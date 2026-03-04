@@ -1,0 +1,164 @@
+import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/core/components/ui/field";
+import { Input } from "@/core/components/ui/input";
+import { cn } from "@/lib/utils";
+import { type OnboardingFormData } from "@/modules/auth/validations/onboarding";
+
+type Props = {
+  form: UseFormReturn<OnboardingFormData>;
+};
+
+export default function StepIncome({ form }: Props) {
+  const currencySymbol = useWatch({
+    control: form.control,
+    name: "currencySymbol",
+  });
+  const payFrequency = useWatch({
+    control: form.control,
+    name: "payFrequency",
+  });
+  const monthlyIncome = useWatch({
+    control: form.control,
+    name: "monthlyIncome",
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold tracking-tight">Tus ingresos</h2>
+        <p className="text-muted-foreground text-sm">
+          Define cuánto ganas y cuándo recibes tu pago.
+        </p>
+      </div>
+
+      <FieldGroup>
+        <Controller
+          name="monthlyIncome"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="onboarding-income">
+                Ingreso mensual neto ({currencySymbol})
+              </FieldLabel>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
+                  {currencySymbol}
+                </span>
+                <Input
+                  id="onboarding-income"
+                  type="number"
+                  min={0}
+                  step={100}
+                  placeholder="0"
+                  aria-invalid={fieldState.invalid}
+                  className="pl-10 text-base font-semibold"
+                  value={field.value === 0 ? "" : field.value}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === "" ? 0 : Number(val));
+                  }}
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="payFrequency"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Frecuencia de pago</FieldLabel>
+              <div className="grid grid-cols-2 gap-3">
+                {(
+                  [
+                    {
+                      value: "monthly",
+                      label: "Mensual",
+                      sub: "1 pago al mes",
+                    },
+                    {
+                      value: "biweekly",
+                      label: "Quincenal",
+                      sub: "2 pagos al mes",
+                    },
+                  ] as const
+                ).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      field.onChange(option.value);
+                      form.setValue(
+                        "paydays",
+                        option.value === "monthly" ? [1] : [15, 30],
+                      );
+                      form.clearErrors("paydays");
+                    }}
+                    className={cn(
+                      "rounded-xl border-2 p-4 text-left transition-all",
+                      field.value === option.value
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:border-primary/50",
+                    )}
+                  >
+                    <p className="font-semibold text-sm">{option.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.sub}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      </FieldGroup>
+
+      {monthlyIncome > 0 && (
+        <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-4 space-y-3">
+          <p className="text-sm font-medium text-muted-foreground">
+            Vista previa — asignación{" "}
+            {payFrequency === "monthly" ? "mensual" : "por quincena"}:
+          </p>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            {[
+              {
+                label: "Necesidades",
+                pct: 0.5,
+                color: "text-envelope-needs",
+              },
+              { label: "Gustos", pct: 0.3, color: "text-envelope-wants" },
+              { label: "Ahorro", pct: 0.2, color: "text-envelope-savings" },
+            ].map((item) => {
+              const amount =
+                payFrequency === "monthly"
+                  ? monthlyIncome * item.pct
+                  : (monthlyIncome / 2) * item.pct;
+              return (
+                <div key={item.label}>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className={`text-sm font-bold ${item.color}`}>
+                    {currencySymbol} {amount.toLocaleString()}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+          {payFrequency === "biweekly" && (
+            <p className="text-xs text-muted-foreground text-center">
+              × 2 quincenas = {currencySymbol} {monthlyIncome.toLocaleString()}{" "}
+              / mes
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

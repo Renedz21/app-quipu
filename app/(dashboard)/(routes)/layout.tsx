@@ -1,0 +1,40 @@
+import { api } from "@/convex/_generated/api";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/core/components/ui/sidebar";
+import { fetchAuthQuery, isAuthenticated } from "@/lib/auth-server";
+import AppSidebar from "@/modules/dashboard/components/app-sidebar";
+import { redirect } from "next/navigation";
+import type { PropsWithChildren } from "react";
+
+type Props = PropsWithChildren<{}>;
+
+export default async function DashboardLayout({ children }: Props) {
+  // 1. Sin sesión → login
+  const authed = await isAuthenticated();
+  if (!authed) redirect("/login");
+
+  // 2. Con sesión pero sin onboarding completo → onboarding
+  const profile = await fetchAuthQuery(api.profiles.getMyProfile, {});
+  if (!profile || !profile.onboardingComplete) redirect("/onboarding");
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center px-4">
+            <SidebarTrigger />
+          </div>
+        </header>
+        <main className="flex-1 overflow-auto">
+          <div className="container max-w-full mx-auto p-4 md:p-6">
+            {children}
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, DM_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/core/components/providers/convex-client-provider";
 import { getToken } from "@/lib/auth-server";
+import { TooltipProvider } from "@/core/components/ui/tooltip";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -34,7 +35,7 @@ export default async function RootLayout({
         className={`${dmSans.variable} ${spaceGrotesk.variable} antialiased`}
       >
         <ConvexClientProvider initialToken={token}>
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
         </ConvexClientProvider>
       </body>
     </html>

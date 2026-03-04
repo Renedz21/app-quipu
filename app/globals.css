@@ -38,8 +38,9 @@
   --color-card-foreground: var(--card-foreground);
   --color-envelope-needs: var(--envelope-needs);
   --color-envelope-wants: var(--envelope-wants);
-  --color-envelope-saving: var(--envelope-saving);
+  --color-envelope-savings: var(--envelope-savings);
   --color-envelope-juntos: var(--envelope-juntos);
+  --color-success-foreground: var(--success-foreground);
 
   --color-card: var(--card);
   --radius-sm: calc(var(--radius) - 4px);

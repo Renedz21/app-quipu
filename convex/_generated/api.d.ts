@@ -8,7 +8,18 @@
  * @module
  */
 
-import type * as https from "../https.js";
+import type * as auth from "../auth.js";
+import type * as coach from "../coach.js";
+import type * as expenses from "../expenses.js";
+import type * as fixedCommitments from "../fixedCommitments.js";
+import type * as helpers from "../helpers.js";
+import type * as http from "../http.js";
+import type * as payday from "../payday.js";
+import type * as profiles from "../profiles.js";
+import type * as savings from "../savings.js";
+import type * as specialIncomes from "../specialIncomes.js";
+import type * as streaks from "../streaks.js";
+import type * as subscriptions from "../subscriptions.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +28,18 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  https: typeof https;
+  auth: typeof auth;
+  coach: typeof coach;
+  expenses: typeof expenses;
+  fixedCommitments: typeof fixedCommitments;
+  helpers: typeof helpers;
+  http: typeof http;
+  payday: typeof payday;
+  profiles: typeof profiles;
+  savings: typeof savings;
+  specialIncomes: typeof specialIncomes;
+  streaks: typeof streaks;
+  subscriptions: typeof subscriptions;
 }>;
 
 /**

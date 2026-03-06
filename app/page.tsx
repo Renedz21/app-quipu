@@ -28,6 +28,10 @@ export default function Home() {
           La mayoría de apps te muestran en qué gastaste. Quipu te ayuda a
           decidir antes de gastar.
         </p>
+        <div className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground border border-border rounded-full px-4 py-1.5">
+          <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+          Sin conexión bancaria · Tu banco no sabe que usas Quipu
+        </div>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button size="lg" className="text-base px-8">
             Empezar gratis
@@ -115,7 +119,7 @@ export default function Home() {
             {
               icon: Layers,
               title: "Tu dinero se asigna solo",
-              desc: "El día que cobras, Quipu divide tu sueldo automáticamente: 50% necesidades, 30% gustos, 20% ahorro. Sin que tengas que hacer nada.",
+              desc: "El día que cobras, confirmas tu ingreso y Quipu asigna todo en sobres: 50% necesidades, 30% gustos, 20% ahorro. Sin conectar tu banco, sin complicaciones.",
             },
             {
               icon: ShieldCheck,
@@ -148,7 +152,7 @@ export default function Home() {
               },
               {
                 title: "Automático de verdad",
-                text: "No hay categorías que completar ni transacciones que etiquetar. Tu plan funciona solo desde el día de pago.",
+                text: "Sin conexión bancaria. Sin categorías que etiquetar. Registras tus gastos en segundos y Quipu te dice exactamente cuánto te queda.",
               },
               {
                 title: "Hecho para Perú",

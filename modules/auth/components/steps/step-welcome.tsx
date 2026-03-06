@@ -11,6 +11,10 @@ export default function StepWelcome() {
         <p className="text-muted-foreground text-base leading-relaxed">
           En 3 pasos tendrás tu plan financiero listo.
         </p>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Quipu no se conecta a tu banco. Tú registras tus gastos y la app te
+          dice cuánto puedes gastar en cada sobre.
+        </p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

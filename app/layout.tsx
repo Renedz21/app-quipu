@@ -5,6 +5,7 @@ import { ConvexClientProvider } from "@/core/components/providers/convex-client-
 import { getToken } from "@/lib/auth-server";
 import { TooltipProvider } from "@/core/components/ui/tooltip";
 import Script from "next/script";
+import ToastProvider from "@/core/components/providers/toast-provider";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -43,7 +44,10 @@ export default async function RootLayout({
         className={`${dmSans.variable} ${spaceGrotesk.variable} antialiased`}
       >
         <ConvexClientProvider initialToken={token}>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {children}
+            <ToastProvider />
+          </TooltipProvider>
         </ConvexClientProvider>
       </body>
     </html>

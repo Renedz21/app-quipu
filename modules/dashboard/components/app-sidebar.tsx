@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   PiggyBank,
   PlusCircle,
-  Settings,
   Trophy,
 } from "lucide-react";
 
@@ -17,6 +16,7 @@ import {
   SidebarRail,
 } from "@/core/components/ui/sidebar";
 import { NavItems } from "./nav-items";
+import { NavUser } from "./nav-user";
 
 // This is sample data.
 const data = {
@@ -48,7 +48,7 @@ const data = {
     },
     {
       name: "Día de pago",
-      url: "/payment-day",
+      url: "/payday",
       icon: Calendar,
     },
     {
@@ -60,11 +60,6 @@ const data = {
       name: "Registrar gasto",
       url: "/add-expense",
       icon: PlusCircle,
-    },
-    {
-      name: "Configuración",
-      url: "/settings",
-      icon: Settings,
     },
   ],
 };
@@ -78,7 +73,9 @@ export default function AppSidebar({
       <SidebarContent>
         <NavItems items={data.projects} />
       </SidebarContent>
-      <SidebarFooter>FOOTER</SidebarFooter>
+      <SidebarFooter>
+        <NavUser user={data.user} />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

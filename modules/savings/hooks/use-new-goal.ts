@@ -4,7 +4,6 @@ import { api } from "@/convex/_generated/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -73,7 +72,6 @@ export type NewGoalFormData = z.infer<typeof schema>;
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useNewGoal() {
-  const router = useRouter();
   const createGoal = useMutation(api.savings.createSavingsGoal);
 
   const [open, setOpen] = useState(false);
@@ -114,7 +112,6 @@ export function useNewGoal() {
         monthlyRequired: Math.ceil(data.targetAmount / monthsUntilDeadline(data.deadlineMonth)),
       });
       handleOpenChange(false);
-      router.refresh();
     } catch (err) {
       if (err instanceof ConvexError) setSubmitError(String(err.data));
       else setSubmitError("Ocurrió un error. Inténtalo de nuevo.");

@@ -2,6 +2,7 @@ import { Button } from "@/core/components/ui/button";
 import { Card, CardContent } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { Calendar, Layers, ShieldCheck, Check } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -11,8 +12,10 @@ export default function Home() {
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <span className="text-xl font-semibold tracking-tight">quipu</span>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Iniciar sesión
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login" prefetch={false}>
+                Iniciar sesión
+              </Link>
             </Button>
             <Button size="sm">Empezar gratis</Button>
           </div>
@@ -175,7 +178,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
           {[
             { number: "S/ 1,000", label: "Ahorro promedio en el primer mes" },
-            { number: "2 min", label: "Para configurar tu plan" },
+            { number: "1 min", label: "Para configurar tu plan" },
             { number: "0", label: "Transacciones que categorizar manualmente" },
           ].map((stat) => (
             <div key={stat.number}>
@@ -196,7 +199,7 @@ export default function Home() {
         <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-5">
           {[
             "Asignación automática el día de pago",
-            "Fondo de emergencia, objetivos y inversión separados",
+            "Fondo de emergencia, objetivos e inversión separados",
             "Modo Rescate cuando te pasas del presupuesto",
             "Gratificaciones y CTS con plan automático",
             "Cuotas y deudas integradas a tu presupuesto real",

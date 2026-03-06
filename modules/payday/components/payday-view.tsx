@@ -3,11 +3,11 @@
 import { Preloaded, usePreloadedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { usePayday } from "../hooks/use-payday";
-import PaydayStep from "./PaydayStep";
-import AssigningStep from "./AssigningStep";
-import DoneStep from "./DoneStep";
-import NextPaydayView from "./NextPaydayView";
-import AlreadyProcessedView from "./AlreadyProcessedView";
+import PaydayStep from "./payday-step";
+import AssigningStep from "./assigning-step";
+import DoneStep from "./done-step";
+import NextPaydayView from "./next-payday-view";
+import AlreadyProcessedView from "./already-processed-view";
 
 type Props = {
   preloadedPaydayStatus: Preloaded<typeof api.payday.getPaydayStatus>;

@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/core/components/ui/card";
 import { cn } from "@/lib/utils";
 import EnvelopeCard from "./envelope-card";
 import { formatCurrency } from "@/lib/format-currency";
+import { Button } from "@/core/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 
 type Props = {
   preloaded: Preloaded<typeof api.payday.getDashboardData>;
@@ -18,6 +20,14 @@ export default function Client({ preloaded }: Props) {
   return (
     <>
       <Header name={data?.profile?.name} month={data?.month} />
+
+      <Button
+        onClick={() => {
+          authClient.signOut();
+        }}
+      >
+        Logout
+      </Button>
 
       {/* Month summary bar */}
       <div className="animate-in fade-in duration-300 rounded-xl bg-muted p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">

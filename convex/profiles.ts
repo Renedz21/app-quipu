@@ -42,6 +42,9 @@ export const createProfile = mutation({
     allocationNeeds: v.optional(v.number()),
     allocationWants: v.optional(v.number()),
     allocationSavings: v.optional(v.number()),
+    // Savings goal targets (computed from income on the client)
+    savingsGoalEmergency: v.optional(v.number()),
+    savingsGoalInvestment: v.optional(v.number()),
   },
   returns: v.id("profiles"),
   handler: async (ctx, args) => {
@@ -71,9 +74,9 @@ export const createProfile = mutation({
       allocationNeeds: args.allocationNeeds ?? 50,
       allocationWants: args.allocationWants ?? 30,
       allocationSavings: args.allocationSavings ?? 20,
-      savingsGoalEmergency: 0,
-      savingsGoalShortTerm: 0,
-      savingsGoalInvestment: 0,
+      savingsGoalEmergency: args.savingsGoalEmergency ?? 0,
+      //savingsGoalShortTerm: 0,
+      savingsGoalInvestment: args.savingsGoalInvestment ?? 0,
       coupleModeEnabled: false,
       couplePartnerName: "",
       coupleMonthlyBudget: 0,
@@ -88,7 +91,7 @@ export const createProfile = mutation({
       label: "Fondo de Emergencia",
       icon: "🛡️",
       currentAmount: 0,
-      goalAmount: 0,
+      goalAmount: args.savingsGoalEmergency ?? 0,
       progress: 0,
     });
     await ctx.db.insert("savingsSubEnvelopes", {
@@ -106,7 +109,7 @@ export const createProfile = mutation({
       label: "Inversión",
       icon: "📈",
       currentAmount: 0,
-      goalAmount: 0,
+      goalAmount: args.savingsGoalInvestment ?? 0,
       progress: 0,
     });
 

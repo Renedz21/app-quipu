@@ -43,7 +43,7 @@ export default defineSchema({
     allocationWants: v.number(),
     allocationSavings: v.number(),
     savingsGoalEmergency: v.number(),
-    savingsGoalShortTerm: v.number(),
+    //savingsGoalShortTerm: v.number(),
     savingsGoalInvestment: v.number(),
     coupleModeEnabled: v.boolean(),
     couplePartnerName: v.string(),

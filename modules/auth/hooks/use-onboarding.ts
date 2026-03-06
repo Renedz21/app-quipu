@@ -15,7 +15,10 @@ import {
   stepFourSchema,
 } from "@/modules/auth/validations/onboarding";
 
-const STEP_SCHEMAS: Record<number, typeof stepTwoSchema | typeof stepThreeSchema | typeof stepFourSchema> = {
+const STEP_SCHEMAS: Record<
+  number,
+  typeof stepTwoSchema | typeof stepThreeSchema | typeof stepFourSchema
+> = {
   2: stepTwoSchema,
   3: stepThreeSchema,
   4: stepFourSchema,
@@ -89,6 +92,14 @@ export function useOnboarding() {
   const handleSubmit = form.handleSubmit(async (data) => {
     setSubmitError(null);
     try {
+      // Compute savings goal targets from income and allocation
+      const monthlySavings =
+        data.monthlyIncome * (data.allocationSavings / 100);
+      // Emergency fund target: 3 months of income
+      const savingsGoalEmergency = data.monthlyIncome * 3;
+      // Investment goal target: 1 year of monthly savings contributions
+      const savingsGoalInvestment = Math.round(monthlySavings * 12);
+
       await createProfile({
         name: data.name,
         country: data.country,
@@ -102,6 +113,8 @@ export function useOnboarding() {
         allocationNeeds: data.allocationNeeds,
         allocationWants: data.allocationWants,
         allocationSavings: data.allocationSavings,
+        savingsGoalEmergency,
+        savingsGoalInvestment,
       });
       await completeOnboarding();
       router.push("/dashboard");

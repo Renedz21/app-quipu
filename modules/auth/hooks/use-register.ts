@@ -5,6 +5,7 @@ import {
   type RegisterSchema,
 } from "@/modules/auth/schemas/register.schema";
 import { authClient } from "@/lib/auth-client";
+import { redirect } from "next/navigation";
 
 export const useRegister = () => {
   const form = useForm<RegisterSchema>({
@@ -17,12 +18,12 @@ export const useRegister = () => {
   });
 
   const handleSubmit = async (data: RegisterSchema) => {
-    console.log({ data });
     await authClient.signUp.email({
       email: data.email,
       password: data.password,
       name: data.fullName,
     });
+    redirect("/dashboard");
   };
 
   return {

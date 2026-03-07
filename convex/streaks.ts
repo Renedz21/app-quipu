@@ -92,7 +92,8 @@ export const evaluateMonthCompliance = internalMutation({
     const allocatedNeeds = netIncome * (profile.allocationNeeds / 100);
     const allocatedWants = netIncome * (profile.allocationWants / 100);
 
-    const compliant = spentNeeds <= allocatedNeeds && spentWants <= allocatedWants;
+    const compliant =
+      spentNeeds <= allocatedNeeds && spentWants <= allocatedWants;
 
     // Record history
     await ctx.db.insert("streakMonthlyHistory", {
@@ -117,7 +118,11 @@ export const evaluateMonthCompliance = internalMutation({
         lastComplianceDate: month,
       });
       // Check for streak achievements
-      await unlockStreakAchievements(ctx as MutationCtx, args.profileId, newStreak);
+      await unlockStreakAchievements(
+        ctx as MutationCtx,
+        args.profileId,
+        newStreak,
+      );
     } else {
       await ctx.db.patch(streak._id, { currentStreak: 0 });
     }
@@ -171,9 +176,7 @@ async function unlockStreakAchievements(
   const existing = await ctx.db
     .query("achievements")
     .withIndex("by_profileId_achievementId", (q) =>
-      q
-        .eq("profileId", profileId)
-        .eq("achievementId", milestone.achievementId),
+      q.eq("profileId", profileId).eq("achievementId", milestone.achievementId),
     )
     .unique();
 

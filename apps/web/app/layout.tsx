@@ -1,16 +1,11 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Hanken_Grotesk } from "next/font/google"
 import { ConvexClientProvider } from "@/core/components/providers/ConvexClientProvider"
 import { getToken } from "@/lib/auth-server"
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
 })
 
@@ -27,11 +22,8 @@ export default async function RootLayout({
   const initialToken = await getToken()
 
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${hankenGrotesk.variable} h-full antialiased`}>
         <ConvexClientProvider initialToken={initialToken}>
           {children}
         </ConvexClientProvider>

@@ -10,6 +10,10 @@
     "lint": "biome check src",
     "check-types": "tsc --noEmit -p tsconfig.json"
   },
+  "dependencies": {
+    "clsx": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
   "devDependencies": {
     "@quipu/config": "workspace:*",
     "typescript": "catalog:"

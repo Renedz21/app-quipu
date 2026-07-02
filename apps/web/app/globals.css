@@ -1,18 +1,32 @@
 @import "tailwindcss";
 
+/*
+ * Tell Tailwind v4 to scan shared workspace packages for utility classes.
+ *
+ * Paths are relative to this file (apps/web/app/globals.css). Going up three
+ * levels lands at the monorepo root, where packages/ lives.
+ *
+ * NOTE: Tailwind v4 does not understand TypeScript's `@/` alias — paths must
+ * be real filesystem paths (relative or absolute). We use relative paths here
+ * so the project is portable: it works regardless of where the repo is cloned.
+ */
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../packages/lib/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.2676 0.0103 260.7);
   --primary: oklch(0.4934 0.0735 251.4);
+  --primary-foreground: oklch(1 0 0);
   --primary-soft: oklch(0.952 0.0093 242.84);
   --success: oklch(0.5899 0.0745 150.44);
   --success-soft: oklch(0.9482 0.0109 149.86);
   --warning: oklch(0.638 0.1045 75.64);
   --warning-soft: oklch(0.9513 0.0217 83.26);
   --destructive: oklch(0.5846 0.133 34.35);
-  --destructive: oklch(0.9445 0.0177 39.4);
+  --destructive-soft: oklch(0.9445 0.0177 39.4);
   --card: oklch(1 0 0);
   --paper: oklch(0.9643 0.007 88.64);
   --border: oklch(0.9316 0.0128 86.83);
@@ -24,13 +38,14 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-destructive: var(--destructive);
-  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
   --color-card: var(--card);
   --color-paper: var(--paper);
   --color-border: var(--border);

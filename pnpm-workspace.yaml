@@ -8,11 +8,19 @@ catalog:
   typescript: 6.0.3
   "@biomejs/biome": 2.5.1
   "@types/node": ^24
+  "@types/react": ^19
   better-auth: 1.6.22
   '@convex-dev/better-auth': 0.12.4
   '@better-auth/passkey': 1.6.22
-  convex: ^1.42.1
-  turbo: ^2.10.2
+  '@radix-ui/react-slot': 1.2.0
+  clsx: 2.1.1
+  class-variance-authority: 0.7.1
+  convex: 1.42.1
+  lucide-react: 1.23.0
+  react: 19.2.7
+  react-dom: 19.2.7
+  tailwind-merge: 3.6.0
+  turbo: 2.10.2
 
 catalogMode: prefer
 cleanupUnusedCatalogs: true

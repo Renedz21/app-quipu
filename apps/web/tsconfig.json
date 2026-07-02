@@ -2,7 +2,7 @@
   "extends": "@quipu/config/tsconfig/next.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*", "../../../*"]
     }
   },
   "include": [

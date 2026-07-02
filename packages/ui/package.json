@@ -11,8 +11,21 @@
     "lint": "biome check src",
     "check-types": "tsc --noEmit -p tsconfig.json"
   },
+  "peerDependencies": {
+    "react": "catalog:"
+  },
+  "dependencies": {
+    "@quipu/lib": "workspace:*",
+    "@radix-ui/react-slot": "catalog:",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "lucide-react": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
   "devDependencies": {
     "@quipu/config": "workspace:*",
+    "@types/react": "catalog:",
+    "react": "catalog:",
     "typescript": "catalog:"
   }
 }

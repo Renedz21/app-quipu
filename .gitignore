@@ -61,6 +61,8 @@ next-env.d.ts
 **/build/
 **/dist/
 
+**/docs/
+
 # monorepo: nested test outputs
 **/test-results/
 **/playwright-report/

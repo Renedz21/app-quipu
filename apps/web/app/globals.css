@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2676 0.0103 260.7);
+  --primary: oklch(0.4934 0.0735 251.4);
+  --primary-soft: oklch(0.952 0.0093 242.84);
+  --success: oklch(0.5899 0.0745 150.44);
+  --success-soft: oklch(0.9482 0.0109 149.86);
+  --warning: oklch(0.638 0.1045 75.64);
+  --warning-soft: oklch(0.9513 0.0217 83.26);
+  --destructive: oklch(0.5846 0.133 34.35);
+  --destructive: oklch(0.9445 0.0177 39.4);
+  --card: oklch(1 0 0);
+  --paper: oklch(0.9643 0.007 88.64);
+  --border: oklch(0.9316 0.0128 86.83);
+  --faint: oklch(0.6959 0.0076 268.52);
+  --muted: oklch(0.5484 0.0114 267.29);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive: var(--destructive);
+  --color-card: var(--card);
+  --color-paper: var(--paper);
+  --color-border: var(--border);
+  --color-faint: var(--faint);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-hanken);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-background text-foreground;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

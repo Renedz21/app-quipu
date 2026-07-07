@@ -1,30 +1,10 @@
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import {
-  currentMonthString,
-  getAuthUserIdOrThrow,
-  getProfileOrThrow,
-  requirePremium,
-} from "./helpers";
-
-// ─── Queries ──────────────────────────────────────────────────────────────────
-
+import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 /**
- * Returns the current user's email from the auth identity.
- */
-export const getMyUserEmail = query({
-  args: {},
-  returns: v.union(v.null(), v.string()),
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-    return identity.email ?? null;
-  },
-});
-
-/**
- * Returns the current user's profile, or null if not created yet.
- * The client uses null to decide whether to show the onboarding flow.
+ * Obtiene el perfil del usuario autenticado actual.
+ * Retorna null si el usuario no ha completado el onboarding.
  */
 export const getMyProfile = query({
   args: {},
@@ -32,6 +12,7 @@ export const getMyProfile = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
+    // Buscamos el perfil usando el userId string que Better Auth provee
     return await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
@@ -39,11 +20,9 @@ export const getMyProfile = query({
   },
 });
 
-// ─── Mutations ────────────────────────────────────────────────────────────────
-
 /**
- * Called at the end of onboarding to create the user's profile.
- * Prevents duplicate profiles by checking if one already exists.
+ * Crea el perfil financiero del usuario al terminar el Onboarding.
+ * Es una mutación atómica: siembra perfil, racha y fondo de emergencia.
  */
 export const createProfile = mutation({
   args: {
@@ -51,104 +30,75 @@ export const createProfile = mutation({
     country: v.string(),
     currencyCode: v.string(),
     currencySymbol: v.string(),
-    currencyName: v.string(),
-    currencyLocale: v.string(),
     workerType: v.union(v.literal("dependent"), v.literal("independent")),
-    payFrequency: v.optional(
-      v.union(v.literal("monthly"), v.literal("biweekly")),
-    ),
-    paydays: v.optional(v.array(v.number())),
-    monthlyIncome: v.number(),
-    estimatedMonthlyIncome: v.optional(v.number()),
-    // Allocation defaults to 50/30/20 if not provided
-    allocationNeeds: v.optional(v.number()),
-    allocationWants: v.optional(v.number()),
-    allocationSavings: v.optional(v.number()),
-    // Savings goal targets (computed from income on the client)
-    savingsGoalEmergency: v.optional(v.number()),
-    savingsGoalInvestment: v.optional(v.number()),
-    // Mid-month onboarding: how much the user has left this month
-    initialRemainingBudget: v.optional(v.number()),
+    payFrequency: v.union(v.literal("monthly"), v.literal("biweekly")),
+    paydays: v.array(v.number()),
+    allocationNeeds: v.number(),
+    allocationWants: v.number(),
+    allocationSavings: v.number(),
   },
-  returns: v.id("profiles"),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserIdOrThrow(ctx);
-
-    const existing = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .unique();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { onboardingComplete: true });
-      return existing._id;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error(
+        "No autorizado. Debes iniciar sesión con tu Passkey o credencial.",
+      );
     }
 
-    if (args.monthlyIncome < 0) {
-      throw new ConvexError("Monthly income cannot be negative");
+    // Idempotencia primero: si ya existe, no revalidamos ni re-sembramos.
+    const existing = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (existing) return existing._id;
+
+    const name = args.name.trim();
+    if (!name) throw new Error("El nombre es obligatorio.");
+
+    if (
+      !isValidAllocations(
+        args.allocationNeeds,
+        args.allocationWants,
+        args.allocationSavings,
+      )
+    ) {
+      throw new Error(
+        "La distribución de sobres (Necesidades, Gustos, Ahorro) debe sumar exactamente 100% con valores enteros no negativos.",
+      );
+    }
+    if (!isValidPaydays(args.payFrequency, args.paydays)) {
+      throw new Error(
+        "Los días de pago no son válidos para la frecuencia seleccionada.",
+      );
     }
 
     const profileId = await ctx.db.insert("profiles", {
-      userId,
-      name: args.name,
+      userId: identity.subject,
+      name,
       country: args.country,
       currencyCode: args.currencyCode,
       currencySymbol: args.currencySymbol,
-      currencyName: args.currencyName,
-      currencyLocale: args.currencyLocale,
       workerType: args.workerType,
       payFrequency: args.payFrequency,
       paydays: args.paydays,
-      monthlyIncome: args.monthlyIncome ?? 0,
-      estimatedMonthlyIncome: args.estimatedMonthlyIncome,
-      allocationNeeds: args.allocationNeeds ?? 50,
-      allocationWants: args.allocationWants ?? 30,
-      allocationSavings: args.allocationSavings ?? 20,
-      savingsGoalEmergency: args.savingsGoalEmergency ?? 0,
-      //savingsGoalShortTerm: 0,
-      savingsGoalInvestment: args.savingsGoalInvestment ?? 0,
-      initialRemainingBudget: args.initialRemainingBudget,
-      initialBudgetMonth:
-        args.initialRemainingBudget !== undefined
-          ? currentMonthString()
-          : undefined,
-      coupleModeEnabled: false,
-      couplePartnerName: "",
-      coupleMonthlyBudget: 0,
-      onboardingComplete: false,
+      allocationNeeds: args.allocationNeeds,
+      allocationWants: args.allocationWants,
+      allocationSavings: args.allocationSavings,
+      onboardingComplete: true,
       plan: "free",
+      createdAt: Date.now(),
     });
 
-    // Seed the three savings sub-envelopes
-    await ctx.db.insert("savingsSubEnvelopes", {
+    // Fondo de Emergencia por defecto: evita el dashboard en blanco tras el onboarding.
+    await ctx.db.insert("subEnvelopes", {
       profileId,
-      subEnvelopeId: "emergency",
+      parentEnvelopeType: "savings",
       label: "Fondo de Emergencia",
-      icon: "🛡️",
+      emoji: "🛡️",
       currentAmount: 0,
-      goalAmount: args.savingsGoalEmergency ?? 0,
-      progress: 0,
-    });
-    await ctx.db.insert("savingsSubEnvelopes", {
-      profileId,
-      subEnvelopeId: "short_term",
-      label: "Objetivos a Corto Plazo",
-      icon: "🎯",
-      currentAmount: 0,
-      goalAmount: 0,
-      progress: 0,
-    });
-    await ctx.db.insert("savingsSubEnvelopes", {
-      profileId,
-      subEnvelopeId: "investment",
-      label: "Inversión",
-      icon: "📈",
-      currentAmount: 0,
-      goalAmount: args.savingsGoalInvestment ?? 0,
-      progress: 0,
+      isSystemDefault: true,
     });
 
-    // Seed the initial streak record
     await ctx.db.insert("streaks", {
       profileId,
       currentStreak: 0,
@@ -160,85 +110,70 @@ export const createProfile = mutation({
 });
 
 /**
- * Marks onboarding as complete. Called after createProfile when the user
- * finishes the onboarding flow.
+ * Actualiza los porcentajes de pre-compromiso o la configuración de pagos.
  */
-export const completeOnboarding = mutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const profile = await getProfileOrThrow(ctx);
-    await ctx.db.patch(profile._id, { onboardingComplete: true });
-    return null;
-  },
-});
-
-/**
- * Updates profile settings. All fields are optional — only provided fields
- * are patched. Validates that allocation percentages sum to 100 when all three
- * are provided.
- */
-export const updateProfile = mutation({
+export const updateProfileSettings = mutation({
   args: {
-    name: v.optional(v.string()),
-    country: v.optional(v.string()),
-    currencyCode: v.optional(v.string()),
-    currencySymbol: v.optional(v.string()),
-    currencyName: v.optional(v.string()),
-    currencyLocale: v.optional(v.string()),
-    monthlyIncome: v.optional(v.number()),
-    estimatedMonthlyIncome: v.optional(v.number()),
+    allocationNeeds: v.optional(v.number()),
+    allocationWants: v.optional(v.number()),
+    allocationSavings: v.optional(v.number()),
     payFrequency: v.optional(
       v.union(v.literal("monthly"), v.literal("biweekly")),
     ),
     paydays: v.optional(v.array(v.number())),
-    allocationNeeds: v.optional(v.number()),
-    allocationWants: v.optional(v.number()),
-    allocationSavings: v.optional(v.number()),
-    savingsGoalEmergency: v.optional(v.number()),
-    savingsGoalShortTerm: v.optional(v.number()),
-    savingsGoalInvestment: v.optional(v.number()),
-    coupleModeEnabled: v.optional(v.boolean()),
-    couplePartnerName: v.optional(v.string()),
-    coupleMonthlyBudget: v.optional(v.number()),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("No autorizado");
 
-    if (args.monthlyIncome !== undefined && args.monthlyIncome < 0) {
-      throw new ConvexError("Monthly income cannot be negative");
-    }
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) throw new Error("Perfil no encontrado");
 
-    if (
-      args.coupleMonthlyBudget !== undefined &&
-      args.coupleMonthlyBudget < 0
-    ) {
-      throw new ConvexError("Couple budget cannot be negative");
-    }
-
-    if (args.coupleModeEnabled === true) {
-      requirePremium(profile.plan);
-    }
-
-    // Validate allocations sum to 100, merging provided values with existing ones
     const needs = args.allocationNeeds ?? profile.allocationNeeds;
     const wants = args.allocationWants ?? profile.allocationWants;
     const savings = args.allocationSavings ?? profile.allocationSavings;
-    if (needs !== undefined && wants !== undefined && savings !== undefined) {
-      const sum = needs + wants + savings;
-      if (Math.round(sum) !== 100) {
-        throw new ConvexError("Allocations must sum to 100%");
-      }
+    if (!isValidAllocations(needs, wants, savings)) {
+      throw new Error(
+        "Los porcentajes deben sumar exactamente 100% con valores enteros no negativos.",
+      );
     }
 
-    // Build patch object with only defined fields
-    const patch: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(args)) {
-      if (value !== undefined) patch[key] = value;
+    const payFrequency = args.payFrequency ?? profile.payFrequency;
+    const paydays = args.paydays ?? profile.paydays;
+    if (!isValidPaydays(payFrequency, paydays)) {
+      throw new Error(
+        "Los días de pago no son válidos para la frecuencia seleccionada.",
+      );
     }
 
-    await ctx.db.patch(profile._id, patch);
-    return null;
+    // Convex interpreta `undefined` como "borrar campo": solo incluimos los definidos.
+    const updates: Partial<
+      Pick<
+        Doc<"profiles">,
+        | "allocationNeeds"
+        | "allocationWants"
+        | "allocationSavings"
+        | "payFrequency"
+        | "paydays"
+      >
+    > = {};
+    if (args.allocationNeeds !== undefined)
+      updates.allocationNeeds = args.allocationNeeds;
+    if (args.allocationWants !== undefined)
+      updates.allocationWants = args.allocationWants;
+    if (args.allocationSavings !== undefined)
+      updates.allocationSavings = args.allocationSavings;
+    if (args.payFrequency !== undefined)
+      updates.payFrequency = args.payFrequency;
+    if (args.paydays !== undefined) updates.paydays = args.paydays;
+
+    if (Object.keys(updates).length > 0) {
+      await ctx.db.patch(profile._id, updates);
+    }
+
+    return { success: true };
   },
 });

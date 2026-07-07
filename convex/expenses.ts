@@ -1,306 +1,210 @@
-import { paginationOptsValidator } from "convex/server";
-import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import {
-  currentMonthString,
-  getProfile,
-  getProfileOrThrow,
-  todayString,
-} from "./helpers";
-import { unlockExpenseAchievements } from "./streaks";
+import { v } from "convex/values"
+import { mutation, query } from "./_generated/server"
+import { shouldWarnWantsBurn } from "./lib/budgetMath"
 
-// Free plan limit: 20 expenses per month
-const FREE_PLAN_MONTHLY_LIMIT = 20;
+const FREE_PLAN_MONTHLY_LIMIT = 20
+const RECENT_EXPENSES_LIMIT = 5
+const WANTS_OVERFLOW_EVENT = "WANTS_OVERFLOW_60"
+const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-// ─── Queries ──────────────────────────────────────────────────────────────────
-
-/**
- * Paginated expense list. Optionally filter by envelope or date prefix ("YYYY-MM").
- * Used in the Gastos screen and dashboard recent expenses.
- */
-export const listExpenses = query({
-  args: {
-    paginationOpts: paginationOptsValidator,
-    envelope: v.optional(
-      v.union(v.literal("needs"), v.literal("wants"), v.literal("juntos")),
-    ),
-    month: v.optional(v.string()), // "YYYY-MM"
-  },
-  handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
-
-    // When filtering by both envelope and month, use the composite index for efficient
-    // range queries that avoid in-memory filtering of the paginated page.
-    if (args.envelope && args.month) {
-      return await ctx.db
-        .query("expenses")
-        .withIndex("by_profileId_envelope_date", (q) =>
-          q
-            .eq("profileId", profile._id)
-            .eq("envelope", args.envelope!)
-            .gte("date", `${args.month}-01`)
-            .lt("date", `${args.month}-32`),
-        )
-        .order("desc")
-        .paginate(args.paginationOpts);
-    }
-
-    // When filtering by envelope only (no month), use the single-field envelope index.
-    if (args.envelope) {
-      return await ctx.db
-        .query("expenses")
-        .withIndex("by_profileId_envelope", (q) =>
-          q.eq("profileId", profile._id).eq("envelope", args.envelope!),
-        )
-        .order("desc")
-        .paginate(args.paginationOpts);
-    }
-
-    // With month filter: use date-range index so pagination stays within the month.
-    if (args.month) {
-      return await ctx.db
-        .query("expenses")
-        .withIndex("by_profileId_date", (q) =>
-          q
-            .eq("profileId", profile._id)
-            .gte("date", `${args.month}-01`)
-            .lt("date", `${args.month}-32`),
-        )
-        .order("desc")
-        .paginate(args.paginationOpts);
-    }
-
-    // No filters — paginate all expenses for this profile
-    return await ctx.db
-      .query("expenses")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .order("desc")
-      .paginate(args.paginationOpts);
-  },
-});
-
-/**
- * Returns totals per envelope for a given month ("YYYY-MM").
- * Used for calculating available balance in each envelope.
- */
-export const getMonthlyTotals = query({
-  args: {
-    month: v.optional(v.string()), // defaults to current month
-  },
-  returns: v.union(
-    v.null(),
-    v.object({
-      total: v.number(),
-      needs: v.number(),
-      wants: v.number(),
-      juntos: v.number(),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    const profile = await getProfile(ctx);
-    if (!profile) return null;
-    const month = args.month ?? currentMonthString();
-
-    const monthExpenses = await ctx.db
-      .query("expenses")
-      .withIndex("by_profileId_date", (q) =>
-        q
-          .eq("profileId", profile._id)
-          .gte("date", `${month}-01`)
-          .lt("date", `${month}-32`),
-      )
-      .collect();
-
-    return {
-      total: monthExpenses.reduce((sum, e) => sum + e.amount, 0),
-      needs: monthExpenses
-        .filter((e) => e.envelope === "needs")
-        .reduce((sum, e) => sum + e.amount, 0),
-      wants: monthExpenses
-        .filter((e) => e.envelope === "wants")
-        .reduce((sum, e) => sum + e.amount, 0),
-      juntos: monthExpenses
-        .filter((e) => e.envelope === "juntos")
-        .reduce((sum, e) => sum + e.amount, 0),
-    };
-  },
-});
-
-/**
- * Returns the count of expenses for the current month.
- * Used by the client to show the free plan limit warning (20/month).
- */
-export const getCurrentMonthCount = query({
-  args: {
-    month: v.optional(v.string()), // "YYYY-MM" — pass from client for deterministic caching
-  },
-  returns: v.union(v.null(), v.number()),
-  handler: async (ctx, args) => {
-    const profile = await getProfile(ctx);
-    if (!profile) return null;
-    const month = args.month ?? currentMonthString();
-
-    const expenses = await ctx.db
-      .query("expenses")
-      .withIndex("by_profileId_date", (q) =>
-        q
-          .eq("profileId", profile._id)
-          .gte("date", `${month}-01`)
-          .lt("date", `${month}-32`),
-      )
-      .collect();
-
-    return expenses.length;
-  },
-});
-
-// ─── Mutations ────────────────────────────────────────────────────────────────
-
-/**
- * Registers a new expense. Enforces the free plan limit of 20/month.
- * The `registeredBy` field is set to "partner" when in couple mode and the
- * partner registers the expense (future: via shared session token).
- */
 export const registerExpense = mutation({
   args: {
     amount: v.number(),
-    description: v.optional(v.string()),
-    envelope: v.union(
-      v.literal("needs"),
-      v.literal("wants"),
-      v.literal("juntos"),
-    ),
-    bucket: v.optional(
-      v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
-    ),
-    module: v.optional(v.string()),
-    date: v.optional(v.string()), // "YYYY-MM-DD", defaults to today
-    registeredBy: v.optional(v.union(v.literal("user"), v.literal("partner"))),
+    description: v.string(),
+    envelopeType: v.union(v.literal("needs"), v.literal("wants")),
   },
-  returns: v.id("expenses"),
   handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
-
-    if (args.amount <= 0) {
-      throw new ConvexError("Amount must be greater than 0");
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("No autorizado")
+    if (!Number.isInteger(args.amount) || args.amount <= 0) {
+      throw new Error("El monto debe ser un entero de céntimos mayor a cero")
     }
 
-    // Enforce free plan limit
-    if (profile.plan === "free") {
-      const month = currentMonthString();
-      const monthExpenses = await ctx.db
-        .query("expenses")
-        .withIndex("by_profileId_date", (q) =>
-          q
-            .eq("profileId", profile._id)
-            .gte("date", `${month}-01`)
-            .lt("date", `${month}-32`),
-        )
-        .collect();
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique()
+    if (!profile) throw new Error("Perfil no encontrado")
 
-      if (monthExpenses.length >= FREE_PLAN_MONTHLY_LIMIT) {
-        throw new ConvexError(
-          `Free plan limit: ${FREE_PLAN_MONTHLY_LIMIT} expenses per month`,
-        );
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique()
+    if (!activeCycle) {
+      throw new Error(
+        "No hay un ciclo financiero activo. Procesa tu día de pago primero.",
+      )
+    }
+
+    if (profile.plan === "free") {
+      const counted = await ctx.db
+        .query("expenses")
+        .withIndex("by_cycle_envelope_time", (q) =>
+          q.eq("cycleId", activeCycle._id),
+        )
+        .take(FREE_PLAN_MONTHLY_LIMIT)
+
+      if (counted.length >= FREE_PLAN_MONTHLY_LIMIT) {
+        throw new Error(
+          `Has alcanzado el límite de ${FREE_PLAN_MONTHLY_LIMIT} registros de tu plan gratuito este ciclo. Pásate a Premium para registros ilimitados.`,
+        )
       }
     }
 
-    // "juntos" envelope requires couple mode enabled
-    if (args.envelope === "juntos" && !profile.coupleModeEnabled) {
-      throw new ConvexError("Couple mode is not enabled");
-    }
+    const envelope = await ctx.db
+      .query("envelopes")
+      .withIndex("by_cycle_type", (q) =>
+        q.eq("cycleId", activeCycle._id).eq("type", args.envelopeType),
+      )
+      .unique()
+    if (!envelope) throw new Error("Sobre no encontrado en el ciclo actual")
 
-    if (args.registeredBy === "partner" && !profile.coupleModeEnabled) {
-      throw new ConvexError("Couple mode is not enabled");
-    }
+    const now = Date.now()
+    const newRemainingAmount = envelope.remainingAmount - args.amount
+    await ctx.db.patch(envelope._id, { remainingAmount: newRemainingAmount })
 
     const expenseId = await ctx.db.insert("expenses", {
       profileId: profile._id,
+      cycleId: activeCycle._id,
+      envelopeId: envelope._id,
       amount: args.amount,
       description: args.description,
-      envelope: args.envelope,
-      bucket: args.bucket,
-      module: args.module,
-      date: args.date ?? todayString(),
-      registeredBy: args.registeredBy ?? "user",
-    });
+      timestamp: now,
+    })
 
-    // Count total expenses for achievement tracking (all-time, not just current month)
-    const totalExpenseCount = await ctx.db
+    if (
+      args.envelopeType === "wants" &&
+      shouldWarnWantsBurn({
+        allocated: envelope.allocatedAmount,
+        remaining: newRemainingAmount,
+        cycleStart: activeCycle.startDate,
+        cycleEnd: activeCycle.endDate,
+        now,
+      })
+    ) {
+      const existing = await ctx.db
+        .query("coachInteractions")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("profileId", profile._id).eq("status", "pending"),
+        )
+        .filter((q) => q.eq(q.field("triggerEvent"), WANTS_OVERFLOW_EVENT))
+        .first()
+
+      if (!existing) {
+        const burnPct =
+          ((envelope.allocatedAmount - newRemainingAmount) /
+            envelope.allocatedAmount) *
+          100
+        const daysElapsed = (now - activeCycle.startDate) / MS_PER_DAY
+
+        await ctx.db.insert("coachInteractions", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          triggerEvent: WANTS_OVERFLOW_EVENT,
+          initialNudge: `${profile.name}, has quemado el ${burnPct.toFixed(0)}% de tu sobre de Gustos en solo ${daysElapsed.toFixed(0)} días. A este ritmo te quedarás a cero antes de tu próximo pago. ¿Cómo deseas proceder?`,
+          options: [
+            {
+              id: "freeze_wants",
+              label: "❄️ Congelar sobre de Gustos por 3 días",
+            },
+            {
+              id: "suggest_rescue",
+              label: "🛡️ Activar Modo Rescate preventivo",
+            },
+            { id: "ignore", label: "📉 Asumir la pérdida y continuar" },
+          ],
+          status: "pending",
+          createdAt: now,
+        })
+      }
+    }
+
+    return expenseId
+  },
+})
+
+export const getRecentExpenses = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique()
+    if (!profile) return []
+
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique()
+    if (!activeCycle) return []
+
+    const expenses = await ctx.db
       .query("expenses")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect()
-      .then((rows) => rows.length);
-    await unlockExpenseAchievements(ctx, profile._id, totalExpenseCount);
+      .withIndex("by_cycle_envelope_time", (q) =>
+        q.eq("cycleId", activeCycle._id),
+      )
+      .order("desc")
+      .take(RECENT_EXPENSES_LIMIT)
 
-    return expenseId;
+    return expenses.map((e) => ({
+      _id: e._id,
+      amount: e.amount,
+      description: e.description,
+      timestamp: e.timestamp,
+      envelopeId: e.envelopeId,
+    }))
   },
-});
+})
 
-/**
- * Updates an existing expense. Verifies ownership via the profile relationship.
- * Only the provided fields are updated (partial patch).
- */
-export const updateExpense = mutation({
-  args: {
-    expenseId: v.id("expenses"),
-    amount: v.optional(v.number()),
-    envelope: v.optional(
-      v.union(v.literal("needs"), v.literal("wants"), v.literal("juntos")),
-    ),
-    bucket: v.optional(
-      v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
-    ),
-    module: v.optional(v.string()),
-    description: v.optional(v.string()),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
-
-    const expense = await ctx.db.get(args.expenseId);
-    if (!expense || expense.profileId !== profile._id) {
-      throw new ConvexError("Expense not found");
-    }
-
-    if (args.amount !== undefined && args.amount <= 0) {
-      throw new ConvexError("Amount must be greater than 0");
-    }
-
-    if (args.envelope === "juntos" && !profile.coupleModeEnabled) {
-      throw new ConvexError("Couple mode is not enabled");
-    }
-
-    const patch: Record<string, unknown> = {};
-    if (args.amount !== undefined) patch.amount = args.amount;
-    if (args.envelope !== undefined) patch.envelope = args.envelope;
-    if (args.bucket !== undefined) patch.bucket = args.bucket;
-    if (args.module !== undefined) patch.module = args.module;
-    if (args.description !== undefined) patch.description = args.description;
-
-    if (Object.keys(patch).length > 0) {
-      await ctx.db.patch(args.expenseId, patch);
-    }
-
-    return null;
-  },
-});
-
-/**
- * Deletes an expense. Verifies ownership via the profile relationship.
- */
 export const deleteExpense = mutation({
   args: { expenseId: v.id("expenses") },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    const profile = await getProfileOrThrow(ctx);
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("No autorizado")
 
-    const expense = await ctx.db.get(args.expenseId);
-    if (!expense || expense.profileId !== profile._id) {
-      throw new ConvexError("Expense not found");
+    const expense = await ctx.db.get(args.expenseId)
+    if (!expense) throw new Error("El gasto no existe")
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique()
+    if (!profile || expense.profileId !== profile._id) {
+      throw new Error("No tienes permisos para eliminar este registro")
     }
 
-    await ctx.db.delete(args.expenseId);
-    return null;
+    // Solo el ciclo activo: revertir un ciclo cerrado corrompe el historial ya evaluado.
+    const cycle = await ctx.db.get(expense.cycleId)
+    if (!cycle || cycle.status !== "active") {
+      throw new Error("Solo puedes eliminar gastos del ciclo activo.")
+    }
+
+    // Registrar un gasto solo bajó remainingAmount → al borrar, lo devolvemos.
+    const envelope = await ctx.db.get(expense.envelopeId)
+    if (!envelope)
+      throw new Error("El sobre asociado a este gasto ya no existe")
+    await ctx.db.patch(envelope._id, {
+      remainingAmount: envelope.remainingAmount + expense.amount,
+    })
+
+    // Si el gasto salió de un sub-sobre de ahorro, también lo restauramos.
+    if (expense.subEnvelopeId) {
+      const sub = await ctx.db.get(expense.subEnvelopeId)
+      if (sub) {
+        await ctx.db.patch(sub._id, {
+          currentAmount: sub.currentAmount + expense.amount,
+        })
+      }
+    }
+
+    await ctx.db.delete(args.expenseId)
+    return { success: true }
   },
-});
+})

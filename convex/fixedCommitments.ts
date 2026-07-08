@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
 export const listMyCommitments = query({
@@ -109,5 +110,84 @@ export const deleteFixedCommitment = mutation({
 
     await ctx.db.delete(args.commitmentId);
     return { success: true };
+  },
+});
+
+/**
+ * Crea N compromisos fijos en una sola mutation atómica.
+ * Usado por el onboarding v2.5 (paso 6) para evitar N round-trips.
+ *
+ * Valida que todos los profileId coincidan con la sesión, que cada
+ * name no esté vacío, cada amount sea entero positivo, y cada dueDay
+ * esté en 1-31. Si alguna validación falla, ningún commitment se crea
+ * (atomicidad de la mutation).
+ */
+export const createCommitmentsBulk = mutation({
+  args: {
+    profileId: v.id("profiles"),
+    commitments: v.array(
+      v.object({
+        name: v.string(),
+        amount: v.number(),
+        envelope: v.union(v.literal("needs"), v.literal("wants")),
+        dueDay: v.number(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+
+    const profile = await ctx.db.get(args.profileId);
+    if (!profile || profile.userId !== identity.subject) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Perfil no encontrado o no autorizado.",
+      });
+    }
+
+    // Valida todos antes de insertar (atomicidad).
+    for (let i = 0; i < args.commitments.length; i++) {
+      const c = args.commitments[i]!;
+      if (!c.name.trim()) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "El nombre del compromiso es obligatorio.",
+          data: { field: `commitments[${i}].name` },
+        });
+      }
+      if (!Number.isInteger(c.amount) || c.amount <= 0) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "El monto debe ser un entero de céntimos mayor a cero.",
+          data: { field: `commitments[${i}].amount` },
+        });
+      }
+      if (!Number.isInteger(c.dueDay) || c.dueDay < 1 || c.dueDay > 31) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "dueDay debe ser un entero entre 1 y 31.",
+          data: { field: `commitments[${i}].dueDay` },
+        });
+      }
+    }
+
+    const ids: Id<"fixedCommitments">[] = [];
+    for (const c of args.commitments) {
+      const id = await ctx.db.insert("fixedCommitments", {
+        profileId: args.profileId,
+        name: c.name.trim(),
+        amount: c.amount,
+        envelope: c.envelope,
+        dueDay: c.dueDay,
+      });
+      ids.push(id);
+    }
+    return ids;
   },
 });

@@ -1937,11 +1937,18 @@ grep -rn "workerType\|baseIncomeReceived\|extraordinaryIncomeReceived\|totalPeri
 
 Fix any remaining references.
 
-- [ ] **Step 8: Smoke test end-to-end**
+- [ ] **Step 8: Smoke test (partial, expected to fail onboarding)**
 
-`pnpm dev`. Sign in. Run through:
-- Onboarding (will fail; onboarding still uses `workerType` and the old `createProfile` signature). This is **expected** for this PR. Document the failure in the PR description: "Onboarding requires a follow-up PR to consume the v2.5 API. Out of scope for this migration PR."
-- Existing user flow: verify dashboard, expenses, coach still work.
+`pnpm dev`. Sign in with a **pre-existing** user. Run through:
+- Login with passkey → expect success.
+- Dashboard for a pre-existing user → expect success (envelopes, ciclo, etc. se leen con el código nuevo).
+- Register an expense → expect success.
+- Resolve a coach interaction → expect success.
+- **DO NOT** try to complete onboarding with a new user. It is **expected to fail** because the onboarding code still uses `workerType` and the old `createProfile` signature. This PR is the schema/backend migration; the onboarding v2.5 is a follow-up PR.
+
+The PR description must include this banner:
+
+> **⚠️ Onboarding is intentionally broken in this PR.** The new schema does not include `workerType`, but the onboarding flow at `app/(onboarding)/configurar/` still uses it. A follow-up PR will rewrite the onboarding to consume the v2.5 API. This PR is the schema/backend migration only and should be merged into a feature branch, not directly into `main`, until the onboarding follow-up is ready.
 
 - [ ] **Step 9: Commit**
 
@@ -2024,10 +2031,14 @@ Closes the v2.5 audit spec (`docs/superpowers/specs/2026-07-07-domain-v25-audit-
 - [x] All mutations throw `ConvexError({ code, message })` with `ErrorCode`
 
 ### Follow-ups (out of scope)
-- [ ] Onboarding v2.5 wizard (separate spec)
+- [ ] Onboarding v2.5 wizard (separate spec) — **blocks merge to `main`**
 - [ ] Dashboard v2.5 with new "Disponibilidad del ciclo" UI
 - [ ] Cascade engine for `variable` income model (commitment coverage on event)
 - [ ] Setting to allow user to adjust `dueDay` per commitment
+
+### Merge policy
+- **DO NOT merge to `main`** until the Onboarding v2.5 follow-up PR is ready and merged. This PR's smoke test is intentionally partial (onboarding is broken).
+- Merge into a feature branch and hold there.
 
 ### Known limitations
 - Migrated `adHocIncomes` rows are indistinguishable from real `other` source events.

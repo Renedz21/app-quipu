@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUnauthenticatedSession } from "@/auth/auth-server";
 import { PasskeyPromptButton } from "@/modules/auth/components/passkey-prompt-button";
+import { mapBetterAuthError } from "@/modules/auth/errorMap";
 import { StatusCard } from "@/shared/components/auth/status-card";
 import { AUTH_MESSAGES } from "@/modules/auth/constants";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -24,6 +25,28 @@ export default async function SignUpPage({ searchParams }: PageProps) {
           href: "/onboarding",
         }}
       />
+    );
+  }
+
+  // Flow 5 del spec: si hay ?error=CODE, renderizar el StatusCard correspondiente.
+  if (params.error) {
+    const mapped = mapBetterAuthError(params.error);
+    return (
+      <div className="flex flex-col gap-6">
+        <StatusCard
+          variant={mapped.variant}
+          title="No pudimos crear tu cuenta"
+          description={mapped.message}
+          primaryAction={{
+            label: AUTH_MESSAGES.retry,
+            href: "/sign-up",
+          }}
+          secondaryAction={{
+            label: AUTH_MESSAGES.useOtherMethod,
+            href: "/sign-up/email",
+          }}
+        />
+      </div>
     );
   }
 

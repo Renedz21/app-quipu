@@ -10,7 +10,7 @@
 
 ### A. Sign-up con passkey (usuario nuevo)
 1. Ir a `http://localhost:3000/sign-up`.
-2. (TODO: capturar email en el form antes de mostrar el botón. Por ahora el email está hardcoded.)
+2. **Estado actual (pre-P0-8):** el email está hardcoded como `placeholder@quipu.pe` en `app/(auth)/sign-up/page.tsx:48`. No ingresar email; el flujo crea un user con ese email. **Esto es un bug conocido (P0-8) que se resolverá en una iteración siguiente.** Para esta verificación, simplemente click "Crear con Passkey" sin tipear nada.
 3. Click "Crear con Passkey".
 4. Autorizar passkey con Touch ID / Windows Hello.
 5. URL cambia a `/sign-up?status=success`.

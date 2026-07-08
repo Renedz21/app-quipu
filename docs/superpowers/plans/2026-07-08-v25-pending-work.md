@@ -404,11 +404,13 @@ git commit -m "fix(auth): correct passkey capability detection — gate on WebAu
 
 ---
 
-### P2-4: Capturar email del usuario antes de mostrar el botón passkey en sign-up
+### P0-8: Capturar email del usuario antes de mostrar el botón passkey en sign-up
 
-- [ ] **Status:** Pendiente. **Owner:** TBD. **Detectado durante:** Task 7 de auth v2.5 (commit `0331872`).
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Bloquea:** merge a main (promovido de P2-4 a P0-8 en final review del 2026-07-08, por bug de integridad de datos).
 
-**Por qué existe:** el sign-up con passkey necesita un email como `context` para que el `resolveUser` de Better Auth pueda crear o encontrar el usuario. Hoy el email está hardcoded como `placeholder@quipu.pe` en `app/(auth)/sign-up/page.tsx`, y el `<label htmlFor="email">` apunta a un `id` que no existe. Esto es un defect de a11y y de UX: el usuario no puede ingresar su email antes de crear la passkey.
+**Por qué existe:** el sign-up con passkey necesita un email como `context` para que el `resolveUser` de Better Auth pueda crear o encontrar el usuario. Hoy el email está hardcoded como `placeholder@quipu.pe` en `app/(auth)/sign-up/page.tsx:48`, y el `<label htmlFor="email">` apunta a un `id` que no existe. Esto es un defect de a11y, de UX, **y de integridad de datos**: dos usuarios en el mismo dispositivo quedan merged en un solo record (mismo email), y el `name` de todos es `placeholder` (de `email.split("@")[0]`).
+
+**Razón de la promoción a P0:** el final review del branch (2026-07-08) clasificó este defect como C2 (data integrity bug, no solo UX gap). El sign-up con passkey actualmente es funcionalmente roto: todos los usuarios nuevos comparten la misma identidad. No se puede mergear a main con este defect abierto.
 
 **Qué hacer:**
 
@@ -421,7 +423,7 @@ git commit -m "fix(auth): correct passkey capability detection — gate on WebAu
 3. Actualizar el smoke test (`docs/auth-smoke.md`) caso A step 2: cambiar el `(TODO: ...)` por un paso real ("Tipear email nuevo y click 'Crear con Passkey'").
 4. Verificar a11y con axe o lectura manual del label.
 
-**Criterio de cierre:** un usuario puede tipear su email en `/sign-up` antes de ver el botón passkey, el botón está deshabilitado si el email no es válido, y la passkey se crea con el email correcto como `context`.
+**Criterio de cierre:** un usuario puede tipear su email en `/sign-up` antes de ver el botón passkey, el botón está deshabilitado si el email no es válido, y la passkey se crea con el email correcto como `context`. Dos usuarios en el mismo dispositivo con emails distintos crean dos records distintos.
 
 **Commit esperado:**
 ```bash

@@ -1,14 +1,44 @@
 import Link from "next/link";
 import { requireUnauthenticatedSession } from "@/auth/auth-server";
 import { PasskeyPromptButton } from "@/modules/auth/components/passkey-prompt-button";
+import { mapBetterAuthError } from "@/modules/auth/errorMap";
 import { AUTH_MESSAGES } from "@/modules/auth/constants";
+import { StatusCard } from "@/shared/components/auth/status-card";
 
-export default async function SignInPage() {
+interface PageProps {
+  searchParams: Promise<{ error?: string }>;
+}
+
+export default async function SignInPage({ searchParams }: PageProps) {
   await requireUnauthenticatedSession();
+  const { error: errorCode } = await searchParams;
+
+  // Flow 5 del spec: si hay ?error=CODE, renderizar el StatusCard correspondiente.
+  // El componente del botón también muestra el error inline (ver C1 fix), pero
+  // esta es la ruta para errores que vienen de redirects (ej. después de un
+  // sign-in fallido desde /sign-in/email).
+  if (errorCode) {
+    const mapped = mapBetterAuthError(errorCode);
+    return (
+      <div className="flex flex-col gap-6">
+        <StatusCard
+          variant={mapped.variant}
+          title="No pudimos iniciar sesión"
+          description={mapped.message}
+          primaryAction={{
+            label: AUTH_MESSAGES.retry,
+            href: "/sign-in",
+          }}
+          secondaryAction={{
+            label: AUTH_MESSAGES.useOtherMethod,
+            href: "/sign-in/email",
+          }}
+        />
+      </div>
+    );
+  }
 
   // Si llegamos acá sin redirect, no hay sesión. Renderizar el form.
-  // Nota: el botón passkey no muestra ?status=success en sign-in porque
-  // un usuario existente va directo a dashboard (decisión 3 del spec).
 
   return (
     <div className="flex flex-col gap-6">

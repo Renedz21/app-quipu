@@ -53,6 +53,12 @@ describe("PasskeyPromptButton", () => {
   });
 
   it("renders enabled button when browser has WebAuthn", async () => {
+    // El pre-load de autofill llama a signInWithPasskey(true). Lo mockeamos
+    // para que retorne éxito y no haga nada visible.
+    (signInWithPasskey as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: {},
+      error: null,
+    });
     render(<PasskeyPromptButton mode="signIn" />);
     await waitFor(() => {
       const btn = screen.getByRole("button");
@@ -78,6 +84,10 @@ describe("PasskeyPromptButton", () => {
   // Regression test del bug: botón debe estar activo aunque UVPA devuelva false
   // (cross-platform authenticator, security key, o simplemente UVPA no detectable).
   it("renders enabled button when WebAuthn exists but UVPA is unavailable (security key, etc.)", async () => {
+    (signInWithPasskey as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: {},
+      error: null,
+    });
     Object.defineProperty(window, "PublicKeyCredential", {
       value: {
         isUserVerifyingPlatformAuthenticatorAvailable: () =>
@@ -109,6 +119,8 @@ describe("PasskeyPromptButton", () => {
     await waitFor(() => {
       expect(signInWithPasskey).toHaveBeenCalledWith(false);
     });
+    // El pre-load llamó a signInWithPasskey(true) al montar.
+    expect(signInWithPasskey).toHaveBeenCalledWith(true);
   });
 
   it("calls registerPasskey on click in signUp mode", async () => {
@@ -128,5 +140,34 @@ describe("PasskeyPromptButton", () => {
         context: "test@quipu.pe",
       });
     });
+  });
+
+  // Regression test: C1 del final review. Los errores de passkey antes eran
+  // silenciosos (solo `data-error` attribute, sin render). Ahora se renderiza
+  // con `role="alert"`.
+  it("renders the error message when signInWithPasskey fails", async () => {
+    (signInWithPasskey as ReturnType<typeof vi.fn>).mockImplementation(
+      async (autoFill?: boolean) => {
+        // El primer call es el pre-load de autofill (best-effort, lo silenciamos).
+        if (autoFill) return { data: null, error: null };
+        // El segundo call es el del click manual. Este sí falla.
+        return {
+          data: null,
+          error: {
+            code: "AUTH_PASSKEY_SECURITY_ERROR",
+            message: "No pudimos verificarte.",
+            variant: "verify-error",
+          },
+        };
+      },
+    );
+    render(<PasskeyPromptButton mode="signIn" />);
+    await waitFor(() => {
+      const btn = screen.getByRole("button");
+      expect(btn.hasAttribute("disabled")).toBe(false);
+    });
+    fireEvent.click(screen.getByRole("button"));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toMatch(/No pudimos verificarte/);
   });
 });

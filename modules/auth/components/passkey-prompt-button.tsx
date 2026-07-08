@@ -45,7 +45,16 @@ export function PasskeyPromptButton({ mode, email }: PasskeyPromptButtonProps) {
     window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.()
       .then(setHasPlatformAuth)
       .catch(() => setHasPlatformAuth(false));
-  }, []);
+    // Pre-load Conditional UI en signIn mode: arma el autofill del browser
+    // para que el prompt de passkey aparezca al focus del input con
+    // `autocomplete="... webauthn"`. Sin esto, Chrome no muestra el prompt
+    // aunque el usuario tenga passkeys. Ver spec flujo 1.
+    if (mode === "signIn") {
+      signInWithPasskey(true).catch(() => {
+        // El pre-load es best-effort. Si falla, no afecta al botón manual.
+      });
+    }
+  }, [mode]);
 
   const handleClick = async () => {
     if (!hasWebAuthn) return;
@@ -106,6 +115,18 @@ export function PasskeyPromptButton({ mode, email }: PasskeyPromptButtonProps) {
           </>
         )}
       </Button>
+      {/* Error inline. Antes se ignoraba: el botón volvía a idle sin feedback
+          (regression detectada en final review). Ahora se renderiza con
+          role="alert" para accesibilidad. */}
+      {error && (
+        <p
+          role="alert"
+          className="text-center text-sm text-destructive"
+          data-testid="passkey-error"
+        >
+          {error.message}
+        </p>
+      )}
       {/* Solo si el browser NO tiene WebAuthn. Si tiene WebAuthn pero no UVPA,
           el botón sigue activo (puede haber security key externa). */}
       {!hasWebAuthn && (

@@ -3,6 +3,7 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import { z } from "zod";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
@@ -10,7 +11,14 @@ import authSchema from "./betterAuth/schema";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
-const rpName = process.env.PASSKEY_RP_NAME || "Quipu";
+const rpName = process.env.PASSKEY_RP_NAME || "quipu";
+
+const emailSchema = z
+  .string({ error: "Email is required" })
+  .trim()
+  .toLowerCase()
+  .min(1, "Email is required")
+  .pipe(z.email("Email inválido"));
 
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,
@@ -25,6 +33,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   return {
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
+    emailAndPassword: {
+      enabled: true,
+      autoSignIn: true,
+      requireEmailVerification: false,
+    },
     plugins: [
       convex({ authConfig }),
       passkey({
@@ -34,14 +47,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         registration: {
           requireSession: false,
           resolveUser: async ({ context, ctx }) => {
-            const email = String(context ?? "")
-              .trim()
-              .toLowerCase();
-            if (!email.includes("@")) throw new Error("Email inválido");
+            const { success, data: email } = emailSchema.safeParse(context);
+            if (!success) throw new Error("Email inválido");
 
-            const internal = ctx.context.internalAdapter;
-
-            const found = await internal.findUserByEmail(email);
+            const { internalAdapter } = ctx.context;
+            const found = await internalAdapter.findUserByEmail(email);
             if (found?.user) {
               return {
                 id: found.user.id,
@@ -49,9 +59,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
                 displayName: email,
               };
             }
-            const created = await internal.createUser({
+            const created = await internalAdapter.createUser({
               email,
-              name: email.split("@")[0] ?? email,
+              name: email.split("@")[0]!,
               emailVerified: false,
             });
             return { id: created.id, name: created.name, displayName: email };

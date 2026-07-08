@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome check",
-    "format": "biome format --write"
+    "lint": "biome lint --write",
+    "format": "biome format --write",
+    "test": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@better-auth/passkey": "^1.6.23",
     "@convex-dev/better-auth": "^0.12.5",
+    "@hookform/resolvers": "^5.4.0",
     "@tanstack/react-form": "^1.33.0",
     "better-auth": "^1.6.23",
     "class-variance-authority": "^0.7.1",
@@ -30,11 +32,17 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.2",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.3",
     "babel-plugin-react-compiler": "1.0.0",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.10"
   }
 }

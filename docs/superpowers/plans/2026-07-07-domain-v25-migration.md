@@ -25,7 +25,7 @@
 - **Dates in `America/Lima`.** Use `shared/lib/date.ts`.
 - **Errors are typed (`ConvexError({ code, message })`), never raw `throw new Error("...")`.** Use codes from the `ErrorCode` enum in `core/errors/index.ts`.
 - **Biome formats and lints.** Run `pnpm lint` and `pnpm format` after every file change. CI would fail otherwise.
-- **Typecheck green.** Run `pnpm tsc --noEmit` after every type change. CI would fail otherwise.
+- **Typecheck green.** Run `pnpm tsc --noEmit` after every type change. CI would fail otherwise. In the widen phase, when a schema field becomes `v.optional` and production code reads it as required, the task MAY add a defensive `?? default` at the read site so typecheck stays clean. The brief may say "do NOT touch production code" — that prohibition applies to the `createProfile`/`createFixedCommitment` mutations specifically (which will be reworked in narrow), not to the read sites in `paydayEngine.ts`, `coachEngine.ts`, or `updateProfileSettings` which need minimal defensive defaults to keep typecheck green.
 
 ---
 

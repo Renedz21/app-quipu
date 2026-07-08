@@ -23,6 +23,11 @@
 # misc
 .DS_Store
 *.pem
+# Windows reserved device names that sometimes leak into the working tree
+nul
+aux
+con
+prn
 
 # debug
 npm-debug.log*
@@ -43,3 +48,5 @@ next-env.d.ts
 # AI skills
 .agents/*
 .claude/*
+
+docs/

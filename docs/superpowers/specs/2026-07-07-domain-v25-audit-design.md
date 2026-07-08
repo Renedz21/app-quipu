@@ -16,11 +16,11 @@
 ### 1.2 Lo que Quipu SÍ hace
 
 - Registra ingresos que realmente ocurrieron.
-- Organiza los ingresos en ciclos (fijos, variables, mixtos).
-- Distribuye automáticamente los ingresos entre tres sobres (Necesidades, Gustos, Ahorro) al inicio de cada ciclo.
+- Organiza los ingresos en ciclos (fijos, variables, mixtos). El ciclo no se ata a un día de pago: para `fixed`/`mixed` sigue el calendario del ingreso predecible; para `variable` sigue un horizonte (15 o 30 días) que se renueva con cada nuevo ingreso.
+- Distribuye automáticamente los ingresos entre tres sobres (Necesidades, Gustos, Ahorro) cuando entran al ciclo. Para `fixed`/`mixed` esto ocurre típicamente al inicio del ciclo, con el primer ingreso. Para `variable` puede ocurrir múltiples veces dentro de un mismo ciclo, con cada `incomeEvent` que llegue.
 - Hace seguimiento del saldo vivo de cada sobre.
 - Registra gastos contra el sobre correspondiente.
-- Modela compromisos fijos (alquiler, servicios, deudas) descontados del neto antes de repartir.
+- Modela compromisos fijos (alquiler, servicios, deudas) con su día de vencimiento en el calendario, y hace visible su cobertura sin descontarlos automáticamente del ingreso.
 - Muestra el estado actual de cada sobre y la disponibilidad del ciclo (referencia, no regla).
 - Sugiere acciones del coach cuando un sobre va a quedar en rojo antes del cierre, sin aplicar cambios sin confirmación.
 - Mantiene racha de cumplimiento por ciclo (cumplido, advertencia, fallido) con un buffer para evitar el efecto "What the Hell".
@@ -66,7 +66,7 @@ Esta regla es el criterio rector para todas las decisiones de modelado de aquí 
 | # | Tabla | Propósito | Referencias |
 |---|---|---|---|
 | 1 | `profiles` | "Dueño" del producto. 1 usuario Better Auth → 0 o 1 perfil | todas |
-| 2 | `financialCycles` | Período financiero. Status: active/closed. Hoy se siembra en payday | paydayEngine, expenses, coach |
+| 2 | `financialCycles` | Período financiero. Status: active/closed. Hoy se siembra en payday (modelo actual); en v2.5 se siembra cuando corresponde según `incomeModel` del perfil (payday para `fixed`/`mixed`, horizonte para `variable`) | paydayEngine, expenses, coach |
 | 3 | `envelopes` | 3 sobres vivos del ciclo (needs/wants/savings) | paydayEngine, coach, expenses |
 | 4 | `subEnvelopes` | Sub-sobres del sobre de Ahorro (metas). Default: Fondo de Emergencia | paydayEngine, expenses |
 | 5 | `fixedCommitments` | Gastos fijos recurrentes, descontados del neto | paydayEngine, fixedCommitments |
@@ -209,11 +209,16 @@ Sin cambios. Sigue siendo un sub-sobre del sobre `savings` con `isSystemDefault:
 | `envelope` | sí | sin cambios | "needs" / "wants" |
 | `dueDay` | **entra** | `number` (1-31) | Día del mes en que vence el compromiso en Lima. El motor decide en qué momento se descuenta según `incomeModel` del perfil. |
 
-**Semántica de `dueDay`:**
-- `fixed` / `mixed`: el motor descuenta del próximo sueldo (o del más cercano) según la proximidad de `dueDay` al payday.
-- `variable` / `mixed` (parte variable): el motor lleva un "objetivo de cobertura" por commitment; cada `incomeEvent` que entra va cubriendo commitments pendientes hasta que se cubran.
+**Semántica de `dueDay` (intención conductual):**
 
-**Estado de cobertura:** **no se persiste** (regla facts-over-derivations). Se calcula on-the-fly: "¿cuánto de este commitment ya entró este mes por incomeEvents del ciclo actual?". Si alcanzó, está cubierto. No se permite doble descuento.
+El compromiso vive en el calendario, no en el ciclo. Su `dueDay` no se modifica con el ciclo ni con los ingresos; es una fecha del mes. El motor de Quipu **no descuenta automáticamente** el compromiso del próximo ingreso. En su lugar:
+
+- `fixed` / `mixed`: el motor **recomienda** que el siguiente ingreso predecible (próximo payday) reserve suficiente para cubrir el commitment antes de `dueDay`. La recomendación se muestra como información, no como acción aplicada.
+- `variable` / `mixed` (parte variable): el motor lleva un "objetivo de cobertura" por commitment pendiente. Cada `incomeEvent` que entra sugiere (no aplica) cuánto de ese evento podría destinarse a cubrir commitments cuyo `dueDay` se aproxima. El usuario confirma qué commitments se cubren con cada evento.
+
+**Diferencia clave con el modelo anterior:** Quipu no "descuenta" los compromisos del neto antes de repartir. Los compromisos se modelan como objetivos que el motor ayuda a visualizar y planificar, no como descuentos automáticos. Esto es coherente con la regla "facts over derivations" y con la filosofía "Quipu no controla tus decisiones; hace visibles las consecuencias".
+
+**Estado de cobertura:** **no se persiste** (regla facts-over-derivations). Se calcula on-the-fly: "¿cuánto de este commitment ya fue marcado como cubierto por incomeEvents del ciclo actual?". Si alcanzó, está cubierto. No se permite doble conteo.
 
 **Índices:** `by_profileId` se mantiene. Posible nuevo índice: `by_profile_dueDay` para queries de "próximos vencimientos" en el dashboard. Decidir en §6.
 
@@ -521,11 +526,12 @@ Detalle de qué cambia (no de implementación, solo de comportamiento esperado) 
 ### 6.4 `modules/coach/` (cambia mucho en comportamiento, schema igual)
 
 - `resolveNudgeAction` con `optionId: "freeze_wants"`: ya no aplica `frozenUntil` automáticamente. Abre un flow de **doble confirmación**:
-  1. El coach sugiere: "Tu Gustos va a quedar en -S/ 50. Podés congelarlo 3 días para冷静. ¿Querés hacerlo?"
+  1. El coach sugiere: "Tu Gustos va a quedar en -S/ 50 antes del cierre. Si querés, podés congelarlo 3 días para el ritmo. ¿Querés hacerlo?"
   2. Si confirma, aplica `frozenUntil = now + 3d`. Si no, no hace nada.
 - `resolveNudgeAction` con `optionId: "suggest_rescue"`: ya no transfiere automáticamente. Devuelve `{ from: "savings", to: "wants", amount, projectedDeficit }` y abre flow de doble confirmación.
 - `computeRescueTransfer` (en `budgetMath.ts`): cambia de "ejecuta" a "sugiere". La signature puede cambiar a `suggestRescueTransfer(savingsRemaining, wantsRemaining): { transfer, projectedDeficit }`.
 - El trigger `WANTS_OVERFLOW_60` se mantiene, pero el copy del `initialNudge` cambia para reflejar la nueva semántica (sugerir, no supervisar).
+- **Nuevo tipo de nudge para commitments:** el coach puede sugerir "tenés un compromiso que vence en 3 días (Alquiler, S/ 1,200) y tu Gustos+Necesidades no lo cubre con el ritmo actual. Querés reservar del próximo ingreso?". Esto refuerza la intención conductual de §3.6: los compromisos son objetivos visibles, no descuentos automáticos.
 
 ### 6.5 `modules/dashboard/` (cambia estructuralmente)
 

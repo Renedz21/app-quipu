@@ -31,8 +31,7 @@
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
+  --color-paper: var(--paper);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
@@ -73,9 +72,6 @@
   --paper: oklch(0.9643 0.007 88.64);
   --border: oklch(0.9316 0.0128 86.83);
 
-  /* Envelopes: alias semánticos de los tokens ya existentes.
-     --needs → azul (igual a --primary), --wants → naranja (igual a --warning),
-     --savings → verde (igual a --success). Cambiar acá cambia los 3 sobres. */
   --needs: oklch(0.4934 0.0735 251.4);
   --needs-soft: oklch(0.952 0.0093 242.84);
   --wants: oklch(0.638 0.1045 75.64);

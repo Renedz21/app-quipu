@@ -21,64 +21,94 @@
 | 7 | Errores de Better Auth → `ErrorCode` mapeados | Regla 4 del AGENTS.md: nunca comparar `error.message` con strings. |
 | 8 | Validación de sesión en `page.tsx`, no en `layout.tsx` | `layout.tsx` persiste entre navegaciones; redirects ahí pueden tener efectos no esperados. |
 | 9 | Detección de capabilities con `PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()` | Si retorna `false`, deshabilita botón passkey y promueve link "Usar otro método". |
-| 10 | `components/` (no `_components/`) en `app/(auth)/` | Convención del proyecto. `_components/` es anti-patrón documentado en `docs/arquitectura.md:316`. |
+| 10 | Auth es un módulo (`modules/auth/`), no vive dentro de `app/(auth)/` | El AGENTS.md define `app/` como routing puro y `modules/[x]/` como dominio. `app/(auth)/components/` violaba la regla. |
 
 ## Global Constraints
 
-- Tokens de color: usar SOLO las variables existentes en `app/globals.css` (`--primary`, `--primary-soft`, `--success`, `--success-soft`, `--warning`, `--warning-soft`, `--destructive`, `--destructive-soft`, `--paper`, `--foreground`, `--muted-foreground`, `--border`, `--ring`, `--input`). No crear nuevas.
-- Errores tipados: `ConvexError({ code, message })` con códigos del enum `ErrorCode` en `core/errors/index.ts`. Cliente: `fromConvexError()` y discriminar por `error.code`.
-- Estructura de carpetas: regla de 2 niveles del `AGENTS.md`. Para `app/(auth)/`: la "module" se llama `auth` y vive en `app/(auth)/components/...` (no `_components`).
-- Componentes reusables auth (status card, status icon) en `shared/components/auth/`.
-- Mensajes al usuario en español peruano.
-- Vitest + `@testing-library/react` (ya configurados) para tests unitarios.
-- Typecheck y lint deben pasar antes de cada commit.
-- No usar `useMemo`/`useCallback`/`memo` "por las dudas" (React Compiler activado, ver `AGENTS.md:214`).
-- Commits separados, no big-bang.
+- **`app/` es solo routing.** Sin componentes de dominio. Auth es un dominio → vive en `modules/auth/`. Los route groups `(auth)` y `(app)` organizan rutas, no contienen código de dominio.
+- **Regla de 2 niveles** del `AGENTS.md` se aplica a `modules/auth/` también: nada de `modules/auth/components/forms/...`. Si un sub-componente crece, se sube a `shared/` o se parte.
+- **Validación de sesión va en `page.tsx`, no en `layout.tsx`.** `layout.tsx` persiste entre navegaciones y un `redirect` ahí causa loops.
+- **Componentes reusables cross-module** van a `shared/components/auth/` (status-card, status-icon). El módulo auth solo tiene lo que es suyo.
+- **Tokens de color:** usar SOLO las variables existentes en `app/globals.css` (`--primary`, `--primary-soft`, `--success`, `--success-soft`, `--warning`, `--warning-soft`, `--destructive`, `--destructive-soft`, `--paper`, `--foreground`, `--muted-foreground`, `--border`, `--ring`, `--input`). No crear nuevas.
+- **Errores tipados:** `ConvexError({ code, message })` con códigos del enum `ErrorCode` en `core/errors/index.ts`. Cliente: `fromConvexError()` y discriminar por `error.code`.
+- **Mensajes al usuario en español peruano.**
+- **Vitest + `@testing-library/react`** (ya configurados) para tests unitarios.
+- **Typecheck y lint** deben pasar antes de cada commit.
+- **No usar `useMemo`/`useCallback`/`memo` "por las dudas"** (React Compiler activado, ver `AGENTS.md:214`).
+- **Commits separados, no big-bang.** Cada commit deployable.
 
 ---
 
 ## Arquitectura
+
+### Regla de oro (refuerzo)
+
+**`app/` es solo routing.** Layouts, pages y route handlers — nada más. Ningún componente de dominio vive bajo `app/`. Los route groups (paréntesis) son del router de Next.js, no del dominio.
+
+**`modules/[x]/` es donde vive un dominio.** Auth es un dominio (tiene componentes, acciones, schemas, types), así que vive en `modules/auth/`. Las páginas de `app/(auth)/` solo **componen** los componentes del módulo.
+
+**`shared/` es para reutilizables cross-module.** El `StatusCard` es reutilizable más allá de auth (un día "compra exitosa" en otra feature), así que vive en `shared/components/auth/`, no en `modules/auth/`.
 
 ### Estructura de archivos
 
 ```
 app/
   (auth)/
-    layout.tsx                          # SOLO composición UI: <AuthShell>{children}</AuthShell>. No fetches, no auth, no redirects.
+    layout.tsx                          # SOLO <AuthShell>{children}</AuthShell>. Sin fetches, sin auth, sin redirects.
     sign-in/
-      page.tsx                          # server: gate sesión → redirect si logueado. UI: form email + botón passkey.
+      page.tsx                          # server: gate sesión → redirect si logueado. Compone modules/auth/* y shared/components/auth/*.
     sign-up/
-      page.tsx                          # server: gate sesión → redirect si logueado. UI: form email + botón passkey. Lee ?status=success.
+      page.tsx                          # server: gate sesión → redirect si logueado. Lee ?status=success y compone StatusCard. Compone modules/auth/* y shared/components/auth/*.
     sign-in/email/
-      page.tsx                          # server: gate sesión. UI: form email+password (signIn.email).
+      page.tsx                          # server: gate sesión. Compone modules/auth/email-password-form.
     sign-up/email/
-      page.tsx                          # server: gate sesión. UI: form email+password (signUp.email).
+      page.tsx                          # server: gate sesión. Compone modules/auth/email-password-form.
+
+  (app)/
+    onboarding/
+      page.tsx                          # placeholder (P0-5). Server: gate sesión + gate !profile.
+    dashboard/
+      page.tsx                          # placeholder (P0-5). Server: gate sesión + gate profile.
+
+modules/
+  auth/
     components/
       auth-shell.tsx                    # server component: chrome (logo + fondo --paper). Sin estado.
       passkey-prompt-button.tsx         # client: detecta capabilities + maneja el flujo passkey.
       email-password-form.tsx           # client: maneja signIn.email() / signUp.email().
-      status-state.tsx                  # client: pequeño hook que lee ?status=... de searchParams y devuelve la variante del card.
+      status-state.tsx                  # client: hook que lee ?status=... de searchParams y devuelve la variante del card.
+      passkey-prompt-button.test.tsx
+      email-password-form.test.tsx
+    actions.ts                          # server actions tipadas si se necesita (opcional).
+    schemas.ts                          # Zod schemas para signIn/signUp.
+    types.ts                            # view models (AuthStatus, PasskeyResult, etc.).
+    constants.ts                        # mensajes en español.
+    errorMap.ts                         # tabla de mapeo Better Auth → ErrorCode.
+    errorMap.test.ts                    # vitest.
+    passkey.ts                          # MODIFICAR: wrappers tipados con ErrorCode (movido desde auth/passkey.ts).
+    emailPassword.ts                    # NUEVO.
+
 shared/
   components/
     auth/
       status-card.tsx                   # server: card con status-icon + título + descripción + acción.
       status-icon.tsx                   # server: círculo con check o X, color por variant.
-modules/
-  auth/
-    actions.ts                          # server actions tipadas (registrarPasskey, iniciarSesionConPasskey, etc.) — opcional, no obligatorio si el cliente puede llamar a authClient directo.
-    schemas.ts                          # Zod schemas para signIn/signUp.
-    types.ts                            # view models (AuthStatus = 'success' | 'error' | 'verify-error' | 'network-error' | 'expired-error').
-    constants.ts                        # mensajes en español, codes de Better Auth → ErrorCode.
+      status-card.test.tsx
+      status-icon.test.tsx
+
 auth/
-  passkey.ts                            # MODIFICAR: wrappers tipados con ErrorCode. Ver "Errores tipados" abajo.
   auth-client.ts                        # sin cambios.
-  auth-server.ts                        # sin cambios.
+  auth-server.ts                        # MODIFICAR: agregar requireUnauthenticatedSession() (server-only, se usa desde page.tsx, NO desde layout.tsx).
+  passkey.ts                            # QUEDA hasta el commit 5. La página sign-in vieja lo usa. El commit 5 lo borra.
+
 convex/
   auth.ts                               # sin cambios.
   profiles.ts                           # sin cambios (la query getMyProfile ya existe).
+
 core/
   errors/
-    index.ts                            # AGREGAR nuevos ErrorCode si hace falta (ver tabla de mapeo abajo).
+    index.ts                            # AGREGAR nuevos ErrorCode (ver tabla de mapeo abajo).
+
 docs/
   auth-smoke.md                         # NUEVO: checklist de smoke test manual reproducible.
 ```
@@ -136,7 +166,7 @@ sign-up/email/page.tsx
 #### 5) Error de passkey
 ```
 cualquier flujo passkey fallido
-  → error.code mapeado en auth/passkey.ts
+  → error.code mapeado en modules/auth/errorMap.ts
   → sign-in/page.tsx lee ?error=CODE y renderiza <StatusCard variant="error" ... />
   → botones: "Reintentar" (limpia ?error) y "Usar otro método" (link a /sign-in/email)
 ```
@@ -163,7 +193,7 @@ Cada `page.tsx` llama `await requireUnauthenticatedSession()` como primera líne
 ### Detección de capabilities
 
 ```ts
-// app/(auth)/components/passkey-prompt-button.tsx
+// modules/auth/components/passkey-prompt-button.tsx
 "use client";
 
 const [hasPlatformAuth, setHasPlatformAuth] = useState<boolean | null>(null);
@@ -239,10 +269,10 @@ Renderiza un círculo con el ícono de `lucide-react` (`Check`, `X`, `WifiOff`).
 | `EMAIL_ALREADY_EXISTS` | `AUTH_EMAIL_TAKEN` | "Ya existe una cuenta con ese correo. Inicia sesión." | `error` |
 | (cualquier otro) | `AUTH_UNKNOWN_ERROR` | "Algo salió mal. Intenta de nuevo." | `error` |
 
-### `auth/passkey.ts` (versión nueva)
+### `modules/auth/passkey.ts` (versión nueva — movido desde `auth/passkey.ts`)
 
 ```ts
-import { authClient } from "./auth-client";
+import { authClient } from "@/auth/auth-client";
 import { mapBetterAuthError } from "./errorMap";  // tabla de arriba
 
 export type PasskeyResult<T> =
@@ -297,15 +327,16 @@ export const ErrorCode = {
 
 ### Unit (vitest)
 
-1. `auth/errorMap.test.ts` — Tabla completa de pairs (input code → output ErrorCode + message).
-2. `app/(auth)/components/passkey-prompt-button.test.tsx` — Mockear `window.PublicKeyCredential`:
+1. `modules/auth/errorMap.test.ts` — Tabla completa de pairs (input code → output ErrorCode + message).
+2. `modules/auth/components/passkey-prompt-button.test.tsx` — Mockear `window.PublicKeyCredential`:
    - Caso `isUserVerifyingPlatformAuthenticatorAvailable` retorna `true` → botón habilitado, link secundario visible.
    - Caso retorna `false` → botón deshabilitado, link a `/sign-in/email` como CTA principal.
    - Caso `window.PublicKeyCredential` undefined → mismo que `false`.
-3. `app/(auth)/components/email-password-form.test.tsx` — Mockear `authClient.signIn.email`:
+3. `modules/auth/components/email-password-form.test.tsx` — Mockear `authClient.signIn.email`:
    - Submit válido → llama `signIn.email` con los argumentos correctos.
    - Error de Better Auth → muestra mensaje mapeado en el card.
 4. `shared/components/auth/status-card.test.tsx` — Renderiza cada variant con título, descripción y acciones correctas.
+5. `shared/components/auth/status-icon.test.tsx` — Cada variant usa el color token correcto y el ícono correcto.
 
 ### Integration manual (smoke test reproducible)
 
@@ -382,46 +413,55 @@ export const ErrorCode = {
 ## Plan de commits (deployables independientes)
 
 1. **`chore(auth): add error map and ErrorCode entries`**
-   - `core/errors/index.ts`: agregar nuevos códigos.
-   - `auth/errorMap.ts`: tabla de mapeo.
-   - `auth/errorMap.test.ts`: tests de la tabla.
-   - `auth/passkey.ts`: reescribir con tipado.
-   - `auth/emailPassword.ts`: nuevo.
-   - **Verificación:** vitest pasa, typecheck pasa. La app sigue funcionando porque `passkey.ts` mantiene la misma API superficial (devuelve el resultado, solo cambia el shape).
+   - `core/errors/index.ts`: agregar nuevos códigos (`AUTH_PASSKEY_*`, `AUTH_USER_NOT_FOUND`, `AUTH_INVALID_CREDENTIALS`, `AUTH_EMAIL_TAKEN`, `AUTH_UNKNOWN_ERROR`).
+   - `modules/auth/errorMap.ts`: tabla de mapeo.
+   - `modules/auth/errorMap.test.ts`: tests de la tabla.
+   - `modules/auth/types.ts`: `PasskeyResult`, `AuthStatus`, `StatusVariant`.
+   - `modules/auth/passkey.ts`: mover desde `auth/passkey.ts` y reescribir con tipado.
+   - `modules/auth/emailPassword.ts`: nuevo.
+   - **Verificación:** vitest pasa, typecheck pasa. La app sigue funcionando porque `auth/passkey.ts` viejo NO se toca en este commit (se borra en el commit 5). Los wrappers nuevos conviven con los viejos hasta que las páginas nuevas se introduzcan en el commit 4.
 
 2. **`feat(auth): add status card components`**
    - `shared/components/auth/status-card.tsx`.
    - `shared/components/auth/status-icon.tsx`.
-   - Tests de los dos componentes.
+   - `shared/components/auth/status-card.test.tsx`.
+   - `shared/components/auth/status-icon.test.tsx`.
    - **Verificación:** vitest pasa, typecheck pasa. La app no se ve afectada.
 
-3. **`feat(auth): add shared components for sign-in/sign-up`**
-   - `app/(auth)/layout.tsx`: solo `<AuthShell>{children}</AuthShell>`.
-   - `app/(auth)/components/auth-shell.tsx`.
-   - `app/(auth)/components/passkey-prompt-button.tsx`.
-   - `app/(auth)/components/passkey-prompt-button.test.tsx`.
-   - `app/(auth)/components/email-password-form.tsx`.
-   - `app/(auth)/components/email-password-form.test.tsx`.
-   - `app/(auth)/components/status-state.tsx` (hook que lee searchParams).
-   - **Verificación:** vitest pasa, typecheck pasa. La app no se ve afectada (estas rutas todavía no existen, solo son archivos nuevos en `app/`).
+3. **`feat(auth): add modules/auth components`**
+   - `modules/auth/components/auth-shell.tsx`.
+   - `modules/auth/components/passkey-prompt-button.tsx`.
+   - `modules/auth/components/passkey-prompt-button.test.tsx`.
+   - `modules/auth/components/email-password-form.tsx`.
+   - `modules/auth/components/email-password-form.test.tsx`.
+   - `modules/auth/components/status-state.tsx` (hook que lee searchParams).
+   - `modules/auth/schemas.ts`: Zod para signIn/signUp.
+   - `modules/auth/constants.ts`: mensajes en español.
+   - **Verificación:** vitest pasa, typecheck pasa. La app no se ve afectada (las páginas todavía no se introducen).
 
 4. **`feat(auth): add new sign-in and sign-up routes`**
+   - `app/(auth)/layout.tsx`: solo `<AuthShell>{children}</AuthShell>`.
    - `app/(auth)/sign-in/page.tsx` (nueva, server component con gate).
    - `app/(auth)/sign-up/page.tsx` (nueva, server component con gate + status condicional).
    - `app/(auth)/sign-in/email/page.tsx` (nueva).
    - `app/(auth)/sign-up/email/page.tsx` (nueva).
    - `auth/auth-server.ts`: agregar `requireUnauthenticatedSession()`.
+   - `app/(app)/onboarding/page.tsx` (placeholder, P0-5).
+   - `app/(app)/dashboard/page.tsx` (placeholder, P0-5).
+   - `app/(app)/layout.tsx` (placeholder shell).
    - `docs/auth-smoke.md`: checklist.
-   - **Verificación:** vitest pasa, typecheck pasa, smoke test del navegador (los 8 casos).
+   - **Verificación:** vitest pasa, typecheck pasa, smoke test del navegador (los 8 casos del Anexo).
 
 5. **`chore(auth): remove old sign-in page`**
    - Borrar `app/(auth)/sign-in/page.tsx` VIEJO.
+   - Borrar `auth/passkey.ts` (movido a `modules/auth/passkey.ts`).
    - `app/page.tsx`: borrar contenido de Next.js demo, dejarlo en `redirect("/sign-in")`.
    - **Verificación:** typecheck, smoke test que el home redirige.
 
 6. **`docs: update AGENTS.md and CLAUDE.md with auth v2.5 rules`**
    - Agregar nota: "Las páginas de auth no usan tabs — la ruta refleja intención y método."
    - Agregar nota: "Validaciones de sesión van en `page.tsx`, no en `layout.tsx`."
+   - Agregar nota: "Auth es un módulo (`modules/auth/`), no vive dentro de `app/(auth)/`."
    - **Verificación:** docs consistentes.
 
 ---
@@ -436,7 +476,7 @@ export const ErrorCode = {
 | 4 | Rate limiting de Better Auth no es suficiente | Verificar defaults; si la app es pública, evaluar agregar rate limit por email. P2. |
 | 5 | Si `/onboarding` y `/dashboard` no existen (P0-5), el smoke test del paso 4 falla | Hacer P0-5 ANTES del paso 4 de este spec. O al menos antes del merge a main. |
 | 6 | Tokens de color nuevos "tentadores" en un PR grande | Lint rule ad-hoc en el PR review. No crear CI rule por ahora (P2 si aparece el problema). |
-| 7 | El wrapper tipado cambia la forma de retorno de `passkey.ts` → rompe consumidores | En este PR los únicos consumidores son las 4 páginas nuevas (que se introducen en el commit 4). El commit 1 cambia `passkey.ts` pero manteniendo la API superficial; los consumers no se migran hasta el commit 4. |
+| 7 | El wrapper tipado cambia la forma de retorno de `auth/passkey.ts` → rompe consumidores | Secuencia: commit 1 crea `modules/auth/passkey.ts` (nueva forma) **sin tocar** `auth/passkey.ts` viejo. Commit 4 introduce las páginas nuevas que importan de `modules/auth/`. Commit 5 borra la página vieja (que importaba de `auth/passkey.ts` viejo) y luego borra `auth/passkey.ts`. Entre los commits 1–4 conviven dos versiones; no se rompen consumers. |
 
 ---
 

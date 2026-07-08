@@ -416,6 +416,39 @@ git commit -m "refactor(auth): extract AuthHeader to shared/components/auth"
 
 ---
 
+### P2-6: Resolver deuda de lint pre-existente (13 errors + 31 warnings)
+
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Detectado durante:** Tasks 6-8 de auth v2.5 (commits `b2fd0fd`, `0331872`, `872474e`).
+
+**Por qué existe:** `pnpm lint` reporta 13 errors + 31 warnings en 105 archivos que NO fueron introducidos por las tareas de auth v2.5. La regla "no fix unrelated bugs" del AGENTS.md impidió tocarlas en su momento, pero eventualmente bloquearán CI cuando se endurezca el pipeline. Los principales offenders:
+
+- `auth/auth-server.ts:14-15` — `!` non-null assertions en `process.env.NEXT_PUBLIC_CONVEX_URL!` y `_SITE_URL!`
+- `convex/_generated/api.d.ts` — generated `any` types
+- `convex/betterAuth/_generated/api.ts` — generated `any` types y `{}` ban
+- `convex/betterAuth/auth.ts` — `createAuth({} as any)`
+- `convex/auth.ts:65` — `email.split("@")[0]!`
+- `convex/lib/incomeEventLogic.test.ts` — unused `DAY`
+- `convex/lib/migrations.ts` — `input.paydays[0]!`
+- `modules/auth/emailPassword.ts:32` — `input.email.split("@")[0]!`
+- `app/globals.css:67` — biome parse error en `--paper: oklch(0.9643 0.007 88.64);`
+
+**Qué hacer:**
+
+1. **Por archivo, decidir si cada lint es legítimo (deuda) o falso positivo (regla de biome demasiado estricta).** Si es legítimo, arreglar el código. Si es falso positivo, agregar `biome-ignore` con explicación.
+2. **Para los non-null assertions** (`!` postfix): considerar usar `??` con default, o destructuring con check.
+3. **Para los `as any`** en betterAuth: idealmente reemplazar con un cast más específico. Si no se puede, documentar por qué con `biome-ignore` y un comentario.
+4. **Para el parse error de CSS en `oklch(0.9643 0.007 88.64)`**: verificar que el formato esté bien (probablemente falta el `/` separator o el espacio). Es un CSS value, no un TS/TSX, así que biome es estricto en formato.
+5. **No tocar archivos en `convex/_generated/`** — son autogenerados, los regenera Convex.
+
+**Criterio de cierre:** `pnpm lint` reporta 0 errors y 0 warnings en archivos commiteados (excluyendo `convex/_generated/`).
+
+**Commit esperado:**
+```bash
+git commit -m "chore(lint): resolve pre-existing Biome lint debt"
+```
+
+---
+
 ## Cómo agregar un nuevo pendiente a este documento
 
 1. Decidir prioridad: ¿bloquea merge a main? → P0. ¿próximo sprint? → P1. ¿backlog? → P2.
@@ -448,4 +481,4 @@ git commit -m "refactor(auth): extract AuthHeader to shared/components/auth"
 ## Changelog de este documento
 
 - **2026-07-08** — Creación inicial post-migración. Items P0-1 a P0-4, P1-1 a P1-3, P2-1 a P2-3. Owner del documento: el branch `chore/quipu-2.0`.
-- **2026-07-08** — Update durante implementación de auth v2.5. Cambios: P0-2 corregido (`_components/` → `components/`), nuevo P0-5 (rutas mínimas /onboarding y /dashboard placeholders). Nuevos P2-4 y P2-5 (issues detectados en Task 7 de auth v2.5).
+- **2026-07-08** — Update durante implementación de auth v2.5. Cambios: P0-2 corregido (`_components/` → `components/`), nuevo P0-5 (rutas mínimas /onboarding y /dashboard placeholders). Nuevos P2-4 (sign-up email capture), P2-5 (AuthHeader extraction), P2-6 (lint pre-existente).

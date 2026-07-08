@@ -44,24 +44,6 @@ export const backfillProfilesV25 = internalMutation({
   },
 });
 
-export const backfillCyclesV25 = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const cycles = await ctx.db.query("financialCycles").collect();
-    let updated = 0;
-
-    for (const cycle of cycles) {
-      if (cycle.totalIncomeReceived !== undefined) continue;
-      const total =
-        cycle.baseIncomeReceived + cycle.extraordinaryIncomeReceived;
-      await ctx.db.patch(cycle._id, { totalIncomeReceived: total });
-      updated++;
-    }
-
-    return { cyclesUpdated: updated };
-  },
-});
-
 export const backfillCommitmentsV25 = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -87,31 +69,5 @@ export const backfillCommitmentsV25 = internalMutation({
     }
 
     return { commitmentsUpdated: updated };
-  },
-});
-
-export const backfillIncomeEventsV25 = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const adHoc = await ctx.db.query("adHocIncomes").collect();
-    let created = 0;
-
-    for (const income of adHoc) {
-      if (income.migratedToIncomeEvents === true) continue;
-
-      await ctx.db.insert("incomeEvents", {
-        profileId: income.profileId,
-        cycleId: income.cycleId,
-        amount: income.amount,
-        source: "other",
-        description: income.description,
-        occurredAt: income.timestamp,
-        distributionApplied: income.split,
-      });
-      await ctx.db.patch(income._id, { migratedToIncomeEvents: true });
-      created++;
-    }
-
-    return { incomeEventsCreated: created };
   },
 });

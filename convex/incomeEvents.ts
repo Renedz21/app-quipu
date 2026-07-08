@@ -123,12 +123,6 @@ export const createIncomeEvent = mutation({
         startDate,
         endDate,
         status: "active",
-        // Los campos viejos (base/extraordinary/totalPeriodIncome) siguen en
-        // el schema como requeridos para que las queries existentes
-        // funcionen; la narrow final los eliminará (Task 26).
-        baseIncomeReceived: 0,
-        extraordinaryIncomeReceived: 0,
-        totalPeriodIncome: 0,
         totalIncomeReceived: 0,
       });
       isNewCycle = true;

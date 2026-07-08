@@ -22,7 +22,7 @@ export const appTables = {
     currencyCode: v.string(), // e.g., "PEN"
     currencySymbol: v.string(), // e.g., "S/"
 
-    // v2.5: how the user organizes their income cycle (replaces workerType)
+    // v2.5: how the user organizes their income cycle
     incomeModel: v.optional(
       v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
     ),
@@ -56,10 +56,7 @@ export const appTables = {
     startDate: v.number(),
     endDate: v.number(), // Próxima fecha estimada de recarga
     status: v.union(v.literal("active"), v.literal("closed")),
-    baseIncomeReceived: v.number(),
-    extraordinaryIncomeReceived: v.number(), // Gratificaciones / CTS ingresan limpio aquí
-    totalPeriodIncome: v.number(),
-    // v2.5: unified total, replaces base+extraordinary+totalPeriodIncome
+    // v2.5: unified total, snapshot materializado de los incomeEvents del ciclo
     totalIncomeReceived: v.optional(v.number()),
   }).index("by_profile_status", ["profileId", "status"]),
 
@@ -100,7 +97,7 @@ export const appTables = {
       ),
     ),
     envelope: v.union(v.literal("needs"), v.literal("wants")),
-    // v2.5: day of the month (Lima) the commitment is due. Replaces frequency.
+    // v2.5: day of the month (Lima) the commitment is due. Reemplaza frequency.
     dueDay: v.optional(v.number()), // 1-31
   })
     .index("by_profileId", ["profileId"])
@@ -182,25 +179,6 @@ export const appTables = {
   })
     .index("by_cycle", ["cycleId"])
     .index("by_profile_time", ["profileId", "occurredAt"]),
-
-  adHocIncomes: defineTable({
-    profileId: v.id("profiles"),
-    cycleId: v.id("financialCycles"),
-    amount: v.number(), // céntimos
-    description: v.string(),
-    timestamp: v.number(),
-    // Breakdown aplicado al registrar → permite revertir exacto aunque cambien las allocations.
-    split: v.object({
-      needs: v.number(),
-      wants: v.number(),
-      savings: v.number(),
-    }),
-    // v2.5: set to true when this row has been copied to incomeEvents.
-    // Removed in the narrow phase.
-    migratedToIncomeEvents: v.optional(v.boolean()),
-  })
-    .index("by_cycle", ["cycleId"])
-    .index("by_profile", ["profileId"]),
 };
 
 const schema = defineSchema(appTables);

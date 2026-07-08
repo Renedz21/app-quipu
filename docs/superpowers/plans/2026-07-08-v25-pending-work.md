@@ -367,6 +367,55 @@ git commit -m "feat(app): add onboarding and dashboard placeholder routes"
 
 ---
 
+### P2-4: Capturar email del usuario antes de mostrar el botón passkey en sign-up
+
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Detectado durante:** Task 7 de auth v2.5 (commit `0331872`).
+
+**Por qué existe:** el sign-up con passkey necesita un email como `context` para que el `resolveUser` de Better Auth pueda crear o encontrar el usuario. Hoy el email está hardcoded como `placeholder@quipu.pe` en `app/(auth)/sign-up/page.tsx`, y el `<label htmlFor="email">` apunta a un `id` que no existe. Esto es un defect de a11y y de UX: el usuario no puede ingresar su email antes de crear la passkey.
+
+**Qué hacer:**
+
+1. Modificar `app/(auth)/sign-up/page.tsx`:
+   - Reemplazar el `<Card>` placeholder por un form que capture el email primero.
+   - Mantener el email en estado local (useState) hasta que el usuario pulse "Crear con Passkey".
+   - Pasar ese email a `<PasskeyPromptButton mode="signUp" email={email} />`.
+   - Validar el formato del email con `emailSchema` de `modules/auth/schemas.ts` antes de habilitar el botón.
+2. Eliminar el `<label htmlFor="email">` huérfano.
+3. Actualizar el smoke test (`docs/auth-smoke.md`) caso A step 2: cambiar el `(TODO: ...)` por un paso real ("Tipear email nuevo y click 'Crear con Passkey'").
+4. Verificar a11y con axe o lectura manual del label.
+
+**Criterio de cierre:** un usuario puede tipear su email en `/sign-up` antes de ver el botón passkey, el botón está deshabilitado si el email no es válido, y la passkey se crea con el email correcto como `context`.
+
+**Commit esperado:**
+```bash
+git commit -m "feat(auth): capture email in sign-up before passkey prompt"
+```
+
+---
+
+### P2-5: Refactor: extraer AuthHeader reusable a shared/components/auth/
+
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Detectado durante:** Task 7 de auth v2.5 (commit `0331872`).
+
+**Por qué existe:** las 4 páginas de auth (`sign-in`, `sign-up`, `sign-in/email`, `sign-up/email`) repiten el mismo header (logo circle + h1 + lede). Eso son ~10 líneas duplicadas en 4 archivos. La regla de DRY del AGENTS.md dice que 2 fragmentos parecidos pueden ser coincidencia; 4 es señal de abstracción.
+
+**Qué hacer:**
+
+1. Crear `shared/components/auth/auth-header.tsx` (server component):
+   - Props: `title: string`, `lede?: string`.
+   - Renderiza el círculo del logo (placeholder "Q" hasta que se tenga el logo real), el `h1`, y opcionalmente el lede.
+2. Reemplazar el bloque duplicado en las 4 páginas con `<AuthHeader title="..." lede="..." />`.
+3. Verificar visualmente que las 4 páginas siguen viéndose iguales.
+
+**Criterio de cierre:** las 4 páginas de auth importan `<AuthHeader>` y el bloque de header ya no está duplicado inline.
+
+**Commit esperado:**
+```bash
+git commit -m "refactor(auth): extract AuthHeader to shared/components/auth"
+```
+
+---
+
 ## Cómo agregar un nuevo pendiente a este documento
 
 1. Decidir prioridad: ¿bloquea merge a main? → P0. ¿próximo sprint? → P1. ¿backlog? → P2.
@@ -399,3 +448,4 @@ git commit -m "feat(app): add onboarding and dashboard placeholder routes"
 ## Changelog de este documento
 
 - **2026-07-08** — Creación inicial post-migración. Items P0-1 a P0-4, P1-1 a P1-3, P2-1 a P2-3. Owner del documento: el branch `chore/quipu-2.0`.
+- **2026-07-08** — Update durante implementación de auth v2.5. Cambios: P0-2 corregido (`_components/` → `components/`), nuevo P0-5 (rutas mínimas /onboarding y /dashboard placeholders). Nuevos P2-4 y P2-5 (issues detectados en Task 7 de auth v2.5).

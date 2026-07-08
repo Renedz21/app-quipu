@@ -1,8 +1,8 @@
+import { redirect } from "next/navigation";
 import { fetchAuthQuery } from "@/auth/auth-server";
 import { api } from "@/convex/_generated/api";
 import { OnboardingWizard } from "@/modules/onboarding/components/onboarding-wizard";
 import { parseStepId } from "@/modules/onboarding/constants";
-import { redirect } from "next/navigation";
 
 type Props = {
   searchParams: Promise<{ step?: string }>;

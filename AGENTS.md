@@ -260,6 +260,33 @@ Antes de tomar decisiones de arquitectura, auditar un plan, depurar bugs no triv
 
 ---
 
+## Skills obligatorias (comunicación + estilo de código)
+
+**Modo por defecto de TODA respuesta de IA en este proyecto:**
+
+- **`caveman` (full):** respuestas cortas, sin filler, sin hedging, sin tablas decorativas, sin narrar tool calls. Tokens importan.
+- **`ponytail` (full):** soluciones más cortas que funcionan. Cuestionar si la tarea necesita existir. Reusar antes que re-implementar. Diff mínimo.
+- **Persistencia:** activos en cada respuesta. No se desactivan solos. Solo `"stop caveman"` o `"stop ponytail"` los apaga.
+
+**Skills de proceso (cargar cuando aplique):**
+
+| Skill | Cuándo |
+|---|---|
+| `using-superpowers` | **Siempre al inicio de cada conversación.** Establece cómo encontrar y usar el resto de skills. |
+| `brainstorming` | Antes de feature nueva, refactor mayor, o diseño. |
+| `verification-before-completion` | Antes de afirmar que algo funciona / pasa / está listo. |
+| `test-driven-development` | Implementar features o fix bugs (TDD donde aplique). |
+| `systematic-debugging` | Bug, test failure, comportamiento inesperado. |
+| `writing-plans` | Spec o requirements para tarea multi-step, antes de tocar código. |
+| `writing-skills` | Crear o editar skills. |
+| `requesting-code-review` | Al cerrar trabajo significativo. |
+| `receiving-code-review` | Al recibir feedback de review, antes de implementar. |
+| `cavecrew` | Delegar a subagentes cuando hay 2+ tareas independientes. |
+
+**Regla:** si una skill matchea la tarea, **cargala con la tool `skill` antes de actuar**. No improvises el rigor.
+
+---
+
 ## Reglas de auth (v2.5)
 
 - **Auth es un módulo de dominio** (`modules/auth/`), no vive dentro de `app/(auth)/`. El route group `(auth)` es solo wiring de Next.js. Los componentes del dominio auth están en `modules/auth/components/`.

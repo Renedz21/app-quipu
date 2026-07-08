@@ -1,9 +1,7 @@
-# CLAUDE.md — Contexto para Claude Code
+# AGENTS.md — Contexto para agentes de IA
 
-> Este archivo es leído específicamente por Claude Code. Se mantiene
-> **idéntico** a `AGENTS.md` (mismo proyecto, mismo contexto). Si editas uno,
-> replica los cambios en el otro.
->
+> Este archivo es leído por herramientas como Zed, Claude Code, Cursor, etc.
+> Su gemelo `CLAUDE.md` se mantiene idéntico por compatibilidad.
 > El bloque entre `convex-ai-start` / `convex-ai-end` es administrado por
 > `npx convex ai-files install` y **no debe modificarse manualmente**.
 
@@ -259,6 +257,33 @@ Antes de tomar decisiones de arquitectura, auditar un plan, depurar bugs no triv
 | 6. Guardián de CI/CD y Despliegue | Antes de cualquier release o cambio de pipeline. |
 
 **Regla:** si un manual aplica a tu tarea, usalo. No improvises el rigor — copialo.
+
+---
+
+## Skills obligatorias (comunicación + estilo de código)
+
+**Modo por defecto de TODA respuesta de IA en este proyecto:**
+
+- **`caveman` (full):** respuestas cortas, sin filler, sin hedging, sin tablas decorativas, sin narrar tool calls. Tokens importan.
+- **`ponytail` (full):** soluciones más cortas que funcionan. Cuestionar si la tarea necesita existir. Reusar antes que re-implementar. Diff mínimo.
+- **Persistencia:** activos en cada respuesta. No se desactivan solos. Solo `"stop caveman"` o `"stop ponytail"` los apaga.
+
+**Skills de proceso (cargar cuando aplique):**
+
+| Skill | Cuándo |
+|---|---|
+| `using-superpowers` | **Siempre al inicio de cada conversación.** Establece cómo encontrar y usar el resto de skills. |
+| `brainstorming` | Antes de feature nueva, refactor mayor, o diseño. |
+| `verification-before-completion` | Antes de afirmar que algo funciona / pasa / está listo. |
+| `test-driven-development` | Implementar features o fix bugs (TDD donde aplique). |
+| `systematic-debugging` | Bug, test failure, comportamiento inesperado. |
+| `writing-plans` | Spec o requirements para tarea multi-step, antes de tocar código. |
+| `writing-skills` | Crear o editar skills. |
+| `requesting-code-review` | Al cerrar trabajo significativo. |
+| `receiving-code-review` | Al recibir feedback de review, antes de implementar. |
+| `cavecrew` | Delegar a subagentes cuando hay 2+ tareas independientes. |
+
+**Regla:** si una skill matchea la tarea, **cargala con la tool `skill` antes de actuar**. No improvises el rigor.
 
 ---
 

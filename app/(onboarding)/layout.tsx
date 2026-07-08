@@ -1,6 +1,6 @@
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { isAuthenticated } from "@/auth/auth-server";
-import { redirect } from "next/navigation";
 
 /**
  * Layout del grupo `(onboarding)`.

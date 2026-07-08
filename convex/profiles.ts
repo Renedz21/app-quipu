@@ -141,8 +141,8 @@ export const updateProfileSettings = mutation({
       );
     }
 
-    const payFrequency = args.payFrequency ?? profile.payFrequency;
-    const paydays = args.paydays ?? profile.paydays;
+    const payFrequency = args.payFrequency ?? profile.payFrequency ?? "monthly";
+    const paydays = args.paydays ?? profile.paydays ?? [];
     if (!isValidPaydays(payFrequency, paydays)) {
       throw new Error(
         "Los días de pago no son válidos para la frecuencia seleccionada.",

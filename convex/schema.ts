@@ -22,10 +22,17 @@ export const appTables = {
     currencyCode: v.string(), // e.g., "PEN"
     currencySymbol: v.string(), // e.g., "S/"
 
+    // v2.5: how the user organizes their income cycle (replaces workerType)
+    incomeModel: v.optional(
+      v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
+    ),
+
     // Configuración del motor de Flujo de Caja
     workerType: v.union(v.literal("dependent"), v.literal("independent")),
-    payFrequency: v.union(v.literal("monthly"), v.literal("biweekly")),
-    paydays: v.array(v.number()), // e.g., [15, 30] para tus quincenas
+    payFrequency: v.optional(
+      v.union(v.literal("monthly"), v.literal("biweekly")),
+    ),
+    paydays: v.optional(v.array(v.number())), // e.g., [15, 30] para tus quincenas
 
     // Distribución del pre-compromiso (Madres de Contabilidad Mental)
     allocationNeeds: v.number(), // Default: 50

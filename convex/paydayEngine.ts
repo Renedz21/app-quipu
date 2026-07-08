@@ -111,7 +111,7 @@ export const processPayday = mutation({
       commitments,
       payFrequency,
       limaDay,
-      profile.paydays,
+      profile.paydays ?? [],
     );
     const netAvailable = Math.max(0, totalPeriodIncome - appliedFixedTotal);
 

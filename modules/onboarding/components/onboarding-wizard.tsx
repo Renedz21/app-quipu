@@ -5,10 +5,15 @@
  * monta el `OnboardingProvider` (state + sessionStorage), y según
  * `state.currentStep` renderiza el step correspondiente.
  *
- * Steps implementados en slice 1:
+ * Steps implementados:
  * - 1: Bienvenida del copiloto (captura nombre).
  * - 2: Modelo de ingresos.
- * - 3-8: placeholders o futuros componentes.
+ * - 3: Frecuencia y días de pago.
+ * - 4: Preview del ciclo.
+ * - 5: Reparto 50/30/20.
+ * - 6: Compromisos fijos.
+ * - 7: Resumen final + submit (crea perfil y compromisos).
+ * - 8: Confirmación final.
  *
  * El provider hace que cada step component pueda leer/escribir el
  * state sin prop drilling.
@@ -30,7 +35,9 @@ import { Step2IncomeModel } from "./step-2-income-model";
 import { Step3Frequency } from "./step-3-frequency";
 import { Step4CyclePreview } from "./step-4-cycle-preview";
 import { Step5Allocations } from "./step-5-allocations";
-import { StepPlaceholder } from "./step-placeholder";
+import { Step6Commitments } from "./step-6-commitments";
+import { Step7Summary } from "./step-7-summary";
+import { Step8Success } from "./step-8-success";
 import type { OnboardingStep } from "../types";
 
 interface OnboardingWizardProps {
@@ -89,34 +96,17 @@ function WizardInner() {
       case 5:
         return <Step5Allocations onAdvance={() => setStep(6)} />;
       case 6:
-        return (
-          <StepPlaceholder
-            step={6}
-            title="¿Tienes gastos fijos?"
-            description="Los apartamos de Necesidades antes de repartir el resto."
-            onAdvance={() => setStep(7)}
-          />
-        );
+        return <Step6Commitments onAdvance={() => setStep(7)} />;
       case 7:
-        return (
-          <StepPlaceholder
-            step={7}
-            title="Así se verá tu Quipu"
-            description="Un preview del dashboard con tus sobres vacíos, listos para el primer ingreso."
-            ctaLabel="Activar mi copiloto"
-            onAdvance={() => setStep(8)}
-          />
-        );
+        return <Step7Summary onAdvance={() => setStep(8)} />;
       case 8:
-        return (
-          <StepPlaceholder
-            step={8}
-            title="¡Tu Quipu está listo!"
-            description="Resumen final tras crear el perfil."
-          />
-        );
+        return <Step8Success />;
     }
   })();
 
-  return <OnboardingShell currentStep={state.currentStep}>{stepContent}</OnboardingShell>;
+  return (
+    <OnboardingShell currentStep={state.currentStep}>
+      {stepContent}
+    </OnboardingShell>
+  );
 }

@@ -49,4 +49,4 @@ next-env.d.ts
 .agents/*
 .claude/*
 
-docs/
+docs/*

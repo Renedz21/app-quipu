@@ -43,7 +43,12 @@ const ICONS: Record<PayFrequency, typeof CalendarDays> = {
   variable: Sparkles,
 };
 
-const FREQUENCIES: PayFrequency[] = ["monthly", "biweekly", "weekly", "variable"];
+const FREQUENCIES: PayFrequency[] = [
+  "monthly",
+  "biweekly",
+  "weekly",
+  "variable",
+];
 
 interface Step3FrequencyProps {
   onAdvance: () => void;
@@ -81,7 +86,9 @@ export function Step3Frequency({ onAdvance }: Step3FrequencyProps) {
     payFrequency: state.payFrequency,
     paydays: state.paydays,
   });
-  const error = !validation.success ? validation.error.issues[0]?.message : undefined;
+  const error = !validation.success
+    ? validation.error.issues[0]?.message
+    : undefined;
   const showError = touched && error;
   const canContinue = validation.success;
 

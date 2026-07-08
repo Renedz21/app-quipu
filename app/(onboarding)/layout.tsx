@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { isAuthenticated } from "@/auth/auth-server";
 
 /**
@@ -19,12 +19,16 @@ import { isAuthenticated } from "@/auth/auth-server";
  */
 export default async function OnboardingLayout({
   children,
-}: {
-  children: ReactNode;
-}) {
+}: PropsWithChildren) {
   const isAuthed = await isAuthenticated();
   if (!isAuthed) {
     redirect("/sign-in");
   }
-  return <>{children}</>;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2">
+      <div>1</div>
+      {children}
+    </div>
+  )
 }

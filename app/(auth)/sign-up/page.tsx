@@ -58,7 +58,8 @@ export default async function SignUpPage({ searchParams }: PageProps) {
         </div>
         <h1 className="font-heading text-2xl font-semibold">Crea tu cuenta</h1>
         <p className="text-sm text-muted-foreground">
-          Sin contraseñas que recordar. Solo tú con una llave segura en este dispositivo.
+          Sin contraseñas que recordar. Solo tú con una llave segura en este
+          dispositivo.
         </p>
       </header>
 
@@ -70,7 +71,8 @@ export default async function SignUpPage({ searchParams }: PageProps) {
             </label>
             <PasskeyPromptButton mode="signUp" email="placeholder@quipu.pe" />
             <p className="text-xs text-muted-foreground">
-              Tu dispositivo creará una llave única protegida con Face ID o huella.
+              Tu dispositivo creará una llave única protegida con Face ID o
+              huella.
             </p>
           </div>
         </CardContent>

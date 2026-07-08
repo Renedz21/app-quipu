@@ -11,8 +11,7 @@ export const AUTH_MESSAGES = {
   // Passkey
   passkeyVerifyError:
     "No pudimos verificarte. La verificación con Passkey se canceló o expiró.",
-  passkeyNetworkError:
-    "Sin conexión. Revisa tu internet e intenta de nuevo.",
+  passkeyNetworkError: "Sin conexión. Revisa tu internet e intenta de nuevo.",
   passkeyExpired: "La verificación expiró. Intenta de nuevo.",
 
   // Email/password

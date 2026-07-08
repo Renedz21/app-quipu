@@ -63,7 +63,11 @@ export function Step4CyclePreview({ onAdvance }: Step4CyclePreviewProps) {
           {/* Track */}
           <div className="absolute left-3 right-3 top-1/2 h-0.5 -translate-y-1/2 bg-border" />
           {/* Nodos */}
-          <TimelineNode label="Día 1" caption="Entra tu pago" variant="primary" />
+          <TimelineNode
+            label="Día 1"
+            caption="Entra tu pago"
+            variant="primary"
+          />
           <TimelineNode
             label={`Día ${midDay || 1}`}
             caption="Vas a mitad"
@@ -83,11 +87,13 @@ export function Step4CyclePreview({ onAdvance }: Step4CyclePreviewProps) {
 
       {/* Banner */}
       <div className="flex items-start gap-2 rounded-xl bg-primary-soft px-3 py-2.5 text-sm text-foreground">
-        <CalendarCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+        <CalendarCheck
+          className="mt-0.5 size-4 shrink-0 text-primary"
+          aria-hidden
+        />
         <p>
-          Tu ciclo{" "}
-          <strong className="font-semibold">{FREQ_LABEL[freq]}</strong> de {totalDays} días
-          empieza hoy, {today}.
+          Tu ciclo <strong className="font-semibold">{FREQ_LABEL[freq]}</strong>{" "}
+          de {totalDays} días empieza hoy, {today}.
         </p>
       </div>
 

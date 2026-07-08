@@ -48,7 +48,8 @@ export const registerExpense = mutation({
     if (!activeCycle) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
-        message: "No hay un ciclo financiero activo. Procesa tu día de pago primero.",
+        message:
+          "No hay un ciclo financiero activo. Procesa tu día de pago primero.",
       });
     }
 

@@ -20,6 +20,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useOnboarding } from "./onboarding-provider";
 import { step5Schema } from "../schemas";
+import { computeAllocation } from "../lib/allocations";
 
 interface Step5AllocationsProps {
   onAdvance: () => void;
@@ -41,7 +42,8 @@ export function Step5Allocations({ onAdvance }: Step5AllocationsProps) {
   const { state, update } = useOnboarding();
   const [touched, setTouched] = useState(false);
 
-  const total = state.allocationNeeds + state.allocationWants + state.allocationSavings;
+  const total =
+    state.allocationNeeds + state.allocationWants + state.allocationSavings;
 
   const validation = step5Schema.safeParse({
     allocationNeeds: state.allocationNeeds,
@@ -54,52 +56,12 @@ export function Step5Allocations({ onAdvance }: Step5AllocationsProps) {
   const showError = touched && error;
   const canContinue = validation.success;
 
-  /**
-   * Ajusta un sobre a un nuevo valor, repartiendo el delta entre los otros 2
-   * en proporción inversa a su tamaño actual. Si el otro está en 0, todo
-   * el delta va al tercero. Garantiza que la suma quede exactamente en 100.
-   */
   const setAllocation = (key: Envelope, newValue: number) => {
-    const clamped = Math.max(0, Math.min(100, Math.round(newValue)));
-    const current = {
+    const rounded = computeAllocation(key, newValue, {
       needs: state.allocationNeeds,
       wants: state.allocationWants,
       savings: state.allocationSavings,
-    };
-    const oldValue = current[key];
-    const delta = oldValue - clamped; // positivo si bajó, negativo si subió
-    current[key] = clamped;
-
-    const others = (Object.keys(current) as Envelope[]).filter((k) => k !== key);
-    // others.length === 2 porque hay 3 envelopes y filtramos 1.
-    const [other1, other2] = others as [Envelope, Envelope];
-    const sumOthers = current[other1] + current[other2];
-
-    if (sumOthers === 0) {
-      // Reparte 50/50
-      current[other1] = delta / 2;
-      current[other2] = delta / 2;
-    } else {
-      current[other1] += delta * (current[other1] / sumOthers);
-      current[other2] += delta * (current[other2] / sumOthers);
-    }
-
-    // Redondeo y ajuste por remanente
-    const rounded = {
-      needs: Math.round(current.needs),
-      wants: Math.round(current.wants),
-      savings: Math.round(current.savings),
-    };
-    const roundedSum = rounded.needs + rounded.wants + rounded.savings;
-    const remainder = 100 - roundedSum;
-    // Ajusta el sobre del medio (Gustos) por el remanente.
-    rounded[other1] += remainder;
-
-    // Clamp final por si el delta fue extremo.
-    rounded[key] = Math.max(0, Math.min(100, rounded[key]));
-    rounded[other1] = Math.max(0, Math.min(100, rounded[other1]));
-    rounded[other2] = Math.max(0, Math.min(100, rounded[other2]));
-
+    });
     update({
       allocationNeeds: rounded.needs,
       allocationWants: rounded.wants,

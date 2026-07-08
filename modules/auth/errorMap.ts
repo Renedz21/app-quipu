@@ -69,7 +69,9 @@ const FALLBACK: ErrorMapping = {
   message: AUTH_MESSAGES.unknown,
 };
 
-export function mapBetterAuthError(input: BetterAuthErrorInput): MappedAuthError {
+export function mapBetterAuthError(
+  input: BetterAuthErrorInput,
+): MappedAuthError {
   const code = typeof input === "string" ? input : input.code;
   const customMessage = typeof input === "object" ? input.message : undefined;
   const mapping = TABLE[code] ?? FALLBACK;

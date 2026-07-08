@@ -45,9 +45,7 @@ export function IncomeModelCard({
       className={cn(
         "flex cursor-pointer items-center gap-3 rounded-xl border-2 bg-card p-4 transition-colors",
         "hover:border-primary/50",
-        selected
-          ? "border-primary ring-2 ring-primary/10"
-          : "border-border",
+        selected ? "border-primary ring-2 ring-primary/10" : "border-border",
         variant === "compact" && "p-3",
       )}
       aria-label={ariaLabel ?? `${title} — ${subtitle}`}

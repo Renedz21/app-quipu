@@ -24,7 +24,10 @@ interface StepperProps {
 }
 
 export function Stepper({ currentStep }: StepperProps) {
-  const steps = Array.from({ length: STEP_COUNT }, (_, i) => i + 1) as OnboardingStep[];
+  const steps = Array.from(
+    { length: STEP_COUNT },
+    (_, i) => i + 1,
+  ) as OnboardingStep[];
 
   return (
     <nav

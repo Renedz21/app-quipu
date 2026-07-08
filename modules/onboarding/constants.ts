@@ -83,7 +83,8 @@ export const ERROR_MESSAGES: Record<string, string> = {
   commitment_name_required: "El nombre del compromiso es obligatorio.",
   commitment_amount_invalid: "El monto debe ser mayor a cero.",
   worker_type_required: "Cuéntanos cómo trabajas para terminar.",
-  network: "No pudimos guardar tu configuración. Revisa tu conexión e intenta de nuevo.",
+  network:
+    "No pudimos guardar tu configuración. Revisa tu conexión e intenta de nuevo.",
   conflict: "Ya tienes un perfil creado. Te llevamos a tu resumen.",
 };
 
@@ -92,7 +93,10 @@ export const ERROR_MESSAGES: Record<string, string> = {
  * el copy de las radio-cards no se duplique entre el componente y los
  * mensajes de error.
  */
-export const INCOME_MODEL_LABELS: Record<IncomeModel, { title: string; subtitle: string }> = {
+export const INCOME_MODEL_LABELS: Record<
+  IncomeModel,
+  { title: string; subtitle: string }
+> = {
   fixed: { title: "Fijos", subtitle: "Sueldo o planilla, fechas fijas." },
   variable: { title: "Variables", subtitle: "Freelance, negocio, proyectos." },
   mixed: { title: "Mixtos", subtitle: "Un sueldo base + ingresos extra." },
@@ -101,7 +105,10 @@ export const INCOME_MODEL_LABELS: Record<IncomeModel, { title: string; subtitle:
 /**
  * Labels visibles de las cadencias (paso 3).
  */
-export const PAY_FREQUENCY_LABELS: Record<PayFrequency, { title: string; subtitle: string }> = {
+export const PAY_FREQUENCY_LABELS: Record<
+  PayFrequency,
+  { title: string; subtitle: string }
+> = {
   monthly: { title: "Mensual", subtitle: "1 vez al mes" },
   biweekly: { title: "Quincenal", subtitle: "Cada 15 días" },
   weekly: { title: "Semanal", subtitle: "Cada 7 días" },

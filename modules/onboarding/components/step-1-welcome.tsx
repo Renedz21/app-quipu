@@ -35,7 +35,9 @@ export function Step1Welcome({ onAdvance }: Step1WelcomeProps) {
   // Validación inline. Si el usuario ya escribió y se pasa del max,
   // mostramos error. Si está vacío y tocó el input, mostramos error.
   const validation = step1Schema.safeParse({ name: state.name });
-  const error = !validation.success ? validation.error.issues[0]?.message : undefined;
+  const error = !validation.success
+    ? validation.error.issues[0]?.message
+    : undefined;
   const showError = touched && error;
 
   const handleAdvance = () => {
@@ -54,7 +56,9 @@ export function Step1Welcome({ onAdvance }: Step1WelcomeProps) {
           <Compass className="size-6" aria-hidden />
         </div>
         <div>
-          <div className="font-heading text-base font-semibold">Tu copiloto</div>
+          <div className="font-heading text-base font-semibold">
+            Tu copiloto
+          </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="size-1.5 rounded-full bg-success" aria-hidden />
             en línea, listo para ayudar
@@ -80,7 +84,10 @@ export function Step1Welcome({ onAdvance }: Step1WelcomeProps) {
           id="welcome-name-input"
           type="text"
           autoComplete="given-name"
-          maxLength={MAX_LENGTH + 10 /* permitimos escribir de más para mostrar el error */}
+          maxLength={
+            MAX_LENGTH +
+            10 /* permitimos escribir de más para mostrar el error */
+          }
           placeholder="Tu nombre"
           value={state.name}
           onChange={(e) => update({ name: e.target.value })}

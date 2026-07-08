@@ -19,17 +19,20 @@ interface OnboardingShellProps {
   children: ReactNode;
 }
 
-export function OnboardingShell({ currentStep, children }: OnboardingShellProps) {
+export function OnboardingShell({
+  currentStep,
+  children,
+}: OnboardingShellProps) {
   return (
-    <div className="flex min-h-svh flex-1 flex-col bg-paper px-4 py-8">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8">
+    <div className="flex min-h-dvh flex-1 flex-col bg-paper px-4 py-8">
+      <div className="flex justify-center items-center w-full  flex-1 flex-col gap-8">
         <header className="flex items-center justify-between">
           <Stepper currentStep={currentStep} />
           <span className="text-xs text-muted-foreground" aria-hidden>
             Paso {currentStep} de 8
           </span>
         </header>
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex flex-col">{children}</main>
       </div>
     </div>
   );

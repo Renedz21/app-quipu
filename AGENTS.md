@@ -230,6 +230,58 @@ export default async function DashboardPage() {
 
 ---
 
+## Reglas de código limpio
+
+### Un archivo = una responsabilidad
+
+No mezclar UI, lógica de negocio, y datos en el mismo archivo:
+- Componentes React renderizan JSX.
+- Funciones puras computan (van en `lib/` del módulo).
+- Hooks orquestan estado/efectos (van en `hooks/` del módulo).
+- Server actions mutan datos (van en `actions.ts`).
+
+### Cero GOD COMPONENTS / GOD FILES
+
+- Si un archivo pasa ~200 líneas o tiene 3+ componentes exportables, dividilo.
+- Cada componente en su propio archivo.
+- Anti-patrón: archivo de 300+ líneas con 3 componentes inline y lógica de negocio mezclada.
+
+### TanStack Form para forms complejos
+
+Usar TanStack Form + Zod resolver cuando:
+- ✅ El form tiene **3+ campos** con **validación cruzada** entre ellos.
+- ✅ El estado del form es complejo (arrays dinámicos, dependencias entre campos).
+
+No usar TanStack Form cuando:
+- ❌ El form tiene 1-2 campos con validación independiente (basta useState + Zod safeParse inline).
+- ❌ Solo hay un botón de submit sin inputs.
+
+### Lógica de negocio fuera del componente
+
+- Extraer funciones puras a `modules/[x]/lib/`.
+- Extraer hooks de orquestación a `modules/[x]/hooks/`.
+- El componente solo llama a la función/hook, no contiene el algoritmo.
+
+Ejemplo correcto:
+```ts
+// modules/allocations/lib/compute-allocation.ts — función pura
+export function computeAllocation(key, newValue, current) { ... }
+
+// modules/allocations/components/step-5-allocations.tsx — solo UI
+const handleChange = (key, val) => {
+  const rounded = computeAllocation(key, val, state);
+  update(rounded);
+};
+```
+
+### KISS + DRY
+
+- Preferir la solución más simple que funciona.
+- No anticipar necesidades futuras (YAGNI).
+- Si dos componentes comparten lógica, extraerla; si no comparten, no.
+
+---
+
 ## Antes de abrir un PR / commit
 
 1. `pnpm tsc --noEmit` — sin errores.

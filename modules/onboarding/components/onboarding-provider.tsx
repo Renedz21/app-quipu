@@ -102,9 +102,7 @@ const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 export function useOnboarding(): OnboardingContextValue {
   const ctx = useContext(OnboardingContext);
   if (!ctx) {
-    throw new Error(
-      "useOnboarding debe usarse dentro de <OnboardingProvider>",
-    );
+    throw new Error("useOnboarding debe usarse dentro de <OnboardingProvider>");
   }
   return ctx;
 }

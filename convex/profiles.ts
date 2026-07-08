@@ -110,7 +110,8 @@ export const createProfile = mutation({
       if (!isValidPaydays(args.payFrequency, args.paydays)) {
         throw new ConvexError({
           code: "VALIDATION_ERROR",
-          message: "Los días de pago no son válidos para la frecuencia seleccionada.",
+          message:
+            "Los días de pago no son válidos para la frecuencia seleccionada.",
           data: { field: "paydays" },
         });
       }
@@ -207,7 +208,8 @@ export const updateProfileSettings = mutation({
     if (!isValidPaydays(payFrequency, paydays)) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
-        message: "Los días de pago no son válidos para la frecuencia seleccionada.",
+        message:
+          "Los días de pago no son válidos para la frecuencia seleccionada.",
         data: { field: "paydays" },
       });
     }

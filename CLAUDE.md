@@ -243,6 +243,25 @@ export default async function DashboardPage() {
 
 ---
 
+## Manuales de sistema
+
+Antes de tomar decisiones de arquitectura, auditar un plan, depurar bugs no triviales, refactorizar código maduro o preparar un despliegue, consultá el manual correspondiente. Cada uno define un modo de operación distinto — no los mezcles en la misma sesión.
+
+📘 **`docs/manuales-de-sistema.md`** contiene 6 system prompts canónicos:
+
+| Manual | Cuándo leerlo |
+|---|---|
+| 1. Chequeo de Seguridad (Arranque) | Arranque de un proyecto o nueva superficie (auth, pagos, jobs). |
+| 2. Fable Plan (El Interrogador) | Antes de diseñar una feature o aceptar un reporte de bug. |
+| 3. Abogado del Diablo | Revisión adversarial de un plan, diseño o PR. |
+| 4. El Fixer (RCA) | Bug no trivial, intermitente, o "ya estaba así". |
+| 5. El Optimizador de Rendimiento y Refactor | Llevar código que "ya funciona" a estándar de producción. |
+| 6. Guardián de CI/CD y Despliegue | Antes de cualquier release o cambio de pipeline. |
+
+**Regla:** si un manual aplica a tu tarea, usalo. No improvises el rigor — copialo.
+
+---
+
 ## Trabajo pendiente
 
 **Mapa vivo de lo que falta para cerrar la migración v2.0 → v2.5 y los follow-ups que dejó.** Antes de empezar cualquier tarea nueva, leé:
@@ -271,3 +290,4 @@ Ahí vas a encontrar items en P0 (blockers del merge a main), P1 (próximo a hac
 | Layout reusable | `shared/components/layout/` |
 | Convex backend | `convex/` |
 | **Trabajo pendiente / follow-ups v2.5** | `docs/superpowers/plans/2026-07-08-v25-pending-work.md` ← **revisar antes de empezar tareas nuevas** |
+| **Manuales de sistema (arquitectura, Fable Plan, RCA, refactor, CI/CD)** | `docs/manuales-de-sistema.md` ← **consultar el manual adecuado antes de actuar** |

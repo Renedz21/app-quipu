@@ -93,12 +93,12 @@
 **Archivos a crear/modificar (estimación inicial, refinar al ejecutar):**
 
 - `app/(onboarding)/configurar/page.tsx` — server component, lee estado.
-- `app/(onboarding)/configurar/_components/step-income-model.tsx` — client component, opción A/B/C.
-- `app/(onboarding)/configurar/_components/step-payday.tsx` — client component, para fixed/mixed.
-- `app/(onboarding)/configurar/_components/step-horizon.tsx` — client component, para variable.
-- `app/(onboarding)/configurar/_components/step-allocations.tsx` — sliders de distribución.
-- `app/(onboarding)/configurar/_components/step-first-income.tsx` — input de monto, source, descripción → llama `createIncomeEvent`.
-- `app/(onboarding)/configurar/_components/onboarding-form.tsx` — orquesta los steps (state machine: useReducer o zustand).
+- `app/(onboarding)/configurar/components/step-income-model.tsx` — client component, opción A/B/C.
+- `app/(onboarding)/configurar/components/step-payday.tsx` — client component, para fixed/mixed.
+- `app/(onboarding)/configurar/components/step-horizon.tsx` — client component, para variable.
+- `app/(onboarding)/configurar/components/step-allocations.tsx` — sliders de distribución.
+- `app/(onboarding)/configurar/components/step-first-income.tsx` — input de monto, source, descripción → llama `createIncomeEvent`.
+- `app/(onboarding)/configurar/components/onboarding-form.tsx` — orquesta los steps (state machine: useReducer o zustand).
 - `modules/onboarding/actions.ts` — wrapper de `createProfile` + `createIncomeEvent`.
 - `modules/onboarding/schemas.ts` — Zod schemas con validación condicional.
 - `modules/onboarding/types.ts` — view models.
@@ -176,6 +176,46 @@ git commit -m "refactor(schema): remove v2.0 workerType and frequency"
 ```
 
 **Criterio de cierre:** `grep` no encuentra `workerType` ni `.frequency` en código, schema limpio, todo verde.
+
+---
+
+### P0-5: Rutas mínimas `/onboarding` y `/dashboard` para que los redirects post-auth no rompan
+
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Bloquea:** P-2 (la pantalla de éxito del nuevo sign-up redirige a `/onboarding` y sin esa ruta hace 404).
+
+**Por qué existe:** el rediseño de auth (ver spec `2026-07-08-auth-v25-redesign-design.md` en `docs/superpowers/specs/`) requiere que el post-éxito redirija a `/onboarding` (usuario nuevo) o `/dashboard` (usuario con profile). Hoy esas rutas no existen; el `redirect` de Next tira 404. Hay que crear placeholders mínimos antes de mergear el rediseño de auth.
+
+**Qué hacer (paso a paso):**
+
+1. **Crear `app/(app)/onboarding/page.tsx`** (server component, server-side gate):
+   - Lee sesión con `isAuthenticated` y `getToken`.
+   - Si no hay sesión → `redirect("/sign-in")`.
+   - Lee profile con `fetchAuthQuery(api.profiles.getMyProfile, {})`.
+   - Si ya hay profile → `redirect("/dashboard")`.
+   - Si no hay profile → renderiza placeholder: "Onboarding (próximamente)" + link a docs. No se implementa el wizard acá; eso es P0-2.
+2. **Crear `app/(app)/dashboard/page.tsx`** (server component, server-side gate):
+   - Lee sesión con `isAuthenticated` y `getToken`.
+   - Si no hay sesión → `redirect("/sign-in")`.
+   - Lee profile con `fetchAuthQuery(api.profiles.getMyProfile, {})`.
+   - Si no hay profile → `redirect("/onboarding")`.
+   - Si hay profile → renderiza placeholder: "Dashboard (próximamente)". No se implementa acá; eso es otra historia.
+3. **Crear `app/(app)/layout.tsx`** que solo componga `<AppShell>` (placeholder, no implementar la sidebar). Verificar con P-3 que el grupo `(app)` respeta la convención de 2 niveles del `AGENTS.md`.
+4. **Validar que los redirects de las páginas de auth funcionan end-to-end**:
+   - Sign-up nuevo con passkey → status card → click "Configurar mi ciclo" → `/onboarding` (placeholder).
+   - Sign-in con email/password y profile existente → `/dashboard` (placeholder).
+   - Sign-in sin profile (usuario creado por passkey pero que no terminó onboarding) → `/onboarding`.
+5. **Correr el smoke test del P0-1** que ahora debe pasar.
+
+**Tests:**
+- No requiere tests unitarios (placeholders). El criterio es manual.
+- El integration test E2E (Playwright) si existe debe cubrir los 3 caminos. Si no existe, documentar en el smoke.
+
+**Commits esperados:**
+```bash
+git commit -m "feat(app): add onboarding and dashboard placeholder routes"
+```
+
+**Criterio de cierre:** los 3 redirects de post-auth caen en un placeholder visible (no 404), y un usuario puede recorrer sign-up → onboarding → (vuelve a iniciar sesión) → dashboard sin error de runtime.
 
 ---
 

@@ -1,23 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
-import { computeAllocations } from "./lib/budgetMath";
+import { computeAllocations, CYCLE_DAYS } from "./lib/budgetMath";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const CYCLE_DAYS = { biweekly: 15, monthly: 30 } as const;
 const HORIZON_DAYS = 15; // v2.5 initial: fixed at 15 for variable income model.
-
-const VALID_SOURCES = [
-  "payroll",
-  "freelance",
-  "business",
-  "gift",
-  "refund",
-  "investment",
-  "other",
-] as const;
-type Source = (typeof VALID_SOURCES)[number];
 
 export const createIncomeEvent = mutation({
   args: {

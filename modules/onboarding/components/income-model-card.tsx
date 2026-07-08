@@ -61,9 +61,8 @@ export function IncomeModelCard({
       />
       <div
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-lg",
+          "flex shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary",
           variant === "compact" ? "size-9" : "size-11",
-          selected ? "bg-primary text-primary-foreground" : "bg-primary-soft text-primary",
         )}
         aria-hidden
       >

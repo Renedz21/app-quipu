@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   await requireAuthenticatedSession();
   const profile = await fetchAuthQuery(api.profiles.getMyProfile, {});
   if (!profile) {
-    redirect("/onboarding");
+    redirect("/configurar");
   }
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">

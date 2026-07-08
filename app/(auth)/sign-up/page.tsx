@@ -22,7 +22,7 @@ export default async function SignUpPage({ searchParams }: PageProps) {
         description={AUTH_MESSAGES.signUpSuccessDescription}
         primaryAction={{
           label: AUTH_MESSAGES.configureMyCycle,
-          href: "/onboarding",
+          href: "/configurar",
         }}
       />
     );

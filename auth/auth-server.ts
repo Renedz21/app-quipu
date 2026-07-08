@@ -20,7 +20,7 @@ export const {
  * Usar como primera línea en page.tsx de rutas auth (NO en layout.tsx).
  *
  * - Si hay sesión y profile → /dashboard
- * - Si hay sesión sin profile → /onboarding
+ * - Si hay sesión sin profile → /configurar (wizard de onboarding)
  * - Si no hay sesión → no hace nada
  */
 export async function requireUnauthenticatedSession() {
@@ -30,7 +30,7 @@ export async function requireUnauthenticatedSession() {
   if (profile) {
     redirect("/dashboard");
   } else {
-    redirect("/onboarding");
+    redirect("/configurar");
   }
 }
 

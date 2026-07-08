@@ -14,7 +14,6 @@ import type {
   CommitmentDraft,
   IncomeModel,
   OnboardingState,
-  OnboardingStep,
   PayFrequency,
   WorkerType,
 } from "./types";

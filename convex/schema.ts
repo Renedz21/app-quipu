@@ -89,22 +89,19 @@ export const appTables = {
     isSystemDefault: v.boolean(), // true para el Fondo de Emergencia mandatorio del sistema
   }).index("by_profile", ["profileId"]),
 
-  // COMPROMISOS FIJOS: Descontados atómicamente antes de calcular el 50/30/20
+  // COMPROMISOS FIJOS: Descontados atómicamente antes de calcular el 50/30/20.
+  // v2.5: el modelo es dueDay puro (día del mes, Lima). El campo "frequency"
+  // viejo (first_payday / second_payday / every_payday) se eliminó porque
+  // el frame del onboarding muestra "Cada día N", no el modelo de quincenas.
   fixedCommitments: defineTable({
     profileId: v.id("profiles"),
     name: v.string(),
     amount: v.number(),
-    frequency: v.optional(
-      v.union(
-        v.literal("monthly"),
-        v.literal("first_payday"),
-        v.literal("second_payday"),
-        v.literal("every_payday"),
-      ),
-    ),
     envelope: v.union(v.literal("needs"), v.literal("wants")),
-    // v2.5: day of the month (Lima) the commitment is due. Reemplaza frequency.
-    dueDay: v.optional(v.number()), // 1-31
+    // v2.5: día del mes (Lima) en que se descuenta el compromiso. 1-31.
+    // Endurecer a required cuando P0-3 cierre (después de que el wizard esté
+    // completo y todos los profiles nuevos lo traigan seteado).
+    dueDay: v.optional(v.number()),
   })
     .index("by_profileId", ["profileId"])
     .index("by_profile_dueDay", ["profileId", "dueDay"]),

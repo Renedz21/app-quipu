@@ -13,7 +13,6 @@ type EnvelopeCompliance = Pick<
   Doc<"envelopes">,
   "type" | "remainingAmount" | "allocatedAmount"
 >;
-type CommitmentShare = Pick<Doc<"fixedCommitments">, "frequency" | "amount">;
 type AllocationWeights = Pick<
   Doc<"profiles">,
   "allocationNeeds" | "allocationWants" | "allocationSavings"
@@ -67,28 +66,6 @@ export function evaluateCycleCompliance(
     hasWarning = true;
   }
   return hasWarning ? "warning" : "compliant";
-}
-
-export function sumApplicableCommitments(
-  commitments: CommitmentShare[],
-  payFrequency: PayFrequency,
-  currentDay: number,
-  paydays: number[],
-): number {
-  if (payFrequency === "monthly") {
-    return commitments.reduce((acc, c) => acc + c.amount, 0);
-  }
-
-  const secondPayday = paydays[1] ?? SECOND_PAYDAY_FALLBACK;
-  const isFirstQuincena = currentDay < secondPayday;
-
-  return commitments.reduce((acc, { frequency, amount }) => {
-    if (frequency === "every_payday") return acc + amount;
-    if (frequency === "monthly") return acc + Math.round(amount / 2); // mitad por quincena, en céntimos enteros
-    if (frequency === "first_payday" && isFirstQuincena) return acc + amount;
-    if (frequency === "second_payday" && !isFirstQuincena) return acc + amount;
-    return acc;
-  }, 0);
 }
 
 // Reparto entero con largest-remainder: los céntimos sobrantes van a las mayores

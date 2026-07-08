@@ -107,16 +107,3 @@ export const PAY_FREQUENCY_LABELS: Record<PayFrequency, { title: string; subtitl
   weekly: { title: "Semanal", subtitle: "Cada 7 días" },
   variable: { title: "Variable", subtitle: "Lo apunto yo" },
 };
-
-/**
- * Labels visibles de las frecuencias de compromiso (paso 6).
- */
-export const COMMITMENT_FREQUENCY_LABELS: Record<
-  CommitmentDraft["frequency"],
-  string
-> = {
-  monthly: "Mensual",
-  first_payday: "Primera quincena",
-  second_payday: "Segunda quincena",
-  every_payday: "Cada quincena",
-};

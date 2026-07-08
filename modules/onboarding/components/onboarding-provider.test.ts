@@ -63,7 +63,7 @@ describe("onboardingReducer", () => {
           {
             name: "Alquiler",
             amountCents: 1000,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],
@@ -75,13 +75,13 @@ describe("onboardingReducer", () => {
             {
               name: "Internet",
               amountCents: 100,
-              frequency: "every_payday",
+              dueDay: 15,
               envelope: "needs",
             },
             {
               name: "Spotify",
               amountCents: 30,
-              frequency: "monthly",
+              dueDay: 15,
               envelope: "wants",
             },
           ],
@@ -109,7 +109,7 @@ describe("onboardingReducer", () => {
         payload: {
           name: "Alquiler",
           amountCents: 1000,
-          frequency: "monthly",
+          dueDay: 15,
           envelope: "needs",
         },
       });
@@ -124,7 +124,7 @@ describe("onboardingReducer", () => {
           {
             name: "A",
             amountCents: 100,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],
@@ -134,7 +134,7 @@ describe("onboardingReducer", () => {
         payload: {
           name: "B",
           amountCents: 200,
-          frequency: "monthly",
+          dueDay: 15,
           envelope: "wants",
         },
       });
@@ -151,19 +151,19 @@ describe("onboardingReducer", () => {
           {
             name: "A",
             amountCents: 100,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
           {
             name: "B",
             amountCents: 200,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "wants",
           },
           {
             name: "C",
             amountCents: 300,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],
@@ -188,7 +188,7 @@ describe("onboardingReducer", () => {
           {
             name: "X",
             amountCents: 1,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],

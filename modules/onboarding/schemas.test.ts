@@ -176,7 +176,7 @@ describe("onboarding schemas", () => {
           {
             name: "Alquiler",
             amountCents: 150000,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],
@@ -190,7 +190,7 @@ describe("onboarding schemas", () => {
           {
             name: "X",
             amountCents: 0,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],
@@ -204,7 +204,7 @@ describe("onboarding schemas", () => {
           {
             name: "   ",
             amountCents: 100,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "needs",
           },
         ],
@@ -218,9 +218,35 @@ describe("onboarding schemas", () => {
           {
             name: "X",
             amountCents: 100,
-            frequency: "monthly",
+            dueDay: 15,
             envelope: "savings",
           },
+        ],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rechaza dueDay fuera de 1-31", () => {
+      expect(
+        step6Schema.safeParse({
+          commitments: [
+            { name: "X", amountCents: 100, dueDay: 0, envelope: "needs" },
+          ],
+        }).success,
+      ).toBe(false);
+      expect(
+        step6Schema.safeParse({
+          commitments: [
+            { name: "X", amountCents: 100, dueDay: 32, envelope: "needs" },
+          ],
+        }).success,
+      ).toBe(false);
+    });
+
+    it("rechaza dueDay no entero", () => {
+      const result = step6Schema.safeParse({
+        commitments: [
+          { name: "X", amountCents: 100, dueDay: 15.5, envelope: "needs" },
         ],
       });
       expect(result.success).toBe(false);
@@ -234,7 +260,7 @@ describe("onboarding schemas", () => {
       const result = commitmentDraftSchema.safeParse({
         name: "Internet",
         amountCents: 9990,
-        frequency: "every_payday",
+        dueDay: 15,
         envelope: "needs",
       });
       expect(result.success).toBe(true);

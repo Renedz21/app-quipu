@@ -120,12 +120,11 @@ export const commitmentDraftSchema = z.object({
     .number()
     .int("El monto debe ser un entero (céntimos).")
     .positive("El monto debe ser mayor a cero."),
-  frequency: z.enum([
-    "monthly",
-    "first_payday",
-    "second_payday",
-    "every_payday",
-  ]),
+  dueDay: z
+    .number()
+    .int("El día debe ser un número entero.")
+    .min(1, "El día debe estar entre 1 y 31.")
+    .max(31, "El día debe estar entre 1 y 31."),
   envelope: z.enum(["needs", "wants"], {
     error: "El compromiso solo puede ir a Necesidades o Gustos.",
   }),

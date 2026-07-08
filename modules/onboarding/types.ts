@@ -28,19 +28,6 @@ export type IncomeModel = "fixed" | "variable" | "mixed";
 export type PayFrequency = "monthly" | "biweekly" | "weekly" | "variable";
 
 /**
- * Frecuencia de un compromiso fijo. Cada uno descuenta de su sobre.
- * - "monthly": una vez al mes (cualquier día).
- * - "first_payday": descuenta en el primer pago del ciclo.
- * - "second_payday": descuenta en el segundo pago del ciclo (biweekly).
- * - "every_payday": descuenta en ambos pagos del ciclo.
- */
-export type CommitmentFrequency =
-  | "monthly"
-  | "first_payday"
-  | "second_payday"
-  | "every_payday";
-
-/**
  * Sobre al que se descuenta un compromiso fijo.
  * Solo "needs" o "wants" por diseño (savings no toca compromisos fijos).
  */
@@ -48,12 +35,15 @@ export type CommitmentEnvelope = "needs" | "wants";
 
 /**
  * Un compromiso fijo en borrador (antes de persistir).
- * `amountCents` está en céntimos enteros para evitar floats.
+ * - `amountCents` está en céntimos enteros para evitar floats.
+ * - `dueDay` es el día del mes (1-31, Lima) en que se descuenta. El
+ *   backend v2.5 ya no usa "frequency" (first_payday/second_payday/etc):
+ *   el frame del onboarding dice "Cada día 15", no "Cada quincena".
  */
 export type CommitmentDraft = {
   name: string;
   amountCents: number;
-  frequency: CommitmentFrequency;
+  dueDay: number;
   envelope: CommitmentEnvelope;
 };
 

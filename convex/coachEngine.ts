@@ -1,6 +1,6 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { computeRescueTransfer } from "./lib/budgetMath";
+import { suggestRescueTransfer } from "./lib/budgetMath";
 
 const FREEZE_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
@@ -37,20 +37,34 @@ export const resolveNudgeAction = mutation({
   },
   handler: async (ctx, { interactionId, optionId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("No autorizado");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
 
     const interaction = await ctx.db.get(interactionId);
     if (!interaction || interaction.status !== "pending") {
-      throw new Error("La interacción no existe o ya fue resuelta.");
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La interacción no existe o ya fue resuelta.",
+      });
     }
 
     const profile = await ctx.db.get(interaction.profileId);
     if (!profile || profile.userId !== identity.subject) {
-      throw new Error("No tienes permisos para modificar este registro.");
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "No tienes permisos para modificar este registro.",
+      });
     }
 
     if (!interaction.options.some((o) => o.id === optionId)) {
-      throw new Error("Opción inválida.");
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Opción inválida.",
+      });
     }
 
     if (optionId === "suggest_rescue" && profile.plan === "free") {
@@ -58,12 +72,16 @@ export const resolveNudgeAction = mutation({
         selectedOptionId: optionId,
         status: "resolved",
         initialNudge:
-          "[Plan Free] El Coach te aconseja: reduce S/ 15 diarios en tus consumos de Gastos por 4 días para equilibrar el sobre sin tocar tus ahorros.",
+          "[Plan Free] El Coach te aconseja: reduce S/ 15 diarios en tus consumos de Gustos por 4 días para equilibrar el sobre sin tocar tus ahorros.",
       });
       return { success: true, mode: "free_advice" as const };
     }
 
     if (optionId === "suggest_rescue") {
+      // v2.5: do NOT apply the transfer automatically. Return the suggestion
+      // and let the UI prompt the user for confirmation. The mutation marks
+      // the interaction as "resolved" with the suggestion in the nudge; the
+      // actual transfer is applied via a separate mutation after confirmation.
       const [savings, wants] = await Promise.all([
         ctx.db
           .query("envelopes")
@@ -80,19 +98,22 @@ export const resolveNudgeAction = mutation({
       ]);
 
       if (savings && wants) {
-        const transfer = computeRescueTransfer(
+        const suggestion = suggestRescueTransfer(
           savings.remainingAmount,
           wants.remainingAmount,
         );
-        if (transfer > 0) {
-          await ctx.db.patch(savings._id, {
-            remainingAmount: savings.remainingAmount - transfer,
-          });
-          await ctx.db.patch(wants._id, {
-            remainingAmount: wants.remainingAmount + transfer,
-          });
-        }
+        await ctx.db.patch(interactionId, {
+          selectedOptionId: optionId,
+          status: "resolved",
+          initialNudge: `Te sugiero transferir ${suggestion.transfer} céntimos de Savings a Gustos para cubrir tu déficit proyectado de ${suggestion.projectedDeficit} céntimos. Confirma en la UI para aplicar.`,
+        });
+      } else {
+        await ctx.db.patch(interactionId, {
+          selectedOptionId: optionId,
+          status: "resolved",
+        });
       }
+      return { success: true, mode: "suggested" as const };
     }
 
     if (optionId === "freeze_wants") {

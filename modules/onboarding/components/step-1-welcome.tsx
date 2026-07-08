@@ -62,9 +62,9 @@ export function Step1Welcome({ onAdvance }: Step1WelcomeProps) {
         </div>
       </div>
 
-      {/* Burbuja del copiloto (paper, sin borde, redondeada con esquina pequeña) */}
+      {/* Burbuja del copiloto (blanca con borde sutil, redondeada con esquina pequeña) */}
       <div
-        className="rounded-2xl rounded-tl-sm bg-paper px-4 py-3 text-sm text-foreground"
+        className="rounded-2xl rounded-tl-sm bg-card px-4 py-3 text-sm text-foreground ring-1 ring-foreground/10"
         data-testid="copilot-bubble"
       >
         Hola 👋 En unos minutos dejamos tu dinero ordenado en tres sobres que

@@ -59,6 +59,8 @@ export const appTables = {
     baseIncomeReceived: v.number(),
     extraordinaryIncomeReceived: v.number(), // Gratificaciones / CTS ingresan limpio aquí
     totalPeriodIncome: v.number(),
+    // v2.5: unified total, replaces base+extraordinary+totalPeriodIncome
+    totalIncomeReceived: v.optional(v.number()),
   }).index("by_profile_status", ["profileId", "status"]),
 
   // SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -96,7 +98,11 @@ export const appTables = {
       v.literal("every_payday"),
     ),
     envelope: v.union(v.literal("needs"), v.literal("wants")),
-  }).index("by_profileId", ["profileId"]),
+    // v2.5: day of the month (Lima) the commitment is due. Replaces frequency.
+    dueDay: v.optional(v.number()), // 1-31
+  })
+    .index("by_profileId", ["profileId"])
+    .index("by_profile_dueDay", ["profileId", "dueDay"]),
 
   // HISTORIAL DE GASTOS: Vinculado directamente a su ciclo dinámico de flujo
   expenses: defineTable({
@@ -147,6 +153,33 @@ export const appTables = {
     ), // "warning" actua como zona de amortiguación
     evaluatedAt: v.number(),
   }).index("by_profile_cycle", ["profileId", "cycleId"]),
+
+  // v2.5: unified income event log. Replaces the implicit "salary vs cachuelo"
+  // distinction that lived in financialCycles.baseIncomeReceived +
+  // adHocIncomes in v2.0.
+  incomeEvents: defineTable({
+    profileId: v.id("profiles"),
+    cycleId: v.id("financialCycles"),
+    amount: v.number(), // integer cents, > 0
+    source: v.union(
+      v.literal("payroll"),
+      v.literal("freelance"),
+      v.literal("business"),
+      v.literal("gift"),
+      v.literal("refund"),
+      v.literal("investment"),
+      v.literal("other"),
+    ),
+    description: v.string(), // always required
+    occurredAt: v.number(), // timestamp, can be retroactive
+    distributionApplied: v.object({
+      needs: v.number(),
+      wants: v.number(),
+      savings: v.number(),
+    }),
+  })
+    .index("by_cycle", ["cycleId"])
+    .index("by_profile_time", ["profileId", "occurredAt"]),
 
   adHocIncomes: defineTable({
     profileId: v.id("profiles"),

@@ -28,7 +28,7 @@ export const appTables = {
     ),
 
     // Configuración del motor de Flujo de Caja
-    workerType: v.union(v.literal("dependent"), v.literal("independent")),
+    workerType: v.optional(v.union(v.literal("dependent"), v.literal("independent"))),
     payFrequency: v.optional(
       v.union(v.literal("monthly"), v.literal("biweekly")),
     ),
@@ -91,11 +91,13 @@ export const appTables = {
     profileId: v.id("profiles"),
     name: v.string(),
     amount: v.number(),
-    frequency: v.union(
-      v.literal("monthly"),
-      v.literal("first_payday"),
-      v.literal("second_payday"),
-      v.literal("every_payday"),
+    frequency: v.optional(
+      v.union(
+        v.literal("monthly"),
+        v.literal("first_payday"),
+        v.literal("second_payday"),
+        v.literal("every_payday"),
+      ),
     ),
     envelope: v.union(v.literal("needs"), v.literal("wants")),
     // v2.5: day of the month (Lima) the commitment is due. Replaces frequency.

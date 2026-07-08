@@ -75,7 +75,10 @@ export const backfillCommitmentsV25 = internalMutation({
       const paydays = profile?.paydays;
 
       const dueDay = backfillCommitmentDueDay({
-        frequency: commitment.frequency,
+        // Las filas v2.0 siempre tuvieron frequency required; la marca optional
+        // del schema es para que el código nuevo pueda omitirla. En la práctica
+        // el valor siempre existe en dev/prod al momento del backfill.
+        frequency: commitment.frequency ?? "monthly",
         paydays: paydays ?? undefined,
       });
 

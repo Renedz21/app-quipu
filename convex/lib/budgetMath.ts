@@ -28,6 +28,17 @@ export function computeRescueTransfer(
   return Math.min(savingsRemaining, deficit);
 }
 
+// v2.5: el coach sugiere, no aplica. Devuelve cuánto transferir y el déficit
+// proyectado para que la UI muestre un paso de confirmación.
+export function suggestRescueTransfer(
+  savingsRemaining: number,
+  wantsRemaining: number,
+): { transfer: number; projectedDeficit: number } {
+  const projectedDeficit = wantsRemaining < 0 ? Math.abs(wantsRemaining) : 0;
+  const transfer = Math.min(savingsRemaining, projectedDeficit);
+  return { transfer, projectedDeficit };
+}
+
 // Alerta si quemó >60% de Gustos antes de pasar la mitad del ciclo (derivada del propio ciclo).
 export function shouldWarnWantsBurn(p: {
   allocated: number;

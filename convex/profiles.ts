@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
@@ -30,9 +30,15 @@ export const createProfile = mutation({
     country: v.string(),
     currencyCode: v.string(),
     currencySymbol: v.string(),
-    workerType: v.union(v.literal("dependent"), v.literal("independent")),
-    payFrequency: v.union(v.literal("monthly"), v.literal("biweekly")),
-    paydays: v.array(v.number()),
+    incomeModel: v.union(
+      v.literal("fixed"),
+      v.literal("variable"),
+      v.literal("mixed"),
+    ),
+    payFrequency: v.optional(
+      v.union(v.literal("monthly"), v.literal("biweekly")),
+    ),
+    paydays: v.optional(v.array(v.number())),
     allocationNeeds: v.number(),
     allocationWants: v.number(),
     allocationSavings: v.number(),
@@ -40,9 +46,10 @@ export const createProfile = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error(
-        "No autorizado. Debes iniciar sesión con tu Passkey o credencial.",
-      );
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
     }
 
     // Idempotencia primero: si ya existe, no revalidamos ni re-sembramos.
@@ -53,7 +60,32 @@ export const createProfile = mutation({
     if (existing) return existing._id;
 
     const name = args.name.trim();
-    if (!name) throw new Error("El nombre es obligatorio.");
+    if (!name) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "El nombre es obligatorio.",
+        data: { field: "name" },
+      });
+    }
+
+    if (
+      (args.incomeModel === "fixed" || args.incomeModel === "mixed") &&
+      (!args.payFrequency || !args.paydays || args.paydays.length === 0)
+    ) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "Para ingresos fijos o mixtos, payFrequency y paydays son obligatorios.",
+        data: { field: "payFrequency" },
+      });
+    }
+    if (args.incomeModel === "variable" && args.payFrequency) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Para ingresos variables, payFrequency no aplica.",
+        data: { field: "payFrequency" },
+      });
+    }
 
     if (
       !isValidAllocations(
@@ -62,14 +94,21 @@ export const createProfile = mutation({
         args.allocationSavings,
       )
     ) {
-      throw new Error(
-        "La distribución de sobres (Necesidades, Gustos, Ahorro) debe sumar exactamente 100% con valores enteros no negativos.",
-      );
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "La distribución de sobres (Necesidades, Gustos, Ahorro) debe sumar exactamente 100% con valores enteros no negativos.",
+        data: { field: "allocations" },
+      });
     }
-    if (!isValidPaydays(args.payFrequency, args.paydays)) {
-      throw new Error(
-        "Los días de pago no son válidos para la frecuencia seleccionada.",
-      );
+    if (args.payFrequency && args.paydays) {
+      if (!isValidPaydays(args.payFrequency, args.paydays)) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "Los días de pago no son válidos para la frecuencia seleccionada.",
+          data: { field: "paydays" },
+        });
+      }
     }
 
     const profileId = await ctx.db.insert("profiles", {
@@ -78,7 +117,7 @@ export const createProfile = mutation({
       country: args.country,
       currencyCode: args.currencyCode,
       currencySymbol: args.currencySymbol,
-      workerType: args.workerType,
+      incomeModel: args.incomeModel,
       payFrequency: args.payFrequency,
       paydays: args.paydays,
       allocationNeeds: args.allocationNeeds,
@@ -124,29 +163,43 @@ export const updateProfileSettings = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("No autorizado");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
 
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .unique();
-    if (!profile) throw new Error("Perfil no encontrado");
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
+    }
 
     const needs = args.allocationNeeds ?? profile.allocationNeeds;
     const wants = args.allocationWants ?? profile.allocationWants;
     const savings = args.allocationSavings ?? profile.allocationSavings;
     if (!isValidAllocations(needs, wants, savings)) {
-      throw new Error(
-        "Los porcentajes deben sumar exactamente 100% con valores enteros no negativos.",
-      );
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "Los porcentajes deben sumar exactamente 100% con valores enteros no negativos.",
+      });
     }
 
     const payFrequency = args.payFrequency ?? profile.payFrequency ?? "monthly";
     const paydays = args.paydays ?? profile.paydays ?? [];
     if (!isValidPaydays(payFrequency, paydays)) {
-      throw new Error(
-        "Los días de pago no son válidos para la frecuencia seleccionada.",
-      );
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Los días de pago no son válidos para la frecuencia seleccionada.",
+        data: { field: "paydays" },
+      });
     }
 
     // Convex interpreta `undefined` como "borrar campo": solo incluimos los definidos.

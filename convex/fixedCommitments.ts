@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const listMyCommitments = query({
@@ -25,39 +25,57 @@ export const createFixedCommitment = mutation({
     name: v.string(),
     amount: v.number(),
     envelope: v.union(v.literal("needs"), v.literal("wants")),
-    frequency: v.union(
-      v.literal("monthly"),
-      v.literal("first_payday"),
-      v.literal("second_payday"),
-      v.literal("every_payday"),
-    ),
+    dueDay: v.number(), // 1-31
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("No autorizado");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
 
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .unique();
-    if (!profile) throw new Error("Perfil no encontrado");
-
-    const name = args.name.trim();
-    if (!name) throw new Error("El nombre del compromiso es obligatorio.");
-    if (!Number.isInteger(args.amount) || args.amount <= 0) {
-      throw new Error("El monto debe ser un entero de céntimos mayor a cero.");
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
     }
 
-    // Un perfil mensual no tiene quincenas: forzamos "monthly" para no guardar basura.
-    const frequency =
-      profile.payFrequency === "monthly" ? "monthly" : args.frequency;
+    const name = args.name.trim();
+    if (!name) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "El nombre del compromiso es obligatorio.",
+        data: { field: "name" },
+      });
+    }
+    if (!Number.isInteger(args.amount) || args.amount <= 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "El monto debe ser un entero de céntimos mayor a cero.",
+        data: { field: "amount" },
+      });
+    }
+    if (!Number.isInteger(args.dueDay) || args.dueDay < 1 || args.dueDay > 31) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "dueDay debe ser un entero entre 1 y 31.",
+        data: { field: "dueDay" },
+      });
+    }
 
     return await ctx.db.insert("fixedCommitments", {
       profileId: profile._id,
       name,
       amount: args.amount,
       envelope: args.envelope,
-      frequency,
+      dueDay: args.dueDay,
     });
   },
 });
@@ -66,14 +84,27 @@ export const deleteFixedCommitment = mutation({
   args: { commitmentId: v.id("fixedCommitments") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("No autorizado");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
 
     const commitment = await ctx.db.get(args.commitmentId);
-    if (!commitment) throw new Error("Compromiso no encontrado");
+    if (!commitment) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Compromiso no encontrado.",
+      });
+    }
 
     const profile = await ctx.db.get(commitment.profileId);
     if (!profile || profile.userId !== identity.subject) {
-      throw new Error("No tienes permisos para eliminar este registro.");
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "No tienes permisos para eliminar este registro.",
+      });
     }
 
     await ctx.db.delete(args.commitmentId);

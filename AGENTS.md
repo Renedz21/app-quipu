@@ -260,6 +260,16 @@ Antes de tomar decisiones de arquitectura, auditar un plan, depurar bugs no triv
 
 ---
 
+## Reglas de auth (v2.5)
+
+- **Auth es un módulo de dominio** (`modules/auth/`), no vive dentro de `app/(auth)/`. El route group `(auth)` es solo wiring de Next.js. Los componentes del dominio auth están en `modules/auth/components/`.
+- **Las páginas de auth no usan tabs.** La ruta refleja intención (`sign-in` vs `sign-up`) y método (`passkey` vs `email`). URLs: `/sign-in`, `/sign-up`, `/sign-in/email`, `/sign-up/email`.
+- **Validaciones de sesión van en `page.tsx`, no en `layout.tsx`.** Usar `requireUnauthenticatedSession()` (rutas auth) o `requireAuthenticatedSession()` (rutas protegidas) desde `auth/auth-server.ts`.
+- **Componentes reusables de status** viven en `shared/components/auth/` (`status-card`, `status-icon`), no en `modules/auth/`. El módulo auth los consume.
+- **Errores de Better Auth** se traducen a `ErrorCode` vía `modules/auth/errorMap.ts`. Nunca comparar `error.message` con strings en la UI.
+
+---
+
 ## Trabajo pendiente
 
 **Mapa vivo de lo que falta para cerrar la migración v2.0 → v2.5 y los follow-ups que dejó.** Antes de empezar cualquier tarea nueva, leé:

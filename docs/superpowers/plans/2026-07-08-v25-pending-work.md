@@ -344,6 +344,54 @@ git commit -m "fix(auth): correct passkey capability detection — gate on WebAu
 
 ---
 
+## P0 — Gaps de backend descubiertos durante slice 0 del onboarding
+
+> Items abiertos durante la implementación del onboarding v2.5. **No son deuda preexistente**: son trabajo que el spec del onboarding requiere y que el código actual no provee todavía. Cada uno se cierra en el slice que lo necesita (no en un PR aparte), porque el wizard no funciona end-to-end sin ellos.
+
+### P0-9: Extender `PayFrequency` del backend a 4 valores (slice 2)
+
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Bloquea:** slice 2 del onboarding (paso 3). **Resuelto en:** al ejecutar el slice 2.
+
+**Por qué existe:** el spec del onboarding (`docs/superpowers/specs/2026-07-07-onboarding-design.md` §3, paso 3) define `payFrequency` con 4 valores: `monthly | biweekly | weekly | variable`. Pero el backend Convex actual solo acepta 2: `monthly | biweekly`. Si un usuario elige "Semanal" o "Variable" en el paso 3, la mutation `createProfile` rechaza el payload.
+
+**Archivos a modificar (3):**
+
+- `convex/schema.ts` — extender el union de `profiles.payFrequency` para incluir `weekly` y `variable`.
+- `convex/lib/budgetMath.ts` — extender `CYCLE_DAYS` con `weekly: 7` y `variable: 15` (usar `HORIZON_DAYS`). Y extender `isValidPaydays` para que acepte `weekly` (cualquier `length >= 1` con días 1-31) y `variable` (length 0 permitido).
+- `convex/incomeEvents.ts` — extender el `CYCLE_DAYS` local con los mismos 2 valores. Hoy el `CYCLE_DAYS` está duplicado entre `incomeEvents.ts` y `budgetMath.ts`; al tocarlo, refactorizar para importar desde `budgetMath` (única fuente de verdad).
+
+**Tests a actualizar:**
+
+- `convex/lib/budgetMath.test.ts` — agregar casos para `isValidPaydays("weekly", [15])` (acepta), `isValidPaydays("variable", [])` (acepta), `isValidPaydays("variable", [15])` (rechaza).
+
+**Criterio de cierre:** el union de `PayFrequency` en backend tiene 4 valores; `isValidPaydays` valida correctamente los 4; el wizard pasa el payload completo sin coerción (eliminar el adapter `toConvexCreateProfileArgs` que existe en el slice 0 del onboarding).
+
+**Commit esperado:** `git commit -m "feat(backend): extend PayFrequency union to 4 values"`.
+
+---
+
+### P0-10: Nueva mutation `createCommitmentsBulk` (slice 5)
+
+- [ ] **Status:** Pendiente. **Owner:** TBD. **Bloquea:** slice 5 del onboarding (paso 6). **Resuelto en:** al ejecutar el slice 5.
+
+**Por qué existe:** el spec del onboarding define un paso 6 donde el usuario agrega 0+ compromisos fijos. La opción actual es N round-trips a `createFixedCommitment`. El spec exige una mutation bulk atómica.
+
+**Archivos a modificar (2):**
+
+- `convex/fixedCommitments.ts` — agregar la mutation `createCommitmentsBulk` con la firma exacta del spec §5: `args: { profileId, commitments: Array<{ name, amount, envelope, frequency }> }`. Migrar errores a `ConvexError({ code, message, meta })` siguiendo el patrón del resto de mutaciones.
+- `modules/onboarding/actions.ts` — reemplazar el `console.log` de slice 0 por `fetchAuthMutation(api.fixedCommitments.createCommitmentsBulk, ...)`. Eliminar el adapter `toConvexCommitment` si en el slice 9 (o donde corresponda) se decide que el schema de Convex use `amountCents` directo en vez de `amount`.
+
+**Tests a escribir:**
+
+- Test unitario para `createCommitmentsBulk`: el handler valida que el `profile.userId` coincida con la sesión, que cada `name` no esté vacío, que cada `amount` sea entero positivo, y que la frecuencia sea válida.
+- (Smoke manual desde `npx convex dashboard`).
+
+**Criterio de cierre:** la mutation existe, valida y persiste; el action del onboarding la llama cuando hay commitments; no hay N round-trips.
+
+**Commit esperado:** `git commit -m "feat(backend): add createCommitmentsBulk mutation"`.
+
+---
+
 ## P2 — Backlog
 
 ### P2-1: Limpiar `docs/` del `.gitignore` o decidir política
@@ -521,3 +569,4 @@ git commit -m "chore(lint): resolve pre-existing Biome lint debt"
 
 - **2026-07-08** — Creación inicial post-migración. Items P0-1 a P0-4, P1-1 a P1-3, P2-1 a P2-3. Owner del documento: el branch `chore/quipu-2.0`.
 - **2026-07-08** — Update durante implementación de auth v2.5. Cambios: P0-2 corregido (`_components/` → `components/`), nuevo P0-5 (rutas mínimas /onboarding y /dashboard placeholders). Nuevos P2-4 (sign-up email capture), P2-5 (AuthHeader extraction), P2-6 (lint pre-existente). P0-7 (fix bug detección capabilities passkey) — RESUELTO.
+- **2026-07-08** — Update durante slice 0 del onboarding v2.5. Nuevos P0-9 (extender PayFrequency del backend a 4 valores) y P0-10 (nueva mutation `createCommitmentsBulk`). Ambos se cierran en sus respectivos slices (2 y 5), no en PRs aparte. Slice 0 cerrado con 4 commits: tokens CSS, types, constants, schemas. Slice 0 no incluye `actions.ts` — se materializa en slice 7 con los gaps cerrados.

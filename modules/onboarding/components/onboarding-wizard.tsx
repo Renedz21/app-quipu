@@ -29,6 +29,7 @@ import { Step1Welcome } from "./step-1-welcome";
 import { Step2IncomeModel } from "./step-2-income-model";
 import { Step3Frequency } from "./step-3-frequency";
 import { Step4CyclePreview } from "./step-4-cycle-preview";
+import { Step5Allocations } from "./step-5-allocations";
 import { StepPlaceholder } from "./step-placeholder";
 import type { OnboardingStep } from "../types";
 
@@ -86,14 +87,7 @@ function WizardInner() {
       case 4:
         return <Step4CyclePreview onAdvance={() => setStep(5)} />;
       case 5:
-        return (
-          <StepPlaceholder
-            step={5}
-            title="¿Cómo repartimos tu dinero?"
-            description="Necesidades, Gustos y Ahorro. Recomendamos 50/30/20."
-            onAdvance={() => setStep(6)}
-          />
-        );
+        return <Step5Allocations onAdvance={() => setStep(6)} />;
       case 6:
         return (
           <StepPlaceholder

@@ -1,112 +1,48 @@
-"use client";
+import Link from "next/link";
+import { requireUnauthenticatedSession } from "@/auth/auth-server";
+import { PasskeyPromptButton } from "@/modules/auth/components/passkey-prompt-button";
+import { AUTH_MESSAGES } from "@/modules/auth/constants";
 
-import { useForm } from "@tanstack/react-form";
-import { Check, Fingerprint, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { registerPasskey, signInWithPasskey } from "@/auth/passkey";
-import { Button } from "@/shared/components/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/shared/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/shared/components/ui/input-group";
-import { Spinner } from "@/shared/components/ui/spinner";
+export default async function SignInPage() {
+  await requireUnauthenticatedSession();
 
-export default function LoginPage() {
-  const router = useRouter();
-  const form = useForm({
-    defaultValues: { email: "" },
-    onSubmit: async ({ value }) => {
-      // Register: crear passkey y luego iniciar sesión.
-      // `data.email` se widen-a a `string | undefined` por la unión con el
-      // schema de sign-in, pero aquí `isSignIn` es `false` y el resolver de
-      // register garantiza que el campo es string. Narrow explícito.
-      const trimmed = value.email;
-      const reg = await registerPasskey({ name: trimmed, context: trimmed });
-      if (reg?.error) {
-        return;
-      }
-      const signIn = await signInWithPasskey(false);
-      if (signIn?.error) {
-        return;
-      }
-      router.replace("/dashboard");
-    },
-  });
+  // Si llegamos acá sin redirect, no hay sesión. Renderizar el form.
+  // Nota: el botón passkey no muestra ?status=success en sign-in porque
+  // un usuario existente va directo a dashboard (decisión 3 del spec).
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
-    >
-      <FieldGroup>
-        <form.Field
-          name="email"
-          children={(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-col items-center gap-2 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+          {/* Logo placeholder */}
+          <span className="font-heading text-lg font-semibold">Q</span>
+        </div>
+        <h1 className="font-heading text-2xl font-semibold">Inicia sesión</h1>
+        <p className="text-sm text-muted-foreground">
+          Continúa con Passkey para acceder de forma segura.
+        </p>
+      </header>
 
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel htmlFor="email">Correo</FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <Mail data-icon="inline-start" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    type="email"
-                    inputMode="email"
-                    autoComplete="username webauthn"
-                    placeholder="tu@correo.com"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    aria-invalid={isInvalid}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                  {!isInvalid && (
-                    <InputGroupAddon align="inline-end">
-                      <Check
-                        data-icon="inline-end"
-                        className="text-success"
-                        aria-label="Email con formato válido"
-                      />
-                    </InputGroupAddon>
-                  )}
-                </InputGroup>
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
-        />
-      </FieldGroup>
+      <PasskeyPromptButton mode="signIn" />
 
-      <div className="mt-6 flex flex-col gap-3">
-        <Button
-          type="submit"
-          size="lg"
-          className="h-12 w-full text-sm font-semibold"
+      <p className="text-center text-sm text-muted-foreground">
+        <Link
+          href="/sign-in/email"
+          className="underline-offset-4 hover:text-foreground hover:underline"
         >
-          {form.state.isSubmitting ? (
-            <>
-              <Spinner data-icon="inline-start" /> Cargando
-            </>
-          ) : (
-            <>
-              <Fingerprint data-icon="inline-start" /> Inicia sesion
-            </>
-          )}
-        </Button>
-      </div>
-    </form>
+          {AUTH_MESSAGES.useOtherMethod}
+        </Link>
+      </p>
+
+      <p className="text-center text-sm text-muted-foreground">
+        ¿No tienes cuenta?{" "}
+        <Link
+          href="/sign-up"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          Inicia el registro
+        </Link>
+      </p>
+    </div>
   );
 }

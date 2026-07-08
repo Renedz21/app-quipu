@@ -193,6 +193,9 @@ export const appTables = {
       wants: v.number(),
       savings: v.number(),
     }),
+    // v2.5: set to true when this row has been copied to incomeEvents.
+    // Removed in the narrow phase.
+    migratedToIncomeEvents: v.optional(v.boolean()),
   })
     .index("by_cycle", ["cycleId"])
     .index("by_profile", ["profileId"]),

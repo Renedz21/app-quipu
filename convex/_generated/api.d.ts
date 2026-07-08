@@ -14,6 +14,8 @@ import type * as expenses from "../expenses.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as http from "../http.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
+import type * as lib_migrations from "../lib/migrations.js";
+import type * as migrations from "../migrations.js";
 import type * as paydayEngine from "../paydayEngine.js";
 import type * as profiles from "../profiles.js";
 
@@ -30,6 +32,8 @@ declare const fullApi: ApiFromModules<{
   fixedCommitments: typeof fixedCommitments;
   http: typeof http;
   "lib/budgetMath": typeof lib_budgetMath;
+  "lib/migrations": typeof lib_migrations;
+  migrations: typeof migrations;
   paydayEngine: typeof paydayEngine;
   profiles: typeof profiles;
 }>;

@@ -39,6 +39,12 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-needs: var(--needs);
+  --color-needs-soft: var(--needs-soft);
+  --color-wants: var(--wants);
+  --color-wants-soft: var(--wants-soft);
+  --color-savings: var(--savings);
+  --color-savings-soft: var(--savings-soft);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -66,6 +72,17 @@
   --destructive-soft: oklch(0.9445 0.0177 39.4);
   --paper: oklch(0.9643 0.007 88.64);
   --border: oklch(0.9316 0.0128 86.83);
+
+  /* Envelopes: alias semánticos de los tokens ya existentes.
+     --needs → azul (igual a --primary), --wants → naranja (igual a --warning),
+     --savings → verde (igual a --success). Cambiar acá cambia los 3 sobres. */
+  --needs: oklch(0.4934 0.0735 251.4);
+  --needs-soft: oklch(0.952 0.0093 242.84);
+  --wants: oklch(0.638 0.1045 75.64);
+  --wants-soft: oklch(0.9513 0.0217 83.26);
+  --savings: oklch(0.5899 0.0745 150.44);
+  --savings-soft: oklch(0.9482 0.0109 149.86);
+
   --muted: oklch(0.6959 0.0076 268.52);
   --muted-foreground: oklch(0.5484 0.0114 267.29);
 
@@ -111,6 +128,14 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Envelopes en dark: versiones levantadas de los originales. */
+  --needs: oklch(0.7 0.1 251.4);
+  --needs-soft: oklch(0.3 0.05 251.4 / 0.2);
+  --wants: oklch(0.75 0.12 75.64);
+  --wants-soft: oklch(0.3 0.05 75.64 / 0.2);
+  --savings: oklch(0.7 0.1 150.44);
+  --savings-soft: oklch(0.3 0.05 150.44 / 0.2);
 }
 
 @layer base {

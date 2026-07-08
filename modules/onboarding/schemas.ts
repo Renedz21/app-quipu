@@ -135,18 +135,13 @@ export const step6Schema = z.object({
   commitments: z.array(commitmentDraftSchema).default([]),
 });
 
-/** Paso 7: worker type. */
-export const step7Schema = z.object({
-  workerType: z.enum(["dependent", "independent"], {
-    error: "Cuéntanos cómo trabajas para terminar.",
-  }),
-});
-
 /**
  * Payload completo que se envía al `completeOnboardingAction`.
- * Es la composición de los 7 schemas editables (1, 2, 3, 5, 6, 7) más
+ * Es la composición de los 6 schemas editables (1, 2, 3, 5, 6) más
  * los defaults que el action completa si el cliente no los manda
- * (country, currencyCode, currencySymbol).
+ * (country, currencyCode, currencySymbol). El paso 7 (summary) no
+ * aporta datos al payload: el botón "Activar mi copiloto" dispara el
+ * submit directamente con el state acumulado.
  *
  * Implementación: NO desestructuramos `.shape` (eso pierde los
  * `.refine` y `.superRefine`). Hacemos un `z.object` con los mismos
@@ -162,7 +157,6 @@ export const finalPayloadSchema = z
     allocationWants: step5Schema.shape.allocationWants,
     allocationSavings: step5Schema.shape.allocationSavings,
     commitments: step6Schema.shape.commitments,
-    workerType: step7Schema.shape.workerType,
     country: z.string().default("Perú"),
     currencyCode: z.string().default("PEN"),
     currencySymbol: z.string().default("S/"),

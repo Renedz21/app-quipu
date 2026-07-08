@@ -7,7 +7,6 @@ import {
   step3Schema,
   step5Schema,
   step6Schema,
-  step7Schema,
 } from "./schemas";
 
 describe("onboarding schemas", () => {
@@ -228,21 +227,6 @@ describe("onboarding schemas", () => {
     });
   });
 
-  describe("step7Schema (workerType)", () => {
-    it.each([
-      "dependent",
-      "independent",
-    ] as const)("acepta workerType válido: %s", (value) => {
-      const result = step7Schema.safeParse({ workerType: value });
-      expect(result.success).toBe(true);
-    });
-
-    it("rechaza workerType inválido", () => {
-      const result = step7Schema.safeParse({ workerType: "other" });
-      expect(result.success).toBe(false);
-    });
-  });
-
   describe("commitmentDraftSchema (reusable)", () => {
     it("exporta el schema individual", () => {
       // Importante: step6Schema es array de este. Si el individual
@@ -268,7 +252,6 @@ describe("onboarding schemas", () => {
         allocationWants: 30,
         allocationSavings: 20,
         commitments: [],
-        workerType: "dependent",
         country: "Perú",
         currencyCode: "PEN",
         currencySymbol: "S/",
@@ -286,7 +269,6 @@ describe("onboarding schemas", () => {
         allocationWants: 30,
         allocationSavings: 10,
         commitments: [],
-        workerType: "dependent",
       });
       expect(result.success).toBe(false);
     });
@@ -301,7 +283,6 @@ describe("onboarding schemas", () => {
         allocationWants: 30,
         allocationSavings: 20,
         commitments: [],
-        workerType: "dependent",
       });
       expect(result.success).toBe(false);
     });

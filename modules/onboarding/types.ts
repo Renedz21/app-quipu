@@ -28,14 +28,6 @@ export type IncomeModel = "fixed" | "variable" | "mixed";
 export type PayFrequency = "monthly" | "biweekly" | "weekly" | "variable";
 
 /**
- * Cómo trabaja el usuario. Decidido en el paso 7 (summary).
- * Sirve para configurar copy futuro (no afecta el ciclo financiero).
- * - "dependent": planilla, quinto mes, beneficios laborales.
- * - "independent": freelance, negocio propio, sin planilla.
- */
-export type WorkerType = "dependent" | "independent";
-
-/**
  * Frecuencia de un compromiso fijo. Cada uno descuenta de su sobre.
  * - "monthly": una vez al mes (cualquier día).
  * - "first_payday": descuenta en el primer pago del ciclo.
@@ -73,7 +65,7 @@ export type CommitmentDraft = {
  * - 4: preview del ciclo (read-only).
  * - 5: porcentajes de reparto.
  * - 6: compromisos fijos.
- * - 7: summary + worker type (último editable, dispara el submit).
+ * - 7: summary (último editable, dispara el submit).
  * - 8: confirmación final (server-rendered tras redirect del action).
  */
 export type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -96,7 +88,6 @@ export type OnboardingState = {
   allocationWants: number;
   allocationSavings: number;
   commitments: CommitmentDraft[];
-  workerType: WorkerType | null;
   country: string;
   currencyCode: string;
   currencySymbol: string;

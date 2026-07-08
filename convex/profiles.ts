@@ -36,7 +36,12 @@ export const createProfile = mutation({
       v.literal("mixed"),
     ),
     payFrequency: v.optional(
-      v.union(v.literal("monthly"), v.literal("biweekly")),
+      v.union(
+        v.literal("monthly"),
+        v.literal("biweekly"),
+        v.literal("weekly"),
+        v.literal("variable"),
+      ),
     ),
     paydays: v.optional(v.array(v.number())),
     allocationNeeds: v.number(),
@@ -157,7 +162,12 @@ export const updateProfileSettings = mutation({
     allocationWants: v.optional(v.number()),
     allocationSavings: v.optional(v.number()),
     payFrequency: v.optional(
-      v.union(v.literal("monthly"), v.literal("biweekly")),
+      v.union(
+        v.literal("monthly"),
+        v.literal("biweekly"),
+        v.literal("weekly"),
+        v.literal("variable"),
+      ),
     ),
     paydays: v.optional(v.array(v.number())),
   },

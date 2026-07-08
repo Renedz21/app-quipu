@@ -45,7 +45,6 @@ import type {
   OnboardingState,
   OnboardingStep,
   PayFrequency,
-  WorkerType,
 } from "../types";
 
 const STORAGE_KEY = "quipu:onboarding-state:v1";
@@ -194,5 +193,4 @@ export type {
   OnboardingState,
   OnboardingStep,
   PayFrequency,
-  WorkerType,
 };

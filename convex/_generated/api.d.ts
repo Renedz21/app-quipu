@@ -16,8 +16,6 @@ import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
-import type * as lib_migrations from "../lib/migrations.js";
-import type * as migrations from "../migrations.js";
 import type * as profiles from "../profiles.js";
 
 import type {
@@ -35,8 +33,6 @@ declare const fullApi: ApiFromModules<{
   incomeEvents: typeof incomeEvents;
   "lib/budgetMath": typeof lib_budgetMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
-  "lib/migrations": typeof lib_migrations;
-  migrations: typeof migrations;
   profiles: typeof profiles;
 }>;
 

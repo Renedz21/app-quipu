@@ -13,7 +13,6 @@ const baseState: OnboardingState = {
   allocationWants: 30,
   allocationSavings: 20,
   commitments: [],
-  workerType: null,
 };
 
 describe("onboardingReducer", () => {

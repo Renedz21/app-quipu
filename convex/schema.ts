@@ -27,10 +27,16 @@ export const appTables = {
       v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
     ),
 
-    // Configuración del motor de Flujo de Caja
-    workerType: v.optional(v.union(v.literal("dependent"), v.literal("independent"))),
+    // Cadencia con la que el usuario recibe su dinero.
+    // v2.5: extendemos el union a 4 valores (semanal y variable son nuevos).
+    // Slice B del onboarding endurezca a required cuando P0-2 cierre.
     payFrequency: v.optional(
-      v.union(v.literal("monthly"), v.literal("biweekly")),
+      v.union(
+        v.literal("monthly"),
+        v.literal("biweekly"),
+        v.literal("weekly"),
+        v.literal("variable"),
+      ),
     ),
     paydays: v.optional(v.array(v.number())), // e.g., [15, 30] para tus quincenas
 

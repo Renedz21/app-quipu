@@ -15,7 +15,6 @@ import type {
   IncomeModel,
   OnboardingState,
   PayFrequency,
-  WorkerType,
 } from "./types";
 
 /** IDs de los 8 pasos del wizard, en orden. */
@@ -57,7 +56,6 @@ export const ONBOARDING_DEFAULTS = {
   allocationWants: 30,
   allocationSavings: 20,
   commitments: [] as CommitmentDraft[],
-  workerType: null as WorkerType | null,
   country: "Perú",
   currencyCode: "PEN",
   currencySymbol: "S/",

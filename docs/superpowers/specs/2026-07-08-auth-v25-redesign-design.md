@@ -20,7 +20,7 @@
 | 6 | `addPasskey` pre-auth (sin sesión) | Passkey-first registration con `context` opaco. `addPasskey` autenticado se posterga a "Dispositivos de confianza". |
 | 7 | Errores de Better Auth → `ErrorCode` mapeados | Regla 4 del AGENTS.md: nunca comparar `error.message` con strings. |
 | 8 | Validación de sesión en `page.tsx`, no en `layout.tsx` | `layout.tsx` persiste entre navegaciones; redirects ahí pueden tener efectos no esperados. |
-| 9 | Detección de capabilities con `PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()` | Si retorna `false`, deshabilita botón passkey y promueve link "Usar otro método". |
+| 9 | Detección de capabilities: `typeof window.PublicKeyCredential === "undefined"` deshabilita el botón; la promesa `isUserVerifyingPlatformAuthenticatorAvailable()` es solo informativa (NO bloquea). **Fix post-MVP**: el código original usaba la promesa UVPA como bloqueante, lo cual deshabilitaba el botón en dispositivos con security keys externas (YubiKey) o cuando el browser no detecta UVPA por condiciones del entorno. Ver living doc P0-7. |
 | 10 | Auth es un módulo (`modules/auth/`), no vive dentro de `app/(auth)/` | El AGENTS.md define `app/` como routing puro y `modules/[x]/` como dominio. `app/(auth)/components/` violaba la regla. |
 
 ## Global Constraints
@@ -192,29 +192,42 @@ Cada `page.tsx` llama `await requireUnauthenticatedSession()` como primera líne
 
 ### Detección de capabilities
 
+**Criterio correcto:** el botón de passkey está activo si el browser soporta WebAuthn. La promesa `isUserVerifyingPlatformAuthenticatorAvailable()` es solo informativa (puede fallar en dispositivos con security keys externas o cuando el browser no detecta UVPA por condiciones del entorno).
+
 ```ts
 // modules/auth/components/passkey-prompt-button.tsx
 "use client";
 
+const [hasWebAuthn, setHasWebAuthn] = useState<boolean | null>(null);
 const [hasPlatformAuth, setHasPlatformAuth] = useState<boolean | null>(null);
 
 useEffect(() => {
-  if (typeof window === "undefined" || !window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
+  if (typeof window === "undefined") return;
+  if (typeof window.PublicKeyCredential === "undefined") {
+    // Browser sin WebAuthn: único caso donde se deshabilita el botón.
+    setHasWebAuthn(false);
     setHasPlatformAuth(false);
     return;
   }
-  PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+  setHasWebAuthn(true);
+  // UVPA es informativo. Si la promesa falla, el botón sigue activo
+  // (puede haber security key externa, o UVPA no detectable).
+  window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.()
     .then(setHasPlatformAuth)
     .catch(() => setHasPlatformAuth(false));
 }, []);
 
 // Render:
-// - hasPlatformAuth === null: skeleton neutro
-// - hasPlatformAuth === false: botón deshabilitado + "Tu dispositivo no soporta Passkeys" + link a /sign-in/email como CTA principal
-// - hasPlatformAuth === true: botón activo + "Usar otro método" como link secundario
+// - hasWebAuthn === null: skeleton neutro
+// - hasWebAuthn === false: botón deshabilitado + "Tu dispositivo no soporta Passkeys"
+// - hasWebAuthn === true: botón activo siempre
+//   - hasPlatformAuth === true: copy por defecto (experiencia óptima)
+//   - hasPlatformAuth === false: sin copy secundario extra
 ```
 
 **Importante:** el link "Usar otro método" se renderiza **siempre**, no solo cuando la detección falla. Así un usuario con passkey puede decidir voluntariamente usar email (ej. laptop del trabajo).
+
+**Historia:** la primera versión de este spec (decisión 9) usaba la promesa UVPA como bloqueante. Eso se implementó en Task 5 y pasó los tests, pero un usuario reportó que su dispositivo "sí soporta passkeys pero le decía que no". El bug es que la API UVPA solo cubre authenticators integrados al dispositivo; falla en YubiKeys, en PIN sin biometric, etc. El fix (commit `fix(auth): correct passkey capability detection`) separa `hasWebAuthn` (gate) de `hasPlatformAuth` (informativo). Ver living doc P0-7.
 
 ---
 

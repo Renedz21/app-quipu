@@ -219,7 +219,44 @@ git commit -m "feat(app): add onboarding and dashboard placeholder routes"
 
 ---
 
-## P1 — Próximo a hacer (post-merge a main)
+### P0-7: Fix detección de capabilities de passkey (bug bloqueante)
+
+- [x] **Status:** Resuelto (commit por definir). **Owner:** controller. **Detectado durante:** smoke test del usuario después de implementar el plan de auth v2.5.
+
+**Por qué existe:** el código original de `passkey-prompt-button.tsx` (Task 5 del plan de auth v2.5) usaba `isUserVerifyingPlatformAuthenticatorAvailable()` como gate para deshabilitar el botón. Esa API solo cubre authenticators **UVPA integrados al dispositivo** (biometric como Face ID/Windows Hello). Falla silenciosamente en:
+
+- Dispositivos con security keys externas (YubiKey, etc.).
+- Dispositivos con PIN (no biometric) que el browser reporta como "no UVPA".
+- Browsers en iOS Safari con iCloud Keychain en ciertas condiciones.
+- Casos donde el authenticator existe pero no es detectable vía UVPA.
+
+El usuario testeó la UI en un dispositivo que sí soporta passkeys (probablemente Windows Hello con PIN o security key) pero vio el copy "Tu dispositivo no soporta Passkeys" + botón deshabilitado. **Esto es un bug que miente al usuario sobre sus capacidades reales.**
+
+**Causa raíz:** confusión entre "el browser tiene WebAuthn" (gate correcto) y "el dispositivo tiene authenticator UVPA" (informativo). El código original las trataba como sinónimos.
+
+**Fix aplicado (commit por crear):**
+
+1. En `modules/auth/components/passkey-prompt-button.tsx`:
+   - Separar `hasWebAuthn` (gate: `typeof window.PublicKeyCredential === "undefined"`) de `hasPlatformAuth` (informativo).
+   - El botón se deshabilita SOLO si `hasWebAuthn === false`.
+   - La promesa UVPA sigue corriendo pero su resultado NO afecta al botón.
+   - El copy "Tu dispositivo no soporta Passkeys" se muestra SOLO si `hasWebAuthn === false` (no si UVPA es false).
+2. En `modules/auth/components/passkey-prompt-button.test.tsx`:
+   - Actualizar el test "renders disabled button with 'no soporta' message" para que el caso sea `PublicKeyCredential === undefined` (en vez de UVPA `false`).
+   - Agregar regression test: "renders enabled button when WebAuthn exists but UVPA is unavailable".
+3. En `docs/superpowers/specs/2026-07-08-auth-v25-redesign-design.md`:
+   - Actualizar la decisión 9 y la sección "Detección de capabilities" para reflejar el criterio correcto.
+
+**Commit esperado:**
+```bash
+git commit -m "fix(auth): correct passkey capability detection — gate on WebAuthn, not UVPA"
+```
+
+**Criterio de cierre:** un usuario con security key externa o dispositivo con PIN (no biometric) puede ver el botón de passkey activo. Los 5 tests del componente pasan. El spec y el plan están actualizados con la decisión correcta.
+
+**Lección aprendida (para el Manual 4 - Fixer):** la spec inicial (decisión 9) decía "UVPA false → deshabilitar botón". Esto fue lo que el implementer de Task 5 codificó, y los tests lo reflejaban. Los tests verificaban la implementación, no el comportamiento esperado del usuario. En retrospectiva, el test debió preguntar "¿el dispositivo del usuario realmente no soporta passkeys?" y no "¿UVPA retorna false?". Un smoke test en el browser habría atrapado el bug antes de mergear.
+
+---
 
 ### P1-1: Motor de cascada de compromisos para `mixed`/`variable`
 
@@ -481,4 +518,4 @@ git commit -m "chore(lint): resolve pre-existing Biome lint debt"
 ## Changelog de este documento
 
 - **2026-07-08** — Creación inicial post-migración. Items P0-1 a P0-4, P1-1 a P1-3, P2-1 a P2-3. Owner del documento: el branch `chore/quipu-2.0`.
-- **2026-07-08** — Update durante implementación de auth v2.5. Cambios: P0-2 corregido (`_components/` → `components/`), nuevo P0-5 (rutas mínimas /onboarding y /dashboard placeholders). Nuevos P2-4 (sign-up email capture), P2-5 (AuthHeader extraction), P2-6 (lint pre-existente).
+- **2026-07-08** — Update durante implementación de auth v2.5. Cambios: P0-2 corregido (`_components/` → `components/`), nuevo P0-5 (rutas mínimas /onboarding y /dashboard placeholders). Nuevos P2-4 (sign-up email capture), P2-5 (AuthHeader extraction), P2-6 (lint pre-existente). P0-7 (fix bug detección capabilities passkey) — RESUELTO.

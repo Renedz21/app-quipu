@@ -21,9 +21,22 @@ vi.mock("next/navigation", () => ({
 
 import { signInWithPasskey, registerPasskey } from "@/modules/auth/passkey";
 
+/**
+ * Tests del bug de capabilities (ver P0-7 del living doc).
+ *
+ * El bug original: el botón se deshabilitaba cuando
+ * `isUserVerifyingPlatformAuthenticatorAvailable()` retornaba `false`. Esto es
+ * incorrecto porque ese API solo cubre authenticators UVPA (biometric/PIN) —
+ * no cubre security keys externas (YubiKey), ni casos donde el browser no
+ * detecta el authenticator pero existe (ej. PIN sin biometric en Windows Hello).
+ *
+ * El fix: deshabilitar el botón SOLO si `window.PublicKeyCredential` no existe
+ * (browser sin WebAuthn). Si WebAuthn existe, el botón está activo aunque la
+ * promesa UVPA falle.
+ */
 describe("PasskeyPromptButton", () => {
   beforeEach(() => {
-    // Default: dispositivo soporta passkey
+    // Default: browser con WebAuthn y UVPA disponible
     Object.defineProperty(window, "PublicKeyCredential", {
       value: {
         isUserVerifyingPlatformAuthenticatorAvailable: () =>
@@ -39,7 +52,7 @@ describe("PasskeyPromptButton", () => {
     vi.clearAllMocks();
   });
 
-  it("renders enabled button when platform authenticator is available", async () => {
+  it("renders enabled button when browser has WebAuthn", async () => {
     render(<PasskeyPromptButton mode="signIn" />);
     await waitFor(() => {
       const btn = screen.getByRole("button");
@@ -47,7 +60,24 @@ describe("PasskeyPromptButton", () => {
     });
   });
 
-  it("renders disabled button with 'no soporta' message when not available", async () => {
+  it("renders disabled button with 'no soporta' message when WebAuthn is unavailable", async () => {
+    // Caso: browser sin WebAuthn (viejo o contexto restringido).
+    Object.defineProperty(window, "PublicKeyCredential", {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+    render(<PasskeyPromptButton mode="signIn" />);
+    await waitFor(() => {
+      const btn = screen.getByRole("button");
+      expect(btn.hasAttribute("disabled")).toBe(true);
+      expect(screen.getByText(/no soporta Passkeys/i)).toBeDefined();
+    });
+  });
+
+  // Regression test del bug: botón debe estar activo aunque UVPA devuelva false
+  // (cross-platform authenticator, security key, o simplemente UVPA no detectable).
+  it("renders enabled button when WebAuthn exists but UVPA is unavailable (security key, etc.)", async () => {
     Object.defineProperty(window, "PublicKeyCredential", {
       value: {
         isUserVerifyingPlatformAuthenticatorAvailable: () =>
@@ -58,7 +88,10 @@ describe("PasskeyPromptButton", () => {
     });
     render(<PasskeyPromptButton mode="signIn" />);
     await waitFor(() => {
-      expect(screen.getByText(/no soporta Passkeys/i)).toBeDefined();
+      const btn = screen.getByRole("button");
+      expect(btn.hasAttribute("disabled")).toBe(false);
+      // El copy "no soporta" NO debe aparecer cuando WebAuthn existe.
+      expect(screen.queryByText(/no soporta Passkeys/i)).toBeNull();
     });
   });
 

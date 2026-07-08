@@ -18,25 +18,37 @@ interface PasskeyPromptButtonProps {
 
 export function PasskeyPromptButton({ mode, email }: PasskeyPromptButtonProps) {
   const router = useRouter();
+  // `hasWebAuthn` = el browser soporta WebAuthn. Si false, no podemos ofrecer passkey.
+  // `hasPlatformAuth` = hay un authenticator UVPA integrado al dispositivo (biometric/PIN).
+  //   Esto NO bloquea el botón; solo se usa para mostrar un copy secundario opcional.
+  //   El bug original: bloqueaba el botón cuando UVPA era false, pero el dispositivo
+  //   puede tener authenticator cross-platform (YubiKey) o UVPA no detectable.
+  //   Ver living doc P0-7 y el fix de 2026-07-08.
+  const [hasWebAuthn, setHasWebAuthn] = useState<boolean | null>(null);
   const [hasPlatformAuth, setHasPlatformAuth] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<MappedAuthError | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (
-      !window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable
-    ) {
+    // Si WebAuthn no existe, el browser no soporta passkeys. Caso único donde
+    // deshabilitamos el botón. (Esto cubre browsers muy viejos o contextos
+    // sin WebAuthn como iframes sandboxed.)
+    if (typeof window.PublicKeyCredential === "undefined") {
+      setHasWebAuthn(false);
       setHasPlatformAuth(false);
       return;
     }
-    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+    setHasWebAuthn(true);
+    // UVPA es informativo. No bloquea. Si la promesa falla, asumimos false
+    // (sin UVPA) pero el botón sigue activo.
+    window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.()
       .then(setHasPlatformAuth)
       .catch(() => setHasPlatformAuth(false));
   }, []);
 
   const handleClick = async () => {
-    if (!hasPlatformAuth) return;
+    if (!hasWebAuthn) return;
     setIsLoading(true);
     setError(null);
 
@@ -64,9 +76,9 @@ export function PasskeyPromptButton({ mode, email }: PasskeyPromptButtonProps) {
   };
 
   const label = mode === "signIn" ? AUTH_MESSAGES.signIn : AUTH_MESSAGES.signUp;
-  const isDisabled = hasPlatformAuth !== true || isLoading;
+  const isDisabled = !hasWebAuthn || isLoading;
 
-  if (hasPlatformAuth === null) {
+  if (hasWebAuthn === null) {
     return (
       <Button size="lg" disabled className="h-12 w-full">
         <Spinner data-icon="inline-start" /> Cargando
@@ -94,7 +106,9 @@ export function PasskeyPromptButton({ mode, email }: PasskeyPromptButtonProps) {
           </>
         )}
       </Button>
-      {!hasPlatformAuth && (
+      {/* Solo si el browser NO tiene WebAuthn. Si tiene WebAuthn pero no UVPA,
+          el botón sigue activo (puede haber security key externa). */}
+      {!hasWebAuthn && (
         <p className="text-center text-sm text-muted-foreground">
           {AUTH_MESSAGES.passkeyNotSupported}
         </p>

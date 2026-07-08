@@ -28,6 +28,7 @@ import { OnboardingShell } from "./onboarding-shell";
 import { Step1Welcome } from "./step-1-welcome";
 import { Step2IncomeModel } from "./step-2-income-model";
 import { Step3Frequency } from "./step-3-frequency";
+import { Step4CyclePreview } from "./step-4-cycle-preview";
 import { StepPlaceholder } from "./step-placeholder";
 import type { OnboardingStep } from "../types";
 
@@ -83,14 +84,7 @@ function WizardInner() {
       case 3:
         return <Step3Frequency onAdvance={() => setStep(4)} />;
       case 4:
-        return (
-          <StepPlaceholder
-            step={4}
-            title="Así se comporta tu ciclo"
-            description="Una vista rápida de cómo se reparte el tiempo entre pagos."
-            onAdvance={() => setStep(5)}
-          />
-        );
+        return <Step4CyclePreview onAdvance={() => setStep(5)} />;
       case 5:
         return (
           <StepPlaceholder

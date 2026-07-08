@@ -2,7 +2,16 @@ import type { Doc } from "../_generated/dataModel";
 
 export const OVER_BUDGET_BUFFER = 0.05;
 export const WANTS_BURN_RATE_THRESHOLD = 0.6;
-export const CYCLE_DAYS = { biweekly: 15, monthly: 30 } as const;
+// v2.5: 4 cadencias soportadas. `variable` no usa paydays (el usuario
+// anota cada ingreso manual); `weekly` usa un solo día por simplicidad
+// (el frame de onboarding del paso 3 lo trata como "Lo apunto yo"
+// pero con cadencia semanal).
+export const CYCLE_DAYS = {
+  biweekly: 15,
+  monthly: 30,
+  weekly: 7,
+  variable: 15, // v2.5 initial: igual a HORIZON_DAYS de incomeEvents.
+} as const;
 export const ENVELOPE_TYPES = ["needs", "wants", "savings"] as const;
 export const SECOND_PAYDAY_FALLBACK = 15;
 
@@ -124,7 +133,9 @@ export function isValidPaydays(
 ): boolean {
   if (paydays.some((d) => !Number.isInteger(d) || d < 1 || d > 31))
     return false;
-  return payFrequency === "biweekly"
-    ? paydays.length >= 2
-    : paydays.length >= 1;
+  // `variable` no requiere paydays (el usuario anota manualmente).
+  if (payFrequency === "variable") return true;
+  if (payFrequency === "biweekly") return paydays.length >= 2;
+  // monthly, weekly: ≥ 1 día.
+  return paydays.length >= 1;
 }

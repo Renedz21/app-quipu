@@ -1,9 +1,9 @@
+import { redirect } from "next/navigation";
 import {
   fetchAuthQuery,
   requireAuthenticatedSession,
 } from "@/auth/auth-server";
 import { api } from "@/convex/_generated/api";
-import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   await requireAuthenticatedSession();

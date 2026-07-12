@@ -22,13 +22,8 @@ export default async function OnboardingLayout({
 }: PropsWithChildren) {
   const isAuthed = await isAuthenticated();
   if (!isAuthed) {
-    redirect("/sign-in");
+    redirect("/");
   }
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2">
-      <div>1</div>
-      {children}
-    </div>
-  )
+  return <div className="grid grid-cols-1 md:grid-cols-2">{children}</div>;
 }

@@ -1,11 +1,10 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { fetchAuthMutation } from "@/auth/auth-server";
 import { api } from "@/convex/_generated/api";
 import { fromConvexError } from "@/core/errors";
-import { finalPayloadSchema } from "./schemas";
 import { ONBOARDING_DEFAULTS } from "./constants";
+import { finalPayloadSchema } from "./schemas";
 
 export async function completeOnboardingAction(input: unknown) {
   const parsed = finalPayloadSchema.parse({
@@ -17,8 +16,4 @@ export async function completeOnboardingAction(input: unknown) {
   } catch (error) {
     throw fromConvexError(error);
   }
-}
-
-export async function redirectToDashboard() {
-  redirect("/dashboard");
 }

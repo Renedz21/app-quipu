@@ -1,20 +1,14 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from "react";
+import { useReducer, useEffect, type ReactNode } from "react";
+import { createContext, useContext } from "react";
 import type { OnboardingState, OnboardingAction } from "../types";
 import { ONBOARDING_DEFAULTS, STORAGE_KEY } from "../constants";
 
-function onboardingReducer(
-  state: OnboardingState,
-  action: OnboardingAction,
-): OnboardingState {
+type Ctx = { state: OnboardingState; dispatch: React.Dispatch<OnboardingAction> };
+const OnboardingContext = createContext<Ctx | null>(null);
+
+function reducer(state: OnboardingState, action: OnboardingAction): OnboardingState {
   switch (action.type) {
     case "UPDATE":
       return { ...state, ...action.payload };
@@ -27,39 +21,24 @@ function onboardingReducer(
   }
 }
 
-type OnboardingContextValue = {
-  state: OnboardingState;
-  dispatch: React.Dispatch<OnboardingAction>;
-};
-
-const OnboardingContext = createContext<OnboardingContextValue | null>(null);
-
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(onboardingReducer, ONBOARDING_DEFAULTS);
+  const [state, dispatch] = useReducer(reducer, ONBOARDING_DEFAULTS, (init) => {
+    if (typeof window === "undefined") return init;
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      return saved ? { ...init, ...JSON.parse(saved) } : init;
+    } catch {
+      return init;
+    }
+  });
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as Partial<OnboardingState>;
-        dispatch({ type: "HYDRATE", payload: parsed });
-      } catch {
-        // ignore corrupt data
-      }
-    }
-  }, []);
-
-  const persist = useCallback(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // storage full
     }
   }, [state]);
-
-  useEffect(() => {
-    persist();
-  }, [state, persist]);
 
   return (
     <OnboardingContext.Provider value={{ state, dispatch }}>
@@ -68,10 +47,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useOnboarding(): OnboardingContextValue {
+export function useOnboarding(): Ctx {
   const ctx = useContext(OnboardingContext);
-  if (!ctx) {
-    throw new Error("useOnboarding must be used within OnboardingProvider");
-  }
+  if (!ctx) throw new Error("useOnboarding must be used within OnboardingProvider");
   return ctx;
 }

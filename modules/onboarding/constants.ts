@@ -10,6 +10,7 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
   paydays: [],
   cycleDurationDays: null,
   mixedFixedAmount: null,
+  variableIncomeSources: [],
   allocationNeeds: 50,
   allocationWants: 30,
   allocationSavings: 20,

@@ -26,7 +26,7 @@ export const getMyProfile = query({
  */
 export const createProfile = mutation({
   args: {
-    name: v.string(),
+    name: v.optional(v.string()),
     country: v.string(),
     currencyCode: v.string(),
     currencySymbol: v.string(),
@@ -44,6 +44,8 @@ export const createProfile = mutation({
       ),
     ),
     paydays: v.optional(v.array(v.number())),
+    cycleDurationDays: v.optional(v.number()),
+    mixedFixedAmount: v.optional(v.number()),
     allocationNeeds: v.number(),
     allocationWants: v.number(),
     allocationSavings: v.number(),
@@ -64,7 +66,7 @@ export const createProfile = mutation({
       .unique();
     if (existing) return existing._id;
 
-    const name = args.name.trim();
+    const name = (args.name ?? identity.name ?? "").trim();
     if (!name) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -126,6 +128,8 @@ export const createProfile = mutation({
       incomeModel: args.incomeModel,
       payFrequency: args.payFrequency,
       paydays: args.paydays,
+      cycleDurationDays: args.cycleDurationDays,
+      mixedFixedAmount: args.mixedFixedAmount,
       allocationNeeds: args.allocationNeeds,
       allocationWants: args.allocationWants,
       allocationSavings: args.allocationSavings,

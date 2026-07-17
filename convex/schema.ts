@@ -26,6 +26,8 @@ export const appTables = {
     incomeModel: v.optional(
       v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
     ),
+    cycleDurationDays: v.optional(v.number()), // 15 or 30 for variable income
+    mixedFixedAmount: v.optional(v.number()), // centimos, estimado de la parte fija en modelo mixed
 
     // Cadencia con la que el usuario recibe su dinero.
     // v2.5: extendemos el union a 4 valores (semanal y variable son nuevos).

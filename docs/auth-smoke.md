@@ -25,7 +25,7 @@
 5. Aparece escudo canon + CTA "Crear passkey".
 6. Click "Crear passkey" → autorizar con Touch ID / Windows Hello.
 7. Aparece check verde + mensaje "Tu cuenta está lista" + CTA "Ir al onboarding →".
-8. Click CTA → aterriza en `/configurar` (placeholder de onboarding).
+8. Click CTA → aterriza en `/onboarding` (placeholder de onboarding).
 9. Sesión activa, redirect correcto.
 
 ### B. Sign-up con email que ya existe

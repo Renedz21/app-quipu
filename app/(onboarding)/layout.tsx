@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { PropsWithChildren, ReactNode } from "react";
+import type { PropsWithChildren } from "react";
 import { isAuthenticated } from "@/auth/auth-server";
 
 /**
@@ -10,12 +10,12 @@ import { isAuthenticated } from "@/auth/auth-server";
  * para no contaminar `(app)` con rutas que no requieren el AppShell.
  *
  * Auth gate: si el usuario no está autenticado, redirige a `/sign-in`.
- * NO verificamos si tiene profile: el page.tsx de `/configurar` se
+ * NO verificamos si tiene profile: el page.tsx de `/onboarding` se
  * encarga de redirigir a `/dashboard` si ya completó el onboarding.
  *
  * El layout es solo composición: no fetchea, no redirige por profile.
  * Si redirigiera acá, perderíamos la lógica de defensa en
- * `/configurar/page.tsx` (caso 2 tabs simultáneos, ver spec §12).
+ * `/onboarding/page.tsx` (caso 2 tabs simultáneos, ver spec §12).
  */
 export default async function OnboardingLayout({
   children,

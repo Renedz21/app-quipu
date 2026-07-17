@@ -234,7 +234,7 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
       {step === "success" && (
         <SuccessStep
           onContinue={() => {
-            router.push("/configurar");
+            router.push("/onboarding");
             router.refresh();
           }}
         />

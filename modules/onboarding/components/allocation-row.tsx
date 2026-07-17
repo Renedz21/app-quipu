@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/shared/lib/utils";
 import type { EnvelopeKey } from "../constants";
 import { distributeEnvelope, type Allocation } from "../lib/allocation";
@@ -25,6 +25,13 @@ export function AllocationRow({
   dispatch,
 }: Props) {
   const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    const currentDraft = Number.parseInt(draft, 10);
+    if (currentDraft !== value) {
+      setDraft(String(value));
+    }
+  }, [value, draft]);
 
   function commit(raw: string) {
     const n = Number.parseInt(raw, 10);

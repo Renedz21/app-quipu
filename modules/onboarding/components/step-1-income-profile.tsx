@@ -107,10 +107,10 @@ export function Step1IncomeProfile({ onNext }: { onNext: () => void }) {
               role="radio"
               aria-checked={selected}
               onClick={() => handleSelect(opt.value)}
-              className={`flex items-center gap-4 rounded-xl border-2 p-5 text-left transition-colors ${
+              className={`flex items-center gap-4 rounded-[14px] py-[18px] pl-5 pr-5 text-left transition-colors ${
                 selected
-                  ? "border-primary bg-primary-soft"
-                  : "border-border bg-card hover:border-primary/50"
+                  ? "border-[1.5px] border-primary bg-primary-soft"
+                  : "border border-[#E7E3DC] bg-white hover:border-primary/50"
               }`}
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-qp-border bg-white">

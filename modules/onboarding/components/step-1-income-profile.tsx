@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { ArrowRight } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
-import { OnboardingShell } from "./onboarding-shell";
-import { useOnboarding } from "./onboarding-provider";
-import { CheckMark } from "./check-mark";
 import { INCOME_MODEL_OPTIONS } from "../constants";
 import type { IncomeModel } from "../types";
+import { CheckMark } from "./check-mark";
+import { useOnboarding } from "./onboarding-provider";
+import { OnboardingShell } from "./onboarding-shell";
 
-type Props = { onNext: () => void };
+type Props = { onNext: VoidFunction };
 
 export function Step1IncomeProfile({ onNext }: Props) {
   const { state, dispatch } = useOnboarding();
@@ -19,9 +20,9 @@ export function Step1IncomeProfile({ onNext }: Props) {
       type: "UPDATE",
       payload: {
         incomeModel: value,
-        payFrequency: value === "mixed" ? "monthly" : null,
+        payFrequency: value === "mixed" ? "monthly" : undefined,
         paydays: value === "mixed" ? [1] : [],
-        cycleDurationDays: value === "variable" ? 30 : null,
+        cycleDurationDays: value === "variable" ? 30 : undefined,
       },
     });
   }
@@ -34,7 +35,8 @@ export function Step1IncomeProfile({ onNext }: Props) {
       hint="Puedes cambiarlo cuando quieras"
       cta={
         <Button onClick={onNext} disabled={!state.incomeModel} size="lg">
-          Continuar →
+          Continuar
+          <ArrowRight size={24} />
         </Button>
       }
     >
@@ -68,7 +70,7 @@ function IncomeModelRow({
   title: string;
   description: string;
   selected: boolean;
-  onClick: () => void;
+  onClick: VoidFunction;
 }) {
   return (
     <button
@@ -102,7 +104,11 @@ function IncomeModelRow({
   );
 }
 
-function IncomeModelIcon({ name }: { name: "Briefcase" | "TrendingUp" | "Layers" }) {
+function IncomeModelIcon({
+  name,
+}: {
+  name: "Briefcase" | "TrendingUp" | "Layers";
+}) {
   if (name === "Briefcase") {
     return <div className="size-5 rounded-sm bg-primary" />;
   }

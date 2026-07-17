@@ -2,11 +2,11 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
-import { OnboardingShell } from "./onboarding-shell";
-import { useOnboarding } from "./onboarding-provider";
 import { CheckMark } from "./check-mark";
+import { useOnboarding } from "./onboarding-provider";
+import { OnboardingShell } from "./onboarding-shell";
 
-type Props = { onBack: () => void; onNext: () => void };
+type Props = { onBack: VoidFunction; onNext: VoidFunction };
 
 export function Step2Variable({ onBack, onNext }: Props) {
   const { state, dispatch } = useOnboarding();
@@ -34,7 +34,10 @@ export function Step2Variable({ onBack, onNext }: Props) {
               role="radio"
               aria-checked={selected}
               onClick={() =>
-                dispatch({ type: "UPDATE", payload: { cycleDurationDays: days } })
+                dispatch({
+                  type: "UPDATE",
+                  payload: { cycleDurationDays: days },
+                })
               }
               className={cn(
                 "flex flex-1 flex-col rounded-xl border-2 p-5 text-left",

@@ -10,7 +10,7 @@ type Props = {
   title: string;
   subtitle?: string;
   children: ReactNode;
-  onBack?: () => void;
+  onBack?: VoidFunction;
   cta?: ReactNode;
   hint?: string;
 };
@@ -25,7 +25,7 @@ export function OnboardingShell({
   hint,
 }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-[720px] flex-col gap-8 px-4 py-10">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
       <div className="flex items-center justify-between gap-4">
         <QuipuLogo />
         <Stepper currentStep={currentStep} />

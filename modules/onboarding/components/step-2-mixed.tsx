@@ -58,7 +58,7 @@ export function Step2Mixed({ onBack, onNext }: Props) {
               onCommit={(cents) =>
                 dispatch({
                   type: "UPDATE",
-                  payload: { mixedFixedAmount: cents },
+                  payload: { mixedFixedAmount: cents ?? undefined },
                 })
               }
             />
@@ -103,7 +103,7 @@ function AmountField({
   initialCents,
   onCommit,
 }: {
-  initialCents: number | null;
+  initialCents: number | undefined;
   onCommit: (cents: number | null) => void;
 }) {
   const [draft, setDraft] = useState(

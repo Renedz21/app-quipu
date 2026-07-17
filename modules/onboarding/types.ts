@@ -7,8 +7,8 @@ export type OnboardingState = {
   incomeModel: IncomeModel | null;
   payFrequency: PayFrequency | null;
   paydays: number[];
-  cycleDurationDays: CycleDuration | null;
-  mixedFixedAmount: number | null;
+  cycleDurationDays: CycleDuration | undefined;
+  mixedFixedAmount: number | undefined;
   variableIncomeSources: string[];
   allocationNeeds: number;
   allocationWants: number;

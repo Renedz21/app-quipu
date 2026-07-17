@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/shared/components/ui/button";
+import { X } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
+import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { DAY_PILLS } from "../constants";
 import { useOnboarding } from "./onboarding-provider";
@@ -13,6 +14,22 @@ type Props = { onBack: VoidFunction; onNext: VoidFunction };
 export function Step2Mixed({ onBack, onNext }: Props) {
   const { state, dispatch } = useOnboarding();
   const mixedDay = state.paydays?.[0] ?? 1;
+
+  function addSource(label: string) {
+    dispatch({
+      type: "UPDATE",
+      payload: { variableIncomeSources: [...state.variableIncomeSources, label] },
+    });
+  }
+
+  function removeSource(label: string) {
+    dispatch({
+      type: "UPDATE",
+      payload: {
+        variableIncomeSources: state.variableIncomeSources.filter((s) => s !== label),
+      },
+    });
+  }
 
   return (
     <OnboardingShell
@@ -68,22 +85,14 @@ export function Step2Mixed({ onBack, onNext }: Props) {
             <span className="size-3 rounded-full bg-clay" />
             <p className="font-semibold">Ingresos variables</p>
             <span className="text-xs text-muted-foreground">
-              · proyectos, ventas
+              · agregá los tipos que esperás recibir
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {["Proyectos", "Ventas", "Servicios"].map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-            <span className="rounded-full border border-dashed border-border bg-surface-soft px-3 py-1.5 text-sm text-muted-foreground">
-              + Agregar
-            </span>
-          </div>
+          <VariableSourceInput
+            sources={state.variableIncomeSources}
+            onAdd={addSource}
+            onRemove={removeSource}
+          />
         </div>
       </div>
     </OnboardingShell>
@@ -161,5 +170,72 @@ function DayPill({
     >
       {label}
     </button>
+  );
+}
+
+function VariableSourceInput({
+  sources,
+  onAdd,
+  onRemove,
+}: {
+  sources: string[];
+  onAdd: (label: string) => void;
+  onRemove: (label: string) => void;
+}) {
+  const [draft, setDraft] = useState("");
+
+  function commit() {
+    const trimmed = draft.trim();
+    if (!trimmed || sources.includes(trimmed)) {
+      setDraft("");
+      return;
+    }
+    onAdd(trimmed);
+    setDraft("");
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {sources.map((tag) => (
+        <SourcePill key={tag} label={tag} onRemove={() => onRemove(tag)} />
+      ))}
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+        }}
+        placeholder="+ Agregar"
+        maxLength={30}
+        className="rounded-full border border-dashed border-border bg-surface-soft px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+      />
+    </div>
+  );
+}
+
+function SourcePill({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: VoidFunction;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-muted-foreground hover:text-foreground"
+        aria-label={`Quitar ${label}`}
+      >
+        <X size={12} />
+      </button>
+    </span>
   );
 }

@@ -18,8 +18,6 @@ function onboardingReducer(
   switch (action.type) {
     case "UPDATE":
       return { ...state, ...action.payload };
-    case "SET_STEP":
-      return { ...state, currentStep: action.payload };
     case "RESET":
       return { ...ONBOARDING_DEFAULTS };
     case "HYDRATE":
@@ -36,11 +34,7 @@ type OnboardingContextValue = {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
-export function OnboardingProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(onboardingReducer, ONBOARDING_DEFAULTS);
 
   useEffect(() => {

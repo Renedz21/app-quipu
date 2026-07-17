@@ -1,45 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { OnboardingProvider, useOnboarding } from "./onboarding-provider";
+import { useState } from "react";
+import { OnboardingProvider } from "./onboarding-provider";
 import { Step1IncomeProfile } from "./step-1-income-profile";
 import { Step2SystemConfig } from "./step-2-system-config";
 import { Step3Allocation } from "./step-3-allocation";
+import { StepSuccess } from "./step-success";
 
-function WizardInner() {
-  const { state, dispatch } = useOnboarding();
-  const searchParams = useSearchParams();
-  const hydrated = useRef(false);
-
-  useEffect(() => {
-    const stepParam = searchParams.get("step");
-    if (stepParam && !hydrated.current) {
-      const n = Number.parseInt(stepParam, 10);
-      if (n >= 1 && n <= 3) {
-        dispatch({ type: "SET_STEP", payload: n as 1 | 2 | 3 });
-      }
-    }
-    hydrated.current = true;
-  }, [searchParams, dispatch]);
-
-  useEffect(() => {
-    if (hydrated.current) {
-      window.history.replaceState(null, "", `/configurar?step=${state.currentStep}`);
-    }
-  }, [state.currentStep]);
-
-  switch (state.currentStep) {
-    case 1:
-      return <Step1IncomeProfile />;
-    case 2:
-      return <Step2SystemConfig />;
-    case 3:
-      return <Step3Allocation />;
-    default:
-      return <Step1IncomeProfile />;
-  }
-}
+type Step = 1 | 2 | 3 | "success";
 
 export function OnboardingWizard() {
   return (
@@ -47,4 +15,33 @@ export function OnboardingWizard() {
       <WizardInner />
     </OnboardingProvider>
   );
+}
+
+function WizardInner() {
+  const [step, setStep] = useState<Step>(1);
+
+  function handleNext() {
+    setStep((s) => (s === 1 ? 2 : s === 2 ? 3 : s));
+  }
+
+  function handleBack() {
+    setStep((s) => (s === 2 ? 1 : s === 3 ? 2 : s));
+  }
+
+  function handleComplete() {
+    setStep("success");
+  }
+
+  if (step === "success") return <StepSuccess />;
+
+  switch (step) {
+    case 1:
+      return <Step1IncomeProfile onNext={handleNext} />;
+    case 2:
+      return <Step2SystemConfig onBack={handleBack} onNext={handleNext} />;
+    case 3:
+      return <Step3Allocation onBack={handleBack} onComplete={handleComplete} />;
+    default:
+      return <Step1IncomeProfile onNext={handleNext} />;
+  }
 }

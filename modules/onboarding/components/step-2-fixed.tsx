@@ -2,13 +2,13 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
-import { OnboardingShell } from "./onboarding-shell";
-import { useOnboarding } from "./onboarding-provider";
-import { CheckMark } from "./check-mark";
 import { DAY_PILLS } from "../constants";
 import { formatCycle } from "../lib/cycle";
+import { CheckMark } from "./check-mark";
+import { useOnboarding } from "./onboarding-provider";
+import { OnboardingShell } from "./onboarding-shell";
 
-type Props = { onBack: () => void; onNext: () => void };
+type Props = { onBack: VoidFunction; onNext: VoidFunction };
 
 const FREQ_LABEL: Record<"monthly" | "biweekly", string> = {
   monthly: "Mensual",
@@ -24,14 +24,20 @@ export function Step2Fixed({ onBack, onNext }: Props) {
   const { state, dispatch } = useOnboarding();
   const isBiweekly = state.payFrequency === "biweekly";
   const cycleDays = isBiweekly ? 15 : 30;
-  const payday = state.paydays?.[0] ?? 1;
   const canContinue = !!state.payFrequency && state.paydays.length > 0;
 
   function selectDay(day: number) {
     if (isBiweekly) {
-      const other = state.paydays?.find((pd) => pd !== payday) ?? 15;
-      if (day === other) return;
-      dispatch({ type: "UPDATE", payload: { paydays: [day, other] } });
+      const currentDays = state.paydays;
+      if (currentDays.includes(day)) {
+        const next = currentDays.filter((d) => d !== day);
+        dispatch({ type: "UPDATE", payload: { paydays: next.length ? next : [day] } });
+      } else if (currentDays.length >= 2) {
+        const next = [currentDays[1]!, day];
+        dispatch({ type: "UPDATE", payload: { paydays: next } });
+      } else {
+        dispatch({ type: "UPDATE", payload: { paydays: [...currentDays, day] } });
+      }
     } else {
       dispatch({ type: "UPDATE", payload: { paydays: [day] } });
     }
@@ -91,14 +97,18 @@ export function Step2Fixed({ onBack, onNext }: Props) {
         })}
       </div>
 
-      <p className="text-sm font-medium">Día de pago</p>
+      <p className="text-sm font-medium">
+        {isBiweekly ? "Días de pago" : "Día de pago"}
+      </p>
+      {isBiweekly && (
+        <p className="text-xs text-muted-foreground">Selecciona 2 días</p>
+      )}
       <div className="flex flex-wrap gap-2">
-        {DAY_PILLS.map((d) => {
-          const day = d === "Ultimo" ? 31 : d;
+        {DAY_PILLS.map((day) => {
           const selected = state.paydays?.includes(day);
           return (
             <button
-              key={d}
+              key={day}
               type="button"
               onClick={() => selectDay(day)}
               className={cn(
@@ -108,19 +118,19 @@ export function Step2Fixed({ onBack, onNext }: Props) {
                   : "border-border text-muted-foreground hover:border-primary/50",
               )}
             >
-              {d}
+              Día {day}
             </button>
           );
         })}
       </div>
 
-      {state.paydays && state.paydays.length > 0 && (
+      {state.paydays && state.paydays.length > 0 && state.payFrequency && (
         <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-soft p-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Tu ciclo
           </span>
           <span className="font-serif text-base text-foreground">
-            {formatCycle(payday)}
+            {formatCycle(state.paydays, state.payFrequency)}
           </span>
           <span className="ml-auto flex items-center gap-1.5 text-sm text-primary">
             <span className="size-2 rounded-full bg-primary" />

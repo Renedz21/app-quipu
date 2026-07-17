@@ -1,14 +1,25 @@
 "use client";
 
-import { useReducer, useEffect, type ReactNode } from "react";
-import { createContext, useContext } from "react";
-import type { OnboardingState, OnboardingAction } from "../types";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useReducer,
+} from "react";
 import { ONBOARDING_DEFAULTS, STORAGE_KEY } from "../constants";
+import type { OnboardingAction, OnboardingState } from "../types";
 
-type Ctx = { state: OnboardingState; dispatch: React.Dispatch<OnboardingAction> };
+type Ctx = {
+  state: OnboardingState;
+  dispatch: React.Dispatch<OnboardingAction>;
+};
 const OnboardingContext = createContext<Ctx | null>(null);
 
-function reducer(state: OnboardingState, action: OnboardingAction): OnboardingState {
+function reducer(
+  state: OnboardingState,
+  action: OnboardingAction,
+): OnboardingState {
   switch (action.type) {
     case "UPDATE":
       return { ...state, ...action.payload };
@@ -22,15 +33,20 @@ function reducer(state: OnboardingState, action: OnboardingAction): OnboardingSt
 }
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, ONBOARDING_DEFAULTS, (init) => {
-    if (typeof window === "undefined") return init;
+  const [state, dispatch] = useReducer(reducer, ONBOARDING_DEFAULTS);
+
+  // Hydrate from sessionStorage post-mount only — server can't read
+  // sessionStorage, so reading in lazy init causes a hydration mismatch.
+  useEffect(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
-      return saved ? { ...init, ...JSON.parse(saved) } : init;
+      if (saved) {
+        dispatch({ type: "HYDRATE", payload: JSON.parse(saved) });
+      }
     } catch {
-      return init;
+      // ignore corrupt data
     }
-  });
+  }, []);
 
   useEffect(() => {
     try {
@@ -49,6 +65,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
 export function useOnboarding(): Ctx {
   const ctx = useContext(OnboardingContext);
-  if (!ctx) throw new Error("useOnboarding must be used within OnboardingProvider");
+  if (!ctx)
+    throw new Error("useOnboarding must be used within OnboardingProvider");
   return ctx;
 }

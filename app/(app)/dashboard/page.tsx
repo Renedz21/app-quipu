@@ -4,6 +4,7 @@ import {
   requireAuthenticatedSession,
 } from "@/auth/auth-server";
 import { api } from "@/convex/_generated/api";
+import { SignOutButton } from "@/modules/auth/components/sign-out-button";
 
 export default async function DashboardPage() {
   await requireAuthenticatedSession();
@@ -19,6 +20,9 @@ export default async function DashboardPage() {
       <p className="mt-2 text-muted-foreground">
         El dashboard real se implementa en otra historia.
       </p>
+      <div className="mt-8">
+        <SignOutButton />
+      </div>
     </main>
   );
 }

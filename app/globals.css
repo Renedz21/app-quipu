@@ -8,6 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -51,6 +52,72 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/**
+ * Tokens canon Quipu (docs/quipu-design.md §1.3, §3).
+ * Subconjunto usado por el Bloque 1 (auth). El set completo qp01–qp25
+ * se agrega cuando el theme switcher lo requiera (YAGNI por ahora).
+ */
+@theme {
+  /* Neutros */
+  --color-canvas: #fbfaf7;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fdfcfa;
+  --color-surface-warm: #f6f4f0;
+  --color-ink: #23201c;
+  --color-body: #5a554e;
+  --color-mute: #7c766d;
+  --color-faint: #a6a099;
+  --color-line: #e1dcd4;
+
+  /* Acento (verde musgo default) */
+  --color-qp: #3c7d6e;
+  --color-qp-deep: #2c5d52;
+  --color-qp-text: #5a6b62;
+  --color-qp-border: #d5e4dc;
+  --color-qp-soft: #e4eee8;
+  --color-qp-selected: #f1f6f2;
+  --color-qp-panel: #eef4f0;
+  --color-qp-success-bg: #eef5f0;
+  --color-qp-shield-from: #eaf1ec;
+  --color-qp-shield-to: #dce9e2;
+  --color-qp-shield-line: #d0e0d7;
+
+  /* Colores de sobre usados en el logo */
+  --color-moss: #5e8c79;
+  --color-clay: #a6836a;
+
+  /* Error terracota (nunca rojo brillante) */
+  --color-danger: #b0685a;
+  --color-danger-line: #c98e80;
+  --color-danger-bg: #fdf7f5;
+  --color-danger-banner: #f6ebe7;
+  --color-danger-banner-line: #e6c9c1;
+  --color-danger-ink: #7c4033;
+  --color-danger-text: #95584b;
+
+  --shadow-glow: 0 14px 34px -14px rgba(60, 125, 110, 0.7);
+  --shadow-shield: 0 16px 40px -20px rgba(60, 125, 110, 0.5);
+
+  --animate-qspin: qspin 0.8s linear infinite;
+  --animate-qpulse: qpulse 1.4s ease-in-out infinite;
+}
+
+@keyframes qspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes qpulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 :root {

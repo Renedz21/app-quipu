@@ -1,5 +1,6 @@
-import { StartForm } from "@/modules/auth/components/start-form";
+import { redirect } from "next/navigation";
 
-export default function AuthEntryPage() {
-  return <StartForm />;
+/** Ruta legacy del flujo unificado. El canon vive en /sign-in y /sign-up. */
+export default function LegacyAuthPage() {
+  redirect("/sign-in");
 }

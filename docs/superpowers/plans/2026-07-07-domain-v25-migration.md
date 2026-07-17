@@ -1,5 +1,14 @@
 # Quipu v2.5 Domain Migration — Implementation Plan
 
+> ⚠️ **STATUS: EJECUTADO** (rama `chore/quipu-2.0`, commits `b70dda1`–`8a04b03`, 2026-07-08). Las 28 tareas de este plan están completas.
+>
+> **Fuentes de verdad actuales:**
+> - Decisiones de modelo: `docs/superpowers/specs/2026-07-07-domain-v25-audit-design.md` (es la spec que este plan implementó).
+> - Operaciones en producción: `docs/migrations/2026-07-07-v25-migration.md` (runbook ejecutable, 25 líneas).
+> - Estado del código: `convex/_generated/dataModel.d.ts` (tipos generados por `npx convex dev`).
+>
+> Este doc se conserva como **archivo histórico** del plan ejecutado. No es la fuente de verdad del modelo.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Migrate Quipu's Convex schema and mutations from the v2.0 (workerType/payday-based) model to v2.5 (incomeModel/event-driven model) in three phases (widen → migrate → narrow), with TDD on the pure logic layer and manual smoke tests on the mutation layer.

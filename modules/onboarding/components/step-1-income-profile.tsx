@@ -95,6 +95,7 @@ export function Step1IncomeProfile({ onNext }: { onNext: () => void }) {
           Continuar →
         </Button>
       }
+      hint="Puedes cambiarlo cuando quieras"
     >
       <div className="flex flex-col gap-3">
         {OPTIONS.map((opt) => {

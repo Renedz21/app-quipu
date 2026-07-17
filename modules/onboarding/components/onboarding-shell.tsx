@@ -10,6 +10,7 @@ type Props = {
   children: ReactNode;
   onBack?: () => void;
   cta?: ReactNode;
+  hint?: string;
 };
 
 export function OnboardingShell({
@@ -19,19 +20,21 @@ export function OnboardingShell({
   children,
   onBack,
   cta,
+  hint,
 }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
-      <div className="flex items-center gap-3">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+      {/* Stepper */}
+      <div className="flex items-center gap-2.5">
         {STEP_LABELS.map((label, i) => {
           const step = i + 1;
           const isActive = step === currentStep;
           const isComplete = step < currentStep;
           return (
-            <div key={step} className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
+            <div key={step} className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <span
-                  className={`flex size-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                  className={`flex size-[22px] items-center justify-center rounded-full text-[11px] font-bold ${
                     isComplete || isActive
                       ? "bg-primary text-primary-foreground"
                       : "border border-border text-muted-foreground"
@@ -58,7 +61,7 @@ export function OnboardingShell({
                   )}
                 </span>
                 <span
-                  className={`text-xs font-medium ${
+                  className={`text-[12.5px] font-semibold ${
                     isActive ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
@@ -66,31 +69,43 @@ export function OnboardingShell({
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
-                <span className="mx-1 h-px w-4 bg-border" />
+                <span className="h-px w-[22px] bg-border" />
               )}
             </div>
           );
         })}
       </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-semibold" tabIndex={-1}>
+      {/* Eyebrow + Title + Subtitle */}
+      <div className="flex flex-col">
+        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-clay">
+          Paso {currentStep} de {STEP_LABELS.length}
+        </span>
+        <h1
+          className="mt-2.5 font-serif text-[33px] font-medium leading-tight text-foreground"
+          tabIndex={-1}
+        >
           {title}
         </h1>
-        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+        {subtitle && (
+          <p className="mt-1.5 text-[15px] text-muted-foreground">{subtitle}</p>
+        )}
       </div>
 
       {children}
 
-      <div className="flex items-center justify-between">
+      {/* Footer nav */}
+      <div className="mt-2 flex items-center justify-between">
         {onBack ? (
           <button
             type="button"
             onClick={onBack}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="text-[13px] font-medium text-muted-foreground hover:text-foreground"
           >
             ← Atrás
           </button>
+        ) : hint ? (
+          <span className="text-[13px] text-faint">{hint}</span>
         ) : (
           <div />
         )}

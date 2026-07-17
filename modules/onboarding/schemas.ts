@@ -30,6 +30,7 @@ export const finalPayloadSchema = z.object({
   payFrequency: z.enum(["monthly", "biweekly"]).optional(),
   paydays: z.array(z.number().int().min(1).max(31)).optional(),
   cycleDurationDays: z.union([z.literal(15), z.literal(30)]).optional(),
+  mixedFixedAmount: z.number().int().min(0).optional(),
   allocationNeeds: z.number().int().min(0).max(100),
   allocationWants: z.number().int().min(0).max(100),
   allocationSavings: z.number().int().min(0).max(100),

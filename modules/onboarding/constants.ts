@@ -9,6 +9,7 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
   payFrequency: null,
   paydays: [],
   cycleDurationDays: null,
+  mixedFixedAmount: null,
   allocationNeeds: 50,
   allocationWants: 30,
   allocationSavings: 20,
@@ -58,7 +59,7 @@ export const FREQ_DISPLAY_LABELS: Record<string, string> = {
   biweekly: "Quincenal",
 };
 
-export const DAY_PILLS = [15, 30, "Ultimo"] as const;
+export const DAY_PILLS = [15, 30] as number[];
 
 export type EnvelopeKey = "allocationNeeds" | "allocationWants" | "allocationSavings";
 

@@ -8,6 +8,7 @@ export type OnboardingState = {
   payFrequency: PayFrequency | null;
   paydays: number[];
   cycleDurationDays: CycleDuration | null;
+  mixedFixedAmount: number | null;
   allocationNeeds: number;
   allocationWants: number;
   allocationSavings: number;

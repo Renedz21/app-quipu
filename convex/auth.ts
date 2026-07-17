@@ -27,21 +27,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     authFunctions,
     triggers: {
       user: {
-        onCreate: async (ctx, authUser) => {
-          await ctx.db.insert("profiles", {
-            name: "",
-            country: "",
-            currencyCode: "",
-            currencySymbol: "",
-            onboardingComplete: false,
-            plan: "free",
-            allocationNeeds: 50,
-            allocationWants: 30,
-            allocationSavings: 20,
-            createdAt: Date.now(),
-            userId: authUser._id,
-          });
-        },
+        // El profile se crea al terminar el onboarding (createProfile).
+        // No auto-crear aquí: un profile vacío bloquea el redirect
+        // /onboarding → /dashboard y ensucia el dominio.
         onUpdate: async () => {
           // sincroniza email u otros campos si cambian
         },

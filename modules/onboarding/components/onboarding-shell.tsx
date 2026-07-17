@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { cn } from "@/shared/lib/utils";
 import { STEP_LABELS } from "../constants";
 
 type Props = {
@@ -23,7 +24,7 @@ export function OnboardingShell({
   hint,
 }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
+    <div className="mx-auto flex w-full max-w-[720px] flex-col gap-8 px-4 py-10">
       {/* Header: logo + stepper */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -46,11 +47,12 @@ export function OnboardingShell({
               <div key={step} className="flex items-center gap-2.5">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`flex size-[22px] items-center justify-center rounded-full text-[11px] font-bold ${
+                    className={cn(
+                      "flex size-[22px] items-center justify-center rounded-full text-[11px] font-bold",
                       isComplete || isActive
                         ? "bg-primary text-primary-foreground"
-                        : "border border-border text-muted-foreground"
-                    }`}
+                        : "border border-border text-muted-foreground",
+                    )}
                   >
                     {isComplete ? (
                       <svg
@@ -73,9 +75,10 @@ export function OnboardingShell({
                     )}
                   </span>
                   <span
-                    className={`text-[12.5px] font-semibold ${
-                      isActive ? "text-foreground" : "text-muted-foreground"
-                    }`}
+                    className={cn(
+                      "text-[12.5px] font-semibold",
+                      isActive ? "text-foreground" : "text-muted-foreground",
+                    )}
                   >
                     {label}
                   </span>

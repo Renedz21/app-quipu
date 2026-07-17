@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import { OnboardingShell } from "./onboarding-shell";
 import { useOnboarding } from "./onboarding-provider";
 import type { IncomeModel } from "../types";
@@ -107,11 +108,12 @@ export function Step1IncomeProfile({ onNext }: { onNext: () => void }) {
               role="radio"
               aria-checked={selected}
               onClick={() => handleSelect(opt.value)}
-              className={`flex items-center gap-4 rounded-[14px] py-[18px] pl-5 pr-5 text-left transition-colors ${
+              className={cn(
+                "flex items-center gap-4 rounded-[14px] px-5 py-[18px] text-left transition-colors",
                 selected
                   ? "border-[1.5px] border-primary bg-primary-soft"
-                  : "border border-[#E7E3DC] bg-white hover:border-primary/50"
-              }`}
+                  : "border border-[#E7E3DC] bg-white hover:border-primary/50",
+              )}
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-qp-border bg-white">
                 {ICON_FOR[opt.value]}
@@ -121,9 +123,10 @@ export function Step1IncomeProfile({ onNext }: { onNext: () => void }) {
                 <p className="text-sm text-muted-foreground">{opt.description}</p>
               </div>
               <span
-                className={`flex size-5 shrink-0 items-center justify-center rounded-full ${
-                  selected ? "bg-primary" : "border-2 border-border"
-                }`}
+                className={cn(
+                  "flex size-5 shrink-0 items-center justify-center rounded-full",
+                  selected ? "bg-primary" : "border-2 border-border",
+                )}
               >
                 {selected && <CheckMark />}
               </span>

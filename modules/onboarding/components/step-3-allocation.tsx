@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useTransition } from "react";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import { OnboardingShell } from "./onboarding-shell";
 import { useOnboarding } from "./onboarding-provider";
 import { completeOnboardingAction } from "../actions";
@@ -142,7 +143,7 @@ export function Step3Allocation({
           return (
             <div key={env.key} className="flex items-center gap-4">
               <span
-                className={`size-3 shrink-0 rounded-full ${env.barColor}`}
+                className={cn("size-3 shrink-0 rounded-full", env.barColor)}
               />
               <div className="flex-1">
                 <p className="font-semibold">{env.label}</p>

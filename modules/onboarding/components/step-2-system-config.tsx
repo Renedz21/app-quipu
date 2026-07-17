@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import { OnboardingShell } from "./onboarding-shell";
 import { useOnboarding } from "./onboarding-provider";
 
@@ -78,11 +79,12 @@ function VariableBranch({
                   payload: { cycleDurationDays: days as 15 | 30 },
                 })
               }
-              className={`flex flex-1 flex-col rounded-xl border-2 p-5 text-left ${
+              className={cn(
+                "flex flex-1 flex-col rounded-xl border-2 p-5 text-left",
                 selected
                   ? "border-primary bg-primary-soft"
-                  : "border-border bg-card hover:border-primary/50"
-              }`}
+                  : "border-border bg-card hover:border-primary/50",
+              )}
             >
               <p className="font-serif text-2xl text-foreground">
                 {days} días
@@ -93,9 +95,10 @@ function VariableBranch({
                   : "Un mes completo para ver el panorama."}
               </p>
               <span
-                className={`mt-3 flex size-5 items-center justify-center rounded-full self-start ${
-                  selected ? "bg-primary" : "border-2 border-border"
-                }`}
+                className={cn(
+                  "mt-3 flex size-5 items-center justify-center rounded-full self-start",
+                  selected ? "bg-primary" : "border-2 border-border",
+                )}
               >
                 {selected && <CheckMark />}
               </span>
@@ -167,11 +170,12 @@ function MixedBranch({
                           payload: { paydays: [day] },
                         })
                       }
-                      className={`rounded-lg border px-3 py-1.5 text-sm ${
+                      className={cn(
+                        "rounded-lg border px-3 py-1.5 text-sm",
                         selected
                           ? "border-primary bg-primary-soft font-semibold text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/50"
-                      }`}
+                          : "border-border text-muted-foreground hover:border-primary/50",
+                      )}
                     >
                       {d}
                     </button>
@@ -254,11 +258,12 @@ function FixedBranch({
                   },
                 })
               }
-              className={`flex flex-1 items-center justify-between rounded-xl border-2 p-5 text-left ${
+              className={cn(
+                "flex flex-1 items-center justify-between rounded-xl border-2 p-5 text-left",
                 selected
                   ? "border-primary bg-primary-soft"
-                  : "border-border bg-card hover:border-primary/50"
-              }`}
+                  : "border-border bg-card hover:border-primary/50",
+              )}
             >
               <div>
                 <p className="font-semibold">
@@ -269,9 +274,10 @@ function FixedBranch({
                 </p>
               </div>
               <span
-                className={`flex size-5 shrink-0 items-center justify-center rounded-full ${
-                  selected ? "bg-primary" : "border-2 border-border"
-                }`}
+                className={cn(
+                  "flex size-5 shrink-0 items-center justify-center rounded-full",
+                  selected ? "bg-primary" : "border-2 border-border",
+                )}
               >
                 {selected && <CheckMark />}
               </span>
@@ -304,11 +310,12 @@ function FixedBranch({
                   dispatch({ type: "UPDATE", payload: { paydays: [day] } });
                 }
               }}
-              className={`rounded-lg border px-4 py-2 text-sm ${
+              className={cn(
+                "rounded-lg border px-4 py-2 text-sm",
                 selected
                   ? "border-primary bg-primary-soft font-semibold text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/50"
-              }`}
+                  : "border-border text-muted-foreground hover:border-primary/50",
+              )}
             >
               {d}
             </button>

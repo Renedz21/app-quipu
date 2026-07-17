@@ -25,5 +25,9 @@ export default async function OnboardingLayout({
     redirect("/");
   }
 
-  return <div className="grid grid-cols-1 md:grid-cols-2">{children}</div>;
+  return (
+    <div className="min-h-full flex-1 bg-background">
+      <div className="container mx-auto w-full">{children}</div>
+    </div>
+  );
 }

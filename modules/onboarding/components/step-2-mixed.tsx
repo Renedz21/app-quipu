@@ -1,16 +1,34 @@
 "use client";
 
+import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
-import { OnboardingShell } from "./onboarding-shell";
-import { useOnboarding } from "./onboarding-provider";
 import { DAY_PILLS } from "../constants";
+import { useOnboarding } from "./onboarding-provider";
+import { OnboardingShell } from "./onboarding-shell";
 
-type Props = { onBack: () => void; onNext: () => void };
+type Props = { onBack: VoidFunction; onNext: VoidFunction };
 
 export function Step2Mixed({ onBack, onNext }: Props) {
   const { state, dispatch } = useOnboarding();
   const mixedDay = state.paydays?.[0] ?? 1;
+  const displayAmount =
+    state.mixedFixedAmount != null
+      ? (state.mixedFixedAmount / 100).toFixed(2)
+      : "";
+
+  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value
+      .replace(/[^0-9.]/g, "")
+      .replace(/^0+(?=\d)/, "");
+    const num = Number.parseFloat(raw);
+    dispatch({
+      type: "UPDATE",
+      payload: {
+        mixedFixedAmount: Number.isNaN(num) ? null : Math.round(num * 100),
+      },
+    });
+  }
 
   return (
     <OnboardingShell
@@ -35,26 +53,39 @@ export function Step2Mixed({ onBack, onNext }: Props) {
           </div>
           <div className="flex gap-3">
             <div className="flex-1 rounded-lg border border-border bg-surface p-3">
-              <p className="text-xs text-muted-foreground">Monto</p>
-              <p className="font-serif text-xl text-foreground">S/ —</p>
+              <label className="text-xs text-muted-foreground">
+                ¿Cuánto recibes normalmente cada mes?
+              </label>
+              <div className="relative mt-1">
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 font-serif text-xl text-muted-foreground">
+                  S/
+                </span>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={displayAmount}
+                  onChange={handleAmountChange}
+                  placeholder="—"
+                  className="border-none bg-transparent p-0 pl-7 font-serif text-xl text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+                />
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Es una estimación. Podrás cambiarla después.
+              </p>
             </div>
             <div className="flex-1 rounded-lg border border-border bg-surface p-3">
               <p className="text-xs text-muted-foreground">Día de pago</p>
-              <div className="flex flex-wrap gap-1.5">
-                {DAY_PILLS.map((d) => {
-                  const day = d === "Ultimo" ? 31 : d;
-                  const label = String(d);
-                  return (
-                    <DayPill
-                      key={label}
-                      label={label}
-                      selected={mixedDay === day}
-                      onClick={() =>
-                        dispatch({ type: "UPDATE", payload: { paydays: [day] } })
-                      }
-                    />
-                  );
-                })}
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {DAY_PILLS.map((day) => (
+                  <DayPill
+                    key={day}
+                    label={`Día ${day}`}
+                    selected={mixedDay === day}
+                    onClick={() =>
+                      dispatch({ type: "UPDATE", payload: { paydays: [day] } })
+                    }
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -94,7 +125,7 @@ function DayPill({
 }: {
   label: string;
   selected: boolean;
-  onClick: () => void;
+  onClick: VoidFunction;
 }) {
   return (
     <button

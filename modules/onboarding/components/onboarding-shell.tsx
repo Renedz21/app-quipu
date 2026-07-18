@@ -26,7 +26,7 @@ export function OnboardingShell({
 }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <QuipuLogo />
         <Stepper currentStep={currentStep} />
       </div>
@@ -70,7 +70,7 @@ function QuipuLogo() {
     <div className="flex items-center gap-2">
       <span className="flex flex-col gap-[2.5px]">
         <span className="h-[2.5px] w-4 rounded-[2px] bg-primary" />
-        <span className="h-[2.5px] w-[11px] rounded-[2px] bg-moss" />
+        <span className="h-[2.5px] w-2.75 rounded-[2px] bg-moss" />
         <span className="h-[2.5px] w-1.5 rounded-[2px] bg-clay" />
       </span>
       <span className="font-serif text-[18px] font-medium text-foreground">
@@ -92,7 +92,7 @@ function Stepper({ currentStep }: { currentStep: number }) {
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  "flex size-[22px] items-center justify-center rounded-full text-[11px] font-bold",
+                  "flex size-5.5 items-center justify-center rounded-full text-[11px] font-bold",
                   isComplete || isActive
                     ? "bg-primary text-primary-foreground"
                     : "border border-border text-muted-foreground",
@@ -110,7 +110,7 @@ function Stepper({ currentStep }: { currentStep: number }) {
               </span>
             </div>
             {i < STEP_LABELS.length - 1 && (
-              <span className="h-px w-[22px] bg-border" />
+              <span className="h-px w-5.5 bg-border" />
             )}
           </div>
         );

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, CheckCircle } from "reicon-react";
+import { FREQ_DISPLAY_LABELS, MODEL_DISPLAY_LABELS } from "../constants";
 import { useOnboarding } from "./onboarding-provider";
-import { MODEL_DISPLAY_LABELS, FREQ_DISPLAY_LABELS } from "../constants";
 
 export function StepSuccess() {
   const { state } = useOnboarding();
@@ -14,26 +15,10 @@ export function StepSuccess() {
         }`;
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-6 px-4 py-12">
-      <div className="flex size-16 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30">
-        <svg
-          width="24"
-          height="18"
-          viewBox="0 0 24 18"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M2 9l7 7L22 3"
-            stroke="white"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
+    <div className="mx-auto flex w-full h-full min-h-dvh max-w-lg flex-col items-start justify-center gap-6 px-4 py-12">
+      <CheckCircle size={64} weight="Filled" color="var(--qp)" />
 
-      <div className="text-center">
+      <div className="text-left">
         <h1 className="font-heading text-2xl font-semibold">
           Tu sistema está listo
         </h1>
@@ -42,8 +27,11 @@ export function StepSuccess() {
         </p>
       </div>
 
-      <div className="flex w-full gap-3">
-        <SummaryCard label="Perfil" value={MODEL_DISPLAY_LABELS[state.incomeModel ?? "fixed"]} />
+      <div className="flex flex-col md:flex-row w-full gap-3">
+        <SummaryCard
+          label="Perfil"
+          value={MODEL_DISPLAY_LABELS[state.incomeModel ?? "fixed"]}
+        />
         <SummaryCard label="Ciclo" value={cycleLabel} />
         <SummaryCard
           label="Reparto"
@@ -54,7 +42,8 @@ export function StepSuccess() {
                 <span className="size-2 rounded-full bg-clay" />
                 <span className="size-2 rounded-full bg-moss" />
               </span>
-              {state.allocationNeeds}/{state.allocationWants}/{state.allocationSavings}
+              {state.allocationNeeds}/{state.allocationWants}/
+              {state.allocationSavings}
             </div>
           }
         />
@@ -64,7 +53,8 @@ export function StepSuccess() {
         href="/dashboard"
         className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-primary-foreground hover:bg-primary/90"
       >
-        Entrar a Quipu →
+        Entrar a Quipu
+        <ArrowRight size={20} weight="Outline" />
       </Link>
     </div>
   );

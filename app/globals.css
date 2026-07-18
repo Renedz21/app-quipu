@@ -5,46 +5,45 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--qp-canvas);
+  --color-foreground: var(--qp-ink);
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-paper: var(--paper);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-needs: var(--needs);
-  --color-needs-soft: var(--needs-soft);
-  --color-wants: var(--wants);
-  --color-wants-soft: var(--wants-soft);
-  --color-savings: var(--savings);
-  --color-savings-soft: var(--savings-soft);
+  --color-sidebar-ring: var(--qp);
+  --color-sidebar-border: var(--qp-line);
+  --color-sidebar-accent-foreground: var(--qp-ink);
+  --color-sidebar-accent: var(--qp-soft);
+  --color-sidebar-primary-foreground: var(--qp-canvas);
+  --color-sidebar-primary: var(--qp);
+  --color-sidebar-foreground: var(--qp-ink);
+  --color-sidebar: var(--qp-sidebar);
+  --color-secondary: var(--qp-soft);
+  --color-secondary-foreground: var(--qp-ink);
+  --color-ring: var(--qp);
+  --color-input: var(--qp-line-soft);
+  --color-border: var(--qp-line);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-ink);
+  --color-accent-foreground: var(--qp-ink);
+  --color-accent: var(--qp-soft);
+  --color-muted-foreground: var(--qp-mute);
+  --color-muted: var(--qp-surface-soft);
+  --color-paper: var(--qp-canvas);
+  --color-primary-foreground: var(--qp-canvas);
+  --color-primary: var(--qp);
+  --color-primary-soft: var(--qp-tint);
+  --color-popover-foreground: var(--qp-ink);
+  --color-popover: var(--qp-surface);
+  --color-card-foreground: var(--qp-ink);
+  --color-card: var(--qp-surface);
+  --color-needs: var(--qp-steel);
+  --color-needs-soft: var(--qp-steel-soft);
+  --color-wants: var(--qp-clay);
+  --color-wants-soft: var(--qp-clay-soft);
+  --color-savings: var(--qp-moss);
+  --color-savings-soft: var(--qp-moss-soft);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -52,53 +51,91 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* QP neutros */
+  --color-canvas: var(--qp-canvas);
+  --color-canvas-page: var(--qp-canvas-page);
+  --color-surface: var(--qp-surface);
+  --color-surface-soft: var(--qp-surface-soft);
+  --color-surface-warm: var(--qp-surface-warm);
+  --color-ink: var(--qp-ink);
+  --color-ink-secondary: var(--qp-ink-secondary);
+  --color-body: var(--qp-body);
+  --color-mute: var(--qp-mute);
+  --color-mute-subtle: var(--qp-mute-subtle);
+  --color-faint: var(--qp-faint);
+  --color-faint-soft: var(--qp-faint-soft);
+  --color-line: var(--qp-line);
+  --color-line-soft: var(--qp-line-soft);
+  --color-line-muted: var(--qp-line-muted);
+  --color-line-section: var(--qp-line-section);
+  --color-line-divider: var(--qp-line-divider);
+  --color-line-white: var(--qp-line-white);
+
+  /* QP acento */
+  --color-qp: var(--qp);
+  --color-qp-deep: var(--qp-deep);
+  --color-qp-text: var(--qp-text);
+  --color-qp-tint: var(--qp-tint);
+  --color-qp-border: var(--qp-border);
+  --color-qp-soft: var(--qp-soft);
+  --color-qp-sidebar: var(--qp-sidebar);
+  --color-qp-selected: var(--qp-selected);
+  --color-qp-gradient: var(--qp-gradient);
+  --color-qp-coach-from: var(--qp-coach-from);
+  --color-qp-coach-to: var(--qp-coach-to);
+  --color-qp-success: var(--qp-success);
+  --color-qp-panel: var(--qp-panel);
+  --color-qp-shield-from: var(--qp-shield-from);
+  --color-qp-shield-to: var(--qp-shield-to);
+  --color-qp-shield-line: var(--qp-shield-line);
+  --color-qp-subtle-border: var(--qp-subtle-border);
+  --color-qp-divider: var(--qp-divider);
+  --color-qp-track: var(--qp-track);
+  --color-qp-dot: var(--qp-dot);
+
+  /* Sobres + variantes */
+  --color-steel: var(--qp-steel);
+  --color-steel-soft: var(--qp-steel-soft);
+  --color-moss: var(--qp-moss);
+  --color-moss-soft: var(--qp-moss-soft);
+  --color-clay: var(--qp-clay);
+  --color-clay-soft: var(--qp-clay-soft);
+
+  /* Error */
+  --color-danger: var(--danger);
+  --color-danger-line: var(--danger-line);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-banner: var(--danger-banner);
+  --color-danger-banner-line: var(--danger-banner-line);
+  --color-danger-ink: var(--danger-ink);
+  --color-danger-text: var(--danger-text);
+
+  /* Temporales diseño */
+  --color-suggested-bg: var(--suggested-bg);
+  --color-suggested-border: var(--suggested-border);
+  --color-suggested-text: var(--suggested-text);
+  --color-auto-tag: var(--auto-tag);
+  --color-needs-tag-text: var(--needs-tag-text);
+  --color-needs-tag-muted: var(--needs-tag-muted);
+  --color-needs-tag-border: var(--needs-tag-border);
+  --color-icon-luz: var(--icon-luz);
 }
 
 /**
- * Tokens canon Quipu (docs/quipu-design.md §1.3, §3).
- * Subconjunto usado por el Bloque 1 (auth). El set completo qp01–qp25
- * se agrega cuando el theme switcher lo requiera (YAGNI por ahora).
+ * Non-color tokens: shadows + animations.
+ * Stay hardcoded (no dark mode switching needed).
  */
 @theme {
-  /* Neutros */
-  --color-canvas: #fbfaf7;
-  --color-surface: #ffffff;
-  --color-surface-soft: #fdfcfa;
-  --color-surface-warm: #f6f4f0;
-  --color-ink: #23201c;
-  --color-body: #5a554e;
-  --color-mute: #7c766d;
-  --color-faint: #a6a099;
-  --color-line: #e1dcd4;
-
-  /* Acento (verde musgo default) */
-  --color-qp: #3c7d6e;
-  --color-qp-deep: #2c5d52;
-  --color-qp-text: #5a6b62;
-  --color-qp-border: #d5e4dc;
-  --color-qp-soft: #e4eee8;
-  --color-qp-selected: #f1f6f2;
-  --color-qp-panel: #eef4f0;
-  --color-qp-success-bg: #eef5f0;
-  --color-qp-shield-from: #eaf1ec;
-  --color-qp-shield-to: #dce9e2;
-  --color-qp-shield-line: #d0e0d7;
-
-  /* Colores de sobre usados en el logo */
-  --color-moss: #5e8c79;
-  --color-clay: #a6836a;
-
-  /* Error terracota (nunca rojo brillante) */
-  --color-danger: #b0685a;
-  --color-danger-line: #c98e80;
-  --color-danger-bg: #fdf7f5;
-  --color-danger-banner: #f6ebe7;
-  --color-danger-banner-line: #e6c9c1;
-  --color-danger-ink: #7c4033;
-  --color-danger-text: #95584b;
-
+  --shadow-card: 0 22px 55px -30px rgba(35, 32, 28, 0.4), 0 2px 4px rgba(35, 32, 28, 0.05);
+  --shadow-card-header: 0 24px 60px -30px rgba(35, 32, 28, 0.3), 0 2px 4px rgba(35, 32, 28, 0.04);
+  --shadow-dashboard: 0 26px 60px -30px rgba(35, 32, 28, 0.42), 0 2px 4px rgba(35, 32, 28, 0.05);
+  --shadow-mobile: 0 26px 60px -28px rgba(35, 32, 28, 0.55);
+  --shadow-modal: 0 40px 90px -25px rgba(0, 0, 0, 0.5);
+  --shadow-overlay: rgba(35, 32, 28, 0.34);
   --shadow-glow: 0 14px 34px -14px rgba(60, 125, 110, 0.7);
   --shadow-shield: 0 16px 40px -20px rgba(60, 125, 110, 0.5);
+  --shadow-fab: 0 12px 30px -8px rgba(35, 32, 28, 0.6);
 
   --animate-qspin: qspin 0.8s linear infinite;
   --animate-qpulse: qpulse 1.4s ease-in-out infinite;
@@ -121,84 +158,111 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.2676 0.0103 260.7);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.4934 0.0735 251.4);
-  --primary-foreground: oklch(0.985 0 0);
-  --primary-soft: oklch(0.952 0.0093 242.84);
-  --success: oklch(0.5899 0.0745 150.44);
-  --success-soft: oklch(0.9482 0.0109 149.86);
-  --warning: oklch(0.638 0.1045 75.64);
-  --warning-soft: oklch(0.9513 0.0217 83.26);
-  --destructive: oklch(0.5846 0.133 34.35);
-  --destructive-soft: oklch(0.9445 0.0177 39.4);
-  --paper: oklch(0.9643 0.007 88.64);
-  --border: oklch(0.9316 0.0128 86.83);
-
-  --needs: oklch(0.4934 0.0735 251.4);
-  --needs-soft: oklch(0.952 0.0093 242.84);
-  --wants: oklch(0.638 0.1045 75.64);
-  --wants-soft: oklch(0.9513 0.0217 83.26);
-  --savings: oklch(0.5899 0.0745 150.44);
-  --savings-soft: oklch(0.9482 0.0109 149.86);
-
-  --muted: oklch(0.6959 0.0076 268.52);
-  --muted-foreground: oklch(0.5484 0.0114 267.29);
-
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --qp-canvas: oklch(0.985 0.0041 91.45);
+  --qp-canvas-page: oklch(0.9377 0.0087 84.57);
+  --qp-surface: oklch(1 0 0);
+  --qp-surface-soft: oklch(0.9913 0.0029 84.56);
+  --qp-surface-warm: oklch(0.9676 0.0057 84.57);
+  --qp-ink: oklch(0.2454 0.0087 75.2);
+  --qp-ink-secondary: oklch(0.335 0.0117 78.15);
+  --qp-body: oklch(0.452 0.0129 76.49);
+  --qp-mute: oklch(0.5685 0.0154 78.2);
+  --qp-mute-subtle: oklch(0.6159 0.0151 78.21);
+  --qp-faint: oklch(0.7088 0.0122 71.85);
+  --qp-faint-soft: oklch(0.7404 0.0145 78.24);
+  --qp-line: oklch(0.8962 0.0121 79.78);
+  --qp-line-soft: oklch(0.9412 0.0103 81.79);
+  --qp-line-muted: oklch(0.9239 0.0109 76.6);
+  --qp-line-section: oklch(0.8931 0.0121 79.78);
+  --qp-line-divider: oklch(0.9443 0.0103 81.79);
+  --qp-line-white: oklch(0.9322 0.0103 81.79);
+
+  --qp: oklch(0.5423 0.0712 176.41);
+  --qp-deep: oklch(0.4405 0.0567 177);
+  --qp-text: oklch(0.5108 0.0249 162.34);
+  --qp-tint: oklch(0.9487 0.0091 161.35);
+  --qp-border: oklch(0.9053 0.0193 162.9);
+  --qp-soft: oklch(0.9399 0.0133 159.91);
+  --qp-sidebar: oklch(0.9595 0.0066 160.07);
+  --qp-selected: oklch(0.9683 0.0075 151.89);
+  --qp-gradient: oklch(0.9712 0.0075 151.89);
+  --qp-coach-from: oklch(0.9645 0.0083 157.09);
+  --qp-coach-to: oklch(0.986 0.0034 145.55);
+  --qp-success: oklch(0.9635 0.0099 155.1);
+  --qp-panel: oklch(0.9615 0.0083 157.09);
+  --qp-shield-from: oklch(0.9515 0.01 155.09);
+  --qp-shield-to: oklch(0.9223 0.0167 162.73);
+  --qp-shield-line: oklch(0.8921 0.021 161.43);
+  --qp-subtle-border: oklch(0.8914 0.0219 163);
+  --qp-divider: oklch(0.9177 0.015 158.23);
+  --qp-track: oklch(0.9286 0.0125 156.99);
+  --qp-dot: oklch(0.8054 0.0306 132.65);
+
+  /* QP sobres */
+  --qp-steel: oklch(0.5856 0.0477 264.74);
+  --qp-steel-soft: oklch(0.955 0.007 268.55);
+  --qp-moss: oklch(0.6011 0.0582 166.73);
+  --qp-moss-soft: oklch(0.9507 0.0108 158.84);
+  --qp-clay: oklch(0.6368 0.0561 57.05);
+  --qp-clay-soft: oklch(0.9483 0.0097 72.66);
+
+  --danger: oklch(0.5939 0.0957 31.84);
+  --danger-line: oklch(0.7011 0.0753 33.83);
+  --danger-bg: oklch(0.9802 0.007 39.46);
+  --danger-banner: oklch(0.9476 0.0131 41.2);
+  --danger-banner-line: oklch(0.8581 0.0347 35.9);
+  --danger-ink: oklch(0.4436 0.0863 33.35);
+  --danger-text: oklch(0.5267 0.0839 32.85);
+
+  --suggested-bg: oklch(0.9634 0.0096 72.66);
+  --suggested-border: oklch(0.892 0.0276 72.79);
+  --suggested-text: oklch(0.5491 0.0578 62.36);
+  --auto-tag: oklch(0.6581 0.0542 68.6);
+  --needs-tag-text: oklch(0.4681 0.052 265.06);
+  --needs-tag-muted: oklch(0.6631 0.0329 267.06);
+  --needs-tag-border: oklch(0.9092 0.0159 266.27);
+  --icon-luz: oklch(0.8058 0.0247 262.08);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /* QP acento en dark */
+  --qp: #4e9e8a;
+  --qp-deep: #3c7d6e;
+  --qp-text: #8ab8a8;
+  --qp-tint: oklch(0.25 0.04 160 / 0.3);
+  --qp-soft: oklch(0.25 0.04 160 / 0.15);
+  --qp-selected: oklch(0.3 0.04 160 / 0.2);
+  --qp-border: oklch(0.35 0.04 160 / 0.3);
 
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* QP neutros en dark */
+  --qp-canvas: oklch(0.18 0.005 80);
+  --qp-canvas-page: oklch(0.15 0.005 80);
+  --qp-surface: oklch(0.2 0.005 80);
+  --qp-surface-soft: oklch(0.18 0.005 80);
+  --qp-surface-warm: oklch(0.16 0.005 80);
+  --qp-ink: oklch(0.92 0.005 80);
+  --qp-ink-secondary: oklch(0.8 0.005 80);
+  --qp-body: oklch(0.7 0.005 80);
+  --qp-mute: oklch(0.6 0.005 80);
+  --qp-mute-subtle: oklch(0.55 0.005 80);
+  --qp-faint: oklch(0.5 0.005 80);
+  --qp-faint-soft: oklch(0.45 0.005 80);
+  --qp-line: oklch(0.3 0.005 80);
+  --qp-line-soft: oklch(0.28 0.005 80);
+  --qp-line-muted: oklch(0.26 0.005 80);
+  --qp-line-section: oklch(0.25 0.005 80);
+  --qp-line-divider: oklch(0.24 0.005 80);
+  --qp-line-white: oklch(0.22 0.005 80);
 
-  /* Envelopes en dark: versiones levantadas de los originales. */
-  --needs: oklch(0.7 0.1 251.4);
-  --needs-soft: oklch(0.3 0.05 251.4 / 0.2);
-  --wants: oklch(0.75 0.12 75.64);
-  --wants-soft: oklch(0.3 0.05 75.64 / 0.2);
-  --savings: oklch(0.7 0.1 150.44);
-  --savings-soft: oklch(0.3 0.05 150.44 / 0.2);
+  /* QP sobres en dark */
+  --qp-steel: #8a9bbf;
+  --qp-steel-soft: oklch(0.3 0.05 251.4 / 0.2);
+  --qp-moss: #7eae94;
+  --qp-moss-soft: oklch(0.3 0.05 150.44 / 0.2);
+  --qp-clay: #c9a68a;
+  --qp-clay-soft: oklch(0.3 0.05 75.64 / 0.2);
 }
 
 @layer base {

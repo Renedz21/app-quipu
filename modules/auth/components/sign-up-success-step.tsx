@@ -2,7 +2,7 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { authPrimaryButtonClass } from "../constants";
 
-export function SuccessStep({ onContinue }: { onContinue: () => void }) {
+export function SuccessStep({ onContinue }: { onContinue: VoidFunction }) {
   return (
     <div className="flex flex-col items-center text-center">
       <div className="mb-7 flex size-[88px] items-center justify-center rounded-full bg-qp shadow-glow">

@@ -22,7 +22,7 @@ export function PasswordStep({
   email: string;
   error: "credentials" | "passkey" | null;
   reason?: string;
-  onChangeEmail: () => void;
+  onChangeEmail: VoidFunction;
   showPasskey: boolean;
 }) {
   return (

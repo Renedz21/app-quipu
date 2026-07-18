@@ -27,7 +27,7 @@ export function PasskeySetup({ onDone }: PassKeyProps) {
 
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="mb-7.5 flex size-33 items-center justify-center rounded-[30px] border border-qp-shield-line shadow-shield bg-[linear-gradient(160deg,var(--color-qp-shield-from),var(--color-qp-shield-to))]">
+      <div className="mb-7.5 flex size-33 items-center justify-center rounded-[30px] border border-qp-shield-line shadow-shield bg-[linear-gradient(160deg,var(--qp-shield-from),var(--qp-shield-to))]">
         <LockKeyholeOpen size={64} weight="Filled" color="#3c7d6e" />
       </div>
       <h1 className="font-serif font-medium text-[30px] text-ink">

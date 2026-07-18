@@ -7,7 +7,7 @@ import { QuipuLogo } from "@/shared/components/quipu-logo";
  */
 export function AuthSidePanel() {
   return (
-    <aside className="hidden w-[400px] flex-col border-line border-r p-10 lg:flex bg-[linear-gradient(160deg,var(--color-qp-panel),var(--color-qp-soft))]">
+    <aside className="hidden w-[400px] flex-col border-line border-r p-10 lg:flex bg-[linear-gradient(160deg,var(--qp-panel),var(--qp-soft))]">
       <QuipuLogo />
       <div className="flex flex-1 flex-col justify-center">
         <h2 className="font-serif font-medium text-[32px] text-ink leading-[1.15]">

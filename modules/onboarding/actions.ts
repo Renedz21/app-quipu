@@ -7,9 +7,12 @@ import { ONBOARDING_DEFAULTS } from "./constants";
 import { finalPayloadSchema } from "./schemas";
 
 export async function completeOnboardingAction(input: unknown) {
+  const clean = Object.fromEntries(
+    Object.entries(input as Record<string, unknown>).filter(([, v]) => v != null),
+  );
   const parsed = finalPayloadSchema.parse({
     ...ONBOARDING_DEFAULTS,
-    ...(input as object),
+    ...clean,
   });
   try {
     await fetchAuthMutation(api.profiles.createProfile, parsed);

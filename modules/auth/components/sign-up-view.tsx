@@ -38,9 +38,9 @@ function isUserAlreadyExists(error: {
 const bgByStep: Record<Step, string> = {
   form: "bg-[radial-gradient(110%_70%_at_50%_-10%,#F5F3EF,#FFFFFF_60%)]",
   passkey:
-    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--color-qp-selected),#FFFFFF_62%)]",
+    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-selected),#FFFFFF_62%)]",
   success:
-    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--color-qp-success-bg),#FFFFFF_60%)]",
+    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-success),#FFFFFF_60%)]",
 };
 
 const stepLabel: Record<Step, string> = {

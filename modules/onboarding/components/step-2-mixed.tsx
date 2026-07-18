@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { X } from "lucide-react";
-import { Input } from "@/shared/components/ui/input";
+import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/shared/lib/utils";
 import { DAY_PILLS } from "../constants";
 import { useOnboarding } from "./onboarding-provider";
@@ -18,7 +19,9 @@ export function Step2Mixed({ onBack, onNext }: Props) {
   function addSource(label: string) {
     dispatch({
       type: "UPDATE",
-      payload: { variableIncomeSources: [...state.variableIncomeSources, label] },
+      payload: {
+        variableIncomeSources: [...state.variableIncomeSources, label],
+      },
     });
   }
 
@@ -26,7 +29,9 @@ export function Step2Mixed({ onBack, onNext }: Props) {
     dispatch({
       type: "UPDATE",
       payload: {
-        variableIncomeSources: state.variableIncomeSources.filter((s) => s !== label),
+        variableIncomeSources: state.variableIncomeSources.filter(
+          (s) => s !== label,
+        ),
       },
     });
   }
@@ -52,7 +57,7 @@ export function Step2Mixed({ onBack, onNext }: Props) {
               · sueldo, mensualidad
             </span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col md:flex-row gap-3">
             <AmountField
               initialCents={state.mixedFixedAmount}
               onCommit={(cents) =>
@@ -71,7 +76,10 @@ export function Step2Mixed({ onBack, onNext }: Props) {
                     label={`Día ${day}`}
                     selected={mixedDay === day}
                     onClick={() =>
-                      dispatch({ type: "UPDATE", payload: { paydays: [day] } })
+                      dispatch({
+                        type: "UPDATE",
+                        payload: { paydays: [day], payFrequency: "monthly" },
+                      })
                     }
                   />
                 ))}
@@ -85,7 +93,7 @@ export function Step2Mixed({ onBack, onNext }: Props) {
             <span className="size-3 rounded-full bg-clay" />
             <p className="font-semibold">Ingresos variables</p>
             <span className="text-xs text-muted-foreground">
-              · agregá los tipos que esperás recibir
+              · tipos que esperás recibir
             </span>
           </div>
           <VariableSourceInput
@@ -121,14 +129,15 @@ function AmountField({
 
   return (
     <div className="flex-1 rounded-lg border border-border bg-surface p-3">
-      <label className="text-xs text-muted-foreground">
+      <Label className="text-xs text-muted-foreground" htmlFor="income">
         ¿Cuánto recibes normalmente cada mes?
-      </label>
+      </Label>
       <div className="relative mt-1">
         <span className="absolute left-0 top-1/2 -translate-y-1/2 font-serif text-xl text-muted-foreground">
           S/
         </span>
         <Input
+          id="income"
           type="text"
           inputMode="decimal"
           value={draft}
@@ -195,11 +204,12 @@ function VariableSourceInput({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-1 w-full flex-wrap gap-2">
       {sources.map((tag) => (
         <SourcePill key={tag} label={tag} onRemove={() => onRemove(tag)} />
       ))}
       <input
+        id="variable-income"
         type="text"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}

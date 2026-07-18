@@ -12,10 +12,8 @@ export function formatCycle(
   const start = new Date(now.getFullYear(), now.getMonth(), day);
 
   if (payFrequency === "biweekly" && paydays.length >= 2) {
-    const secondDay = paydays[1] ?? 15;
-    const start2 = new Date(now.getFullYear(), now.getMonth(), secondDay);
-    if (start2 <= start) start2.setMonth(start2.getMonth() + 1);
-    return `${start.getDate()} y ${start2.getDate()} ${MONTHS[start.getMonth()]}`;
+    const [d1, d2] = [...paydays].sort((a, b) => a - b);
+    return `${d1} y ${d2} ${MONTHS[now.getMonth()]}`;
   }
 
   const end = new Date(start);

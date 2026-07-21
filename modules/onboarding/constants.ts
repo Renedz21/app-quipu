@@ -62,7 +62,10 @@ export const FREQ_DISPLAY_LABELS: Record<string, string> = {
 
 export const DAY_PILLS = [15, 30] as number[];
 
-export type EnvelopeKey = "allocationNeeds" | "allocationWants" | "allocationSavings";
+export type EnvelopeKey =
+  | "allocationNeeds"
+  | "allocationWants"
+  | "allocationSavings";
 
 export const ENVELOPES: {
   key: EnvelopeKey;

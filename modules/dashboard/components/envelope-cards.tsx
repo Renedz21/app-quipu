@@ -5,10 +5,10 @@ import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-registe
 import type { ExpenseEnvelopeType } from "@/modules/expenses/lib/envelopeSuggestion";
 import { formatCents } from "@/shared/lib/money";
 import {
+  DASHBOARD_ENVELOPES_SECTION_ID,
   ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,
   ENVELOPE_EARLY_SAVINGS_SUBCOPY,
   ENVELOPE_LABELS,
-  DASHBOARD_ENVELOPES_SECTION_ID,
 } from "../constants";
 import { clampPercent } from "../lib/dashboard-math";
 import type { DashboardEnvelope } from "../types";

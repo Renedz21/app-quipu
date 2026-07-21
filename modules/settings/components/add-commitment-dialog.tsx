@@ -7,13 +7,13 @@ import { api } from "@/convex/_generated/api";
 import { fromConvexError } from "@/core/errors";
 import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import {
@@ -32,7 +32,9 @@ type Props = {
 
 export function AddCommitmentDialog({ open, onOpenChange }: Props) {
   const isMobile = useIsMobile();
-  const createCommitment = useMutation(api.fixedCommitments.createFixedCommitment);
+  const createCommitment = useMutation(
+    api.fixedCommitments.createFixedCommitment,
+  );
   const [name, setName] = useState("");
   const [amountInput, setAmountInput] = useState("");
   const [dueDayInput, setDueDayInput] = useState("");
@@ -70,7 +72,9 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
   const form = (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="commitment-name">{SETTINGS_COMMITMENT_NAME_LABEL}</Label>
+        <Label htmlFor="commitment-name">
+          {SETTINGS_COMMITMENT_NAME_LABEL}
+        </Label>
         <Input
           id="commitment-name"
           value={name}
@@ -80,7 +84,9 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="commitment-amount">{SETTINGS_COMMITMENT_AMOUNT_LABEL}</Label>
+        <Label htmlFor="commitment-amount">
+          {SETTINGS_COMMITMENT_AMOUNT_LABEL}
+        </Label>
         <Input
           id="commitment-amount"
           value={amountInput}
@@ -99,7 +105,9 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
         />
       </div>
       <div className="space-y-2">
-        <span className="text-sm font-medium">{SETTINGS_COMMITMENT_ENVELOPE_LABEL}</span>
+        <span className="text-sm font-medium">
+          {SETTINGS_COMMITMENT_ENVELOPE_LABEL}
+        </span>
         <div className="flex gap-2">
           {(["needs", "wants"] as const).map((key) => (
             <button
@@ -117,7 +125,11 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
           ))}
         </div>
       </div>
-      <Button type="submit" disabled={isSubmitting || !name.trim()} className="w-full">
+      <Button
+        type="submit"
+        disabled={isSubmitting || !name.trim()}
+        className="w-full"
+      >
         {SETTINGS_ADD_COMMITMENT_TITLE}
       </Button>
     </form>

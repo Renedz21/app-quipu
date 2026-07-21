@@ -50,7 +50,9 @@ function CommitmentsEmptyState() {
       >
         <Calendar size={18} color="var(--mute)" />
       </span>
-      <p className="text-sm font-semibold text-ink">{COMMITMENTS_EMPTY_TITLE}</p>
+      <p className="text-sm font-semibold text-ink">
+        {COMMITMENTS_EMPTY_TITLE}
+      </p>
       <p className="mt-2 max-w-xs text-sm leading-relaxed text-mute">
         {COMMITMENTS_EMPTY_BODY}
       </p>
@@ -74,11 +76,7 @@ function formatCoverageLabel(commitment: DashboardCommitment): string {
   return " · sin cubrir";
 }
 
-function CommitmentProgress({
-  progressPercent,
-}: {
-  progressPercent: number;
-}) {
+function CommitmentProgress({ progressPercent }: { progressPercent: number }) {
   return (
     <div
       className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-surface-warm"
@@ -117,7 +115,12 @@ export function CommitmentsList({
             {covered ? (
               <>
                 <span className="flex size-4 items-center justify-center rounded-full bg-qp-soft">
-                  <Check size={10} color="var(--qp)" strokeWidth={3} aria-hidden />
+                  <Check
+                    size={10}
+                    color="var(--qp)"
+                    strokeWidth={3}
+                    aria-hidden
+                  />
                 </span>
                 {COMMITMENTS_COVERED_HEADER}
               </>

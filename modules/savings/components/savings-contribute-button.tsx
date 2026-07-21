@@ -7,13 +7,13 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
+import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
   CONTRIBUTE_NO_FUNDS,
   CONTRIBUTE_SUCCESS_PREFIX,
   EMERGENCY_FUND_CONTRIBUTE_CTA,
 } from "../constants";
-import { formatCents } from "@/shared/lib/money";
 
 type Props = {
   subEnvelopeId: Id<"subEnvelopes">;

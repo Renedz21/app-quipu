@@ -31,6 +31,7 @@ export type AchievementView = {
 };
 
 export type CycleChartBar = {
+  id: number;
   status: "compliant" | "warning" | "failed" | "empty";
   heightPx: number;
 };
@@ -55,19 +56,18 @@ export function buildCycleChartBars(
   const recent = sorted.slice(-limit);
   const bars: CycleChartBar[] = recent.map((entry, index) => {
     const base =
-      entry.status === "compliant"
-        ? 26
-        : entry.status === "warning"
-          ? 22
-          : 18;
+      entry.status === "compliant" ? 26 : entry.status === "warning" ? 22 : 18;
     const wobble = (index % 3) * 4;
     return {
+      id: entry.evaluatedAt,
       status: entry.status,
       heightPx: base + wobble,
     };
   });
+  let emptySlot = 0;
   while (bars.length < limit) {
-    bars.unshift({ status: "empty", heightPx: 0 });
+    bars.unshift({ id: -(emptySlot + 1), status: "empty", heightPx: 0 });
+    emptySlot += 1;
   }
   return bars;
 }
@@ -144,28 +144,29 @@ export function buildAchievements(input: {
 
   const wantsThreeAt =
     wantsDiscipline >= 3
-      ? [...input.history]
+      ? ([...input.history]
           .sort((a, b) => b.evaluatedAt - a.evaluatedAt)
           .slice(0, 3)
-          .at(-1)?.evaluatedAt ?? null
+          .at(-1)?.evaluatedAt ?? null)
       : null;
 
   const sixCoveredAt =
     allCoveredCount >= 6
-      ? [...input.history]
+      ? ([...input.history]
           .filter((h) => h.allCommitmentsCovered)
-          .sort((a, b) => a.evaluatedAt - b.evaluatedAt)[5]?.evaluatedAt ?? null
+          .sort((a, b) => a.evaluatedAt - b.evaluatedAt)[5]?.evaluatedAt ??
+        null)
       : null;
 
   const fundCompleteAt =
     input.emergencyFundProgressPercent >= 100
-      ? sortedAsc.at(-1)?.evaluatedAt ?? null
+      ? (sortedAsc.at(-1)?.evaluatedAt ?? null)
       : null;
 
   const oneYearAt =
     input.currentStreak >= 12
-      ? [...input.history].sort((a, b) => b.evaluatedAt - a.evaluatedAt)[11]
-          ?.evaluatedAt ?? null
+      ? ([...input.history].sort((a, b) => b.evaluatedAt - a.evaluatedAt)[11]
+          ?.evaluatedAt ?? null)
       : null;
 
   const fund25Done = input.emergencyFundProgressPercent >= 25;
@@ -180,7 +181,7 @@ export function buildAchievements(input: {
     {
       id: "emergency_fund_25",
       state: fund25Done ? "done" : "locked",
-      earnedAt: fund25Done ? sortedAsc.at(-1)?.evaluatedAt ?? null : null,
+      earnedAt: fund25Done ? (sortedAsc.at(-1)?.evaluatedAt ?? null) : null,
       lockedHint: fund25Done
         ? null
         : `Te falta ${input.formatRemaining(remainingTo25)} para el 25%`,

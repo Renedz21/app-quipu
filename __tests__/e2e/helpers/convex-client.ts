@@ -84,7 +84,10 @@ export async function getEnvelopeBalances(client: ConvexHttpClient) {
   const summary = await client.query(api.dashboard.getSummary, {});
   if (!summary?.envelopes) return null;
   const byType = Object.fromEntries(
-    summary.envelopes.map((envelope) => [envelope.type, envelope.remainingAmount]),
+    summary.envelopes.map((envelope) => [
+      envelope.type,
+      envelope.remainingAmount,
+    ]),
   );
   return {
     needs: byType.needs ?? 0,
@@ -159,9 +162,7 @@ export async function seedCrisisFromUncoveredCommitment(
 }
 
 /** Heavy wants overspend → coach `crisis` via failed compliance. */
-export async function seedCrisisFromFailedCompliance(
-  client: ConvexHttpClient,
-) {
+export async function seedCrisisFromFailedCompliance(client: ConvexHttpClient) {
   await seedActiveCycle(client, 100_000);
   await client.mutation(api.expenses.registerExpense, {
     amount: 55_000,

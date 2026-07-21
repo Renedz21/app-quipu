@@ -19,7 +19,10 @@ export function SuccessStep({ onContinue }: { onContinue: VoidFunction }) {
       <Button
         type="button"
         onClick={onContinue}
-        className={cn(authPrimaryButtonClass, "mt-[30px] w-auto gap-2 px-[30px]")}
+        className={cn(
+          authPrimaryButtonClass,
+          "mt-[30px] w-auto gap-2 px-[30px]",
+        )}
       >
         Ir al onboarding
         <ArrowRight size={20} color="currentColor" />

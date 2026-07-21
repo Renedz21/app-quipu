@@ -1,6 +1,5 @@
 export const SETTINGS_PAGE_TITLE = "Ajustes";
-export const SETTINGS_PAGE_SUBTITLE =
-  "Tu cuenta primero; tu sistema, al lado.";
+export const SETTINGS_PAGE_SUBTITLE = "Tu cuenta primero; tu sistema, al lado.";
 export const SETTINGS_MOBILE_ACCOUNT_LABEL = "Cuenta";
 export const SETTINGS_SYSTEM_SLOT_NOTE = "system-column";
 
@@ -12,8 +11,10 @@ export const SETTINGS_PLAN_LABEL = "Plan y suscripción";
 export const SETTINGS_PLAN_PLUS_NAME = "Quipu Plus";
 export const SETTINGS_PLAN_FREE_NAME = "Plan Quipu";
 export const SETTINGS_PLAN_PLUS_PRICE = "S/ 14.90/mes";
-export const SETTINGS_PLAN_FREE_BODY = "Gratis, sin límite de registros manuales.";
-export const SETTINGS_PLAN_RENEWAL_STUB = "Renovación automática · Polar.sh pronto";
+export const SETTINGS_PLAN_FREE_BODY =
+  "Gratis, sin límite de registros manuales.";
+export const SETTINGS_PLAN_RENEWAL_STUB =
+  "Renovación automática · Polar.sh pronto";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
 export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_MANAGE_HINT = "Facturación Polar.sh — próximamente";
@@ -22,7 +23,8 @@ export const SETTINGS_PLAN_CHANGE_CARD = "Cambiar tarjeta";
 export const SETTINGS_SECURITY_LABEL = "Seguridad y passkeys";
 export const SETTINGS_PASSKEY_ADD = "+ Agregar passkey";
 export const SETTINGS_PASSKEY_PENDING = "Preparando passkey…";
-export const SETTINGS_PASSKEY_EMPTY = "Aún no tienes passkeys en este dispositivo.";
+export const SETTINGS_PASSKEY_EMPTY =
+  "Aún no tienes passkeys en este dispositivo.";
 export const SETTINGS_PASSKEY_ERROR =
   "No pudimos agregar la passkey. Intenta de nuevo.";
 export const SETTINGS_SESSIONS_LABEL = "Sesiones activas";

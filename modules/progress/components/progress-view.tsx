@@ -1,12 +1,12 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import { Check } from "reicon-react";
+import { useQuery } from "convex/react";
 import Link from "next/link";
+import { Check } from "reicon-react";
 import { api } from "@/convex/_generated/api";
-import { formatLimaDate } from "@/shared/lib/date";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { formatLimaDate } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import {
   PROGRESS_ACHIEVEMENTS_LABEL,
@@ -26,7 +26,11 @@ import {
 import type { ProgressAchievement, ProgressChartBar } from "../types";
 import { ProgressStreakChart } from "./progress-streak-chart";
 
-function AchievementCard({ achievement }: { achievement: ProgressAchievement }) {
+function AchievementCard({
+  achievement,
+}: {
+  achievement: ProgressAchievement;
+}) {
   const isDone = achievement.state === "done";
   const subtitle = isDone
     ? achievement.earnedAt
@@ -55,7 +59,9 @@ function AchievementCard({ achievement }: { achievement: ProgressAchievement }) 
         {isDone ? (
           <Check size={14} color="var(--qp)" strokeWidth={3} aria-hidden />
         ) : (
-          <span className="font-serif text-xs text-faint md:text-[15px]">···</span>
+          <span className="font-serif text-xs text-faint md:text-[15px]">
+            ···
+          </span>
         )}
       </span>
       <div className="min-w-0">
@@ -162,7 +168,9 @@ export function ProgressView() {
           <div className="mb-2 text-[12px] text-ink-secondary md:mb-3 md:text-[12.5px]">
             {PROGRESS_CHART_LABEL}
           </div>
-          <ProgressStreakChart bars={overview.chartBars as ProgressChartBar[]} />
+          <ProgressStreakChart
+            bars={overview.chartBars as ProgressChartBar[]}
+          />
           <p className="mt-2 text-[11px] text-mute-subtle md:mt-2.5 md:text-[11.5px]">
             {PROGRESS_CHART_CAPTION}
           </p>

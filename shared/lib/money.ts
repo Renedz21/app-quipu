@@ -103,7 +103,7 @@ export function parseToCents(input: string): Cents | null {
     const parts = cleaned.split(",");
     if (parts.length === 2 && parts[1] !== undefined && parts[1].length <= 2) {
       // Decimal
-      normalized = parts[0] + "." + parts[1];
+      normalized = `${parts[0]}.${parts[1]}`;
     } else {
       // Miles
       normalized = parts.join("");

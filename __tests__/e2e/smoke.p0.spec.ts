@@ -3,6 +3,7 @@ import { expect, test } from "./fixtures/smoke";
 import {
   applyCoverFromCycleSavings,
   applyRescueTransfer,
+  createFixedCommitment,
   dismissRescueSuggestion,
   getDashboardCoach,
   getEnvelopeBalances,
@@ -15,7 +16,6 @@ import {
   seedOnboardedUser,
   seedWarningCoachState,
   snoozeCrisisCoach,
-  createFixedCommitment,
 } from "./helpers/convex-client";
 
 test.describe("P0 smoke @smoke", () => {
@@ -261,9 +261,9 @@ test.describe("P0 smoke @smoke", () => {
 
     const beforeCoach = await getDashboardCoach(convexClient);
     expect(beforeCoach?.kind).toBe("crisis");
-    expect(beforeCoach?.crisisOptions?.some((o) => o.id === "cover_from_savings")).toBe(
-      true,
-    );
+    expect(
+      beforeCoach?.crisisOptions?.some((o) => o.id === "cover_from_savings"),
+    ).toBe(true);
 
     const beforeBalances = await getEnvelopeBalances(convexClient);
     expect(beforeBalances?.savings).toBeGreaterThan(0);

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCrisisCoachMessage,
-  buildWarningCoachMessage,
   buildWantsOverflowNudge,
+  buildWarningCoachMessage,
   computeUncoveredCommitmentsCents,
   isFullWidthCoachKind,
   resolveCoachPresentation,
@@ -145,9 +145,9 @@ describe("buildWantsOverflowNudge", () => {
     expect(nudge.triggerEvent).toBe(WANTS_OVERFLOW_EVENT);
     expect(nudge.initialNudge).toContain("Carlos");
     expect(nudge.initialNudge).not.toMatch(/[\u{1F300}-\u{1FAFF}]/u);
-    expect(nudge.options.every((o) => !/[\u{1F300}-\u{1FAFF}]/u.test(o.label))).toBe(
-      true,
-    );
+    expect(
+      nudge.options.every((o) => !/[\u{1F300}-\u{1FAFF}]/u.test(o.label)),
+    ).toBe(true);
   });
 });
 

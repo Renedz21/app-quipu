@@ -10,7 +10,14 @@ export type RescueEnvelopeBalances = {
 
 export type RescueApplyValidation =
   | { ok: true; transfer: number }
-  | { ok: false; reason: "NO_SUGGESTION" | "INVALID_TRANSFER" | "INSUFFICIENT_SAVINGS" | "NO_RESCUE_NEEDED" };
+  | {
+      ok: false;
+      reason:
+        | "NO_SUGGESTION"
+        | "INVALID_TRANSFER"
+        | "INSUFFICIENT_SAVINGS"
+        | "NO_RESCUE_NEEDED";
+    };
 
 export function validateRescueTransferApply(
   suggestion: RescueSuggestion | null | undefined,

@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowRight } from "reicon-react";
 import { useMutation } from "convex/react";
 import { useState } from "react";
+import { ArrowRight } from "reicon-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/shared/components/ui/button";
 import { COACH_CRISIS_LATER_CTA } from "@/modules/coach/constants";
 import type { DashboardCoach } from "@/modules/dashboard/types";
+import { Button } from "@/shared/components/ui/button";
 
 type CrisisOption = NonNullable<DashboardCoach["crisisOptions"]>[number];
 
@@ -17,7 +17,9 @@ type Props = {
 
 export function CoachCrisisActions({ options }: Props) {
   const applyCover = useMutation(api.coachEngine.applyCoverFromCycleSavings);
-  const postponeCommitment = useMutation(api.coachEngine.postponeCommitmentForCycle);
+  const postponeCommitment = useMutation(
+    api.coachEngine.postponeCommitmentForCycle,
+  );
   const snoozeCrisis = useMutation(api.coachEngine.snoozeCrisisCoach);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

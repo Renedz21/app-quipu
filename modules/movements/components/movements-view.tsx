@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
+import { MovementList } from "@/shared/components/movements/movement-list";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate } from "@/shared/lib/date";
@@ -21,7 +22,6 @@ import {
   MOVEMENTS_PAGE_SUBTITLE,
   MOVEMENTS_PAGE_TITLE,
 } from "../constants";
-import { MovementList } from "@/shared/components/movements/movement-list";
 
 function MovementsViewSkeleton() {
   return (

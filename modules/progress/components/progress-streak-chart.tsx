@@ -11,11 +11,11 @@ export function ProgressStreakChart({ bars }: Props) {
       role="img"
       aria-label="Historial de cumplimiento de los últimos ciclos"
     >
-      {bars.map((bar, index) => {
+      {bars.map((bar) => {
         if (bar.status === "empty") {
           return (
             <span
-              key={`empty-${index}`}
+              key={bar.id}
               className="w-[11px] rounded-[3px] bg-transparent md:w-3.5 md:rounded"
               style={{ height: 0 }}
             />
@@ -29,7 +29,7 @@ export function ProgressStreakChart({ bars }: Props) {
               : "bg-[#E7E3DC]";
         return (
           <span
-            key={`${bar.status}-${index}`}
+            key={bar.id}
             className={`w-[11px] rounded-[3px] md:w-3.5 md:rounded ${color}`}
             style={{ height: bar.heightPx }}
           />

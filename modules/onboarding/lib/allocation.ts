@@ -1,8 +1,15 @@
 import type { OnboardingState } from "../types";
 
-type Allocation = Pick<OnboardingState, "allocationNeeds" | "allocationWants" | "allocationSavings">;
+type Allocation = Pick<
+  OnboardingState,
+  "allocationNeeds" | "allocationWants" | "allocationSavings"
+>;
 
-const KEYS = ["allocationNeeds", "allocationWants", "allocationSavings"] as const;
+const KEYS = [
+  "allocationNeeds",
+  "allocationWants",
+  "allocationSavings",
+] as const;
 type AllocationKey = (typeof KEYS)[number];
 
 export function distributeEnvelope(
@@ -14,8 +21,11 @@ export function distributeEnvelope(
   if (clamped === state[key]) return state;
 
   const others = KEYS.filter((k) => k !== key);
-  const o1 = state[others[0]!];
-  const o2 = state[others[1]!];
+  const first = others[0];
+  const second = others[1];
+  if (first === undefined || second === undefined) return state;
+  const o1 = state[first];
+  const o2 = state[second];
   const diff = clamped - state[key];
 
   let n1: number;
@@ -33,7 +43,7 @@ export function distributeEnvelope(
     n2 = Math.max(0, o2 - diff);
   }
 
-  return { ...state, [key]: clamped, [others[0]!]: n1, [others[1]!]: n2 };
+  return { ...state, [key]: clamped, [first]: n1, [second]: n2 };
 }
 
 export const ALLOCATION_DEFAULTS: Allocation = {

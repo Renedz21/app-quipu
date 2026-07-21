@@ -6,8 +6,8 @@ import { api } from "@/convex/_generated/api";
 import { PLAN_LABELS } from "@/modules/dashboard/constants";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_ERROR_BODY,
@@ -78,11 +78,15 @@ function MobileAccountList({
   return (
     <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5 md:hidden">
       <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
-        <span className="flex-1 text-[13.5px] text-ink">{SETTINGS_PROFILE_LABEL}</span>
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_PROFILE_LABEL}
+        </span>
         <ListRowChevron />
       </div>
       <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
-        <span className="flex-1 text-[13.5px] text-ink">{SETTINGS_PLAN_LABEL}</span>
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_PLAN_LABEL}
+        </span>
         {isPremium ? (
           <span className="rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
             {SETTINGS_PLAN_ACTIVE_BADGE}

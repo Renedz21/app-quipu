@@ -18,7 +18,9 @@ export type CrisisCoachOption = {
 export function pickPostponeCandidate(
   commitments: CrisisCommitmentSlice[],
 ): CrisisCommitmentSlice | null {
-  const uncovered = commitments.filter((commitment) => commitment.remaining > 0);
+  const uncovered = commitments.filter(
+    (commitment) => commitment.remaining > 0,
+  );
   if (uncovered.length === 0) return null;
 
   const wants = uncovered
@@ -38,8 +40,7 @@ export function computeCoverFromSavingsSplit(
   uncoveredByEnvelope: { needs: number; wants: number },
   savingsRemaining: number,
 ): { needs: number; wants: number; total: number } {
-  const totalUncovered =
-    uncoveredByEnvelope.needs + uncoveredByEnvelope.wants;
+  const totalUncovered = uncoveredByEnvelope.needs + uncoveredByEnvelope.wants;
   const total = Math.min(Math.max(savingsRemaining, 0), totalUncovered);
 
   if (total <= 0) {
@@ -50,7 +51,9 @@ export function computeCoverFromSavingsSplit(
     return { needs: 0, wants: 0, total: 0 };
   }
 
-  const needs = Math.round((uncoveredByEnvelope.needs / totalUncovered) * total);
+  const needs = Math.round(
+    (uncoveredByEnvelope.needs / totalUncovered) * total,
+  );
   const wants = total - needs;
 
   return { needs, wants, total };

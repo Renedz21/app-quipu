@@ -1,15 +1,12 @@
+import type { Doc } from "@/convex/_generated/dataModel";
 import {
   FREQ_DISPLAY_LABELS,
   MODEL_DISPLAY_LABELS,
 } from "@/modules/onboarding/constants";
-import type { Doc } from "@/convex/_generated/dataModel";
 
 type ProfileSlice = Pick<
   Doc<"profiles">,
-  | "incomeModel"
-  | "payFrequency"
-  | "paydays"
-  | "cycleDurationDays"
+  "incomeModel" | "payFrequency" | "paydays" | "cycleDurationDays"
 >;
 
 export function formatCycleType(profile: ProfileSlice): string {
@@ -42,7 +39,8 @@ export function formatCycleStart(profile: ProfileSlice): string {
 }
 
 export function formatIncomeProfileLabel(profile: ProfileSlice): string {
-  const model = MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel;
+  const model =
+    MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel;
   if (profile.incomeModel === "fixed" && profile.payFrequency) {
     const freq =
       FREQ_DISPLAY_LABELS[profile.payFrequency] ?? profile.payFrequency;

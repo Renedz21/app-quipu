@@ -2,13 +2,13 @@ import { ConvexError, v } from "convex/values";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
+  type AchievementId,
   buildAchievements,
   buildCycleChartBars,
   canUseAccentPreset,
   canUseTheme,
   isRewardUnlocked,
   REWARD_THRESHOLDS,
-  type AchievementId,
 } from "./lib/gamificationMath";
 import {
   computeEmergencyFundTargetCents,
@@ -67,7 +67,9 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
     commitments.filter((c) => c.envelope === "needs"),
     activeCycle?.totalIncomeReceived ?? 0,
   );
-  const computedTarget = computeEmergencyFundTargetCents(monthlyEssentialsCents);
+  const computedTarget = computeEmergencyFundTargetCents(
+    monthlyEssentialsCents,
+  );
   const targetCents = emergencyFund
     ? resolveEmergencyFundTargetCents(
         emergencyFund.targetAmount,
@@ -109,7 +111,8 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
     longestStreak: streak?.longestStreak ?? 0,
     chartBars: buildCycleChartBars(history),
     achievements,
-    achievementsDoneCount: achievements.filter((a) => a.state === "done").length,
+    achievementsDoneCount: achievements.filter((a) => a.state === "done")
+      .length,
     achievementsTotal: achievements.length,
     appearance: {
       theme: profile.appearanceTheme ?? "light",
@@ -171,7 +174,10 @@ export const getRewards = query({
           unlocked: isRewardUnlocked("annualReport", currentStreak),
           requiredStreak: REWARD_THRESHOLDS.annualReport,
           active: false,
-          cyclesRemaining: Math.max(0, REWARD_THRESHOLDS.annualReport - currentStreak),
+          cyclesRemaining: Math.max(
+            0,
+            REWARD_THRESHOLDS.annualReport - currentStreak,
+          ),
         },
       ],
       accents: [
@@ -205,9 +211,7 @@ export const updateAppearance = mutation({
     accentPreset: v.optional(
       v.union(v.literal("moss"), v.literal("steel"), v.literal("clay")),
     ),
-    appIconVariant: v.optional(
-      v.union(v.literal("light"), v.literal("dark")),
-    ),
+    appIconVariant: v.optional(v.union(v.literal("light"), v.literal("dark"))),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -278,8 +282,7 @@ export const updateAppearance = mutation({
       appearance: {
         theme: updates.appearanceTheme ?? profile.appearanceTheme ?? "light",
         accent: updates.accentPreset ?? profile.accentPreset ?? "moss",
-        appIcon:
-          updates.appIconVariant ?? profile.appIconVariant ?? "light",
+        appIcon: updates.appIconVariant ?? profile.appIconVariant ?? "light",
       },
     };
   },

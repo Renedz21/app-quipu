@@ -1,8 +1,8 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
-  computeAllCommitmentCoverage,
   type CommitmentSlice,
+  computeAllCommitmentCoverage,
   type IncomeEventSlice,
 } from "./commitmentCoverage";
 

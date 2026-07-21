@@ -5,12 +5,12 @@ import {
   requireAuthenticatedSession,
 } from "@/auth/auth-server";
 import { api } from "@/convex/_generated/api";
-import { buttonVariants } from "@/shared/components/ui/button";
 import {
   SETTINGS_BACK_LINK,
   SETTINGS_CYCLE_STUB_BODY,
   SETTINGS_CYCLE_STUB_TITLE,
 } from "@/modules/settings/constants";
+import { buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 
 export default async function SettingsCyclePage() {
@@ -33,7 +33,10 @@ export default async function SettingsCyclePage() {
       </p>
       <Link
         href="/settings"
-        className={cn(buttonVariants({ variant: "outline" }), "mt-6 border-line")}
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "mt-6 border-line",
+        )}
       >
         Volver a ajustes
       </Link>

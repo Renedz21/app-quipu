@@ -11,11 +11,11 @@ import {
   computeDailyAvailable,
   computeDisplayDailyCents,
 } from "./lib/dashboardMath";
+import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
 import {
   clearCommitmentCoverageForProfile,
   evaluateCommitmentCoverageForCycle,
 } from "./lib/evaluateCommitmentCoverage";
-import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

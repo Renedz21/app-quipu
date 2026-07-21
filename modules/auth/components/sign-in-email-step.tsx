@@ -17,7 +17,6 @@ export function EmailStep({
   error,
   showPasskey,
 }: {
-  // biome-ignore lint/suspicious/noExplicitAny: TanStack Form type has 20+ generics, not worth threading
   form: any;
   reason?: string;
   error: "credentials" | "passkey" | null;
@@ -59,34 +58,29 @@ export function EmailStep({
       >
         <FieldGroup>
           <form.Field name="email">
-            {
-              // biome-ignore lint/suspicious/noExplicitAny: TanStack field type too complex
-              (field: any) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor={field.name} className={authLabelClass}>
-                      Correo
-                    </FieldLabel>
-                    <AuthInput
-                      id={field.name}
-                      type="email"
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      autoComplete="username webauthn"
-                      autoFocus
-                    />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }
-            }
+            {(field: any) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel htmlFor={field.name} className={authLabelClass}>
+                    Correo
+                  </FieldLabel>
+                  <AuthInput
+                    id={field.name}
+                    type="email"
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    aria-invalid={isInvalid}
+                    autoComplete="username webauthn"
+                    autoFocus
+                  />
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
           </form.Field>
         </FieldGroup>
         <form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>

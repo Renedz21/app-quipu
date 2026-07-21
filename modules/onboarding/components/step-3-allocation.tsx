@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowRight } from "reicon-react";
 import { useTransition } from "react";
+import { ArrowRight } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { completeOnboardingAction } from "../actions";
 import { ENVELOPES } from "../constants";
@@ -17,8 +17,12 @@ type Props = { onBack: VoidFunction; onComplete: VoidFunction };
 export function Step3Allocation({ onBack, onComplete }: Props) {
   const { state, dispatch } = useOnboarding();
   const [isPending, startTransition] = useTransition();
-  const total = state.allocationNeeds + state.allocationWants + state.allocationSavings;
-  const isDefault = state.allocationNeeds === 50 && state.allocationWants === 30 && state.allocationSavings === 20;
+  const total =
+    state.allocationNeeds + state.allocationWants + state.allocationSavings;
+  const isDefault =
+    state.allocationNeeds === 50 &&
+    state.allocationWants === 30 &&
+    state.allocationSavings === 20;
 
   function reset() {
     dispatch({ type: "UPDATE", payload: ALLOCATION_DEFAULTS });
@@ -90,8 +94,12 @@ export function Step3Allocation({ onBack, onComplete }: Props) {
             Suma 100% · listo
           </div>
         ) : (
-          <div className="rounded-lg bg-danger-bg p-3 text-sm text-danger-ink" role="alert">
-            El reparto suma {total}%. Ajusta para que sea exactamente 100% antes de continuar.
+          <div
+            className="rounded-lg bg-danger-bg p-3 text-sm text-danger-ink"
+            role="alert"
+          >
+            El reparto suma {total}%. Ajusta para que sea exactamente 100% antes
+            de continuar.
           </div>
         )}
         {!isDefault && (

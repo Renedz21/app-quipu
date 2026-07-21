@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Safe } from "reicon-react";
 import Link from "next/link";
+import { Safe } from "reicon-react";
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
@@ -15,11 +16,10 @@ import {
   EMERGENCY_FUND_LABEL,
   EMERGENCY_FUND_STAT_COMPLETE,
   EMERGENCY_FUND_STAT_CYCLE,
-  EMERGENCY_FUND_STAT_STREAK,
   EMERGENCY_FUND_STAT_CYCLES_SUFFIX,
+  EMERGENCY_FUND_STAT_STREAK,
   EMERGENCY_FUND_TARGET_SUFFIX,
 } from "../constants";
-import { api } from "@/convex/_generated/api";
 import { formatCyclesToCompleteLabel } from "../lib/savingsCopy";
 import { SavingsContributeButton } from "./savings-contribute-button";
 
@@ -98,7 +98,9 @@ export function EmergencyFundDetailView() {
       <div className="mt-2 flex justify-between text-[10.5px] text-faint md:text-[11.5px]">
         <span>1 mes</span>
         <span>2 meses</span>
-        <span>3 meses · {EMERGENCY_FUND_TARGET_SUFFIX.replace("meta de ", "")}</span>
+        <span>
+          3 meses · {EMERGENCY_FUND_TARGET_SUFFIX.replace("meta de ", "")}
+        </span>
       </div>
 
       <div className="mt-6 grid gap-3 md:grid-cols-3">
@@ -142,7 +144,9 @@ function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <article className="rounded-[13px] border border-line bg-card p-4 md:p-[17px]">
       <p className="text-xs text-mute">{label}</p>
-      <p className="mt-1.5 font-serif text-xl text-ink md:text-[22px]">{value}</p>
+      <p className="mt-1.5 font-serif text-xl text-ink md:text-[22px]">
+        {value}
+      </p>
     </article>
   );
 }

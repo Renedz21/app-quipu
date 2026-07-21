@@ -1,5 +1,5 @@
 import { test as base, expect, type Page } from "@playwright/test";
-import { ConvexHttpClient } from "convex/browser";
+import type { ConvexHttpClient } from "convex/browser";
 import {
   createTestUser,
   getConvexJwt,
@@ -24,6 +24,7 @@ type SmokeFixtures = {
 };
 
 export const test = base.extend<SmokeFixtures>({
+  // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture with no dependencies
   smokeUser: async ({}, use, testInfo) => {
     await use(createTestUser(String(testInfo.parallelIndex)));
   },

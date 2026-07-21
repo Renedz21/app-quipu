@@ -1,12 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ChatDots } from "reicon-react";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import { Button } from "@/shared/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
   COACH_EARLY_REGISTER_CTA,
   COACH_EARLY_VIEW_SYSTEM_CTA,

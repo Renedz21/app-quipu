@@ -98,11 +98,16 @@ export function SavingsView() {
 
       {!overview.hasActiveCycle ? (
         <section className="mb-5 rounded-[14px] border border-line bg-card p-5 md:p-6">
-          <h2 className="font-serif text-2xl text-ink">{SAVINGS_EMPTY_TITLE}</h2>
+          <h2 className="font-serif text-2xl text-ink">
+            {SAVINGS_EMPTY_TITLE}
+          </h2>
           <p className="mt-2 text-sm text-mute">{SAVINGS_EMPTY_BODY}</p>
           <Link
             href="/income/register"
-            className={cn(buttonVariants(), "mt-4 inline-flex w-full md:w-auto")}
+            className={cn(
+              buttonVariants(),
+              "mt-4 inline-flex w-full md:w-auto",
+            )}
           >
             {SAVINGS_EMPTY_CTA}
           </Link>

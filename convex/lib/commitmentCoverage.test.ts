@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  computeAllCommitmentCoverage,
-  computeCommitmentCoverage,
-  mapCoverageStatusToDashboard,
   type CommitmentSlice,
   type CycleSlice,
+  computeAllCommitmentCoverage,
+  computeCommitmentCoverage,
   type IncomeEventSlice,
+  mapCoverageStatusToDashboard,
 } from "./commitmentCoverage";
 
 const CYCLE: CycleSlice = {
@@ -80,7 +80,9 @@ describe("computeCommitmentCoverage", () => {
     expect(result.status).toBe("partial");
     expect(result.covered).toBe(50_000);
     expect(result.remaining).toBe(70_000);
-    expect(result.fundingEvents).toEqual([{ eventId: "payroll", amount: 50_000 }]);
+    expect(result.fundingEvents).toEqual([
+      { eventId: "payroll", amount: 50_000 },
+    ]);
   });
 
   it("marks not-started when no income funds the envelope", () => {

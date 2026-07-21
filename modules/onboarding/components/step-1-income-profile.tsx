@@ -1,7 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ArrowRight, Briefcase, ChartTrend, Layers } from "reicon-react";
-import { type ReactNode, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { INCOME_MODEL_OPTIONS } from "../constants";
@@ -75,8 +75,7 @@ function IncomeModelRow({
   return (
     <button
       type="button"
-      role="radio"
-      aria-checked={selected}
+      aria-pressed={selected}
       onClick={onClick}
       className={cn(
         "flex items-center gap-4 rounded-[14px] px-5 py-[18px] text-left transition-colors",
@@ -116,8 +115,15 @@ function IncomeModelIcon({
   }
   if (name === "TrendingUp") {
     return (
-      <ChartTrend size={20} color="var(--clay)" className="shrink-0" aria-hidden />
+      <ChartTrend
+        size={20}
+        color="var(--clay)"
+        className="shrink-0"
+        aria-hidden
+      />
     );
   }
-  return <Layers size={20} color="var(--needs)" className="shrink-0" aria-hidden />;
+  return (
+    <Layers size={20} color="var(--needs)" className="shrink-0" aria-hidden />
+  );
 }

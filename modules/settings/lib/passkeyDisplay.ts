@@ -19,7 +19,10 @@ export function formatPasskeyUsageSummary(createdAt: Date): string {
   return `Passkey · ${formatLimaDate(created, "es-PE")}`;
 }
 
-export function passkeyDeviceLabel(name: string | undefined, deviceType: string): string {
+export function passkeyDeviceLabel(
+  name: string | undefined,
+  deviceType: string,
+): string {
   if (name?.trim()) {
     return name.trim();
   }

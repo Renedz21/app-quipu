@@ -206,7 +206,7 @@ export const deleteExpense = mutation({
 
     // Solo el ciclo activo: revertir un ciclo cerrado corrompe el historial ya evaluado.
     const cycle = await ctx.db.get(expense.cycleId);
-    if (!cycle || cycle.status !== "active") {
+    if (cycle?.status !== "active") {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
         message: "Solo puedes eliminar gastos del ciclo activo.",

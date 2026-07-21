@@ -4,7 +4,6 @@ import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { formatCents } from "@/shared/lib/money";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -14,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { formatCents } from "@/shared/lib/money";
 import {
   RESCUE_CONFIRM_APPLY_CTA,
   RESCUE_CONFIRM_DISMISS_CTA,

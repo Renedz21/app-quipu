@@ -2,8 +2,8 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { evaluateCycleCompliance } from "./budgetMath";
 import {
-  computeAllCommitmentCoverage,
   type CommitmentSlice,
+  computeAllCommitmentCoverage,
   type IncomeEventSlice,
 } from "./commitmentCoverage";
 import { computeNextStreak } from "./gamificationMath";
@@ -85,8 +85,7 @@ export async function evaluateClosedCycle(
     commitmentSlices.length === 0
       ? true
       : commitmentSlices.every(
-          (commitment) =>
-            coverageById.get(commitment.id)?.status === "covered",
+          (commitment) => coverageById.get(commitment.id)?.status === "covered",
         );
 
   await ctx.db.insert("cycleHistory", {

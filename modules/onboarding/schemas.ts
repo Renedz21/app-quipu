@@ -17,8 +17,13 @@ export const step3Schema = z
     allocationSavings: z.number().int().min(0).max(100),
   })
   .refine(
-    (data) => data.allocationNeeds + data.allocationWants + data.allocationSavings === 100,
-    { message: "El reparto debe sumar exactamente 100%.", path: ["allocations"] },
+    (data) =>
+      data.allocationNeeds + data.allocationWants + data.allocationSavings ===
+      100,
+    {
+      message: "El reparto debe sumar exactamente 100%.",
+      path: ["allocations"],
+    },
   );
 
 export const finalPayloadSchema = z
@@ -38,6 +43,11 @@ export const finalPayloadSchema = z
     allocationSavings: z.number().int().min(0).max(100),
   })
   .refine(
-    (data) => data.allocationNeeds + data.allocationWants + data.allocationSavings === 100,
-    { message: "El reparto debe sumar exactamente 100%.", path: ["allocations"] },
+    (data) =>
+      data.allocationNeeds + data.allocationWants + data.allocationSavings ===
+      100,
+    {
+      message: "El reparto debe sumar exactamente 100%.",
+      path: ["allocations"],
+    },
   );

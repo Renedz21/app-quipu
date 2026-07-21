@@ -66,8 +66,12 @@ function formatPaydayList(paydays: number[]): string {
   const sorted = [...paydays].sort((a, b) => a - b);
   if (sorted.length === 0) return "";
   if (sorted.length === 1) return `día ${sorted[0]}`;
-  const head = sorted.slice(0, -1).map((d) => `día ${d}`).join(", ");
-  const last = sorted[sorted.length - 1]!;
+  const head = sorted
+    .slice(0, -1)
+    .map((d) => `día ${d}`)
+    .join(", ");
+  const last = sorted.at(-1);
+  if (last === undefined) return "";
   return `${head} y día ${last}`;
 }
 
@@ -75,10 +79,7 @@ function formatPaydayList(paydays: number[]): string {
 export function buildCycleScheduleCopy(
   profile: Pick<
     Doc<"profiles">,
-    | "incomeModel"
-    | "payFrequency"
-    | "paydays"
-    | "cycleDurationDays"
+    "incomeModel" | "payFrequency" | "paydays" | "cycleDurationDays"
   >,
 ): { typeLabel: string; scheduleCopy: string; cycleDays: number | null } {
   if (profile.incomeModel === "variable") {

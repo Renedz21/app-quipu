@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { resolveCycleForEvent } from "./incomeEventLogic";
 
 const HOUR = 60 * 60 * 1000;
-const DAY = 24 * HOUR;
+const _DAY = 24 * HOUR;
 
 describe("resolveCycleForEvent", () => {
   const now = new Date("2026-07-15T12:00:00Z").getTime();

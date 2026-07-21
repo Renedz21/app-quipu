@@ -44,9 +44,9 @@ describe("preference defaults", () => {
   });
 
   it("respects stored values", () => {
-    expect(
-      resolveDailySummaryEnabled({ dailySummaryEnabled: false }),
-    ).toBe(false);
+    expect(resolveDailySummaryEnabled({ dailySummaryEnabled: false })).toBe(
+      false,
+    );
   });
 });
 

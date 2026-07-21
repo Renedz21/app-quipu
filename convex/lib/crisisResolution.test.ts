@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildCoverFromSavingsOption,
   buildPostponeOption,
+  type CrisisCommitmentSlice,
   computeCoverFromSavingsSplit,
   pickPostponeCandidate,
-  type CrisisCommitmentSlice,
 } from "./crisisResolution";
 
 describe("pickPostponeCandidate", () => {
@@ -61,10 +61,7 @@ describe("pickPostponeCandidate", () => {
 describe("computeCoverFromSavingsSplit", () => {
   it("allocates up to savings remaining across uncovered envelopes", () => {
     expect(
-      computeCoverFromSavingsSplit(
-        { needs: 180_000, wants: 24_000 },
-        150_000,
-      ),
+      computeCoverFromSavingsSplit({ needs: 180_000, wants: 24_000 }, 150_000),
     ).toEqual({ needs: 132_353, wants: 17_647, total: 150_000 });
   });
 
@@ -94,7 +91,14 @@ describe("buildCoverFromSavingsOption", () => {
 describe("buildPostponeOption", () => {
   it("builds postpone copy with freed amount", () => {
     const option = buildPostponeOption(
-      { id: "spotify", name: "Spotify", amount: 2_400, remaining: 2_400, envelope: "wants", dueDay: 18 },
+      {
+        id: "spotify",
+        name: "Spotify",
+        amount: 2_400,
+        remaining: 2_400,
+        envelope: "wants",
+        dueDay: 18,
+      },
       "S/",
     );
 

@@ -2,8 +2,7 @@ export const SAVINGS_PAGE_TITLE = "Ahorros";
 export const SAVINGS_PAGE_SUBTITLE = "Lo que estás construyendo";
 export const SAVINGS_TOTAL_SAVED_LABEL = "Total ahorrado";
 
-export const SAVINGS_CYCLE_CONTRIBUTION_PREFIX =
-  "Estás guardando";
+export const SAVINGS_CYCLE_CONTRIBUTION_PREFIX = "Estás guardando";
 export const SAVINGS_CYCLE_CONTRIBUTION_SUFFIX =
   "cada ciclo. Con calma, se nota.";
 export const SAVINGS_MOBILE_SUBTITLE = "Con calma, se nota.";

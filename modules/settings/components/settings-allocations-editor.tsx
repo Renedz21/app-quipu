@@ -11,9 +11,7 @@ import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
 import { ENVELOPES } from "@/modules/onboarding/constants";
-import {
-  type Allocation,
-} from "@/modules/onboarding/lib/allocation";
+import type { Allocation } from "@/modules/onboarding/lib/allocation";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -87,10 +85,7 @@ export function SettingsAllocationsEditor() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-lg flex-col px-5 py-4 md:py-8">
-      <Link
-        href="/settings"
-        className="text-[12.5px] text-mute hover:text-ink"
-      >
+      <Link href="/settings" className="text-[12.5px] text-mute hover:text-ink">
         {SETTINGS_BACK_LINK}
       </Link>
       <h1 className="mt-3 font-serif text-[23px] font-medium text-ink">
@@ -118,17 +113,13 @@ export function SettingsAllocationsEditor() {
                 envKey={env.key}
                 label={env.label}
                 desc={
-                  cents != null
-                    ? `${formatCents(cents)} por ciclo`
-                    : env.desc
+                  cents != null ? `${formatCents(cents)} por ciclo` : env.desc
                 }
                 barColor={env.barColor}
                 value={pct}
                 state={state}
                 dispatch={(payload) =>
-                  setState((prev) =>
-                    prev ? { ...prev, ...payload } : prev,
-                  )
+                  setState((prev) => (prev ? { ...prev, ...payload } : prev))
                 }
               />
             </div>

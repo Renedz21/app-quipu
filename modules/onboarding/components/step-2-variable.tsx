@@ -20,7 +20,12 @@ export function Step2Variable({ onBack, onNext }: Props) {
       subtitle="Como tus ingresos varían, Quipu trabaja por ciclos fijos y reparte lo que va entrando."
       onBack={onBack}
       cta={
-        <Button onClick={onNext} disabled={!canContinue} size="lg" className="gap-2">
+        <Button
+          onClick={onNext}
+          disabled={!canContinue}
+          size="lg"
+          className="gap-2"
+        >
           Continuar
           <ArrowRight size={20} color="currentColor" />
         </Button>
@@ -33,8 +38,7 @@ export function Step2Variable({ onBack, onNext }: Props) {
             <button
               key={days}
               type="button"
-              role="radio"
-              aria-checked={selected}
+              aria-pressed={selected}
               onClick={() =>
                 dispatch({
                   type: "UPDATE",

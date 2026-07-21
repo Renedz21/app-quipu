@@ -158,8 +158,7 @@ export const createCommitmentsBulk = mutation({
     }
 
     // Valida todos antes de insertar (atomicidad).
-    for (let i = 0; i < args.commitments.length; i++) {
-      const c = args.commitments[i]!;
+    for (const [i, c] of args.commitments.entries()) {
       if (!c.name.trim()) {
         throw new ConvexError({
           code: "VALIDATION_ERROR",

@@ -18,7 +18,11 @@ function envelopeDot(envelope: "needs" | "wants") {
   return envelope === "needs" ? "bg-needs" : "bg-clay";
 }
 
-export function SettingsCommitmentsSection({ className }: { className?: string }) {
+export function SettingsCommitmentsSection({
+  className,
+}: {
+  className?: string;
+}) {
   const commitments = useQuery(api.fixedCommitments.listMyCommitments, {});
   const [addOpen, setAddOpen] = useState(false);
 
@@ -55,7 +59,9 @@ export function SettingsCommitmentsSection({ className }: { className?: string }
       </div>
 
       {commitments.length === 0 ? (
-        <p className="mb-3 text-[13px] text-mute">{SETTINGS_COMMITMENTS_EMPTY}</p>
+        <p className="mb-3 text-[13px] text-mute">
+          {SETTINGS_COMMITMENTS_EMPTY}
+        </p>
       ) : (
         <ul className="divide-y divide-line-subtle">
           {commitments.map((commitment) => (
@@ -74,7 +80,8 @@ export function SettingsCommitmentsSection({ className }: { className?: string }
                   {commitment.name}
                 </div>
                 <div className="text-[11px] text-faint">
-                  {ENVELOPE_LABELS[commitment.envelope]} · día {commitment.dueDay}
+                  {ENVELOPE_LABELS[commitment.envelope]} · día{" "}
+                  {commitment.dueDay}
                 </div>
               </div>
               <span className="font-serif text-[15px] text-ink">

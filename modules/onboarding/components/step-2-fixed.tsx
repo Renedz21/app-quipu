@@ -32,12 +32,19 @@ export function Step2Fixed({ onBack, onNext }: Props) {
       const currentDays = state.paydays;
       if (currentDays.includes(day)) {
         const next = currentDays.filter((d) => d !== day);
-        dispatch({ type: "UPDATE", payload: { paydays: next.length ? next : [day] } });
+        dispatch({
+          type: "UPDATE",
+          payload: { paydays: next.length ? next : [day] },
+        });
       } else if (currentDays.length >= 2) {
-        const next = [currentDays[1]!, day];
+        const first = currentDays[1];
+        const next = first !== undefined ? [first, day] : [day];
         dispatch({ type: "UPDATE", payload: { paydays: next } });
       } else {
-        dispatch({ type: "UPDATE", payload: { paydays: [...currentDays, day] } });
+        dispatch({
+          type: "UPDATE",
+          payload: { paydays: [...currentDays, day] },
+        });
       }
     } else {
       dispatch({ type: "UPDATE", payload: { paydays: [day] } });
@@ -51,7 +58,12 @@ export function Step2Fixed({ onBack, onNext }: Props) {
       subtitle="Tu ciclo empieza el día que recibes tu sueldo."
       onBack={onBack}
       cta={
-        <Button onClick={onNext} disabled={!canContinue} size="lg" className="gap-2">
+        <Button
+          onClick={onNext}
+          disabled={!canContinue}
+          size="lg"
+          className="gap-2"
+        >
           Continuar
           <ArrowRight size={20} color="currentColor" />
         </Button>
@@ -64,8 +76,7 @@ export function Step2Fixed({ onBack, onNext }: Props) {
             <button
               key={freq}
               type="button"
-              role="radio"
-              aria-checked={selected}
+              aria-pressed={selected}
               onClick={() =>
                 dispatch({
                   type: "UPDATE",
@@ -84,7 +95,9 @@ export function Step2Fixed({ onBack, onNext }: Props) {
             >
               <div>
                 <p className="font-semibold">{FREQ_LABEL[freq]}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{FREQ_DESC[freq]}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {FREQ_DESC[freq]}
+                </p>
               </div>
               <span
                 className={cn(

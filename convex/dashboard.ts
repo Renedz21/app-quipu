@@ -1,5 +1,6 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { resolveCoachPresentation } from "./lib/coachState";
 import {
   computeAllCommitmentCoverage,
   computeCoverageProgressPercent,
@@ -7,9 +8,6 @@ import {
   mapCoverageStatusToDashboard,
 } from "./lib/commitmentCoverage";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
-import {
-  resolveCoachPresentation,
-} from "./lib/coachState";
 import {
   buildEarlyCycleHeroBody,
   buildValidationCopy,
@@ -21,8 +19,8 @@ import {
   daysUntilDueDay,
   detectEarlyCycle,
   evaluateCycleCompliance,
-  resolveHeroStatusBadge,
   mergeRecentMovements,
+  resolveHeroStatusBadge,
   sortCommitmentsByDue,
 } from "./lib/dashboardMath";
 
@@ -182,9 +180,7 @@ export const getSummary = query({
     const hero = {
       dailyAvailableCents,
       displayDailyCents: computeDisplayDailyCents(dailyAvailableCents),
-      bodyCopy: isEarlyCycle
-        ? buildEarlyCycleHeroBody()
-        : undefined,
+      bodyCopy: isEarlyCycle ? buildEarlyCycleHeroBody() : undefined,
       validationCopy: isEarlyCycle
         ? undefined
         : buildValidationCopy(statusBadge),

@@ -7,7 +7,20 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build", "!public"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!public",
+      "!convex/_generated",
+      "!convex/betterAuth/_generated",
+      "!quipu-2.html",
+      "!biome-report.json",
+      "!lint-full.txt",
+      "!lint-out.txt"
+    ]
   },
   "css": {
     "parser": {
@@ -32,6 +45,34 @@
       "react": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": ["shared/components/ui/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off",
+            "noLabelWithoutControl": "off",
+            "useKeyWithClickEvents": "off"
+          },
+          "suspicious": {
+            "noDocumentCookie": "off",
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["modules/auth/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {

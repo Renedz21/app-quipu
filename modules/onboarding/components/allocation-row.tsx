@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import type { EnvelopeKey } from "../constants";
-import { distributeEnvelope, type Allocation } from "../lib/allocation";
+import { type Allocation, distributeEnvelope } from "../lib/allocation";
 
 type Props = {
   envKey: EnvelopeKey;
@@ -72,7 +72,9 @@ export function AllocationRow({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") commit(draft); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit(draft);
+          }}
           min={0}
           max={100}
           className="w-12 border-none bg-transparent p-0 text-center font-serif text-lg text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none focus:outline-none"

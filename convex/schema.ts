@@ -62,9 +62,7 @@ export const appTables = {
     accentPreset: v.optional(
       v.union(v.literal("moss"), v.literal("steel"), v.literal("clay")),
     ),
-    appIconVariant: v.optional(
-      v.union(v.literal("light"), v.literal("dark")),
-    ),
+    appIconVariant: v.optional(v.union(v.literal("light"), v.literal("dark"))),
     // Bloque 9 — preferencias de notificaciones (undefined = defaults en lectura).
     dailySummaryEnabled: v.optional(v.boolean()),
     cycleAlertsEnabled: v.optional(v.boolean()),

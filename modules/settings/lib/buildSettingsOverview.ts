@@ -1,6 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
-import type { Doc } from "@/convex/_generated/dataModel";
 import type { api } from "@/convex/_generated/api";
+import type { Doc } from "@/convex/_generated/dataModel";
 import { MODEL_DISPLAY_LABELS } from "@/modules/onboarding/constants";
 import {
   SETTINGS_PLAN_FREE_BODY,
@@ -58,7 +58,9 @@ export function buildSettingsOverviewFromProfile(
   if (profile.variableIncomeSources?.length) {
     tags.push(...profile.variableIncomeSources.slice(0, 2));
   }
-  tags.push(`Perfil ${MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel}`);
+  tags.push(
+    `Perfil ${MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel}`,
+  );
 
   const isPremium = profile.plan === "premium";
 
@@ -67,7 +69,8 @@ export function buildSettingsOverviewFromProfile(
       name: profile.name,
       email: account?.email ?? null,
       country: profile.country,
-      incomeModelLabel: MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel,
+      incomeModelLabel:
+        MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel,
       tags,
       plan: profile.plan,
     },
@@ -75,7 +78,9 @@ export function buildSettingsOverviewFromProfile(
       plan: profile.plan,
       status: isPremium ? "active" : "free",
       priceDisplay: isPremium ? SETTINGS_PLAN_PLUS_PRICE : null,
-      renewalSummary: isPremium ? SETTINGS_PLAN_RENEWAL_STUB : SETTINGS_PLAN_FREE_BODY,
+      renewalSummary: isPremium
+        ? SETTINGS_PLAN_RENEWAL_STUB
+        : SETTINGS_PLAN_FREE_BODY,
       paymentMethodSummary: null,
     },
     passkeys: [],

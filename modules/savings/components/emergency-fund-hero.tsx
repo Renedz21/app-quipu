@@ -1,7 +1,8 @@
 "use client";
 
-import { Safe } from "reicon-react";
 import Link from "next/link";
+import { Safe } from "reicon-react";
+import { formatCents } from "@/shared/lib/money";
 import {
   EMERGENCY_FUND_AUTO_CONTRIBUTION_PREFIX,
   EMERGENCY_FUND_AUTO_CONTRIBUTION_SUFFIX,
@@ -10,7 +11,6 @@ import {
   EMERGENCY_FUND_TARGET_SUFFIX,
 } from "../constants";
 import type { SavingsEmergencyFund } from "../types";
-import { formatCents } from "@/shared/lib/money";
 
 type Props = {
   fund: SavingsEmergencyFund;

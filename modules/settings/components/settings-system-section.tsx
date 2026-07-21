@@ -84,9 +84,18 @@ export function SettingsSystemSection({ className }: { className?: string }) {
             {SETTINGS_PERCENTAGES_LABEL}
           </span>
           <span className="flex gap-0.5">
-            <span className={cn("size-1.5 rounded-full", envelopeDotClass("needs"))} />
-            <span className={cn("size-1.5 rounded-full", envelopeDotClass("wants"))} />
-            <span className={cn("size-1.5 rounded-full", envelopeDotClass("savings"))} />
+            <span
+              className={cn("size-1.5 rounded-full", envelopeDotClass("needs"))}
+            />
+            <span
+              className={cn("size-1.5 rounded-full", envelopeDotClass("wants"))}
+            />
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                envelopeDotClass("savings"),
+              )}
+            />
           </span>
           <span className="text-[11.5px] text-faint">
             {needs}/{wants}/{savings}
@@ -97,7 +106,9 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           href="/settings/cycle"
           className="flex items-center gap-2 border-b border-line-subtle py-2.5"
         >
-          <span className="flex-1 text-[13.5px] text-ink">{SETTINGS_CYCLE_LABEL}</span>
+          <span className="flex-1 text-[13.5px] text-ink">
+            {SETTINGS_CYCLE_LABEL}
+          </span>
           <span className="text-[11.5px] text-faint">
             {profile.cycleDurationDays ?? 30} días
           </span>
@@ -140,7 +151,10 @@ export function SettingsSystemSection({ className }: { className?: string }) {
               >
                 <div className="mb-1 flex items-center gap-1.5 text-xs text-body-secondary">
                   <span
-                    className={cn("size-2 rounded-full", envelopeDotClass(item.dot))}
+                    className={cn(
+                      "size-2 rounded-full",
+                      envelopeDotClass(item.dot),
+                    )}
                   />
                   {item.label}
                 </div>
@@ -167,7 +181,10 @@ export function SettingsSystemSection({ className }: { className?: string }) {
             {(
               [
                 { label: SETTINGS_CYCLE_TYPE, value: formatCycleType(profile) },
-                { label: SETTINGS_CYCLE_START, value: formatCycleStart(profile) },
+                {
+                  label: SETTINGS_CYCLE_START,
+                  value: formatCycleStart(profile),
+                },
                 {
                   label: SETTINGS_CYCLE_PROFILE,
                   value: formatIncomeProfileLabel(profile),
@@ -179,7 +196,9 @@ export function SettingsSystemSection({ className }: { className?: string }) {
                 className="flex-1 rounded-[11px] border border-line-subtle bg-surface-warm px-3.5 py-3"
               >
                 <div className="text-[11.5px] text-mute">{card.label}</div>
-                <div className="text-sm font-semibold text-ink">{card.value}</div>
+                <div className="text-sm font-semibold text-ink">
+                  {card.value}
+                </div>
               </div>
             ))}
           </div>
@@ -200,27 +219,37 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           </div>
           <div className="divide-y divide-line-subtle">
             <div className="flex items-center justify-between gap-3 py-2.5">
-              <span className="text-sm text-ink">{SETTINGS_CURRENCY_LABEL}</span>
+              <span className="text-sm text-ink">
+                {SETTINGS_CURRENCY_LABEL}
+              </span>
               <span className="text-[13.5px] text-mute">
                 {SETTINGS_CURRENCY_VALUE}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 py-2.5">
-              <span className="text-sm text-ink">{SETTINGS_LANGUAGE_LABEL}</span>
+              <span className="text-sm text-ink">
+                {SETTINGS_LANGUAGE_LABEL}
+              </span>
               <span className="text-[13.5px] text-mute">
                 {SETTINGS_LANGUAGE_VALUE}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 py-2.5">
-              <span className="text-sm text-ink">{SETTINGS_DAILY_SUMMARY_LABEL}</span>
+              <span className="text-sm text-ink">
+                {SETTINGS_DAILY_SUMMARY_LABEL}
+              </span>
               <SettingsToggle
                 label={SETTINGS_DAILY_SUMMARY_LABEL}
                 checked={dailyOn}
-                onCheckedChange={(v) => void patchPref("dailySummaryEnabled", v)}
+                onCheckedChange={(v) =>
+                  void patchPref("dailySummaryEnabled", v)
+                }
               />
             </div>
             <div className="flex items-center justify-between gap-3 py-2.5">
-              <span className="text-sm text-ink">{SETTINGS_CYCLE_ALERTS_LABEL}</span>
+              <span className="text-sm text-ink">
+                {SETTINGS_CYCLE_ALERTS_LABEL}
+              </span>
               <SettingsToggle
                 label={SETTINGS_CYCLE_ALERTS_LABEL}
                 checked={alertsOn}

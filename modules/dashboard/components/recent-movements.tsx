@@ -1,5 +1,5 @@
-import { BillList } from "reicon-react";
 import Link from "next/link";
+import { BillList } from "reicon-react";
 import { MovementList } from "@/shared/components/movements/movement-list";
 import {
   MOVEMENTS_EMPTY_BODY,

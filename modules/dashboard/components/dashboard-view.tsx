@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useDashboardSummary } from "../hooks/use-dashboard-summary";
+import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
 import { CommitmentsList } from "./commitments-list";
 import { DashboardEmptyCycle } from "./dashboard-empty-cycle";
@@ -15,7 +16,6 @@ import { DashboardHeroSkeleton } from "./dashboard-hero-skeleton";
 import { EnvelopeCards } from "./envelope-cards";
 import { EnvelopeCardsSkeleton } from "./envelope-cards-skeleton";
 import { RecentMovements } from "./recent-movements";
-import type { DashboardCoach } from "../types";
 
 function isFullWidthCoach(coach: DashboardCoach | null | undefined): boolean {
   if (!coach) return false;

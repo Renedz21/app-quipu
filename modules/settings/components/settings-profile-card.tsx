@@ -16,10 +16,7 @@ type Props = {
 };
 
 export function SettingsProfileCard({ profile, className }: Props) {
-  const subtitleParts = [
-    profile.email,
-    profile.country,
-  ].filter(Boolean);
+  const subtitleParts = [profile.email, profile.country].filter(Boolean);
 
   return (
     <section

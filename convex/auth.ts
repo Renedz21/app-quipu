@@ -82,9 +82,10 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
                 displayName: email,
               };
             }
+            const localPart = email.split("@")[0];
             const created = await internalAdapter.createUser({
               email,
-              name: email.split("@")[0]!,
+              name: localPart.length > 0 ? localPart : email,
               emailVerified: false,
             });
             return { id: created.id, name: created.name, displayName: email };

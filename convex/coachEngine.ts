@@ -3,12 +3,12 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { suggestRescueTransfer } from "./lib/budgetMath";
-import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
-import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
 import {
   resolveCoachPresentation,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
+import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
+import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import {
   computeRescueEnvelopePatches,
@@ -33,7 +33,7 @@ async function getOwnedPendingInteraction(
   }
 
   const interaction = await ctx.db.get(interactionId);
-  if (!interaction || interaction.status !== "pending") {
+  if (interaction?.status !== "pending") {
     throw new ConvexError({
       code: "VALIDATION_ERROR",
       message: "La interacción no existe o ya fue resuelta.",
@@ -178,7 +178,9 @@ async function getCycleCoverageContext(
     };
   });
 
-  const envelopeByType = new Map(envelopesRaw.map((envelope) => [envelope.type, envelope]));
+  const envelopeByType = new Map(
+    envelopesRaw.map((envelope) => [envelope.type, envelope]),
+  );
 
   return {
     cycle,
@@ -260,7 +262,10 @@ export const resolveNudgeAction = mutation({
     }
 
     if (optionId === "suggest_rescue") {
-      const { savings, wants } = await getCycleEnvelopes(ctx, interaction.cycleId);
+      const { savings, wants } = await getCycleEnvelopes(
+        ctx,
+        interaction.cycleId,
+      );
 
       if (!savings || !wants) {
         throw new ConvexError({
@@ -323,7 +328,7 @@ export const applyRescueTransfer = mutation({
     interactionId: v.id("coachInteractions"),
   },
   handler: async (ctx, { interactionId }) => {
-    const { interaction, profile } = await getOwnedPendingInteraction(
+    const { interaction } = await getOwnedPendingInteraction(
       ctx,
       interactionId,
     );
@@ -334,11 +339,15 @@ export const applyRescueTransfer = mutation({
     ) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
-        message: "Esta interacción no tiene una sugerencia de rescate pendiente.",
+        message:
+          "Esta interacción no tiene una sugerencia de rescate pendiente.",
       });
     }
 
-    const { savings, wants } = await getCycleEnvelopes(ctx, interaction.cycleId);
+    const { savings, wants } = await getCycleEnvelopes(
+      ctx,
+      interaction.cycleId,
+    );
     if (!savings || !wants) {
       throw new ConvexError({
         code: "NOT_FOUND",
@@ -346,10 +355,13 @@ export const applyRescueTransfer = mutation({
       });
     }
 
-    const validation = validateRescueTransferApply(interaction.rescueSuggestion, {
-      savingsRemaining: savings.remainingAmount,
-      wantsRemaining: wants.remainingAmount,
-    });
+    const validation = validateRescueTransferApply(
+      interaction.rescueSuggestion,
+      {
+        savingsRemaining: savings.remainingAmount,
+        wantsRemaining: wants.remainingAmount,
+      },
+    );
 
     if (!validation.ok) {
       const messageByReason: Record<typeof validation.reason, string> = {
@@ -400,7 +412,10 @@ export const dismissRescueSuggestion = mutation({
     interactionId: v.id("coachInteractions"),
   },
   handler: async (ctx, { interactionId }) => {
-    const { interaction } = await getOwnedPendingInteraction(ctx, interactionId);
+    const { interaction } = await getOwnedPendingInteraction(
+      ctx,
+      interactionId,
+    );
 
     if (
       interaction.selectedOptionId !== "suggest_rescue" ||
@@ -408,7 +423,8 @@ export const dismissRescueSuggestion = mutation({
     ) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
-        message: "Esta interacción no tiene una sugerencia de rescate pendiente.",
+        message:
+          "Esta interacción no tiene una sugerencia de rescate pendiente.",
       });
     }
 
@@ -425,9 +441,18 @@ export const applyCoverFromCycleSavings = mutation({
   handler: async (ctx) => {
     const now = Date.now();
     const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
-    const context = await getCycleCoverageContext(ctx, profile._id, cycle._id, now);
+    const context = await getCycleCoverageContext(
+      ctx,
+      profile._id,
+      cycle._id,
+      now,
+    );
 
-    if (!context.savingsEnvelope || !context.needsEnvelope || !context.wantsEnvelope) {
+    if (
+      !context.savingsEnvelope ||
+      !context.needsEnvelope ||
+      !context.wantsEnvelope
+    ) {
       throw new ConvexError({
         code: "NOT_FOUND",
         message: "No se encontraron los sobres del ciclo actual.",
@@ -500,7 +525,12 @@ export const postponeCommitmentForCycle = mutation({
       });
     }
 
-    const context = await getCycleCoverageContext(ctx, profile._id, cycle._id, now);
+    const context = await getCycleCoverageContext(
+      ctx,
+      profile._id,
+      cycle._id,
+      now,
+    );
     const target = context.commitments.find((item) => item.id === commitmentId);
 
     if (!target || target.remaining <= 0) {

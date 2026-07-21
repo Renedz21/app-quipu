@@ -54,10 +54,9 @@ export const listForActiveCycle = query({
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
       .collect();
 
-    const envelopeTypeById = new Map<
-      Id<"envelopes">,
-      Doc<"envelopes">["type"]
-    >(envelopesRaw.map((envelope) => [envelope._id, envelope.type]));
+    const envelopeTypeById = new Map<Id<"envelopes">, Doc<"envelopes">["type"]>(
+      envelopesRaw.map((envelope) => [envelope._id, envelope.type]),
+    );
 
     const [expensesRaw, incomesRaw] = await Promise.all([
       ctx.db

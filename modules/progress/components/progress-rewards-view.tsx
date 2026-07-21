@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -82,7 +82,9 @@ export function ProgressRewardsView() {
         <h1 className="font-serif text-[22px] font-medium text-ink md:text-[24px]">
           {REWARDS_PAGE_TITLE}
         </h1>
-        <p className="mt-1 text-[13px] text-mute-subtle">{REWARDS_PAGE_SUBTITLE}</p>
+        <p className="mt-1 text-[13px] text-mute-subtle">
+          {REWARDS_PAGE_SUBTITLE}
+        </p>
       </header>
 
       <div className="mb-6 flex flex-col gap-2.5 md:gap-2.5">

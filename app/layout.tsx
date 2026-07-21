@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist_Mono, Hanken_Grotesk, Newsreader } from "next/font/google";
 import "./globals.css";
 import { getToken } from "@/auth/auth-server";
-import { ConvexClientProvider } from "@/shared/components/providers/convex-provider";
 import { AppearanceSync } from "@/modules/progress/components/appearance-sync";
+import { ConvexClientProvider } from "@/shared/components/providers/convex-provider";
 import { AppToaster } from "@/shared/components/ui/toaster";
 import { cn } from "@/shared/lib/utils";
 

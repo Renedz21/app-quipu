@@ -121,10 +121,7 @@ async function buildSavingsOverview(ctx: QueryCtx) {
       0,
       savingsEnvelope?.remainingAmount ?? 0,
     );
-    cycleContributionCents = Math.max(
-      0,
-      savingsEnvelope?.allocatedAmount ?? 0,
-    );
+    cycleContributionCents = Math.max(0, savingsEnvelope?.allocatedAmount ?? 0);
   }
 
   const needsEnvelopeAllocated = activeCycle

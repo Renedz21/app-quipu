@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeft } from "reicon-react";
 import type { ReactNode } from "react";
+import { ArrowLeft } from "reicon-react";
 import { cn } from "@/shared/lib/utils";
 import { STEP_LABELS } from "../constants";
 import { CheckMark } from "./check-mark";

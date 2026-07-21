@@ -92,8 +92,7 @@ function filterIncomeEventsInCycle(
   return incomeEvents
     .filter(
       (event) =>
-        event.occurredAt >= cycle.startDate &&
-        event.occurredAt < cycle.endDate,
+        event.occurredAt >= cycle.startDate && event.occurredAt < cycle.endDate,
     )
     .sort((a, b) => a.occurredAt - b.occurredAt);
 }

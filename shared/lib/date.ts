@@ -119,18 +119,131 @@ export function getNextPayday(
   return timestampForLimaDate(nextYear, nextMonth, firstPayday);
 }
 
+export type LimaDateParts = {
+  year: number;
+  month: number;
+  day: number;
+};
+
+/**
+ * Partes de calendario (año/mes/día) en timezone Lima.
+ */
+export function getLimaDateParts(timestamp: number): LimaDateParts {
+  return {
+    year: getLimaYear(timestamp),
+    month: getLimaMonth(timestamp),
+    day: getLimaDay(timestamp),
+  };
+}
+
 /**
  * Construye un timestamp para una fecha específica en Lima, al inicio del día.
  */
+export function limaDatePartsToTimestamp(parts: LimaDateParts): number {
+  return timestampForLimaDate(parts.year, parts.month, parts.day);
+}
+
 function timestampForLimaDate(
   year: number,
   month: number,
   day: number,
 ): number {
-  // Construimos un ISO string asumiendo Lima y luego lo parseamos.
-  // Usamos el truco de -05:00 (Lima no tiene DST, offset fijo -05).
   const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00-05:00`;
   return new Date(iso).getTime();
+}
+
+/**
+ * Inicio del día de Lima para un instante dado (p. ej. "hoy" en Lima).
+ */
+export function limaStartOfDay(timestamp: number = Date.now()): number {
+  return limaDatePartsToTimestamp(getLimaDateParts(timestamp));
+}
+
+export function isSameLimaDay(a: number, b: number): boolean {
+  const partsA = getLimaDateParts(a);
+  const partsB = getLimaDateParts(b);
+  return (
+    partsA.year === partsB.year &&
+    partsA.month === partsB.month &&
+    partsA.day === partsB.day
+  );
+}
+
+/** Valor para `<input type="date">` en Lima (YYYY-MM-DD). */
+export function limaDateToInputValue(timestamp: number): string {
+  const { year, month, day } = getLimaDateParts(timestamp);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Formato corto para escribir a mano (dd/mm/aaaa) en Lima. */
+export function limaDateToDisplayValue(timestamp: number): string {
+  const { year, month, day } = getLimaDateParts(timestamp);
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
+/** Parsea dd/mm/aaaa como día en Lima; null si es inválido. */
+export function parseLimaDisplayDateInput(value: string): number | null {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim());
+  if (!match) return null;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  if (
+    !Number.isInteger(day) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(year) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return null;
+  }
+
+  return parseLimaDateInput(
+    `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+  );
+}
+
+/** Parsea YYYY-MM-DD como día en Lima; null si es inválido. */
+export function parseLimaDateInput(value: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return null;
+  }
+
+  const timestamp = limaDatePartsToTimestamp({ year, month, day });
+  const roundTrip = getLimaDateParts(timestamp);
+  if (
+    roundTrip.year !== year ||
+    roundTrip.month !== month ||
+    roundTrip.day !== day
+  ) {
+    return null;
+  }
+
+  return timestamp;
+}
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** Límite inferior razonable para fechas retroactivas de ingreso (1 año). */
+export function limaIncomeDateMinTimestamp(now: number = Date.now()): number {
+  return limaStartOfDay(now) - 365 * MS_PER_DAY;
 }
 
 /**

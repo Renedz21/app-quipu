@@ -495,7 +495,7 @@ Si falta una, la pantalla está incompleta.
 
 - Móvil: Recuperación/Loading/Vacío (B1), Paso 2 Independiente y Mixto (B2), Variante B de gasto (B4), coach Sugerencia (B7).
 - Web: dashboard en estados no-positivos (vacío/crisis solo se ilustran en B7).
-- Pantallas ausentes: detalle de compromiso, destino del nav "Compromisos".
+- Pantallas ausentes: detalle de compromiso.
 - Modal de confirmación destructiva (diseñado en spec, no implementado).
 - Theme switcher a CSS variables y componentes codificados como sistema (no existe Storybook).
 
@@ -790,9 +790,37 @@ componente `convex/betterAuth/` y no se re-exportan.
 
 ### 6.4 Forms
 
-**TanStack Form + Zod resolver** solo cuando: 3+ campos con validación cruzada, o estado
-complejo (arrays dinámicos, dependencias entre campos).
-**No usar** cuando: 1–2 campos independientes (`useState` + `safeParse` inline basta) o solo hay un submit.
+Todo formulario de **captura con submit** (ingreso, gasto, compromisos, auth, etc.) usa
+**TanStack Form + validadores Zod** (`validators: { onChange: schema }` o equivalente), con
+mensajes en español peruano accionables (`Field` / `FieldError` de `shared/components/ui/field.tsx`).
+
+**Referencia canónica:** `modules/auth/components/sign-in-view.tsx` (wizard + form) y
+`modules/income/components/income-register-flow.tsx` + `income-register-form.tsx` (container +
+form).
+
+**`useState` permitido solo para UI de flujo**, no para valores de campos:
+
+- Paso de wizard (`step`, como sign-in email/password).
+- Apertura de modal / sheet (`open`).
+- Resultado post-submit (`result`, pantalla de confirmación).
+- Errores de servidor globales (`serverError`) cuando no mapean a un campo.
+
+**Capas:**
+
+- `modules/*/schemas.ts` (o `shared/.../schemas.ts`) — Zod al borde del cliente; mismos límites
+  que las mutaciones Convex (montos en céntimos, `dueDay`, longitudes).
+- `*RegisterFlow` / vista contenedora — queries, mutación, `step`/`result`.
+- `*RegisterForm` / subvista — `useForm`, wiring de campos (keypad, date picker, chips).
+
+**Excepciones (no migrar a TanStack solo por contar campos):** toggles sin submit, drafts de
+onboarding con UX numérica local (evaluar form cuando haya validación cruzada, p. ej. suma = 100).
+
+**Checklist al añadir o migrar un form:**
+
+1. Schema Zod en el módulo + tests Vitest de casos límite.
+2. Sin `useState` por campo; submit deshabilitado con `form.state` / `isSubmitting`.
+3. Errores visibles (`FieldError`), nunca `return` silencioso en validación.
+4. Preview o derivados vía `form.useStore` / subscribe, no estado duplicado.
 
 ### 6.5 Testing
 
@@ -956,6 +984,7 @@ revisa solo cuando el usuario declare la app completa.
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
 - **Bloque 9 — Perfil y ajustes:** `/settings` + allocations; ver P1-12.
 - **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard).
+- **Compromisos:** `/commitments` (lista con cobertura del ciclo, total `/ ciclo`, agregar compromiso; nav sidebar/bottom activa; enlace «Ver todo» en dashboard).
 
 **No existe todavía:**
 - Variante C de gasto (automático).
@@ -1139,6 +1168,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-21 — §8 delta Compromisos.** Pantalla `/commitments` (`getCommitmentCoverage` + total ciclo), nav activa, «Ver todo» en dashboard, diálogo agregar en `shared/components/commitments/`.
 - **2026-07-21 — §8 delta B3.** Lista de movimientos (`/movements`, `convex/movements.listForActiveCycle`, enlace dashboard).
 - **2026-07-21 — §8 P1-12.** Bloque 9 Ajustes MVP (`getSettingsOverview`, `/settings`, nav, smoke).
 - **2026-07-21 — §8 P1-12 (parcial).** Bloque 9 Ajustes: `/settings`, sistema/reparto/compromisos, `convex/settings.ts`, nav Ajustes.

@@ -1,0 +1,61 @@
+import { describe, expect, it } from "vitest";
+import { KEYPAD_MAX_CENTS } from "@/modules/expenses/lib/keypad";
+import {
+  createNewGoalSchema,
+  newGoalFormToMutationArgs,
+} from "@/modules/savings/schemas";
+
+describe("createNewGoalSchema", () => {
+  const schema = createNewGoalSchema();
+
+  it("accepts label without target", () => {
+    expect(schema.safeParse({ label: "Viaje", targetInput: "" }).success).toBe(
+      true,
+    );
+  });
+
+  it("accepts label with valid target input", () => {
+    expect(
+      schema.safeParse({ label: "Viaje", targetInput: "3000" }).success,
+    ).toBe(true);
+  });
+
+  it("rejects empty label", () => {
+    expect(schema.safeParse({ label: "  ", targetInput: "" }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects label over 40 chars", () => {
+    expect(
+      schema.safeParse({ label: "x".repeat(41), targetInput: "" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects unparseable target when provided", () => {
+    expect(
+      schema.safeParse({ label: "Viaje", targetInput: "abc" }).success,
+    ).toBe(false);
+  });
+
+  it("rejects target above keypad max", () => {
+    const overMax = String(KEYPAD_MAX_CENTS / 100 + 1);
+    expect(
+      schema.safeParse({ label: "Viaje", targetInput: overMax }).success,
+    ).toBe(false);
+  });
+});
+
+describe("newGoalFormToMutationArgs", () => {
+  it("maps empty target to undefined", () => {
+    expect(
+      newGoalFormToMutationArgs({ label: "Viaje", targetInput: "" }),
+    ).toEqual({ label: "Viaje", targetAmount: undefined });
+  });
+
+  it("maps soles input to cents", () => {
+    expect(
+      newGoalFormToMutationArgs({ label: "Viaje", targetInput: "3000" }),
+    ).toEqual({ label: "Viaje", targetAmount: 300_000 });
+  });
+});

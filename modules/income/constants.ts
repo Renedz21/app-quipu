@@ -6,6 +6,8 @@ export const INCOME_PAGE_SUBTITLE =
 export const INCOME_AMOUNT_LABEL = "Monto recibido";
 export const INCOME_SOURCE_LABEL = "Origen";
 export const INCOME_DATE_LABEL = "Fecha";
+export const INCOME_DATE_HINT =
+  "Si el depósito fue otro día, elige la fecha en la que recibiste el dinero.";
 export const INCOME_CONCEPT_LABEL = "Concepto";
 export const INCOME_CONCEPT_OPTIONAL = "· opcional";
 export const INCOME_IMPACT_TITLE = "Impacto en tus sobres";

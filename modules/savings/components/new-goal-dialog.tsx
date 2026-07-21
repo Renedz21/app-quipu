@@ -1,13 +1,14 @@
 "use client";
 
+import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
 import {
   NEW_GOAL_CANCEL,
   NEW_GOAL_LABEL,
@@ -15,7 +16,11 @@ import {
   NEW_GOAL_TARGET_LABEL,
   NEW_GOAL_TITLE,
 } from "../constants";
-import { parseOptionalTargetCents } from "../lib/savingsCopy";
+import {
+  createNewGoalSchema,
+  type NewGoalFormValues,
+  newGoalFormToMutationArgs,
+} from "../schemas";
 import { SavingsFormShell } from "./savings-form-shell";
 
 type Props = {
@@ -25,28 +30,28 @@ type Props = {
 
 export function NewGoalDialog({ open, onOpenChange }: Props) {
   const createGoal = useMutation(api.savings.createSavingsGoal);
-  const [label, setLabel] = useState("");
-  const [targetInput, setTargetInput] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const formSchema = useMemo(() => createNewGoalSchema(), []);
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await createGoal({
-        label,
-        targetAmount: parseOptionalTargetCents(targetInput),
-      });
-      toast.success("Meta creada.");
-      setLabel("");
-      setTargetInput("");
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const form = useForm({
+    defaultValues: {
+      label: "",
+      targetInput: "",
+    } satisfies NewGoalFormValues,
+    validators: {
+      onChange: formSchema,
+      onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await createGoal(newGoalFormToMutationArgs(value));
+        toast.success("Meta creada.");
+        form.reset();
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(fromConvexError(error).message);
+      }
+    },
+  });
 
   return (
     <SavingsFormShell
@@ -54,31 +59,76 @@ export function NewGoalDialog({ open, onOpenChange }: Props) {
       onOpenChange={onOpenChange}
       title={NEW_GOAL_TITLE}
     >
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <Label htmlFor="goal-label">{NEW_GOAL_LABEL}</Label>
-          <Input
-            id="goal-label"
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-            maxLength={40}
-            autoComplete="off"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="goal-target">{NEW_GOAL_TARGET_LABEL}</Label>
-          <Input
-            id="goal-target"
-            value={targetInput}
-            onChange={(event) => setTargetInput(event.target.value)}
-            inputMode="decimal"
-            placeholder="3000"
-          />
-        </div>
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <form.Field name="label">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="goal-label">{NEW_GOAL_LABEL}</FieldLabel>
+                <Input
+                  id="goal-label"
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  maxLength={40}
+                  autoComplete="off"
+                  aria-invalid={isInvalid}
+                />
+                {isInvalid ? (
+                  <FieldError errors={field.state.meta.errors} />
+                ) : null}
+              </Field>
+            );
+          }}
+        </form.Field>
+
+        <form.Field name="targetInput">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel htmlFor="goal-target">
+                  {NEW_GOAL_TARGET_LABEL}
+                </FieldLabel>
+                <Input
+                  id="goal-target"
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  inputMode="decimal"
+                  placeholder="3000"
+                  aria-invalid={isInvalid}
+                />
+                {isInvalid ? (
+                  <FieldError errors={field.state.meta.errors} />
+                ) : null}
+              </Field>
+            );
+          }}
+        </form.Field>
+
         <div className="flex flex-col gap-2 pt-2">
-          <Button type="submit" disabled={isSubmitting || !label.trim()}>
-            {NEW_GOAL_SUBMIT}
-          </Button>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting] as const}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                {NEW_GOAL_SUBMIT}
+              </Button>
+            )}
+          </form.Subscribe>
           <Button
             type="button"
             variant="outline"

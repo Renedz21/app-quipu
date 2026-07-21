@@ -1,17 +1,46 @@
-const LIMA_TIMEZONE = "America/Lima";
+import {
+  getLimaDateParts,
+  isSameLimaDay,
+  limaStartOfDay,
+} from "@/shared/lib/date";
 
-export function formatIncomeDateLabel(now: number): string {
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function formatIncomeDayMonth(occurredAt: number): string {
+  const { day } = getLimaDateParts(occurredAt);
   const formatter = new Intl.DateTimeFormat("es-PE", {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
+    timeZone: "America/Lima",
     month: "short",
   });
-  const parts = formatter.formatToParts(new Date(now));
-  const day = parts.find((part) => part.type === "day")?.value ?? "";
-  const month = (parts.find((part) => part.type === "month")?.value ?? "")
+  const monthLabel = formatter
+    .format(new Date(occurredAt))
     .replace(/\.$/, "")
     .toLowerCase();
-  return `Hoy · ${day} ${month}`;
+  return `${day} ${monthLabel}`;
+}
+
+export function formatIncomeDateLabel(
+  occurredAt: number,
+  now: number = Date.now(),
+): string {
+  const dayMonth = formatIncomeDayMonth(occurredAt);
+
+  if (isSameLimaDay(occurredAt, now)) {
+    return `Hoy · ${dayMonth}`;
+  }
+
+  const yesterday = limaStartOfDay(now) - MS_PER_DAY;
+  if (isSameLimaDay(occurredAt, yesterday)) {
+    return `Ayer · ${dayMonth}`;
+  }
+
+  const { year: eventYear } = getLimaDateParts(occurredAt);
+  const { year: currentYear } = getLimaDateParts(now);
+  if (eventYear !== currentYear) {
+    return `${dayMonth} ${eventYear}`;
+  }
+
+  return dayMonth;
 }
 
 export function buildIncomeDescription(

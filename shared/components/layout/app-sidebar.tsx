@@ -13,6 +13,13 @@ type Props = {
   className?: string;
 };
 
+function navItemActive(pathname: string, href: string) {
+  if (href === "/settings") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+  return pathname === href;
+}
+
 function SidebarIcon({ label }: { label: string }) {
   switch (label) {
     case "Inicio":
@@ -41,6 +48,12 @@ function SidebarIcon({ label }: { label: string }) {
       return (
         <span className="size-[15px] rounded-full rounded-bl-[3px] border-[1.7px] border-mute" />
       );
+    case "Ajustes":
+      return (
+        <span className="flex size-[15px] items-center justify-center rounded-full border-[1.7px] border-mute">
+          <span className="size-1 rounded-full bg-mute" />
+        </span>
+      );
     default:
       return (
         <span className="flex size-[15px] items-center justify-center rounded-full border-[1.7px] border-mute">
@@ -64,7 +77,7 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
 
       <nav className="flex flex-col gap-1">
         {SIDEBAR_ITEMS.map((item) => {
-          const active = !item.disabled && pathname === item.href;
+          const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
               <SidebarIcon label={item.label} />

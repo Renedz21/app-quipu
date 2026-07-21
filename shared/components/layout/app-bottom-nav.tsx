@@ -10,6 +10,13 @@ type Props = {
   className?: string;
 };
 
+function navItemActive(pathname: string, href: string) {
+  if (href === "/settings") {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+  return pathname === href;
+}
+
 function BottomNavIcon({ label, active }: { label: string; active: boolean }) {
   const color = active ? "border-qp-deep" : "border-mute";
 
@@ -26,6 +33,22 @@ function BottomNavIcon({ label, active }: { label: string; active: boolean }) {
       );
     case "Compromisos":
       return <span className={cn("size-4 rounded border-[1.8px]", color)} />;
+    case "Ajustes":
+      return (
+        <span
+          className={cn(
+            "flex size-4 items-center justify-center rounded-full border-[1.8px]",
+            color,
+          )}
+        >
+          <span
+            className={cn(
+              "size-1 rounded-full",
+              active ? "bg-qp-deep" : "bg-mute",
+            )}
+          />
+        </span>
+      );
     default:
       return (
         <span
@@ -57,7 +80,7 @@ export function AppBottomNav({ className }: Props) {
     >
       <div className="grid grid-cols-5 items-start">
         {BOTTOM_NAV_ITEMS.slice(0, 2).map((item) => {
-          const active = !item.disabled && pathname === item.href;
+          const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
               <BottomNavIcon label={item.label} active={active} />
@@ -98,7 +121,7 @@ export function AppBottomNav({ className }: Props) {
         </div>
 
         {BOTTOM_NAV_ITEMS.slice(2).map((item) => {
-          const active = !item.disabled && pathname === item.href;
+          const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
               <BottomNavIcon label={item.label} active={active} />

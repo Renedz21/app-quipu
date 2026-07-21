@@ -80,7 +80,7 @@ export const SIDEBAR_ITEMS: Array<{
   { href: "/savings", label: "Ahorros" },
   { href: "#", label: "Compromisos", disabled: true },
   { href: "#", label: "Coach", disabled: true },
-  { href: "#", label: "Ajustes", disabled: true },
+  { href: "/settings", label: "Ajustes" },
 ];
 
 export const BOTTOM_NAV_ITEMS: Array<{
@@ -91,7 +91,7 @@ export const BOTTOM_NAV_ITEMS: Array<{
   { href: "/dashboard", label: "Inicio" },
   { href: "/savings", label: "Ahorros" },
   { href: "#", label: "Compromisos", disabled: true },
-  { href: "#", label: "Ajustes", disabled: true },
+  { href: "/settings", label: "Ajustes" },
 ];
 
 export const PLAN_LABELS = {

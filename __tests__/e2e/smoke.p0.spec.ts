@@ -334,4 +334,31 @@ test.describe("P0 smoke @smoke", () => {
     );
     expect(afterNudge).toBeNull();
   });
+
+  test("pantalla Tu progreso carga tras onboarding", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+
+    await authedPage.goto("/progress");
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Tu progreso" }),
+    ).toBeVisible();
+    await expect(
+      authedPage.getByText(/La constancia también se construye/),
+    ).toBeVisible();
+  });
+
+  test("pantalla Ajustes carga tras onboarding", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+
+    await authedPage.goto("/settings");
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Ajustes" }),
+    ).toBeVisible();
+  });
 });

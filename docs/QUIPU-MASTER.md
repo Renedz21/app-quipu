@@ -372,8 +372,8 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta e
 | 5 | Ingresos | ¿Cuánto entró y a dónde va? | ✅ Implementado (2026-07-21) |
 | 6 | Ahorros | ¿Qué estoy construyendo? | ✅ Implementado (2026-07-21, P1-9) |
 | 7 | Coach | ¿Qué decisión debería tomar? | ✅ Implementado (2026-07-21, P1-10) |
-| 8 | Gamificación | ¿Qué he logrado? | ⬜ No existe |
-| 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ⬜ Parcial (sin plan/preferencias) |
+| 8 | Gamificación | ¿Qué he logrado? | ✅ Implementado (2026-07-21, P1-11) |
+| 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ✅ MVP (2026-07-21, P1-12); Polar/sesiones/ciclo wizard/nombre edit diferidos |
 
 **Bloque 1 — Autenticación "¿Eres tú?"**
 Pantallas web: Landing · Login · Registro · Passkeys · Vacío · Error · Recuperación · Loading · Éxito
@@ -683,7 +683,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 
 | Tabla | Campos clave | Notas de dominio |
 |---|---|---|
-| `profiles` | userId, name, country, currencyCode/Symbol, `incomeModel` (fixed/variable/mixed), `cycleDurationDays?` (15/30), `mixedFixedAmount?` (céntimos), `variableIncomeSources?`, `payFrequency?` (monthly/biweekly/weekly/variable), `paydays?`, allocationNeeds/Wants/Savings (default 50/30/20), onboardingComplete, plan (free/premium), polarCustomerId/SubscriptionId? | `incomeModel` required desde P0-3 (2026-07-21) |
+| `profiles` | userId, name, country, currencyCode/Symbol, `incomeModel` (fixed/variable/mixed), `cycleDurationDays?` (15/30), `mixedFixedAmount?` (céntimos), `variableIncomeSources?`, `payFrequency?` (monthly/biweekly/weekly/variable), `paydays?`, allocationNeeds/Wants/Savings (default 50/30/20), onboardingComplete, plan (free/premium), polarCustomerId/SubscriptionId?, `appearanceTheme?` (light/tinta), `accentPreset?` (moss/steel/clay), `appIconVariant?` (light/dark), coachCrisisSnoozedUntil? | `incomeModel` required desde P0-3 (2026-07-21) |
 | `financialCycles` | profileId, startDate, endDate, status (active/closed), `totalIncomeReceived?` | Snapshot materializado mantenido por `createIncomeEvent` |
 | `envelopes` | profileId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount, frozenUntil? | Saldo vivo O(1) para el dashboard |
 | `subEnvelopes` | profileId, parentEnvelopeType (**solo "savings"**), label, emoji, currentAmount, targetAmount?, isSystemDefault | Metas de ahorro; `isSystemDefault` = Fondo de Emergencia |
@@ -691,7 +691,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp | Hechos inmutables |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
-| `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt | "warning" = zona de amortiguación |
+| `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
 | `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}` | Log unificado de ingresos; `distributionApplied` nunca se recalcula |
 
 ### 5.2 Funciones por archivo
@@ -711,6 +711,10 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/lib/commitmentCoverage.ts` | Puras: `computeCommitmentCoverage`, `computeAllCommitmentCoverage`, `mapCoverageStatusToDashboard` (con tests) |
 | `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
 | `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations) |
+| `convex/progress.ts` | `getOverview`, `getRewards`, `getAppearance` (queries), `updateAppearance` (mutation) |
+| `convex/settings.ts` | `getSettingsOverview`, `listMyPasskeys` (queries); `updateAllocations`, `updateNotificationPreferences` (mutations) |
+| `convex/lib/gamificationMath.ts` | Puras: racha, chart, logros, umbrales recompensa (con tests) |
+| `convex/lib/evaluateClosedCycle.ts` | Persiste `cycleHistory` + actualiza `streaks` al cerrar ciclo |
 | `convex/lib/savingsMath.ts` | Puras: meta fondo 3 meses, meses cubiertos, progreso, ciclos para completar (con tests) |
 
 ### 5.3 Reglas de dominio v2.5
@@ -948,12 +952,12 @@ revisa solo cuando el usuario declare la app completa.
 - **Bloque 5 — Ingresos:** `/income/register` con preview, chips, confirmación con deltas.
 - **Bloque 6 — Ahorros:** `/savings` + `/savings/fund`; hero Fondo, metas (máx 6), aporte manual.
 - **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10).
+- **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
 - **Motor de cascada de compromisos** (P1-1).
 
 **No existe todavía:**
-- Bloques 8–9 completos (gamificación, perfil/ajustes).
-- Theme switcher funcional en UI (tokens listos; selector no implementado).
+- **Bloque 9 — Ajustes (MVP):** `/settings`, reparto, compromisos, passkeys cliente; ver P1-12.
 - Variante C de gasto (automático).
 - Sistema de componentes codificado tipo Storybook (primitivos shadcn sí existen).
 
@@ -987,6 +991,8 @@ revisa solo cuando el usuario declare la app completa.
 | P1-8 | Bloque 5 — Ingresos | ✅ **Cerrado 2026-07-21.** `/income/register` full-screen; preview 3 sobres + disponible hoy; chips origen → `createIncomeEvent`; confirmación con deltas; CTAs empty/header/FAB; TDD `impactPreview`; smoke E2E ingreso. |
 | P1-9 | Bloque 6 — Ahorros | ✅ **Cerrado 2026-07-21.** `/savings` + `/savings/fund`; hero Fondo (Prioridad, progreso 3 meses), detalle con stats, `contributeToSubEnvelope`, `createSavingsGoal` (máx 6 metas), TDD `savingsMath`; nav Ahorros activa. Ajustar aporte y aporte a metas custom en UI diferidos. |
 | P1-10 | Bloque 7 — Coach CTAs advertencia/crisis | ✅ **Cerrado 2026-07-21.** Warning: `/income/register` + scroll sobres. Crisis: `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`; `crisisResolution` (TDD), `coverageBoost`/`postponedForCycleId`; UI `coach-crisis-actions`. Tranquilo CTAs y pantalla coach dedicada diferidos. |
+| P1-11 | Bloque 8 — Gamificación | ✅ **Cerrado 2026-07-21.** `/progress` (racha Newsreader + chart 12 ciclos + logros) y `/progress/rewards` (Tinta/Arcilla/informe + acento/tema/ícono). Motor: `evaluateClosedCycle` en cierre de ciclo (`createIncomeEvent`), `gamificationMath` (TDD), `convex/progress.ts`, `AppearanceSync`. Informe anual PDF diferido. Enlace desde `/settings` (perfil). |
+| P1-12 | Bloque 9 — Perfil y ajustes | ✅ **Cerrado 2026-07-21 (MVP).** `/settings` + `/settings/allocations` + `/settings/cycle` (stub); `modules/settings/` cuenta + sistema + compromisos; `convex/settings.ts` (`getSettingsOverview`, `listMyPasskeys`, `updateAllocations`, `updateNotificationPreferences`); nav Ajustes activa; smoke E2E. Diferido: Polar.sh, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. |
 
 **P2 — backlog:**
 
@@ -1009,8 +1015,8 @@ revisa solo cuando el usuario declare la app completa.
 | 5. Ingresos | Selector de fecha retroactiva (fuera de v2.5). |
 | 6. Ahorros | Aporte a metas custom desde UI; "Ajustar aporte" del fondo. |
 | 7. Coach | Tranquilo CTAs ("Ver detalle", "Guardar de más"); pantalla/nav Coach dedicada. |
-| 8. Gamificación | Todo desde cero: racha, logros, recompensas, personalización. |
-| 9. Perfil/Ajustes | Plan Quipu Plus (Polar.sh), preferencias, gestión de passkeys, ciclo y porcentajes editables. |
+| 8. Gamificación | Informe anual descargable (PDF). |
+| 9. Perfil/Ajustes | Polar.sh billing, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. **Hecho:** `/settings`, reparto editable, compromisos + toggles preferencias, enlace progreso. |
 
 ### 8.5 Regla de actualización de esta sección
 
@@ -1133,6 +1139,9 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-21 — §8 P1-12.** Bloque 9 Ajustes MVP (`getSettingsOverview`, `/settings`, nav, smoke).
+- **2026-07-21 — §8 P1-12 (parcial).** Bloque 9 Ajustes: `/settings`, sistema/reparto/compromisos, `convex/settings.ts`, nav Ajustes.
+- **2026-07-21 — §8 P1-11.** Bloque 8 Gamificación (`/progress`, `evaluateClosedCycle`, recompensas/personalización).
 - **2026-07-21 — §8 P1-10.** Bloque 7 Coach CTAs advertencia/crisis (`crisisResolution`, `coach-crisis-actions`, mutations cover/postpone/snooze).
 - **2026-07-21 — §8 P1-9.** Bloque 6 Ahorros implementado (`/savings`, `/savings/fund`, `convex/savings.ts`).
 - **2026-07-20 — v1.0.** Creación. Consolida 6 documentos en fuente única (opción híbrida

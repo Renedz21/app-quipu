@@ -15,6 +15,7 @@ import {
   clearCommitmentCoverageForProfile,
   evaluateCommitmentCoverageForCycle,
 } from "./lib/evaluateCommitmentCoverage";
+import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -99,6 +100,7 @@ export const createIncomeEvent = mutation({
     } else {
       // Close the previous active cycle (if any) and open a new one.
       if (activeCycle) {
+        await evaluateClosedCycle(ctx, profile._id, activeCycle._id, now);
         await ctx.db.patch(activeCycle._id, { status: "closed" });
       }
       // Compute the new cycle's window.

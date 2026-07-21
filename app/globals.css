@@ -238,7 +238,6 @@
   /* §3.3 aliases — theme switcher intercambia --qp / --qp-deep / … */
   --qpA: var(--qp);
   --qpB: var(--qp-deep);
-  --qpC: var(--qp-text);
   --qpSoft: var(--qp-moss);
   --qpD: var(--qp-dot);
   --qp01: var(--qp-tint);
@@ -262,6 +261,18 @@
   --needs-tag-muted: oklch(0.6631 0.0329 267.06);
   --needs-tag-border: oklch(0.9092 0.0159 266.27);
   --icon-luz: oklch(0.8058 0.0247 262.08);
+}
+
+html[data-accent="steel"] {
+  --qp: #41648a;
+  --qp-deep: #2f4d6a;
+  --qp-text: #41648a;
+}
+
+html[data-accent="clay"] {
+  --qp: #a6836a;
+  --qp-deep: #8a6a54;
+  --qp-text: #a6836a;
 }
 
 .dark {

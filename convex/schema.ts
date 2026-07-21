@@ -56,6 +56,18 @@ export const appTables = {
     polarCustomerId: v.optional(v.string()),
     polarSubscriptionId: v.optional(v.string()),
     coachCrisisSnoozedUntil: v.optional(v.number()),
+    appearanceTheme: v.optional(
+      v.union(v.literal("light"), v.literal("tinta")),
+    ),
+    accentPreset: v.optional(
+      v.union(v.literal("moss"), v.literal("steel"), v.literal("clay")),
+    ),
+    appIconVariant: v.optional(
+      v.union(v.literal("light"), v.literal("dark")),
+    ),
+    // Bloque 9 — preferencias de notificaciones (undefined = defaults en lectura).
+    dailySummaryEnabled: v.optional(v.boolean()),
+    cycleAlertsEnabled: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index("by_userId", ["userId"])
@@ -180,7 +192,11 @@ export const appTables = {
       v.literal("failed"),
     ), // "warning" actua como zona de amortiguación
     evaluatedAt: v.number(),
-  }).index("by_profile_cycle", ["profileId", "cycleId"]),
+    wantsWithinBudget: v.boolean(),
+    allCommitmentsCovered: v.boolean(),
+  })
+    .index("by_profile_cycle", ["profileId", "cycleId"])
+    .index("by_profileId", ["profileId"]),
 
   // v2.5: unified income event log. Replaces the implicit "salary vs cachuelo"
   // distinction that lived in financialCycles.baseIncomeReceived +

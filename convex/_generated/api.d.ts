@@ -20,13 +20,18 @@ import type * as lib_coachState from "../lib/coachState.js";
 import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
+import type * as lib_evaluateClosedCycle from "../lib/evaluateClosedCycle.js";
 import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
+import type * as lib_gamificationMath from "../lib/gamificationMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
 import type * as lib_savingsMath from "../lib/savingsMath.js";
+import type * as lib_settingsCopy from "../lib/settingsCopy.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as profiles from "../profiles.js";
+import type * as progress from "../progress.js";
 import type * as savings from "../savings.js";
+import type * as settings from "../settings.js";
 
 import type {
   ApiFromModules,
@@ -47,13 +52,18 @@ declare const fullApi: ApiFromModules<{
   "lib/commitmentCoverage": typeof lib_commitmentCoverage;
   "lib/crisisResolution": typeof lib_crisisResolution;
   "lib/dashboardMath": typeof lib_dashboardMath;
+  "lib/evaluateClosedCycle": typeof lib_evaluateClosedCycle;
   "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
+  "lib/gamificationMath": typeof lib_gamificationMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
   "lib/rescueTransfer": typeof lib_rescueTransfer;
   "lib/savingsMath": typeof lib_savingsMath;
+  "lib/settingsCopy": typeof lib_settingsCopy;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   profiles: typeof profiles;
+  progress: typeof progress;
   savings: typeof savings;
+  settings: typeof settings;
 }>;
 
 /**

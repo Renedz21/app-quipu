@@ -138,6 +138,11 @@ export const createProfile = mutation({
       allocationSavings: args.allocationSavings,
       onboardingComplete: true,
       plan: args.plan ?? "free",
+      appearanceTheme: "light",
+      accentPreset: "moss",
+      appIconVariant: "light",
+      dailySummaryEnabled: true,
+      cycleAlertsEnabled: true,
       createdAt: Date.now(),
     });
 

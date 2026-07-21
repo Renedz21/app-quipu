@@ -3,6 +3,7 @@ import { Geist_Mono, Hanken_Grotesk, Newsreader } from "next/font/google";
 import "./globals.css";
 import { getToken } from "@/auth/auth-server";
 import { ConvexClientProvider } from "@/shared/components/providers/convex-provider";
+import { AppearanceSync } from "@/modules/progress/components/appearance-sync";
 import { AppToaster } from "@/shared/components/ui/toaster";
 import { cn } from "@/shared/lib/utils";
 
@@ -52,6 +53,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ConvexClientProvider initialToken={initialToken}>
+          <AppearanceSync />
           {children}
           <AppToaster />
         </ConvexClientProvider>

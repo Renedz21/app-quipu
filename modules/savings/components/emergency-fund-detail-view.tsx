@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import Link from "next/link";
 import { Safe } from "reicon-react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
+import { BackLink } from "@/shared/components/ui/back-link";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -39,9 +39,9 @@ export function EmergencyFundDetailView() {
   if (detail === null || !detail.emergencyFund) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 md:py-8">
-        <Link href="/savings" className="text-sm text-mute">
+        <BackLink href="/savings" className="text-sm text-mute">
           {EMERGENCY_FUND_DETAIL_BACK}
-        </Link>
+        </BackLink>
         <p className="mt-6 text-sm text-mute">
           Aún no encontramos tu fondo de emergencia.
         </p>
@@ -53,9 +53,9 @@ export function EmergencyFundDetailView() {
 
   return (
     <div className="mx-auto w-full max-w-3xl bg-gradient-to-b from-qp-success to-canvas px-4 py-6 md:px-8 md:py-8">
-      <Link href="/savings" className="text-[13px] text-mute">
+      <BackLink href="/savings" className="text-[13px] text-mute">
         {EMERGENCY_FUND_DETAIL_BACK}
-      </Link>
+      </BackLink>
 
       <div className="mt-4 flex items-center gap-3">
         <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-moss text-white">

@@ -1,5 +1,4 @@
-import type { FunctionReturnType } from "convex/server";
-import type { api } from "@/convex/_generated/api";
+import type { SettingsOverviewQueryResult } from "../queries";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { MODEL_DISPLAY_LABELS } from "@/modules/onboarding/constants";
 import {
@@ -9,9 +8,7 @@ import {
 } from "../constants";
 import type { SettingsOverview } from "../types";
 
-export type ConvexSettingsOverview = NonNullable<
-  FunctionReturnType<typeof api.settings.getSettingsOverview>
->;
+export type ConvexSettingsOverview = NonNullable<SettingsOverviewQueryResult>;
 
 export function mapConvexSettingsOverview(
   data: ConvexSettingsOverview,

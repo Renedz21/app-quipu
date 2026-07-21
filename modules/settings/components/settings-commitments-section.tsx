@@ -1,18 +1,17 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { useState } from "react";
-import { api } from "@/convex/_generated/api";
-import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
+import { useSettingsCommitments } from "../queries";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
+import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
+import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
-  SETTINGS_ADD_COMMITMENT,
   SETTINGS_COMMITMENTS_EMPTY,
   SETTINGS_COMMITMENTS_LABEL,
   SETTINGS_COMMITMENTS_TOTAL_SUFFIX,
 } from "../constants";
-import { AddCommitmentDialog } from "./add-commitment-dialog";
 
 function envelopeDot(envelope: "needs" | "wants") {
   return envelope === "needs" ? "bg-needs" : "bg-clay";
@@ -23,7 +22,7 @@ export function SettingsCommitmentsSection({
 }: {
   className?: string;
 }) {
-  const commitments = useQuery(api.fixedCommitments.listMyCommitments, {});
+  const commitments = useSettingsCommitments();
   const [addOpen, setAddOpen] = useState(false);
 
   if (commitments === undefined) {
@@ -97,7 +96,7 @@ export function SettingsCommitmentsSection({
         onClick={() => setAddOpen(true)}
         className="mt-3 w-full rounded-[11px] border border-dashed border-qp-border bg-card py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft"
       >
-        {SETTINGS_ADD_COMMITMENT}
+        {ADD_COMMITMENT_CTA}
       </button>
 
       <AddCommitmentDialog open={addOpen} onOpenChange={setAddOpen} />

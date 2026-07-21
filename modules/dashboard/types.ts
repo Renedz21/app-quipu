@@ -1,9 +1,6 @@
-import type { FunctionReturnType } from "convex/server";
-import type { api } from "@/convex/_generated/api";
+import type { DashboardSummaryQueryResult } from "./queries";
 
-export type DashboardSummary = NonNullable<
-  FunctionReturnType<typeof api.dashboard.getSummary>
->;
+export type DashboardSummary = NonNullable<DashboardSummaryQueryResult>;
 
 export type DashboardCycle = NonNullable<DashboardSummary["cycle"]>;
 export type DashboardHero = NonNullable<DashboardSummary["hero"]>;

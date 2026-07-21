@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import Link from "next/link";
 import { Check } from "reicon-react";
 import { api } from "@/convex/_generated/api";
+import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate } from "@/shared/lib/date";
@@ -128,12 +129,12 @@ export function ProgressView() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 md:py-8">
-      <Link
+      <BackLink
         href="/dashboard"
         className="text-[12.5px] text-ink-secondary hover:text-ink md:text-[13px]"
       >
         {PROGRESS_BACK_LINK}
-      </Link>
+      </BackLink>
 
       <header className="mt-3 mb-6 md:mt-3.5">
         <h1 className="font-serif text-[22px] font-medium text-ink md:text-[27px]">

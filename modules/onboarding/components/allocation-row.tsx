@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
-import type { EnvelopeKey } from "../constants";
+import type { EnvelopeKey } from "@/shared/constants/envelopes";
 import { type Allocation, distributeEnvelope } from "../lib/allocation";
 
 type Props = {

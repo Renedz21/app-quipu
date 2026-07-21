@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { buttonVariants } from "@/shared/components/ui/button";
+import { BackLink } from "@/shared/components/ui/back-link";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -71,12 +72,12 @@ export function ProgressRewardsView() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-8 md:py-8">
-      <Link
+      <BackLink
         href="/progress"
         className="text-[12.5px] text-ink-secondary hover:text-ink md:text-[13px]"
       >
         {PROGRESS_BACK_LINK}
-      </Link>
+      </BackLink>
 
       <header className="mt-3 mb-6">
         <h1 className="font-serif text-[22px] font-medium text-ink md:text-[24px]">

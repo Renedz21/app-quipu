@@ -18,7 +18,7 @@ export function DashboardHeader({ name, cycleDayLine }: Props) {
         ) : null}
       </div>
 
-      <DashboardHeaderActions className="hidden h-11 rounded-[11px] bg-ink px-[18px] text-sm font-semibold text-canvas hover:bg-ink/90 md:inline-flex" />
+      <DashboardHeaderActions />
     </div>
   );
 }

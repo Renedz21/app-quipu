@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { MovementList } from "@/shared/components/movements/movement-list";
 import { buttonVariants } from "@/shared/components/ui/button";
+import { BackLink } from "@/shared/components/ui/back-link";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
@@ -69,12 +70,12 @@ export function MovementsView() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
-      <Link
+      <BackLink
         href="/dashboard"
         className="text-sm font-medium text-qp-deep hover:underline"
       >
         {MOVEMENTS_BACK_LINK}
-      </Link>
+      </BackLink>
 
       <header className="mt-4">
         <h1 className="font-serif text-[28px] leading-tight text-ink md:text-[32px]">

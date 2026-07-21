@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
-import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { api } from "@/convex/_generated/api";
 import { fromConvexError } from "@/core/errors";
+import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
+import { useUpdateNotificationPreferences } from "../actions";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
@@ -47,8 +47,8 @@ function envelopeDotClass(type: "needs" | "wants" | "savings") {
 }
 
 export function SettingsSystemSection({ className }: { className?: string }) {
-  const profile = useQuery(api.profiles.getMyProfile, {});
-  const updatePrefs = useMutation(api.settings.updateNotificationPreferences);
+  const profile = useMyProfile();
+  const updatePrefs = useUpdateNotificationPreferences();
 
   if (!profile) return null;
 
@@ -110,7 +110,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
             {SETTINGS_CYCLE_LABEL}
           </span>
           <span className="text-[11.5px] text-faint">
-            {profile.cycleDurationDays ?? 30} días
+            {profile.cycleDurationDays ?? 30} dÃ­as
           </span>
           <ListRowChevron />
         </Link>

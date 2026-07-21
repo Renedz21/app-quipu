@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Check } from "reicon-react";
-import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";

@@ -1,8 +1,4 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-
-export function useDashboardSummary() {
-  return useQuery(api.dashboard.getSummary, {});
-}
+export { useDashboardSummary } from "../queries";
+export type { DashboardSummaryQueryResult } from "../queries";

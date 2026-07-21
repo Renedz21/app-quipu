@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useDashboardSummary } from "../hooks/use-dashboard-summary";
+import { useDashboardSummary } from "../queries";
 import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
 import { CommitmentsList } from "./commitments-list";

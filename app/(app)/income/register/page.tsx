@@ -1,17 +1,13 @@
-import { redirect } from "next/navigation";
-import {
-  fetchAuthQuery,
-  requireAuthenticatedSession,
-} from "@/auth/auth-server";
-import { api } from "@/convex/_generated/api";
+import { requireOnboardedProfile } from "@/auth/auth-server";
 import { IncomeRegisterFlow } from "@/modules/income/components/income-register-flow";
 
 export default async function IncomeRegisterPage() {
-  await requireAuthenticatedSession();
-  const profile = await fetchAuthQuery(api.profiles.getMyProfile, {});
-  if (!profile) {
-    redirect("/onboarding");
-  }
+  const profile = await requireOnboardedProfile();
 
-  return <IncomeRegisterFlow />;
+  return (
+    <IncomeRegisterFlow
+      profile={profile}
+      currencyCode={profile.currencyCode}
+    />
+  );
 }

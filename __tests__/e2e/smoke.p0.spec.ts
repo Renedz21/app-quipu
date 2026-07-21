@@ -117,7 +117,7 @@ test.describe("P0 smoke @smoke", () => {
 
     await authedPage.getByRole("button", { name: "4" }).click();
     await authedPage.getByRole("button", { name: "8" }).click();
-    await authedPage.getByRole("button", { name: "Siguiente →" }).click();
+    await authedPage.getByRole("button", { name: "Siguiente" }).click();
 
     await expect(
       authedPage.getByRole("heading", { name: "¿De qué sobre sale?" }),
@@ -374,6 +374,21 @@ test.describe("P0 smoke @smoke", () => {
     ).toBeVisible();
     await expect(
       authedPage.getByText(/Ingresos y gastos de tu ciclo activo/),
+    ).toBeVisible();
+  });
+
+  test("pantalla Compromisos carga tras onboarding", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+
+    await authedPage.goto("/commitments");
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Compromisos" }),
+    ).toBeVisible();
+    await expect(
+      authedPage.getByText(/Quipu los ordena por vencimiento/),
     ).toBeVisible();
   });
 });

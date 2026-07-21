@@ -6,6 +6,7 @@ import { cn } from "@/shared/lib/utils";
 import { DAY_PILLS } from "../constants";
 import { formatCycle } from "../lib/cycle";
 import { CheckMark } from "./check-mark";
+import { CycleRangeLabel } from "./cycle-range-label";
 import { useOnboarding } from "./onboarding-provider";
 import { OnboardingShell } from "./onboarding-shell";
 
@@ -144,9 +145,10 @@ export function Step2Fixed({ onBack, onNext }: Props) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Tu ciclo
           </span>
-          <span className="font-serif text-base text-foreground">
-            {formatCycle(state.paydays, state.payFrequency)}
-          </span>
+          <CycleRangeLabel
+            cycle={formatCycle(state.paydays, state.payFrequency)}
+            className="font-serif text-base text-foreground"
+          />
           <span className="ml-auto flex items-center gap-1.5 text-sm text-primary">
             <span className="size-2 rounded-full bg-primary" />
             {cycleDays} días

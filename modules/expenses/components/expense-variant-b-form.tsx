@@ -1,6 +1,6 @@
 "use client";
 
-import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {

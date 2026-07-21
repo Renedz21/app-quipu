@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -234,8 +235,7 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
       {step === "success" && (
         <SuccessStep
           onContinue={() => {
-            router.push("/onboarding");
-            router.refresh();
+            navigateAfterAuth("/onboarding");
           }}
         />
       )}

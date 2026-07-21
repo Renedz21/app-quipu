@@ -13,7 +13,7 @@ export const EMERGENCY_FUND_TARGET_SUFFIX = "meta de 3 meses de gastos";
 export const EMERGENCY_FUND_AUTO_CONTRIBUTION_PREFIX = "Aporte automático";
 export const EMERGENCY_FUND_AUTO_CONTRIBUTION_SUFFIX = "/ ciclo";
 
-export const EMERGENCY_FUND_DETAIL_BACK = "← Ahorros";
+export const EMERGENCY_FUND_DETAIL_BACK = "Ahorros";
 export const EMERGENCY_FUND_DETAIL_BODY =
   "Tu red de seguridad. Cuando esté lleno, tres meses de tranquilidad pase lo que pase.";
 export const EMERGENCY_FUND_DETAIL_MOBILE_BODY =

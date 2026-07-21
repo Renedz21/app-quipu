@@ -1,9 +1,7 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { authClient } from "@/auth/auth-client";
-import { api } from "@/convex/_generated/api";
-import { PLAN_LABELS } from "@/modules/dashboard/constants";
+import { PLAN_LABELS } from "@/shared/constants/plan";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
@@ -23,6 +21,7 @@ import {
   SETTINGS_SECURITY_LABEL,
 } from "../constants";
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
+import { useSettingsOverview } from "../queries";
 import { SettingsCommitmentsSection } from "./settings-commitments-section";
 import { SettingsPlanCard } from "./settings-plan-card";
 import { SettingsProfileCard } from "./settings-profile-card";
@@ -108,17 +107,16 @@ function MobileAccountList({
 }
 
 export function SettingsView() {
-  const settingsData = useQuery(api.settings.getSettingsOverview, {});
-  const profile = useQuery(api.profiles.getMyProfile, {});
+  const settingsData = useSettingsOverview();
 
   const passkeysQuery = authClient.useListPasskeys();
   const passkeyCount = passkeysQuery.data?.length ?? 0;
 
-  if (settingsData === undefined || profile === undefined) {
+  if (settingsData === undefined) {
     return <SettingsViewSkeleton />;
   }
 
-  if (settingsData === null || profile === null) {
+  if (settingsData === null) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
         <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">

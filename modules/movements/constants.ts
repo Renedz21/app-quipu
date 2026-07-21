@@ -1,7 +1,7 @@
 export const MOVEMENTS_PAGE_TITLE = "Movimientos";
 export const MOVEMENTS_PAGE_SUBTITLE =
   "Ingresos y gastos de tu ciclo activo, del más reciente al más antiguo.";
-export const MOVEMENTS_BACK_LINK = "← Inicio";
+export const MOVEMENTS_BACK_LINK = "Inicio";
 export const MOVEMENTS_EMPTY_TITLE = "Aún no hay movimientos";
 export const MOVEMENTS_EMPTY_BODY =
   "Cuando registres un ingreso o un gasto, lo verás aquí con fecha y sobre.";

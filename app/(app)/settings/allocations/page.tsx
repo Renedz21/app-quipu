@@ -1,17 +1,16 @@
-import { redirect } from "next/navigation";
-import {
-  fetchAuthQuery,
-  requireAuthenticatedSession,
-} from "@/auth/auth-server";
-import { api } from "@/convex/_generated/api";
+import { requireOnboardedProfile } from "@/auth/auth-server";
 import { SettingsAllocationsEditor } from "@/modules/settings/components/settings-allocations-editor";
 
 export default async function SettingsAllocationsPage() {
-  await requireAuthenticatedSession();
-  const profile = await fetchAuthQuery(api.profiles.getMyProfile, {});
-  if (!profile) {
-    redirect("/onboarding");
-  }
+  const profile = await requireOnboardedProfile();
 
-  return <SettingsAllocationsEditor />;
+  return (
+    <SettingsAllocationsEditor
+      initialAllocation={{
+        allocationNeeds: profile.allocationNeeds,
+        allocationWants: profile.allocationWants,
+        allocationSavings: profile.allocationSavings,
+      }}
+    />
+  );
 }

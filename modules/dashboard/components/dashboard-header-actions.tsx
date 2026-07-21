@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { HERO_EMPTY_CTA } from "@/modules/dashboard/constants";
-import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
+import { useDashboardSummary } from "@/modules/dashboard/queries";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { DashboardRegisterButton } from "./dashboard-register-button";
@@ -16,19 +16,16 @@ export function DashboardHeaderActions({ className }: Props) {
   const hasActiveCycle = Boolean(summary?.cycle);
 
   if (hasActiveCycle) {
-    return <DashboardRegisterButton className={className} />;
+    return <DashboardRegisterButton />;
   }
 
   return (
     <Link
       href="/income/register"
-      className={
-        className ??
-        cn(
-          buttonVariants(),
-          "hidden h-11 rounded-[11px] bg-ink px-[18px] text-sm font-semibold text-canvas hover:bg-ink/90 md:inline-flex",
-        )
-      }
+      className={cn(
+        buttonVariants({ variant: "secondary", size: "sm" }),
+        "bg-ink text-canvas hover:bg-ink/90 md:hidden",
+      )}
     >
       {HERO_EMPTY_CTA}
     </Link>

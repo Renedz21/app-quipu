@@ -22,7 +22,7 @@ export default async function OnboardingLayout({
 }: PropsWithChildren) {
   const isAuthed = await isAuthenticated();
   if (!isAuthed) {
-    redirect("/");
+    redirect("/sign-in");
   }
 
   return (

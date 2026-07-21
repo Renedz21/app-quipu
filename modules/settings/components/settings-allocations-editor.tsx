@@ -1,19 +1,18 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { api } from "@/convex/_generated/api";
 import { fromConvexError } from "@/core/errors";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
-import { ENVELOPES } from "@/modules/onboarding/constants";
 import type { Allocation } from "@/modules/onboarding/lib/allocation";
+import { ENVELOPES } from "@/shared/constants/envelopes";
 import { Button } from "@/shared/components/ui/button";
+import { BackLink } from "@/shared/components/ui/back-link";
 import { formatCents } from "@/shared/lib/money";
+import { useUpdateAllocations } from "../actions";
 import {
   SETTINGS_ALLOCATIONS_NEXT_CYCLE,
   SETTINGS_ALLOCATIONS_PAGE_BODY,
@@ -22,26 +21,22 @@ import {
   SETTINGS_ALLOCATIONS_SAVED,
   SETTINGS_BACK_LINK,
 } from "../constants";
+import { useSettingsDashboardSummary } from "../queries";
 
-export function SettingsAllocationsEditor() {
+type SettingsAllocationsEditorProps = {
+  initialAllocation: Allocation;
+};
+
+export function SettingsAllocationsEditor({
+  initialAllocation,
+}: SettingsAllocationsEditorProps) {
   const router = useRouter();
-  const profile = useQuery(api.profiles.getMyProfile, {});
-  const summary = useQuery(api.dashboard.getSummary, {});
-  const updateAllocations = useMutation(api.settings.updateAllocations);
-  const [state, setState] = useState<Allocation | null>(null);
+  const summary = useSettingsDashboardSummary();
+  const updateAllocations = useUpdateAllocations();
+  const [state, setState] = useState<Allocation>(initialAllocation);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (profile && !state) {
-      setState({
-        allocationNeeds: profile.allocationNeeds,
-        allocationWants: profile.allocationWants,
-        allocationSavings: profile.allocationSavings,
-      });
-    }
-  }, [profile, state]);
-
-  if (profile === undefined || state === null) {
+  if (summary === undefined) {
     return (
       <div className="mx-auto flex min-h-[50vh] w-full max-w-lg flex-col px-5 py-6">
         <div className="h-4 w-24 animate-pulse rounded bg-line" />
@@ -50,14 +45,14 @@ export function SettingsAllocationsEditor() {
     );
   }
 
-  if (profile === null) {
-    return null;
-  }
-
   const total =
     state.allocationNeeds + state.allocationWants + state.allocationSavings;
   const cycleIncome =
-    summary?.envelopes?.reduce((sum, env) => sum + env.allocatedAmount, 0) ?? 0;
+    summary?.envelopes?.reduce(
+      (sum: number, env: { allocatedAmount: number }) =>
+        sum + env.allocatedAmount,
+      0,
+    ) ?? 0;
 
   function perCycleCents(pct: number) {
     if (cycleIncome <= 0) return null;
@@ -65,7 +60,7 @@ export function SettingsAllocationsEditor() {
   }
 
   function save() {
-    if (total !== 100 || !state) return;
+    if (total !== 100) return;
     const payload = {
       allocationNeeds: state.allocationNeeds,
       allocationWants: state.allocationWants,
@@ -85,9 +80,9 @@ export function SettingsAllocationsEditor() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-lg flex-col px-5 py-4 md:py-8">
-      <Link href="/settings" className="text-[12.5px] text-mute hover:text-ink">
+      <BackLink href="/settings" className="text-[12.5px] text-mute hover:text-ink">
         {SETTINGS_BACK_LINK}
-      </Link>
+      </BackLink>
       <h1 className="mt-3 font-serif text-[23px] font-medium text-ink">
         {SETTINGS_ALLOCATIONS_PAGE_TITLE}
       </h1>
@@ -119,7 +114,7 @@ export function SettingsAllocationsEditor() {
                 value={pct}
                 state={state}
                 dispatch={(payload) =>
-                  setState((prev) => (prev ? { ...prev, ...payload } : prev))
+                  setState((prev) => ({ ...prev, ...payload }))
                 }
               />
             </div>

@@ -47,7 +47,7 @@ export const SETTINGS_ALLOCATIONS_SAVE = "Guardar cambios";
 export const SETTINGS_ALLOCATIONS_SAVED = "Reparto actualizado.";
 export const SETTINGS_ALLOCATIONS_NEXT_CYCLE =
   "Suma 100% · se aplica al próximo ciclo";
-export const SETTINGS_BACK_LINK = "← Ajustes";
+export const SETTINGS_BACK_LINK = "Ajustes";
 
 export const SETTINGS_CYCLE_LABEL = "Ciclo";
 export const SETTINGS_CYCLE_TYPE = "Tipo";

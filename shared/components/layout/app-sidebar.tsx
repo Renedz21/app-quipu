@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PLAN_LABELS, SIDEBAR_ITEMS } from "@/modules/dashboard/constants";
+import { PLAN_LABELS } from "@/shared/constants/plan";
+import { SIDEBAR_ITEMS } from "@/shared/constants/navigation";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { QuipuLogo } from "@/shared/components/quipu-logo";

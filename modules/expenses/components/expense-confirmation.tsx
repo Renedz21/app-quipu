@@ -1,7 +1,6 @@
 "use client";
 
 import { Check } from "reicon-react";
-import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -14,6 +13,7 @@ import {
 } from "../constants";
 import type { ExpenseEnvelopeType } from "../lib/envelopeSuggestion";
 import { formatElapsedSeconds } from "../lib/keypad";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 
 type Props = {
   amountCents: number;

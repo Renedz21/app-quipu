@@ -1,9 +1,9 @@
 "use client";
 import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
 import { usePasskeySupport } from "../hooks/use-passkey-support";
@@ -21,7 +21,6 @@ export function SignInView({
   initialEmail?: string;
   reason?: string;
 }) {
-  const router = useRouter();
   const support = usePasskeySupport();
   const [step, setStep] = useState<Step>(
     initialEmail
@@ -37,12 +36,11 @@ export function SignInView({
       fetchOptions: {
         onSuccess: () => {
           toast.success("Bienvenido de vuelta");
-          router.push("/dashboard");
-          router.refresh();
+          navigateAfterAuth("/dashboard");
         },
       },
     });
-  }, [support.conditionalUI, router]);
+  }, [support.conditionalUI]);
 
   const emailForm = useForm({
     defaultValues: { email: initialEmail },
@@ -68,8 +66,7 @@ export function SignInView({
         return;
       }
       toast.success("Bienvenido de vuelta");
-      router.push("/dashboard");
-      router.refresh();
+      navigateAfterAuth("/dashboard");
     },
   });
 

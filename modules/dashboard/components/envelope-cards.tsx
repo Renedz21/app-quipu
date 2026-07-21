@@ -4,11 +4,11 @@ import type { KeyboardEvent } from "react";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import type { ExpenseEnvelopeType } from "@/modules/expenses/lib/envelopeSuggestion";
 import { formatCents } from "@/shared/lib/money";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
   DASHBOARD_ENVELOPES_SECTION_ID,
   ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,
   ENVELOPE_EARLY_SAVINGS_SUBCOPY,
-  ENVELOPE_LABELS,
 } from "../constants";
 import { clampPercent } from "../lib/dashboard-math";
 import type { DashboardEnvelope } from "../types";

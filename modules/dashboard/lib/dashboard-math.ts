@@ -4,11 +4,7 @@ export function clampPercent(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
 
-export function formatDueInDays(daysUntilDue: number): string {
-  if (daysUntilDue === 0) return "hoy";
-  if (daysUntilDue === 1) return "en 1 día";
-  return `en ${daysUntilDue} días`;
-}
+export { formatDueInDays } from "@/shared/constants/commitments";
 
 export function formatCycleDayLine(
   daysElapsed: number,

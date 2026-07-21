@@ -1,6 +1,6 @@
 "use client";
 
-import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import {
   ENVELOPE_INCOME_STYLES,

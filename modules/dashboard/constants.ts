@@ -1,9 +1,3 @@
-export const ENVELOPE_LABELS = {
-  needs: "Necesidades",
-  wants: "Gustos",
-  savings: "Ahorro",
-} as const;
-
 export const STATUS_BADGE_LABELS = {
   stable: "Estable",
   attention: "Atención",
@@ -39,6 +33,7 @@ export const DASHBOARD_ERROR_RETRY = "Reintentar";
 
 export const MOVEMENTS_SECTION_LABEL = "Movimientos recientes";
 export const MOVEMENTS_VIEW_ALL = "Ver todo";
+export const COMMITMENTS_VIEW_ALL = "Ver todo";
 
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
@@ -58,7 +53,6 @@ export const COMMITMENTS_EMPTY_TITLE = "Aún no tienes compromisos";
 export const COMMITMENTS_EMPTY_BODY =
   "Alquiler, luz, suscripciones. Quipu los aparta antes de que puedas gastarlos.";
 export const COMMITMENTS_EMPTY_CTA = "+ Añadir compromiso";
-export const COMMITMENTS_EMPTY_CTA_HINT = "Próximamente";
 
 export const COACH_EARLY_REGISTER_CTA = "Registrar primer gasto";
 export const COACH_EARLY_VIEW_SYSTEM_CTA = "Ver mi sistema";
@@ -69,31 +63,3 @@ export const MOVEMENTS_EMPTY_BODY =
 
 export const REGISTER_CTA = "Registrar";
 
-export const SIDEBAR_ITEMS: Array<{
-  href: string;
-  label: string;
-  disabled?: boolean;
-}> = [
-  { href: "/dashboard", label: "Inicio" },
-  { href: "#", label: "Registrar", disabled: true },
-  { href: "/savings", label: "Ahorros" },
-  { href: "#", label: "Compromisos", disabled: true },
-  { href: "#", label: "Coach", disabled: true },
-  { href: "/settings", label: "Ajustes" },
-];
-
-export const BOTTOM_NAV_ITEMS: Array<{
-  href: string;
-  label: string;
-  disabled?: boolean;
-}> = [
-  { href: "/dashboard", label: "Inicio" },
-  { href: "/savings", label: "Ahorros" },
-  { href: "#", label: "Compromisos", disabled: true },
-  { href: "/settings", label: "Ajustes" },
-];
-
-export const PLAN_LABELS = {
-  free: "Plan Quipu",
-  premium: "Plan Quipu Plus",
-} as const;

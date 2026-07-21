@@ -1,17 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { ExpenseRegisterProvider } from "@/modules/expenses/components/expense-register-provider";
 import { AppBottomNav } from "./app-bottom-nav";
 import { AppSidebar } from "./app-sidebar";
 
 type Props = {
   children: ReactNode;
-  profileName?: string;
-  plan?: "free" | "premium";
 };
 
-export function AppLayoutShell({ children, profileName, plan }: Props) {
+export function AppLayoutShell({ children }: Props) {
+  const profile = useMyProfile();
+  const profileName = profile?.name;
+  const plan = profile?.plan ?? "free";
+
   return (
     <ExpenseRegisterProvider>
       <div className="flex min-h-dvh bg-background">

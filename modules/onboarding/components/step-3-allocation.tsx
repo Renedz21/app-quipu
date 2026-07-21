@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { ArrowRight } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { completeOnboardingAction } from "../actions";
-import { ENVELOPES } from "../constants";
+import { ENVELOPES } from "@/shared/constants/envelopes";
 import { ALLOCATION_DEFAULTS } from "../lib/allocation";
 import { AllocationBar } from "./allocation-bar";
 import { AllocationRow } from "./allocation-row";

@@ -224,8 +224,12 @@ export const getCommitmentCoverage = query({
     const now = Date.now();
 
     if (!activeCycle) {
+      const totalCents = commitments.reduce((sum, c) => sum + c.amount, 0);
       return {
+        currencyCode: profile.currencyCode,
+        cycle: null,
         cycleId: null,
+        totalCents,
         commitments: commitments.map((commitment) => ({
           id: commitment._id,
           name: commitment.name,
@@ -268,8 +272,16 @@ export const getCommitmentCoverage = query({
       now,
     });
 
+    const totalCents = commitments.reduce((sum, c) => sum + c.amount, 0);
+
     return {
+      currencyCode: profile.currencyCode,
+      cycle: {
+        startDate: activeCycle.startDate,
+        endDate: activeCycle.endDate,
+      },
       cycleId: activeCycle._id,
+      totalCents,
       commitments: commitments
         .map((commitment) => {
           const coverage = coverageById.get(commitment._id);

@@ -1,8 +1,9 @@
-import { Button } from "@/shared/components/ui/button";
+import Link from "next/link";
+import { buttonVariants } from "@/shared/components/ui/button";
+import { cn } from "@/shared/lib/utils";
 import {
   HERO_EMPTY_BODY,
   HERO_EMPTY_CTA,
-  HERO_EMPTY_CTA_HINT,
   HERO_EMPTY_EYEBROW,
   HERO_EMPTY_TITLE,
 } from "../constants";
@@ -32,14 +33,15 @@ export function DashboardEmptyCycle({
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-ink-secondary md:text-[15px]">
           {HERO_EMPTY_BODY}
         </p>
-        <Button
-          type="button"
-          disabled
-          title={HERO_EMPTY_CTA_HINT}
-          className="mt-5 rounded-[11px] bg-ink px-5 text-canvas hover:bg-ink/90"
+        <Link
+          href="/income/register"
+          className={cn(
+            buttonVariants(),
+            "mt-5 inline-flex rounded-[11px] bg-ink px-5 text-canvas hover:bg-ink/90",
+          )}
         >
           {HERO_EMPTY_CTA}
-        </Button>
+        </Link>
       </section>
 
       {commitments.length > 0 ? (

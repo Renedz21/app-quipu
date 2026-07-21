@@ -1,9 +1,12 @@
+"use client";
+
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
+import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
+import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import { Button } from "@/shared/components/ui/button";
 import {
   COACH_CRISIS_LATER_CTA,
   COACH_CTA_HINT,
-  COACH_EARLY_CTA_HINT,
   COACH_EARLY_REGISTER_CTA,
   COACH_EARLY_VIEW_SYSTEM_CTA,
   COACH_KIND_LABELS,
@@ -18,7 +21,10 @@ type Props = {
   layout?: "inline" | "full";
 };
 
-function coachSectionClass(kind: DashboardCoach["kind"], layout: "inline" | "full") {
+function coachSectionClass(
+  kind: DashboardCoach["kind"],
+  layout: "inline" | "full",
+) {
   const fullRow = layout === "full";
 
   switch (kind) {
@@ -64,6 +70,7 @@ function coachIconClass(kind: DashboardCoach["kind"]) {
 }
 
 export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
+  const { open } = useExpenseRegister();
   const isContigo = coach.kind === "contigo";
   const isWarning = coach.kind === "warning";
   const isCrisis = coach.kind === "crisis";
@@ -107,8 +114,8 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
           <Button
             type="button"
             size="sm"
-            disabled
-            title={COACH_EARLY_CTA_HINT}
+            title={EXPENSE_NO_CYCLE_HINT}
+            onClick={() => open({ variant: "fab" })}
             className="rounded-[11px] bg-ink text-canvas hover:bg-ink/90"
           >
             {COACH_EARLY_REGISTER_CTA}
@@ -118,7 +125,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
             size="sm"
             variant="outline"
             disabled
-            title={COACH_EARLY_CTA_HINT}
+            title={COACH_CTA_HINT}
             className="rounded-[11px] border-line bg-canvas/70 text-ink-secondary"
           >
             {COACH_EARLY_VIEW_SYSTEM_CTA}

@@ -368,8 +368,8 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta e
 | 1 | Autenticación | ¿Eres tú? | ✅ Implementado (canon redesign) |
 | 2 | Onboarding | ¿Cómo se arma tu sistema? | ✅ Implementado (v3, 3 pasos) |
 | 3 | Dashboard | ¿Voy bien? | ✅ Implementado (2026-07-21, P1-4) |
-| 4 | Registrar gasto | ¿De qué sobre sale? | ⬜ Pendiente |
-| 5 | Ingresos | ¿Cuánto entró y a dónde va? | ⬜ Pendiente |
+| 4 | Registrar gasto | ¿De qué sobre sale? | ✅ Implementado (2026-07-21, variantes A/B) |
+| 5 | Ingresos | ¿Cuánto entró y a dónde va? | ✅ Implementado (2026-07-21) |
 | 6 | Ahorros | ¿Qué estoy construyendo? | ⬜ Pendiente |
 | 7 | Coach | ¿Qué decisión debería tomar? | 🟨 Backend + dashboard (4 estados; apply rescue ✅ P1-2) |
 | 8 | Gamificación | ¿Qué he logrado? | ⬜ No existe |
@@ -943,8 +943,9 @@ revisa solo cuando el usuario declare la app completa.
   helpers de backfill eliminados tras el narrow).
 
 **No existe todavía:**
-- Bloques 3–9 (dashboard real, registrar gasto, ingresos, ahorros, gamificación, perfil/ajustes completos).
-  `/dashboard` es placeholder. No hay `app/page.tsx` (la raíz `/` no tiene home).
+- **Bloque 4 — Registrar gasto:** variantes A/B en `modules/expenses/`; variante C diferida.
+- **Bloque 5 — Ingresos:** `/income/register` full-screen (web 2-col + móvil apilado). Preview de impacto en vivo (`impactPreview`), chips de origen, distribución automática, confirmación con deltas + disponible hoy. CTAs empty/header/FAB sin ciclo activos.
+- Bloques 6–9 (ahorros, gamificación, perfil/ajustes completos).
 - Coach: 4 estados en dashboard (`tranquil`, `warning`, `suggestion`, `crisis` + `contigo` early cycle). `resolveCoachPresentation` + UI ámbar/sugerencia. `applyRescueTransfer` + diálogo de confirmación (P1-2 ✅ 2026-07-21).
 - Motor de cascada de compromisos (cobertura de commitments desde incomeEvents).
 - Theme switcher a CSS variables; tokens de diseño no migrados a `@theme` (acento hardcoded a verde).
@@ -976,6 +977,8 @@ revisa solo cuando el usuario declare la app completa.
 | P1-4 | Bloque 3 — Dashboard | ✅ **Cerrado 2026-07-21.** `convex/dashboard.getSummary`, `modules/dashboard/`, shell sidebar+bottom nav+FAB, 5 niveles §3.7, empty state sin ciclo + **early cycle** (`detectEarlyCycle`: ciclo activo sin gastos → layout completo con badges Recién empiezas/Contigo y empty states por sección), skeletons LCP. Cobertura compromisos vía motor P1-1 (barra + % parcial). |
 | P1-5 | Coach: estados advertencia y sugerencia | ✅ **Cerrado 2026-07-21.** `convex/lib/coachState.ts` (`resolveCoachPresentation`, TDD), pending nudge → `suggestion`, `warning` vía compliance, `crisis` vía failed/uncovered; copy suggest-only sin emojis en `WANTS_OVERFLOW_60`; UI ámbar + fila propia en `coach-card.tsx`. |
 | P1-6 | Migrar tokens de diseño a Tailwind `@theme` | ✅ **Cerrado 2026-07-21.** Tokens §3.3 en `app/globals.css` (`@theme` + `:root`): neutros, acento `--qp*`, sobres, estados (warning ámbar + crisis terracota), sombras (`shadow-amber`, `shadow-crisis`), aliases `--qpA`…`--qp25` para theme switcher. Hex eliminados en `coach-card`, auth y onboarding. |
+| P1-7 | Bloque 4 — Registrar gasto | ✅ **Cerrado 2026-07-21.** Variantes A/B: `modules/expenses/` (keypad, sugerencia sobre, confirmación con saldo restante), CTAs dashboard activos (FAB, header, tarjetas needs/wants, coach early). Variante C diferida (sin detección automática). TDD `keypad` + `envelopeSuggestion`; smoke E2E UI. |
+| P1-8 | Bloque 5 — Ingresos | ✅ **Cerrado 2026-07-21.** `/income/register` full-screen; preview 3 sobres + disponible hoy; chips origen → `createIncomeEvent`; confirmación con deltas; CTAs empty/header/FAB; TDD `impactPreview`; smoke E2E ingreso. |
 
 **P2 — backlog:**
 
@@ -993,9 +996,9 @@ revisa solo cuando el usuario declare la app completa.
 |---|---|
 | 1. Auth | Pantallas auxiliares (recovery, error, loading, success); panel lateral "Disponible hoy" muestra datos reales cuando exista dashboard. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | CTAs registrar/ingreso activos (Bloques 4–5); "Ver todo" movimientos. |
-| 4. Registrar gasto | Todo: 3 variantes (A/B/C), keypad, sugerencia de sobre, <10s. |
-| 5. Ingresos | Todo: registro con preview de impacto + confirmación con deltas. |
+| 3. Dashboard | "Ver todo" movimientos. |
+| 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
+| 5. Ingresos | Selector de fecha retroactiva (fuera de v2.5). |
 | 6. Ahorros | Todo: hero del Fondo ("el Fondo manda"), detalle, metas. |
 | 7. Coach | CTAs advertencia/crisis activos cuando existan rutas. |
 | 8. Gamificación | Todo desde cero: racha, logros, recompensas, personalización. |

@@ -32,7 +32,6 @@ export const HERO_EMPTY_TITLE = "Tu sistema está listo";
 export const HERO_EMPTY_BODY =
   "Registra tu primer ingreso para activar tu ciclo y ver cuánto puedes gastar hoy.";
 export const HERO_EMPTY_CTA = "Registrar ingreso";
-export const HERO_EMPTY_CTA_HINT = "Próximamente";
 
 export const DASHBOARD_ERROR_TITLE = "No pudimos cargar tu dashboard";
 export const DASHBOARD_ERROR_BODY =

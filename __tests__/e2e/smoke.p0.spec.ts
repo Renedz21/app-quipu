@@ -40,6 +40,30 @@ test.describe("P0 smoke @smoke", () => {
     expect(hydrationErrors).toEqual([]);
   });
 
+  test("registrar ingreso desde empty state activa ciclo", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+
+    await authedPage.goto("/dashboard");
+    await authedPage.getByRole("link", { name: "Registrar ingreso" }).click();
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Registrar ingreso" }),
+    ).toBeVisible();
+    await expect(authedPage.getByText("Impacto en tus sobres")).toBeVisible();
+
+    await authedPage.getByRole("button", { name: "9" }).click();
+    await authedPage.getByRole("button", { name: "0" }).click();
+    await authedPage.getByRole("button", { name: "0" }).click();
+    await authedPage.getByRole("button", { name: "Registrar ingreso" }).click();
+
+    await expect(authedPage.getByText("Ingreso registrado")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(authedPage.getByText(/Disponible hoy ahora/)).toBeVisible();
+  });
+
   test("dashboard muestra estado temprano con ciclo activo sin gastos", {
     tag: "@smoke",
   }, async ({ authedPage, convexClient }) => {
@@ -68,6 +92,37 @@ test.describe("P0 smoke @smoke", () => {
     expect(profile?.incomeModel).toBe("fixed");
     expect(profile?.onboardingComplete).toBe(true);
     expect(profile?.currencyCode).toBe("PEN");
+  });
+
+  test("registrar gasto desde UI abre flujo y confirma", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    await seedActiveCycle(convexClient, 100_000);
+
+    await authedPage.goto("/dashboard");
+
+    await authedPage.getByRole("button", { name: "Registrar" }).first().click();
+
+    await expect(authedPage.getByText("Nuevo gasto")).toBeVisible();
+    await expect(authedPage.getByText("S/ 0.00")).toBeVisible();
+
+    await authedPage.getByRole("button", { name: "4" }).click();
+    await authedPage.getByRole("button", { name: "8" }).click();
+    await authedPage.getByRole("button", { name: "Siguiente →" }).click();
+
+    await expect(
+      authedPage.getByRole("heading", { name: "¿De qué sobre sale?" }),
+    ).toBeVisible();
+
+    await authedPage
+      .getByRole("button", { name: /Confirmar en Gustos/ })
+      .click();
+
+    await expect(authedPage.getByText("Gasto registrado")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(authedPage.getByText(/Te quedan/)).toBeVisible();
   });
 
   test("registrar gasto baja el saldo del sobre Gustos", {

@@ -1,3 +1,8 @@
+"use client";
+
+import type { KeyboardEvent } from "react";
+import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
+import type { ExpenseEnvelopeType } from "@/modules/expenses/lib/envelopeSuggestion";
 import { formatCents } from "@/shared/lib/money";
 import {
   ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,
@@ -37,6 +42,16 @@ export function EnvelopeCards({
   currencyCode,
   isEarlyCycle = false,
 }: Props) {
+  const { open } = useExpenseRegister();
+
+  function handleEnvelopeClick(type: "needs" | "wants" | "savings") {
+    if (type === "savings") return;
+    open({
+      variant: "envelope",
+      preselectedEnvelope: type as ExpenseEnvelopeType,
+    });
+  }
+
   return (
     <section aria-labelledby="dashboard-envelopes">
       <EnvelopeSectionLabel />
@@ -48,7 +63,24 @@ export function EnvelopeCards({
           return (
             <article
               key={envelope.type}
-              className="rounded-[14px] border border-line bg-card p-4 md:p-5"
+              className={`rounded-[14px] border border-line bg-card p-4 md:p-5 ${
+                envelope.type !== "savings"
+                  ? "cursor-pointer transition-colors hover:bg-surface-warm"
+                  : ""
+              }`}
+              {...(envelope.type !== "savings"
+                ? {
+                    role: "button" as const,
+                    tabIndex: 0,
+                    onClick: () => handleEnvelopeClick(envelope.type),
+                    onKeyDown: (event: KeyboardEvent) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleEnvelopeClick(envelope.type);
+                      }
+                    },
+                  }
+                : {})}
             >
               <div className="mb-3.5 flex items-center gap-2">
                 <span

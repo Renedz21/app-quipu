@@ -1,7 +1,16 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
-import { computeAllocations, CYCLE_DAYS } from "./lib/budgetMath";
+import {
+  CYCLE_DAYS,
+  computeAllocations,
+  ENVELOPE_TYPES,
+} from "./lib/budgetMath";
+import {
+  computeCycleDayMetrics,
+  computeDailyAvailable,
+  computeDisplayDailyCents,
+} from "./lib/dashboardMath";
 import {
   clearCommitmentCoverageForProfile,
   evaluateCommitmentCoverageForCycle,
@@ -194,14 +203,50 @@ export const createIncomeEvent = mutation({
       totalIncomeReceived: cycle.totalIncomeReceived + args.amount,
     });
 
-    await evaluateCommitmentCoverageForCycle(
-      ctx,
-      profile._id,
-      cycleId,
+    await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycleId, now);
+
+    const updatedEnvelopes = await ctx.db
+      .query("envelopes")
+      .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
+      .collect();
+    const updatedCycle = await ctx.db.get(cycleId);
+    if (!updatedCycle) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Ciclo no encontrado tras actualizar sobres.",
+      });
+    }
+
+    const cycleMetrics = computeCycleDayMetrics(
+      updatedCycle.startDate,
+      updatedCycle.endDate,
       now,
     );
+    const wantsEnvelope = updatedEnvelopes.find((env) => env.type === "wants");
+    const dailyAvailableCents = computeDailyAvailable(
+      wantsEnvelope?.remainingAmount ?? 0,
+      cycleMetrics.daysRemaining,
+    );
 
-    return { eventId, cycleId, isNewCycle };
+    return {
+      eventId,
+      cycleId,
+      isNewCycle,
+      amount: args.amount,
+      source: args.source,
+      description,
+      distributionApplied: distribution,
+      envelopes: ENVELOPE_TYPES.map((type) => {
+        const envelope = updatedEnvelopes.find((env) => env.type === type);
+        return {
+          type,
+          remainingAmount: envelope?.remainingAmount ?? 0,
+          allocatedAmount: envelope?.allocatedAmount ?? 0,
+          delta: distribution[type],
+        };
+      }),
+      displayDailyCents: computeDisplayDailyCents(dailyAvailableCents),
+    };
   },
 });
 
@@ -236,7 +281,7 @@ export const deleteIncomeEvent = mutation({
     }
 
     const cycle = await ctx.db.get(event.cycleId);
-    if (!cycle || cycle.status !== "active") {
+    if (cycle?.status !== "active") {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
         message: "Solo puedes eliminar ingresos del ciclo activo.",

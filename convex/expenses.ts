@@ -127,7 +127,12 @@ export const registerExpense = mutation({
       }
     }
 
-    return expenseId;
+    return {
+      expenseId,
+      envelopeType: args.envelopeType,
+      amount: args.amount,
+      remainingAmount: newRemainingAmount,
+    };
   },
 });
 

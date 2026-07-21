@@ -370,7 +370,7 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta e
 | 3 | Dashboard | ¿Voy bien? | ✅ Implementado (2026-07-21, P1-4) |
 | 4 | Registrar gasto | ¿De qué sobre sale? | ✅ Implementado (2026-07-21, variantes A/B) |
 | 5 | Ingresos | ¿Cuánto entró y a dónde va? | ✅ Implementado (2026-07-21) |
-| 6 | Ahorros | ¿Qué estoy construyendo? | ⬜ Pendiente |
+| 6 | Ahorros | ¿Qué estoy construyendo? | ✅ Implementado (2026-07-21, P1-9) |
 | 7 | Coach | ¿Qué decisión debería tomar? | 🟨 Backend + dashboard (4 estados; apply rescue ✅ P1-2) |
 | 8 | Gamificación | ¿Qué he logrado? | ⬜ No existe |
 | 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ⬜ Parcial (sin plan/preferencias) |
@@ -709,7 +709,8 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/lib/budgetMath.ts` | Puras + constantes: `computeAllocations`, `isValidAllocations`, `isValidPaydays`, `computeRescueTransfer`, `suggestRescueTransfer`, `shouldWarnWantsBurn`, `evaluateCycleCompliance` (con tests) |
 | `convex/lib/commitmentCoverage.ts` | Puras: `computeCommitmentCoverage`, `computeAllCommitmentCoverage`, `mapCoverageStatusToDashboard` (con tests) |
 | `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
-| `convex/lib/incomeEventLogic.ts` | `resolveCycleForEvent` (pura, con tests) |
+| `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations) |
+| `convex/lib/savingsMath.ts` | Puras: meta fondo 3 meses, meses cubiertos, progreso, ciclos para completar (con tests) |
 
 ### 5.3 Reglas de dominio v2.5
 
@@ -941,15 +942,19 @@ revisa solo cuando el usuario declare la app completa.
   `createCommitmentsBulk`, `payFrequency` de 4 valores, coach suggest-only, funciones puras con tests.
 - **Migración de datos v2.0→v2.5 ejecutada** (widen→migrate→narrow, backfills idempotentes;
   helpers de backfill eliminados tras el narrow).
+- **Bloque 3 — Dashboard:** `modules/dashboard/`, 5 niveles §3.7, coach P1-5, cascada P1-1.
+- **Bloque 4 — Registrar gasto:** variantes A/B en `modules/expenses/`; variante C diferida.
+- **Bloque 5 — Ingresos:** `/income/register` con preview, chips, confirmación con deltas.
+- **Bloque 6 — Ahorros:** `/savings` + `/savings/fund`; hero Fondo, metas (máx 6), aporte manual.
+- **Coach (parcial Bloque 7):** 4 estados + `applyRescueTransfer` en dashboard.
+- **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
+- **Motor de cascada de compromisos** (P1-1).
 
 **No existe todavía:**
-- **Bloque 4 — Registrar gasto:** variantes A/B en `modules/expenses/`; variante C diferida.
-- **Bloque 5 — Ingresos:** `/income/register` full-screen (web 2-col + móvil apilado). Preview de impacto en vivo (`impactPreview`), chips de origen, distribución automática, confirmación con deltas + disponible hoy. CTAs empty/header/FAB sin ciclo activos.
-- Bloques 6–9 (ahorros, gamificación, perfil/ajustes completos).
-- Coach: 4 estados en dashboard (`tranquil`, `warning`, `suggestion`, `crisis` + `contigo` early cycle). `resolveCoachPresentation` + UI ámbar/sugerencia. `applyRescueTransfer` + diálogo de confirmación (P1-2 ✅ 2026-07-21).
-- Motor de cascada de compromisos (cobertura de commitments desde incomeEvents).
-- Theme switcher a CSS variables; tokens de diseño no migrados a `@theme` (acento hardcoded a verde).
-- Sistema de componentes codificado según §3.5 (los primitivos shadcn existen, las variantes canon no).
+- Bloques 7–9 completos (coach CTAs restantes, gamificación, perfil/ajustes).
+- Theme switcher funcional en UI (tokens listos; selector no implementado).
+- Variante C de gasto (automático).
+- Sistema de componentes codificado tipo Storybook (primitivos shadcn sí existen).
 
 ### 8.3 Pendientes (estados corregidos tras auditoría)
 
@@ -979,6 +984,7 @@ revisa solo cuando el usuario declare la app completa.
 | P1-6 | Migrar tokens de diseño a Tailwind `@theme` | ✅ **Cerrado 2026-07-21.** Tokens §3.3 en `app/globals.css` (`@theme` + `:root`): neutros, acento `--qp*`, sobres, estados (warning ámbar + crisis terracota), sombras (`shadow-amber`, `shadow-crisis`), aliases `--qpA`…`--qp25` para theme switcher. Hex eliminados en `coach-card`, auth y onboarding. |
 | P1-7 | Bloque 4 — Registrar gasto | ✅ **Cerrado 2026-07-21.** Variantes A/B: `modules/expenses/` (keypad, sugerencia sobre, confirmación con saldo restante), CTAs dashboard activos (FAB, header, tarjetas needs/wants, coach early). Variante C diferida (sin detección automática). TDD `keypad` + `envelopeSuggestion`; smoke E2E UI. |
 | P1-8 | Bloque 5 — Ingresos | ✅ **Cerrado 2026-07-21.** `/income/register` full-screen; preview 3 sobres + disponible hoy; chips origen → `createIncomeEvent`; confirmación con deltas; CTAs empty/header/FAB; TDD `impactPreview`; smoke E2E ingreso. |
+| P1-9 | Bloque 6 — Ahorros | ✅ **Cerrado 2026-07-21.** `/savings` + `/savings/fund`; hero Fondo (Prioridad, progreso 3 meses), detalle con stats, `contributeToSubEnvelope`, `createSavingsGoal` (máx 6 metas), TDD `savingsMath`; nav Ahorros activa. Ajustar aporte y aporte a metas custom en UI diferidos. |
 
 **P2 — backlog:**
 
@@ -999,7 +1005,7 @@ revisa solo cuando el usuario declare la app completa.
 | 3. Dashboard | "Ver todo" movimientos. |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
 | 5. Ingresos | Selector de fecha retroactiva (fuera de v2.5). |
-| 6. Ahorros | Todo: hero del Fondo ("el Fondo manda"), detalle, metas. |
+| 6. Ahorros | Aporte a metas custom desde UI; "Ajustar aporte" del fondo. |
 | 7. Coach | CTAs advertencia/crisis activos cuando existan rutas. |
 | 8. Gamificación | Todo desde cero: racha, logros, recompensas, personalización. |
 | 9. Perfil/Ajustes | Plan Quipu Plus (Polar.sh), preferencias, gestión de passkeys, ciclo y porcentajes editables. |
@@ -1125,6 +1131,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-21 — §8 P1-9.** Bloque 6 Ahorros implementado (`/savings`, `/savings/fund`, `convex/savings.ts`).
 - **2026-07-20 — v1.0.** Creación. Consolida 6 documentos en fuente única (opción híbrida
   aprobada por el usuario: absorbe operativos, mantiene referencias puras e histórico).
   Auditoría previa corrigió estados fantasma (P0-4/P0-9/P0-10 cerrados de facto; P0-3 sigue

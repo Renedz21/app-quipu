@@ -22,8 +22,10 @@ import type * as lib_dashboardMath from "../lib/dashboardMath.js";
 import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
+import type * as lib_savingsMath from "../lib/savingsMath.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as profiles from "../profiles.js";
+import type * as savings from "../savings.js";
 
 import type {
   ApiFromModules,
@@ -46,8 +48,10 @@ declare const fullApi: ApiFromModules<{
   "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
   "lib/rescueTransfer": typeof lib_rescueTransfer;
+  "lib/savingsMath": typeof lib_savingsMath;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   profiles: typeof profiles;
+  savings: typeof savings;
 }>;
 
 /**

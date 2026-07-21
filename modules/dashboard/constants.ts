@@ -78,7 +78,7 @@ export const SIDEBAR_ITEMS: Array<{
 }> = [
   { href: "/dashboard", label: "Inicio" },
   { href: "#", label: "Registrar", disabled: true },
-  { href: "#", label: "Ahorros", disabled: true },
+  { href: "/savings", label: "Ahorros" },
   { href: "#", label: "Compromisos", disabled: true },
   { href: "#", label: "Coach", disabled: true },
   { href: "#", label: "Ajustes", disabled: true },
@@ -90,7 +90,7 @@ export const BOTTOM_NAV_ITEMS: Array<{
   disabled?: boolean;
 }> = [
   { href: "/dashboard", label: "Inicio" },
-  { href: "#", label: "Ahorros", disabled: true },
+  { href: "/savings", label: "Ahorros" },
   { href: "#", label: "Compromisos", disabled: true },
   { href: "#", label: "Ajustes", disabled: true },
 ];

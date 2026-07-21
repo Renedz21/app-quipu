@@ -1,3 +1,4 @@
+import { Check, CloseCircle } from "reicon-react";
 import { Toaster } from "sonner";
 
 export function AppToaster() {
@@ -19,26 +20,12 @@ export function AppToaster() {
       icons={{
         success: (
           <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-qp">
-            <svg
-              width="10"
-              height="8"
-              viewBox="0 0 10 8"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M1 4l2.5 2.5L9 1"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Check size={10} color="white" strokeWidth={3} aria-hidden />
           </span>
         ),
         error: (
-          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-danger text-white text-[12px] font-bold leading-none">
-            !
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-danger">
+            <CloseCircle size={14} color="white" weight="Filled" aria-hidden />
           </span>
         ),
       }}

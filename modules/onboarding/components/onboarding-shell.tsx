@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft } from "reicon-react";
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
 import { STEP_LABELS } from "../constants";
@@ -50,9 +51,10 @@ export function OnboardingShell({
           <button
             type="button"
             onClick={onBack}
-            className="text-[13px] font-medium text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground hover:text-foreground"
           >
-            ← Atrás
+            <ArrowLeft size={16} color="currentColor" aria-hidden />
+            Atrás
           </button>
         ) : hint ? (
           <span className="text-[13px] text-faint">{hint}</span>

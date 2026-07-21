@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { DAY_PILLS } from "../constants";
@@ -50,8 +51,9 @@ export function Step2Fixed({ onBack, onNext }: Props) {
       subtitle="Tu ciclo empieza el día que recibes tu sueldo."
       onBack={onBack}
       cta={
-        <Button onClick={onNext} disabled={!canContinue} size="lg">
-          Continuar →
+        <Button onClick={onNext} disabled={!canContinue} size="lg" className="gap-2">
+          Continuar
+          <ArrowRight size={20} color="currentColor" />
         </Button>
       }
     >

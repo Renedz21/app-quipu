@@ -1,5 +1,6 @@
 "use client";
 
+import { ChatDots } from "reicon-react";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
@@ -93,11 +94,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
         <span
           className={`flex size-7 items-center justify-center rounded-[9px] ${coachIconClass(coach.kind)}`}
         >
-          <span className="flex flex-col gap-0.5" aria-hidden>
-            <span className="h-0.5 w-2.5 rounded-sm bg-canvas" />
-            <span className="h-0.5 w-2 rounded-sm bg-canvas" />
-            <span className="h-0.5 w-1 rounded-sm bg-canvas" />
-          </span>
+          <ChatDots size={16} color="var(--qp-canvas)" aria-hidden />
         </span>
         <h2 id="dashboard-coach" className="text-sm font-semibold text-ink">
           Coach

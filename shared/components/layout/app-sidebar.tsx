@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PLAN_LABELS, SIDEBAR_ITEMS } from "@/modules/dashboard/constants";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
+import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { cn } from "@/shared/lib/utils";
 
@@ -18,49 +19,6 @@ function navItemActive(pathname: string, href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
   return pathname === href;
-}
-
-function SidebarIcon({ label }: { label: string }) {
-  switch (label) {
-    case "Inicio":
-      return (
-        <span className="size-4 rounded-[5px] border-[1.7px] border-qp-deep" />
-      );
-    case "Registrar":
-      return (
-        <span className="relative size-4">
-          <span className="absolute top-[7px] left-px h-0.5 w-3.5 rounded-sm bg-mute" />
-          <span className="absolute top-px left-[7px] h-3.5 w-0.5 rounded-sm bg-mute" />
-        </span>
-      );
-    case "Ahorros":
-      return (
-        <span className="size-[15px] rounded-full border-[1.7px] border-mute" />
-      );
-    case "Compromisos":
-      return (
-        <span className="relative size-[15px] rounded border-[1.7px] border-mute">
-          <span className="absolute -top-0.5 left-[3px] h-1 w-0.5 rounded-sm bg-mute" />
-          <span className="absolute -top-0.5 right-[3px] h-1 w-0.5 rounded-sm bg-mute" />
-        </span>
-      );
-    case "Coach":
-      return (
-        <span className="size-[15px] rounded-full rounded-bl-[3px] border-[1.7px] border-mute" />
-      );
-    case "Ajustes":
-      return (
-        <span className="flex size-[15px] items-center justify-center rounded-full border-[1.7px] border-mute">
-          <span className="size-1 rounded-full bg-mute" />
-        </span>
-      );
-    default:
-      return (
-        <span className="flex size-[15px] items-center justify-center rounded-full border-[1.7px] border-mute">
-          <span className="size-1 rounded-full bg-mute" />
-        </span>
-      );
-  }
 }
 
 export function AppSidebar({ profileName, plan = "free", className }: Props) {
@@ -80,7 +38,7 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
           const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
-              <SidebarIcon label={item.label} />
+              <AppNavIcon label={item.label} active={active} />
               <span>{item.label}</span>
             </>
           );

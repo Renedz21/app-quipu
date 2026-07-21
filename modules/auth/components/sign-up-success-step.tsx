@@ -1,3 +1,4 @@
+import { ArrowRight, Check } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { authPrimaryButtonClass } from "../constants";
@@ -6,10 +7,7 @@ export function SuccessStep({ onContinue }: { onContinue: VoidFunction }) {
   return (
     <div className="flex flex-col items-center text-center">
       <div className="mb-7 flex size-[88px] items-center justify-center rounded-full bg-qp shadow-glow">
-        <span
-          aria-hidden
-          className="mt-[-6px] block h-9 w-5 rotate-45 border-canvas border-r-4 border-b-4"
-        />
+        <Check size={36} color="var(--qp-canvas)" strokeWidth={3} aria-hidden />
       </div>
       <h1 className="font-serif font-medium text-[32px] text-ink">
         Tu cuenta está lista
@@ -21,9 +19,10 @@ export function SuccessStep({ onContinue }: { onContinue: VoidFunction }) {
       <Button
         type="button"
         onClick={onContinue}
-        className={cn(authPrimaryButtonClass, "mt-[30px] w-auto px-[30px]")}
+        className={cn(authPrimaryButtonClass, "mt-[30px] w-auto gap-2 px-[30px]")}
       >
-        Ir al onboarding →
+        Ir al onboarding
+        <ArrowRight size={20} color="currentColor" />
       </Button>
     </div>
   );

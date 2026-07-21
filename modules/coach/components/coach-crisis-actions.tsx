@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "reicon-react";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
@@ -92,9 +93,12 @@ export function CoachCrisisActions({ options }: Props) {
                 {option.subtitle}
               </span>
             </span>
-            <span className="shrink-0 text-danger" aria-hidden>
-              →
-            </span>
+            <ArrowRight
+              size={16}
+              color="currentColor"
+              className="shrink-0 text-danger"
+              aria-hidden
+            />
           </button>
         ))}
       </div>

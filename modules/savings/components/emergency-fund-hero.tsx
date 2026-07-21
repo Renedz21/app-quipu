@@ -1,7 +1,7 @@
 "use client";
 
+import { Safe } from "reicon-react";
 import Link from "next/link";
-import { EmergencyFundIcon } from "./emergency-fund-icon";
 import {
   EMERGENCY_FUND_AUTO_CONTRIBUTION_PREFIX,
   EMERGENCY_FUND_AUTO_CONTRIBUTION_SUFFIX,
@@ -31,7 +31,7 @@ export function EmergencyFundHero({
       />
       <div className="relative mb-4 flex items-center gap-2.5">
         <span className="flex size-8 items-center justify-center rounded-[9px] bg-moss text-white">
-          <EmergencyFundIcon className="size-3.5" />
+          <Safe size={14} color="currentColor" aria-hidden />
         </span>
         <span className="text-base font-semibold text-ink">
           {EMERGENCY_FUND_LABEL}

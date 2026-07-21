@@ -1,7 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useState } from "react";
+import { ArrowRight, X } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -43,8 +43,9 @@ export function Step2Mixed({ onBack, onNext }: Props) {
       subtitle="Configura tu parte previsible; el resto entra cuando lo registres."
       onBack={onBack}
       cta={
-        <Button onClick={onNext} size="lg">
-          Continuar →
+        <Button onClick={onNext} size="lg" className="gap-2">
+          Continuar
+          <ArrowRight size={20} color="currentColor" />
         </Button>
       }
     >

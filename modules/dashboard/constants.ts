@@ -39,7 +39,6 @@ export const DASHBOARD_ERROR_RETRY = "Reintentar";
 
 export const MOVEMENTS_SECTION_LABEL = "Movimientos recientes";
 export const MOVEMENTS_VIEW_ALL = "Ver todo";
-export const MOVEMENTS_VIEW_ALL_HINT = "Próximamente";
 
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";

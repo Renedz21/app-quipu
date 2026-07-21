@@ -51,17 +51,18 @@ export const getSummary = query({
       .unique();
     if (!profile) return null;
 
-    const commitmentsRaw = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
-
-    const activeCycle = await ctx.db
-      .query("financialCycles")
-      .withIndex("by_profile_status", (q) =>
-        q.eq("profileId", profile._id).eq("status", "active"),
-      )
-      .unique();
+    const [commitmentsRaw, activeCycle] = await Promise.all([
+      ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+      ctx.db
+        .query("financialCycles")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("profileId", profile._id).eq("status", "active"),
+        )
+        .unique(),
+    ]);
 
     const now = Date.now();
 

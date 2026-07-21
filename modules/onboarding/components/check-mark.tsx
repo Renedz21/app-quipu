@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check } from "reicon-react";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -14,6 +14,7 @@ export function CheckMark({ size = 12, className, strokeWidth = 3 }: Props) {
     <Check
       size={size}
       strokeWidth={strokeWidth}
+      color="currentColor"
       className={cn("text-primary-foreground", className)}
     />
   );

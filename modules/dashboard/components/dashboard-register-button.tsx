@@ -1,5 +1,6 @@
 "use client";
 
+import { Add } from "reicon-react";
 import { REGISTER_CTA } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
@@ -30,10 +31,7 @@ export function DashboardRegisterButton({
       onClick={() => open({ variant: "fab" })}
       className={className}
     >
-      <span className="relative mr-2 size-[13px]" aria-hidden>
-        <span className="absolute top-[5.5px] left-0 h-0.5 w-[13px] rounded-sm bg-canvas" />
-        <span className="absolute top-0 left-[5.5px] h-[13px] w-0.5 rounded-sm bg-canvas" />
-      </span>
+      <Add size={16} color="currentColor" className="mr-2" aria-hidden />
       {showLabel ? REGISTER_CTA : null}
     </Button>
   );

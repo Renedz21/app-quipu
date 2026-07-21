@@ -1,7 +1,7 @@
 "use client";
-import { LockOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { LockKeyholeOpen } from "reicon-react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import { Button } from "@/shared/components/ui/button";
@@ -30,7 +30,7 @@ export function SignInPasskeyButton() {
       disabled={pending}
       className={cn(authSecondaryButtonClass, "gap-2.5")}
     >
-      <LockOpen size={24} />
+      <LockKeyholeOpen size={24} />
       {pending ? "Verificando..." : "Entrar con passkey"}
     </Button>
   );

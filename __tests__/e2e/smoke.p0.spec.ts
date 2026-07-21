@@ -361,4 +361,19 @@ test.describe("P0 smoke @smoke", () => {
       authedPage.getByRole("heading", { name: "Ajustes" }),
     ).toBeVisible();
   });
+
+  test("pantalla Movimientos carga tras onboarding", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+
+    await authedPage.goto("/movements");
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Movimientos" }),
+    ).toBeVisible();
+    await expect(
+      authedPage.getByText(/Ingresos y gastos de tu ciclo activo/),
+    ).toBeVisible();
+  });
 });

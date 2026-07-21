@@ -1,3 +1,4 @@
+import { Calendar, Check, Home, ShoppingBag } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -23,14 +24,19 @@ function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
   if (envelope === "wants") {
     return (
       <span className="flex size-8 items-center justify-center rounded-[9px] bg-clay-soft">
-        <span className="size-2.5 rounded-full border-[1.6px] border-clay" />
+        <ShoppingBag
+          size={14}
+          color="var(--clay)"
+          className="shrink-0"
+          aria-hidden
+        />
       </span>
     );
   }
 
   return (
     <span className="flex size-8 items-center justify-center rounded-[9px] bg-steel-soft">
-      <span className="size-3 rounded-[3px] border-[1.6px] border-steel" />
+      <Home size={14} color="var(--steel)" className="shrink-0" aria-hidden />
     </span>
   );
 }
@@ -42,10 +48,7 @@ function CommitmentsEmptyState() {
         className="mb-3 flex size-10 items-center justify-center rounded-[11px] bg-surface-warm"
         aria-hidden
       >
-        <span className="relative size-4 rounded-[3px] border-[1.6px] border-mute">
-          <span className="absolute -top-1 left-1/2 h-1.5 w-2 -translate-x-1/2 rounded-t-[2px] border-x-[1.6px] border-t-[1.6px] border-mute" />
-          <span className="absolute left-1/2 top-[3px] size-0.5 -translate-x-1/2 rounded-full bg-mute" />
-        </span>
+        <Calendar size={18} color="var(--mute)" />
       </span>
       <p className="text-sm font-semibold text-ink">{COMMITMENTS_EMPTY_TITLE}</p>
       <p className="mt-2 max-w-xs text-sm leading-relaxed text-mute">
@@ -114,7 +117,7 @@ export function CommitmentsList({
             {covered ? (
               <>
                 <span className="flex size-4 items-center justify-center rounded-full bg-qp-soft">
-                  <span className="inline-block size-1.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-qp" />
+                  <Check size={10} color="var(--qp)" strokeWidth={3} aria-hidden />
                 </span>
                 {COMMITMENTS_COVERED_HEADER}
               </>

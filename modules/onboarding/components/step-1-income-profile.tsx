@@ -1,7 +1,7 @@
 "use client";
 
+import { ArrowRight, Briefcase, ChartTrend, Layers } from "reicon-react";
 import { type ReactNode, useState } from "react";
-import { ArrowRight } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { INCOME_MODEL_OPTIONS } from "../constants";
@@ -110,17 +110,14 @@ function IncomeModelIcon({
   name: "Briefcase" | "TrendingUp" | "Layers";
 }) {
   if (name === "Briefcase") {
-    return <div className="size-5 rounded-sm bg-primary" />;
+    return (
+      <Briefcase size={20} color="var(--qp)" className="shrink-0" aria-hidden />
+    );
   }
   if (name === "TrendingUp") {
     return (
-      <div className="flex size-5 items-center justify-center rounded-full border-[3px] border-clay" />
+      <ChartTrend size={20} color="var(--clay)" className="shrink-0" aria-hidden />
     );
   }
-  return (
-    <div className="flex gap-1">
-      <div className="w-2 rounded-[3px] bg-needs" style={{ height: "20px" }} />
-      <div className="w-2 rounded-[3px] bg-clay" style={{ height: "20px" }} />
-    </div>
-  );
+  return <Layers size={20} color="var(--needs)" className="shrink-0" aria-hidden />;
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BOTTOM_NAV_ITEMS } from "@/modules/dashboard/constants";
+import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { cn } from "@/shared/lib/utils";
 import { DashboardFab } from "./dashboard-fab";
 
@@ -15,57 +16,6 @@ function navItemActive(pathname: string, href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
   return pathname === href;
-}
-
-function BottomNavIcon({ label, active }: { label: string; active: boolean }) {
-  const color = active ? "border-qp-deep" : "border-mute";
-
-  switch (label) {
-    case "Inicio":
-      return (
-        <span
-          className={cn("size-[17px] rounded-[5px] border-[1.8px]", color)}
-        />
-      );
-    case "Ahorros":
-      return (
-        <span className={cn("size-4 rounded-full border-[1.8px]", color)} />
-      );
-    case "Compromisos":
-      return <span className={cn("size-4 rounded border-[1.8px]", color)} />;
-    case "Ajustes":
-      return (
-        <span
-          className={cn(
-            "flex size-4 items-center justify-center rounded-full border-[1.8px]",
-            color,
-          )}
-        >
-          <span
-            className={cn(
-              "size-1 rounded-full",
-              active ? "bg-qp-deep" : "bg-mute",
-            )}
-          />
-        </span>
-      );
-    default:
-      return (
-        <span
-          className={cn(
-            "flex size-4 items-center justify-center rounded-full border-[1.8px]",
-            color,
-          )}
-        >
-          <span
-            className={cn(
-              "size-1 rounded-full",
-              active ? "bg-qp-deep" : "bg-mute",
-            )}
-          />
-        </span>
-      );
-  }
 }
 
 export function AppBottomNav({ className }: Props) {
@@ -83,7 +33,7 @@ export function AppBottomNav({ className }: Props) {
           const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
-              <BottomNavIcon label={item.label} active={active} />
+              <AppNavIcon label={item.label} active={active} size={18} />
               <span className={cn(active && "font-semibold text-qp-deep")}>
                 {item.label}
               </span>
@@ -124,7 +74,7 @@ export function AppBottomNav({ className }: Props) {
           const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
-              <BottomNavIcon label={item.label} active={active} />
+              <AppNavIcon label={item.label} active={active} size={18} />
               <span className={cn(active && "font-semibold text-qp-deep")}>
                 {item.label}
               </span>

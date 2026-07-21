@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import { Check } from "reicon-react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { formatLimaDate } from "@/shared/lib/date";
@@ -52,7 +53,7 @@ function AchievementCard({ achievement }: { achievement: ProgressAchievement }) 
         aria-hidden
       >
         {isDone ? (
-          <span className="mt-[-2px] inline-block size-[6px] h-[11px] w-[6px] rotate-45 border-r-2 border-b-2 border-qp md:h-[14px] md:w-[8px] md:border-[2.5px]" />
+          <Check size={14} color="var(--qp)" strokeWidth={3} aria-hidden />
         ) : (
           <span className="font-serif text-xs text-faint md:text-[15px]">···</span>
         )}

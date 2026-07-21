@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "reicon-react";
 import Link from "next/link";
 import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
 import { buttonVariants } from "@/shared/components/ui/button";
@@ -28,10 +29,7 @@ export function IncomeConfirmation({ result, currencyCode }: Props) {
     <div className="mx-auto max-w-2xl px-1 py-6 text-center md:px-4 md:py-10">
       <div className="rounded-[18px] bg-[radial-gradient(110%_60%_at_50%_0%,var(--qp-soft),var(--qp-surface)_60%)] px-4 py-8 md:px-10 md:py-12">
         <div className="mx-auto mb-5 flex size-[70px] items-center justify-center rounded-full bg-qp shadow-[0_14px_34px_-14px_var(--qp-shadow-strong)]">
-          <span
-            className="inline-block size-4 rotate-45 border-r-4 border-b-4 border-canvas"
-            aria-hidden
-          />
+          <Check size={18} color="var(--qp-canvas)" strokeWidth={3} aria-hidden />
         </div>
 
         <h2 className="font-serif text-[30px] font-medium text-ink">

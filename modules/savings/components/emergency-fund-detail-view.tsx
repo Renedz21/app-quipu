@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { Safe } from "reicon-react";
 import Link from "next/link";
-import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
@@ -19,8 +19,8 @@ import {
   EMERGENCY_FUND_STAT_CYCLES_SUFFIX,
   EMERGENCY_FUND_TARGET_SUFFIX,
 } from "../constants";
+import { api } from "@/convex/_generated/api";
 import { formatCyclesToCompleteLabel } from "../lib/savingsCopy";
-import { EmergencyFundIcon } from "./emergency-fund-icon";
 import { SavingsContributeButton } from "./savings-contribute-button";
 
 export function EmergencyFundDetailView() {
@@ -59,7 +59,7 @@ export function EmergencyFundDetailView() {
 
       <div className="mt-4 flex items-center gap-3">
         <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-moss text-white">
-          <EmergencyFundIcon className="size-3.5" />
+          <Safe size={14} color="currentColor" aria-hidden />
         </span>
         <h1 className="font-serif text-[21px] font-medium text-ink md:text-[26px]">
           {EMERGENCY_FUND_LABEL}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Add } from "reicon-react";
 import { HERO_EMPTY_CTA, REGISTER_CTA } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
@@ -26,10 +27,7 @@ export function DashboardFab() {
       }}
       className="size-[52px] rounded-full bg-ink text-canvas shadow-[0_10px_24px_-8px_color-mix(in_oklch,var(--qp-ink)_50%,transparent)] hover:bg-ink/90"
     >
-      <span className="relative size-[18px]" aria-hidden>
-        <span className="absolute top-2 left-0 h-0.5 w-[18px] rounded-sm bg-canvas" />
-        <span className="absolute top-0 left-2 h-[18px] w-0.5 rounded-sm bg-canvas" />
-      </span>
+      <Add size={22} color="var(--qp-canvas)" aria-hidden />
     </Button>
   );
 }

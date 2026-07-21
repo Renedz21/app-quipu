@@ -7,6 +7,7 @@ import { PLAN_LABELS } from "@/modules/dashboard/constants";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_ERROR_BODY,
@@ -78,7 +79,7 @@ function MobileAccountList({
     <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5 md:hidden">
       <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
         <span className="flex-1 text-[13.5px] text-ink">{SETTINGS_PROFILE_LABEL}</span>
-        <span className="text-faint">→</span>
+        <ListRowChevron />
       </div>
       <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
         <span className="flex-1 text-[13.5px] text-ink">{SETTINGS_PLAN_LABEL}</span>
@@ -87,7 +88,7 @@ function MobileAccountList({
             {SETTINGS_PLAN_ACTIVE_BADGE}
           </span>
         ) : null}
-        <span className="text-faint">→</span>
+        <ListRowChevron />
       </div>
       <div className="flex items-center gap-2 py-2.5">
         <span className="flex-1 text-[13.5px] text-ink">
@@ -96,7 +97,7 @@ function MobileAccountList({
         {passkeyCount > 0 ? (
           <span className="text-[11px] text-faint">{passkeyCount}</span>
         ) : null}
-        <span className="text-faint">→</span>
+        <ListRowChevron />
       </div>
     </div>
   );

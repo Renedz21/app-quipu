@@ -1,5 +1,6 @@
 "use client";
 
+import { Backspace } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { appendKeypadDigit, backspaceKeypad } from "../lib/keypad";
@@ -56,7 +57,11 @@ export function ExpenseKeypad({ amountCents, onChange, className }: Props) {
               key === "⌫" && "text-[18px] text-mute",
             )}
           >
-            {key}
+            {key === "⌫" ? (
+              <Backspace size={20} color="currentColor" className="text-mute" />
+            ) : (
+              key
+            )}
           </Button>
         );
       })}

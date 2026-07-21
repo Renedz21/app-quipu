@@ -495,7 +495,7 @@ Si falta una, la pantalla está incompleta.
 
 - Móvil: Recuperación/Loading/Vacío (B1), Paso 2 Independiente y Mixto (B2), Variante B de gasto (B4), coach Sugerencia (B7).
 - Web: dashboard en estados no-positivos (vacío/crisis solo se ilustran en B7).
-- Pantallas ausentes: detalle de compromiso, "Ver todo" de movimientos, destino del nav "Compromisos".
+- Pantallas ausentes: detalle de compromiso, destino del nav "Compromisos".
 - Modal de confirmación destructiva (diseñado en spec, no implementado).
 - Theme switcher a CSS variables y componentes codificados como sistema (no existe Storybook).
 
@@ -954,10 +954,10 @@ revisa solo cuando el usuario declare la app completa.
 - **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10).
 - **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
-- **Motor de cascada de compromisos** (P1-1).
+- **Bloque 9 — Perfil y ajustes:** `/settings` + allocations; ver P1-12.
+- **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard).
 
 **No existe todavía:**
-- **Bloque 9 — Ajustes (MVP):** `/settings`, reparto, compromisos, passkeys cliente; ver P1-12.
 - Variante C de gasto (automático).
 - Sistema de componentes codificado tipo Storybook (primitivos shadcn sí existen).
 
@@ -1010,7 +1010,7 @@ revisa solo cuando el usuario declare la app completa.
 |---|---|
 | 1. Auth | Pantallas auxiliares (recovery, error, loading, success); panel lateral "Disponible hoy" muestra datos reales cuando exista dashboard. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | "Ver todo" movimientos. |
+| 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
 | 5. Ingresos | Selector de fecha retroactiva (fuera de v2.5). |
 | 6. Ahorros | Aporte a metas custom desde UI; "Ajustar aporte" del fondo. |
@@ -1139,6 +1139,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-21 — §8 delta B3.** Lista de movimientos (`/movements`, `convex/movements.listForActiveCycle`, enlace dashboard).
 - **2026-07-21 — §8 P1-12.** Bloque 9 Ajustes MVP (`getSettingsOverview`, `/settings`, nav, smoke).
 - **2026-07-21 — §8 P1-12 (parcial).** Bloque 9 Ajustes: `/settings`, sistema/reparto/compromisos, `convex/settings.ts`, nav Ajustes.
 - **2026-07-21 — §8 P1-11.** Bloque 8 Gamificación (`/progress`, `evaluateClosedCycle`, recompensas/personalización).

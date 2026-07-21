@@ -3,8 +3,8 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
+import { SidebarLeft } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Separator } from "@/shared/components/ui/separator";
@@ -270,7 +270,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <SidebarLeft size={16} />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

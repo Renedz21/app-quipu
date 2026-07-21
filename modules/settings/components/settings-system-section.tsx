@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { fromConvexError } from "@/core/errors";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { buttonVariants } from "@/shared/components/ui/button";
+import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_ADJUST_ALLOCATIONS,
@@ -90,7 +91,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           <span className="text-[11.5px] text-faint">
             {needs}/{wants}/{savings}
           </span>
-          <span className="text-faint">→</span>
+          <ListRowChevron />
         </Link>
         <Link
           href="/settings/cycle"
@@ -100,13 +101,13 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           <span className="text-[11.5px] text-faint">
             {profile.cycleDurationDays ?? 30} días
           </span>
-          <span className="text-faint">→</span>
+          <ListRowChevron />
         </Link>
         <div className="flex items-center gap-2 py-2.5">
           <span className="flex-1 text-[13.5px] text-ink">
             {SETTINGS_PREFERENCES_LABEL}
           </span>
-          <span className="text-faint">→</span>
+          <ListRowChevron />
         </div>
       </div>
 

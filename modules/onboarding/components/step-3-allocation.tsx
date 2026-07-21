@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "reicon-react";
 import { useTransition } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { completeOnboardingAction } from "../actions";
@@ -42,8 +43,20 @@ export function Step3Allocation({ onBack, onComplete }: Props) {
       subtitle="La regla 50/30/20 es un buen punto de partida. Ajusta si lo necesitas."
       onBack={onBack}
       cta={
-        <Button onClick={submit} disabled={total !== 100 || isPending} size="lg">
-          {isPending ? "Creando sistema…" : "Crear mi sistema →"}
+        <Button
+          onClick={submit}
+          disabled={total !== 100 || isPending}
+          size="lg"
+          className="gap-2"
+        >
+          {isPending ? (
+            "Creando sistema…"
+          ) : (
+            <>
+              Crear mi sistema
+              <ArrowRight size={20} color="currentColor" />
+            </>
+          )}
         </Button>
       }
     >

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "reicon-react";
 import { ENVELOPE_LABELS } from "@/modules/dashboard/constants";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
@@ -38,10 +39,7 @@ export function ExpenseConfirmation({
   return (
     <div className="px-2 py-4 text-center">
       <div className="mx-auto mb-5 flex size-[72px] items-center justify-center rounded-full bg-qp shadow-[0_14px_34px_-14px_var(--qp-shadow-strong)]">
-        <span
-          className="inline-block size-4 rotate-45 border-r-4 border-b-4 border-canvas"
-          aria-hidden
-        />
+        <Check size={18} color="var(--qp-canvas)" strokeWidth={3} aria-hidden />
       </div>
 
       <h3 className="font-serif text-[26px] font-medium text-ink">

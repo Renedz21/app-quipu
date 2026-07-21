@@ -367,7 +367,7 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta e
 |---|---|---|---|
 | 1 | Autenticación | ¿Eres tú? | ✅ Implementado (canon redesign) |
 | 2 | Onboarding | ¿Cómo se arma tu sistema? | ✅ Implementado (v3, 3 pasos) |
-| 3 | Dashboard | ¿Voy bien? | ⬜ Siguiente (placeholder hoy) |
+| 3 | Dashboard | ¿Voy bien? | ✅ Implementado (2026-07-21, P1-4) |
 | 4 | Registrar gasto | ¿De qué sobre sale? | ⬜ Pendiente |
 | 5 | Ingresos | ¿Cuánto entró y a dónde va? | ⬜ Pendiente |
 | 6 | Ahorros | ¿Qué estoy construyendo? | ⬜ Pendiente |
@@ -971,7 +971,7 @@ revisa solo cuando el usuario declare la app completa.
 | P1-1 | Motor de cascada de compromisos (`mixed`/`variable`) | Función pura `computeCommitmentCoverage({commitment, cycle, incomeEvents, now})` → `{covered, remaining, fundingEvents}` con TDD (covered/partial/not-started/overdue). Schema: agregar `coveredAt` (y evaluar `coveredBy[]`) a `fixedCommitments`. `createIncomeEvent` dispara evaluación. Query `getCommitmentCoverage` + card de progreso en dashboard. Cierre: compromiso se marca cubierto cuando los incomeEvents de la ventana lo financian; UI muestra progreso real. |
 | P1-2 | `applyRescueTransfer` + confirmación del coach | Mutation `applyRescueTransfer({interactionId})`: auth+ownership → leer sugerencia → validar saldos (savings ≥ transfer, wants < 0) → patch atómico → interaction `applied`. + `dismissRescueSuggestion`. UI: diálogo de confirmación con 2 botones en `modules/coach/`. Cierre: sugerencia → usuario confirma → transferencia atómica; si rechaza, nada se aplica. |
 | P1-3 | Actualizar arquitectura a v2.5 | ✅ **Superseded por este documento maestro** (2026-07-20). |
-| P1-4 | Bloque 3 — Dashboard | Construir los 5 niveles (§3.7) sobre el backend existente. **Es el siguiente bloque.** Requiere: módulo `modules/dashboard/`, queries de agregación, hero "Disponible hoy", 3 sobres, compromisos, coach card, movimientos. Depende parcialmente de P1-1 para el nivel 3. |
+| P1-4 | Bloque 3 — Dashboard | ✅ **Cerrado 2026-07-21.** `convex/dashboard.getSummary`, `modules/dashboard/`, shell sidebar+bottom nav+FAB, 5 niveles §3.7, empty state sin ciclo, skeletons LCP. Cobertura compromisos **MVP heurístico** (`remaining >= amount`); upgrade real en P1-1. |
 | P1-5 | Coach: estados advertencia y sugerencia | Backend tiene tranquilo y crisis; agregar los 2 estados intermedios (disparadores en `coachEngine.ts` + UI de banner ámbar y card de sugerencia). Prerequisito de P1-2 para que sugerencia tenga acción. |
 | P1-6 | Migrar tokens de diseño a Tailwind `@theme` | Llevar la tabla §3.3 completa (`--qp*` + neutros + sobres + estados) a `@theme` en `app/globals.css`; eliminar hex hardcodeados; dejar base para theme switcher futuro. |
 
@@ -991,7 +991,7 @@ revisa solo cuando el usuario declare la app completa.
 |---|---|
 | 1. Auth | Pantallas auxiliares (recovery, error, loading, success); panel lateral "Disponible hoy" muestra datos reales cuando exista dashboard. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | Todo (ver P1-4). |
+| 3. Dashboard | Cobertura compromisos real (P1-1); CTAs registrar/ingreso activos (Bloques 4–5); "Ver todo" movimientos. |
 | 4. Registrar gasto | Todo: 3 variantes (A/B/C), keypad, sugerencia de sobre, <10s. |
 | 5. Ingresos | Todo: registro con preview de impacto + confirmación con deltas. |
 | 6. Ahorros | Todo: hero del Fondo ("el Fondo manda"), detalle, metas. |
@@ -1074,7 +1074,7 @@ cuenta limpia (borrar el user de Better Auth en Convex dashboard entre runs).
 
 | # | Flujo | Qué verifica |
 |---|---|---|
-| 1 | Dashboard carga | `/dashboard` renderiza placeholder sin errores de hidratación |
+| 1 | Dashboard carga | `/dashboard` muestra "Disponible hoy" o empty state post-onboarding sin errores de hidratación |
 | 2 | `getMyProfile` | Query retorna profile con `incomeModel`, `onboardingComplete`, `currencyCode` |
 | 3 | Registrar gasto | `registerExpense` persiste gasto y dispara coach `WANTS_OVERFLOW_60` |
 | 4 | Resolver coach | `resolveNudgeAction` marca interacción como resuelta |

@@ -1,0 +1,81 @@
+import { formatCents } from "@/shared/lib/money";
+import { ENVELOPE_LABELS } from "../constants";
+import { clampPercent } from "../lib/dashboard-math";
+import type { DashboardEnvelope } from "../types";
+import { EnvelopeSectionLabel } from "./envelope-cards-skeleton";
+
+type Props = {
+  envelopes: DashboardEnvelope[];
+  currencyCode: string;
+};
+
+const ENVELOPE_STYLES = {
+  needs: {
+    dot: "bg-steel",
+    track: "bg-steel-soft",
+    bar: "bg-steel",
+  },
+  wants: {
+    dot: "bg-clay",
+    track: "bg-clay-soft",
+    bar: "bg-clay",
+  },
+  savings: {
+    dot: "bg-moss",
+    track: "bg-moss-soft",
+    bar: "bg-moss",
+  },
+} as const;
+
+export function EnvelopeCards({ envelopes, currencyCode }: Props) {
+  return (
+    <section aria-labelledby="dashboard-envelopes">
+      <EnvelopeSectionLabel />
+      <div id="dashboard-envelopes" className="grid gap-3 md:grid-cols-3">
+        {envelopes.map((envelope) => {
+          const styles = ENVELOPE_STYLES[envelope.type];
+          const percent = clampPercent(envelope.percentRemaining);
+
+          return (
+            <article
+              key={envelope.type}
+              className="rounded-[14px] border border-line bg-card p-4 md:p-5"
+            >
+              <div className="mb-3.5 flex items-center gap-2">
+                <span
+                  className={`size-2 rounded-full ${styles.dot}`}
+                  aria-hidden
+                />
+                <h3 className="text-sm font-semibold text-ink">
+                  {ENVELOPE_LABELS[envelope.type]}
+                </h3>
+                {envelope.type === "savings" && percent >= 100 ? (
+                  <span className="ml-auto rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
+                    100%
+                  </span>
+                ) : null}
+              </div>
+              <p className="font-serif text-2xl text-ink">
+                {formatCents(Math.max(0, envelope.remainingAmount), {
+                  currency: currencyCode,
+                })}
+              </p>
+              <p className="mt-1 text-xs text-mute">
+                {envelope.type === "savings" ? "apartado" : "disponible"} de{" "}
+                {formatCents(envelope.allocatedAmount, {
+                  currency: currencyCode,
+                })}
+              </p>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-[4px] bg-qp-track">
+                <div
+                  className={`h-full rounded-[4px] ${styles.bar}`}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}

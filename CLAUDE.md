@@ -339,6 +339,52 @@ Antes de tomar decisiones de arquitectura, auditar un plan, depurar bugs no triv
 
 ---
 
+## gstack
+
+[gstack](https://github.com/garrytan/gstack) está instalado globalmente (`~/gstack`).
+
+**Web browsing:** usa la skill `/browse` de gstack para **todo** navegación web. **Nunca** uses herramientas `mcp__claude-in-chrome__*` ni ningún otro MCP/browser tool.
+
+**Skills disponibles:**
+
+- `/office-hours` — explorar ideas y problemas antes de construir
+- `/plan-ceo-review` — revisión de plan desde perspectiva CEO
+- `/plan-eng-review` — revisión de plan desde perspectiva ingeniería
+- `/plan-design-review` — revisión de plan desde perspectiva diseño
+- `/design-consultation` — consulta de diseño
+- `/design-shotgun` — múltiples variantes de diseño en paralelo
+- `/design-html` — prototipo HTML de diseño
+- `/review` — code review estructurado
+- `/ship` — preparar y abrir PR
+- `/land-and-deploy` — merge y deploy
+- `/canary` — verificación post-deploy
+- `/benchmark` — benchmark de rendimiento
+- `/browse` — navegación web headless (usar para **todo** browsing)
+- `/connect-chrome` — conectar browser Chrome existente
+- `/qa` — QA visual y funcional
+- `/qa-only` — QA sin fixes
+- `/design-review` — revisión de diseño UI/UX
+- `/setup-browser-cookies` — configurar cookies de browser
+- `/setup-deploy` — configurar pipeline de deploy
+- `/setup-gbrain` — configurar GBrain (memoria persistente)
+- `/retro` — retrospectiva de sesión
+- `/investigate` — investigar codebase o bug
+- `/document-release` — documentar release
+- `/document-generate` — generar documentación
+- `/codex` — delegar a Codex CLI
+- `/cso` — Chief Strategy Officer review
+- `/autoplan` — planificación autónoma multi-step
+- `/plan-devex-review` — revisión de plan DevEx
+- `/devex-review` — revisión DevEx
+- `/careful` — modo cauteloso (menos cambios)
+- `/freeze` — congelar archivos contra edits
+- `/guard` — proteger archivos críticos
+- `/unfreeze` — descongelar archivos
+- `/gstack-upgrade` — actualizar gstack
+- `/learn` — capturar aprendizajes de sesión
+
+---
+
 ## Reglas de auth (v2.5)
 
 - **Auth es un módulo de dominio** (`modules/auth/`), no vive dentro de `app/(auth)/`. El route group `(auth)` es solo wiring de Next.js. Los componentes del dominio auth están en `modules/auth/components/`.

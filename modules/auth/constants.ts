@@ -1,5 +1,5 @@
 /**
- * Clases canon compartidas por las pantallas de auth (quipu-design.md §2).
+ * Clases canon compartidas por las pantallas de auth (docs/QUIPU-MASTER.md §3.5).
  * Centralizadas para no repetir strings largos entre sign-in y sign-up.
  */
 export const authLabelClass = "text-[12.5px] font-medium text-body";

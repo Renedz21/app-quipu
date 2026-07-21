@@ -48,5 +48,8 @@ next-env.d.ts
 # AI skills
 .agents/*
 .claude/*
+.cursor/*
+.codegraph/*
 
-docs/*
+# Ledger local de SDD (superpowers); docs/ sí se commitea
+/.superpowers/sdd/

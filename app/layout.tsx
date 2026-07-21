@@ -6,7 +6,7 @@ import { ConvexClientProvider } from "@/shared/components/providers/convex-provi
 import { AppToaster } from "@/shared/components/ui/toaster";
 import { cn } from "@/shared/lib/utils";
 
-// Canon tipográfico (docs/quipu-design.md §1.2):
+// Canon tipográfico (docs/QUIPU-MASTER.md §3.2):
 // Hanken Grotesk = interfaz · Newsreader = titulares/cifras · Geist Mono = micro-labels
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],

@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib/utils";
 
 /**
- * Banner de estado canon (quipu-design.md §4.3).
+ * Banner de estado canon (docs/QUIPU-MASTER.md §3.6).
  * error = terracota sobrio (nunca rojo brillante) · info = acento tranquilo.
  */
 export function AuthBanner({

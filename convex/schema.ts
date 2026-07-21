@@ -55,6 +55,7 @@ export const appTables = {
     plan: v.union(v.literal("free"), v.literal("premium")),
     polarCustomerId: v.optional(v.string()),
     polarSubscriptionId: v.optional(v.string()),
+    coachCrisisSnoozedUntil: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_userId", ["userId"])
@@ -69,6 +70,13 @@ export const appTables = {
     status: v.union(v.literal("active"), v.literal("closed")),
     // v2.5: unified total, snapshot materializado de los incomeEvents del ciclo
     totalIncomeReceived: v.number(),
+    // P1-10: boost de cobertura aplicado desde Ahorro del ciclo (coach crisis).
+    coverageBoost: v.optional(
+      v.object({
+        needs: v.number(),
+        wants: v.number(),
+      }),
+    ),
   }).index("by_profile_status", ["profileId", "status"]),
 
   // SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -108,6 +116,8 @@ export const appTables = {
     // P1-1: cobertura persistida cuando los incomeEvents del ciclo lo financian.
     coveredAt: v.optional(v.number()),
     coveredBy: v.optional(v.array(v.id("incomeEvents"))),
+    // P1-10: pospuesto solo para el ciclo activo (coach crisis).
+    postponedForCycleId: v.optional(v.id("financialCycles")),
   })
     .index("by_profileId", ["profileId"])
     .index("by_profile_dueDay", ["profileId", "dueDay"]),

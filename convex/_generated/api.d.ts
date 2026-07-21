@@ -18,6 +18,7 @@ import type * as incomeEvents from "../incomeEvents.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
 import type * as lib_coachState from "../lib/coachState.js";
 import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
+import type * as lib_crisisResolution from "../lib/crisisResolution.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
 import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   "lib/budgetMath": typeof lib_budgetMath;
   "lib/coachState": typeof lib_coachState;
   "lib/commitmentCoverage": typeof lib_commitmentCoverage;
+  "lib/crisisResolution": typeof lib_crisisResolution;
   "lib/dashboardMath": typeof lib_dashboardMath;
   "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;

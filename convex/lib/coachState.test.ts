@@ -72,10 +72,30 @@ describe("resolveCoachPresentation", () => {
     const result = resolveCoachPresentation({
       ...base,
       uncoveredCommitmentsCents: 18_000,
+      crisisOptions: [
+        {
+          id: "cover_from_savings",
+          title: "Tomar del Ahorro del ciclo",
+          subtitle: "No toca tu Fondo de emergencia",
+          transferTotal: 18_000,
+        },
+      ],
     });
 
     expect(result?.kind).toBe("crisis");
     expect(result?.message).toBe(buildCrisisCoachMessage(18_000, "S/"));
+    expect(result?.crisisOptions).toHaveLength(1);
+  });
+
+  it("downgrades crisis to warning when snoozed", () => {
+    const result = resolveCoachPresentation({
+      ...base,
+      uncoveredCommitmentsCents: 18_000,
+      crisisSnoozed: true,
+    });
+
+    expect(result?.kind).toBe("warning");
+    expect(result?.message).toBe(buildWarningCoachMessage());
   });
 
   it("returns crisis when compliance failed even without uncovered commitments", () => {

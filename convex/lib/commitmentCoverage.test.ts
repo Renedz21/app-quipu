@@ -188,6 +188,47 @@ describe("computeCommitmentCoverage", () => {
     expect(result.status).toBe("not-started");
     expect(result.covered).toBe(0);
   });
+
+  it("applies coverage boost before income cascade", () => {
+    const rent = commitment({ id: "rent", amount: 80_000, dueDay: 8 });
+
+    const cascade = computeAllCommitmentCoverage({
+      commitments: [rent],
+      cycle: CYCLE,
+      incomeEvents: [],
+      now: Date.parse("2026-07-06T12:00:00-05:00"),
+      coverageBoost: { needs: 80_000, wants: 0 },
+    });
+
+    expect(cascade.get("rent")).toMatchObject({
+      covered: 80_000,
+      remaining: 0,
+      status: "covered",
+    });
+  });
+
+  it("excludes postponed commitments from uncovered totals", () => {
+    const spotify = commitment({
+      id: "spotify",
+      amount: 2_400,
+      envelope: "wants",
+      dueDay: 18,
+    });
+
+    const cascade = computeAllCommitmentCoverage({
+      commitments: [spotify],
+      cycle: CYCLE,
+      incomeEvents: [],
+      now: Date.parse("2026-07-06T12:00:00-05:00"),
+      excludedCommitmentIds: new Set(["spotify"]),
+    });
+
+    expect(cascade.get("spotify")).toMatchObject({
+      covered: 0,
+      remaining: 0,
+      status: "covered",
+    });
+  });
 });
 
 describe("mapCoverageStatusToDashboard", () => {

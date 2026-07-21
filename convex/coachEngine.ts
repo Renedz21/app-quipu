@@ -3,10 +3,13 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { suggestRescueTransfer } from "./lib/budgetMath";
+import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
+import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
 import {
   resolveCoachPresentation,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
+import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import {
   computeRescueEnvelopePatches,
   validateRescueTransferApply,
@@ -15,6 +18,7 @@ import {
 export { resolveCoachPresentation, WANTS_OVERFLOW_EVENT };
 
 const FREEZE_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
+const CRISIS_SNOOZE_MS = 24 * 60 * 60 * 1000;
 
 async function getOwnedPendingInteraction(
   ctx: MutationCtx,
@@ -67,6 +71,122 @@ async function getCycleEnvelopes(
   ]);
 
   return { savings, wants };
+}
+
+async function getOwnedProfileAndCycle(ctx: MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new ConvexError({
+      code: "UNAUTHORIZED",
+      message: "Debes iniciar sesión con tu Passkey o credencial.",
+    });
+  }
+
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+    .unique();
+  if (!profile) {
+    throw new ConvexError({
+      code: "NOT_FOUND",
+      message: "No encontramos tu perfil.",
+    });
+  }
+
+  const cycle = await ctx.db
+    .query("financialCycles")
+    .withIndex("by_profile_status", (q) =>
+      q.eq("profileId", profile._id).eq("status", "active"),
+    )
+    .unique();
+  if (!cycle) {
+    throw new ConvexError({
+      code: "NOT_FOUND",
+      message: "No hay un ciclo activo.",
+    });
+  }
+
+  return { profile, cycle };
+}
+
+async function getCycleCoverageContext(
+  ctx: MutationCtx,
+  profileId: Id<"profiles">,
+  cycleId: Id<"financialCycles">,
+  now: number,
+) {
+  const cycle = await ctx.db.get(cycleId);
+  if (!cycle) {
+    throw new ConvexError({
+      code: "NOT_FOUND",
+      message: "No encontramos el ciclo activo.",
+    });
+  }
+
+  const [commitmentsRaw, incomeEvents, envelopesRaw] = await Promise.all([
+    ctx.db
+      .query("fixedCommitments")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+      .collect(),
+    ctx.db
+      .query("incomeEvents")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
+      .collect(),
+    ctx.db
+      .query("envelopes")
+      .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
+      .collect(),
+  ]);
+
+  const excludedCommitmentIds = new Set(
+    commitmentsRaw
+      .filter((commitment) => commitment.postponedForCycleId === cycleId)
+      .map((commitment) => commitment._id),
+  );
+
+  const coverageById = computeAllCommitmentCoverage({
+    commitments: commitmentsRaw.map((commitment) => ({
+      id: commitment._id,
+      amount: commitment.amount,
+      envelope: commitment.envelope,
+      dueDay: commitment.dueDay,
+    })),
+    cycle: {
+      startDate: cycle.startDate,
+      endDate: cycle.endDate,
+    },
+    incomeEvents: incomeEvents.map((event) => ({
+      id: event._id,
+      occurredAt: event.occurredAt,
+      distributionApplied: event.distributionApplied,
+    })),
+    now,
+    coverageBoost: cycle.coverageBoost ?? undefined,
+    excludedCommitmentIds,
+  });
+
+  const commitments = commitmentsRaw.map((commitment) => {
+    const coverage = coverageById.get(commitment._id);
+    return {
+      id: commitment._id,
+      name: commitment.name,
+      amount: commitment.amount,
+      remaining: coverage?.remaining ?? commitment.amount,
+      envelope: commitment.envelope,
+      dueDay: commitment.dueDay,
+      cascadeStatus: coverage?.status ?? ("not-started" as const),
+    };
+  });
+
+  const envelopeByType = new Map(envelopesRaw.map((envelope) => [envelope.type, envelope]));
+
+  return {
+    cycle,
+    commitments,
+    savingsEnvelope: envelopeByType.get("savings"),
+    needsEnvelope: envelopeByType.get("needs"),
+    wantsEnvelope: envelopeByType.get("wants"),
+  };
 }
 
 function buildRescueConfirmMessage(
@@ -294,6 +414,125 @@ export const dismissRescueSuggestion = mutation({
 
     await ctx.db.patch(interactionId, {
       status: "resolved",
+    });
+
+    return { success: true };
+  },
+});
+
+export const applyCoverFromCycleSavings = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
+    const context = await getCycleCoverageContext(ctx, profile._id, cycle._id, now);
+
+    if (!context.savingsEnvelope || !context.needsEnvelope || !context.wantsEnvelope) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "No se encontraron los sobres del ciclo actual.",
+      });
+    }
+
+    const uncoveredByEnvelope = context.commitments.reduce(
+      (acc, commitment) => {
+        if (commitment.remaining <= 0) return acc;
+        acc[commitment.envelope] += commitment.remaining;
+        return acc;
+      },
+      { needs: 0, wants: 0 },
+    );
+
+    const split = computeCoverFromSavingsSplit(
+      uncoveredByEnvelope,
+      context.savingsEnvelope.remainingAmount,
+    );
+
+    if (split.total <= 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Ya no hay saldo en Ahorro del ciclo para cubrir compromisos.",
+      });
+    }
+
+    const nextBoost = {
+      needs: (cycle.coverageBoost?.needs ?? 0) + split.needs,
+      wants: (cycle.coverageBoost?.wants ?? 0) + split.wants,
+    };
+
+    await ctx.db.patch(context.savingsEnvelope._id, {
+      remainingAmount: context.savingsEnvelope.remainingAmount - split.total,
+    });
+    await ctx.db.patch(context.needsEnvelope._id, {
+      remainingAmount: context.needsEnvelope.remainingAmount + split.needs,
+    });
+    await ctx.db.patch(context.wantsEnvelope._id, {
+      remainingAmount: context.wantsEnvelope.remainingAmount + split.wants,
+    });
+    await ctx.db.patch(cycle._id, {
+      coverageBoost: nextBoost,
+    });
+
+    await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycle._id, now);
+
+    return {
+      success: true,
+      transferTotal: split.total,
+      needsBoost: split.needs,
+      wantsBoost: split.wants,
+    };
+  },
+});
+
+export const postponeCommitmentForCycle = mutation({
+  args: {
+    commitmentId: v.id("fixedCommitments"),
+  },
+  handler: async (ctx, { commitmentId }) => {
+    const now = Date.now();
+    const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
+    const commitment = await ctx.db.get(commitmentId);
+
+    if (!commitment || commitment.profileId !== profile._id) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "No encontramos ese compromiso.",
+      });
+    }
+
+    const context = await getCycleCoverageContext(ctx, profile._id, cycle._id, now);
+    const target = context.commitments.find((item) => item.id === commitmentId);
+
+    if (!target || target.remaining <= 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Este compromiso ya está cubierto en el ciclo actual.",
+      });
+    }
+
+    await ctx.db.patch(commitmentId, {
+      postponedForCycleId: cycle._id,
+      coveredAt: now,
+      coveredBy: [],
+    });
+
+    await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycle._id, now);
+
+    return {
+      success: true,
+      commitmentId,
+      freedAmount: target.remaining,
+    };
+  },
+});
+
+export const snoozeCrisisCoach = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await getOwnedProfileAndCycle(ctx);
+
+    await ctx.db.patch(profile._id, {
+      coachCrisisSnoozedUntil: Date.now() + CRISIS_SNOOZE_MS,
     });
 
     return { success: true };

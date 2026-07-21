@@ -1,13 +1,21 @@
 import { api } from "@/convex/_generated/api";
 import { expect, test } from "./fixtures/smoke";
 import {
+  applyCoverFromCycleSavings,
   applyRescueTransfer,
   dismissRescueSuggestion,
+  getDashboardCoach,
   getEnvelopeBalances,
+  postponeCommitmentForCycle,
   registerWantsExpense,
   resolveCoachInteraction,
   seedActiveCycle,
+  seedCrisisFromFailedCompliance,
+  seedCrisisFromUncoveredCommitment,
   seedOnboardedUser,
+  seedWarningCoachState,
+  snoozeCrisisCoach,
+  createFixedCommitment,
 } from "./helpers/convex-client";
 
 test.describe("P0 smoke @smoke", () => {
@@ -210,6 +218,95 @@ test.describe("P0 smoke @smoke", () => {
       {},
     );
     expect(afterNudge).toBeNull();
+  });
+
+  test("warning coach CTA Ajustar ciclo navega a registrar ingreso", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    await seedWarningCoachState(convexClient);
+
+    await authedPage.goto("/dashboard");
+
+    await expect(authedPage.getByText("Advertencia")).toBeVisible();
+    await authedPage.getByRole("button", { name: "Ajustar ciclo" }).click();
+
+    await expect(authedPage).toHaveURL(/\/income\/register$/);
+    await expect(
+      authedPage.getByRole("heading", { name: "Registrar ingreso" }),
+    ).toBeVisible();
+  });
+
+  test("snoozeCrisisCoach degrada crisis a advertencia", {
+    tag: "@smoke",
+  }, async ({ convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    await seedCrisisFromFailedCompliance(convexClient);
+
+    const before = await getDashboardCoach(convexClient);
+    expect(before?.kind).toBe("crisis");
+
+    const result = await snoozeCrisisCoach(convexClient);
+    expect(result.success).toBe(true);
+
+    const after = await getDashboardCoach(convexClient);
+    expect(after?.kind).toBe("warning");
+  });
+
+  test("applyCoverFromCycleSavings mueve saldo de Ahorro a Necesidades", {
+    tag: "@smoke",
+  }, async ({ convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    await seedCrisisFromUncoveredCommitment(convexClient);
+
+    const beforeCoach = await getDashboardCoach(convexClient);
+    expect(beforeCoach?.kind).toBe("crisis");
+    expect(beforeCoach?.crisisOptions?.some((o) => o.id === "cover_from_savings")).toBe(
+      true,
+    );
+
+    const beforeBalances = await getEnvelopeBalances(convexClient);
+    expect(beforeBalances?.savings).toBeGreaterThan(0);
+
+    const result = await applyCoverFromCycleSavings(convexClient);
+    expect(result.success).toBe(true);
+    expect(result.transferTotal).toBeGreaterThan(0);
+
+    const afterBalances = await getEnvelopeBalances(convexClient);
+    expect(afterBalances?.savings).toBe(
+      (beforeBalances?.savings ?? 0) - (result.transferTotal ?? 0),
+    );
+    expect(afterBalances?.needs).toBe(
+      (beforeBalances?.needs ?? 0) + (result.needsBoost ?? 0),
+    );
+  });
+
+  test("postponeCommitmentForCycle libera compromiso wants descubierto", {
+    tag: "@smoke",
+  }, async ({ convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    const commitmentId = await createFixedCommitment(convexClient, {
+      name: "Spotify smoke",
+      amount: 35_000,
+      envelope: "wants",
+      dueDay: 18,
+    });
+    await seedActiveCycle(convexClient, 100_000);
+    await registerWantsExpense(convexClient, 100, "Smoke exit early cycle");
+
+    const beforeCoach = await getDashboardCoach(convexClient);
+    expect(beforeCoach?.kind).toBe("crisis");
+    const postponeOption = beforeCoach?.crisisOptions?.find((option) =>
+      option.id.startsWith("postpone_"),
+    );
+    expect(postponeOption?.commitmentId).toBe(commitmentId);
+
+    const result = await postponeCommitmentForCycle(convexClient, commitmentId);
+    expect(result.success).toBe(true);
+    expect(result.freedAmount).toBeGreaterThan(0);
+
+    const afterCoach = await getDashboardCoach(convexClient);
+    expect(afterCoach?.kind).not.toBe("crisis");
   });
 
   test("dismissRescueSuggestion no modifica sobres", {

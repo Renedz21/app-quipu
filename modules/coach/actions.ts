@@ -16,6 +16,18 @@ export function useDismissRescueSuggestion() {
   return useMutation(api.coachEngine.dismissRescueSuggestion);
 }
 
+export function useApplyCoverFromCycleSavings() {
+  return useMutation(api.coachEngine.applyCoverFromCycleSavings);
+}
+
+export function usePostponeCommitmentForCycle() {
+  return useMutation(api.coachEngine.postponeCommitmentForCycle);
+}
+
+export function useSnoozeCrisisCoach() {
+  return useMutation(api.coachEngine.snoozeCrisisCoach);
+}
+
 export type ResolveNudgeOptionId = "freeze_wants" | "suggest_rescue" | "ignore";
 
 export async function resolveNudgeAction(

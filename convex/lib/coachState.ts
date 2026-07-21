@@ -30,6 +30,8 @@ export type ResolveCoachInput = {
   profileName: string;
   surplusCents: number;
   currencySymbol?: string;
+  crisisSnoozed?: boolean;
+  crisisOptions?: CrisisCoachOptionSlice[];
 };
 
 export type CoachPresentation = {
@@ -37,7 +39,18 @@ export type CoachPresentation = {
   message: string;
   interactionId?: string;
   options?: Array<{ id: string; label: string }>;
+  crisisOptions?: Array<{
+    id: string;
+    title: string;
+    subtitle: string;
+    commitmentId?: string;
+    transferTotal?: number;
+  }>;
 };
+
+export type CrisisCoachOptionSlice = NonNullable<
+  CoachPresentation["crisisOptions"]
+>[number];
 
 export function computeUncoveredCommitmentsCents(
   commitments: Array<{
@@ -105,7 +118,18 @@ export function resolveCoachPresentation(
     profileName,
     surplusCents,
     currencySymbol = "S/",
+    crisisSnoozed = false,
+    crisisOptions = [],
   } = input;
+
+  const buildCrisisPresentation = (): CoachPresentation => ({
+    kind: "crisis",
+    message:
+      uncoveredCommitmentsCents > 0
+        ? buildCrisisCoachMessage(uncoveredCommitmentsCents, currencySymbol)
+        : buildEnvelopeCrisisMessage(),
+    crisisOptions,
+  });
 
   if (pendingCoach) {
     return {
@@ -124,23 +148,23 @@ export function resolveCoachPresentation(
   }
 
   if (compliance === "failed") {
-    return {
-      kind: "crisis",
-      message:
-        uncoveredCommitmentsCents > 0
-          ? buildCrisisCoachMessage(uncoveredCommitmentsCents, currencySymbol)
-          : buildEnvelopeCrisisMessage(),
-    };
+    if (crisisSnoozed) {
+      return {
+        kind: "warning",
+        message: buildWarningCoachMessage(),
+      };
+    }
+    return buildCrisisPresentation();
   }
 
   if (uncoveredCommitmentsCents > 0) {
-    return {
-      kind: "crisis",
-      message: buildCrisisCoachMessage(
-        uncoveredCommitmentsCents,
-        currencySymbol,
-      ),
-    };
+    if (crisisSnoozed) {
+      return {
+        kind: "warning",
+        message: buildWarningCoachMessage(),
+      };
+    }
+    return buildCrisisPresentation();
   }
 
   if (compliance === "warning") {

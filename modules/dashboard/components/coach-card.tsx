@@ -1,17 +1,18 @@
 "use client";
 
+import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import { Button } from "@/shared/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
-  COACH_CRISIS_LATER_CTA,
-  COACH_CTA_HINT,
   COACH_EARLY_REGISTER_CTA,
   COACH_EARLY_VIEW_SYSTEM_CTA,
   COACH_KIND_LABELS,
   COACH_WARNING_ADJUST_CTA,
   COACH_WARNING_VIEW_CTA,
+  DASHBOARD_ENVELOPES_SECTION_ID,
 } from "../constants";
 import type { DashboardCoach } from "../types";
 
@@ -69,7 +70,14 @@ function coachIconClass(kind: DashboardCoach["kind"]) {
   }
 }
 
+function scrollToEnvelopes() {
+  document
+    .getElementById(DASHBOARD_ENVELOPES_SECTION_ID)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
+  const router = useRouter();
   const { open } = useExpenseRegister();
   const isContigo = coach.kind === "contigo";
   const isWarning = coach.kind === "warning";
@@ -125,7 +133,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
             size="sm"
             variant="outline"
             disabled
-            title={COACH_CTA_HINT}
+            title="Próximamente"
             className="rounded-[11px] border-line bg-canvas/70 text-ink-secondary"
           >
             {COACH_EARLY_VIEW_SYSTEM_CTA}
@@ -138,8 +146,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
           <Button
             type="button"
             size="sm"
-            disabled
-            title={COACH_CTA_HINT}
+            onClick={() => router.push("/income/register")}
             className="rounded-[11px] bg-warning text-canvas hover:bg-warning/90"
           >
             {COACH_WARNING_ADJUST_CTA}
@@ -148,8 +155,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
             type="button"
             size="sm"
             variant="outline"
-            disabled
-            title={COACH_CTA_HINT}
+            onClick={scrollToEnvelopes}
             className="rounded-[11px] border-warning-border bg-canvas/70 text-warning-text"
           >
             {COACH_WARNING_VIEW_CTA}
@@ -168,18 +174,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       ) : null}
 
       {isCrisis ? (
-        <div className="mt-4">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled
-            title={COACH_CTA_HINT}
-            className="rounded-[11px] border-danger-line bg-canvas/70 text-danger-ink"
-          >
-            {COACH_CRISIS_LATER_CTA}
-          </Button>
-        </div>
+        <CoachCrisisActions options={coach.crisisOptions ?? []} />
       ) : null}
     </section>
   );

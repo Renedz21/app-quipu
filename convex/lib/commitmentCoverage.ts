@@ -98,15 +98,43 @@ function filterIncomeEventsInCycle(
     .sort((a, b) => a.occurredAt - b.occurredAt);
 }
 
+export type CoverageBoost = {
+  needs: number;
+  wants: number;
+};
+
 export function computeAllCommitmentCoverage(params: {
   commitments: CommitmentSlice[];
   cycle: CycleSlice;
   incomeEvents: IncomeEventSlice[];
   now: number;
+  coverageBoost?: CoverageBoost;
+  excludedCommitmentIds?: ReadonlySet<string>;
 }): Map<string, CommitmentCoverageResult> {
-  const { commitments, cycle, incomeEvents, now } = params;
+  const {
+    commitments,
+    cycle,
+    incomeEvents,
+    now,
+    coverageBoost,
+    excludedCommitmentIds,
+  } = params;
   const results = new Map<string, CommitmentCoverageResult>();
   const eventsInWindow = filterIncomeEventsInCycle(incomeEvents, cycle);
+  const activeCommitments = commitments.filter(
+    (commitment) => !excludedCommitmentIds?.has(commitment.id),
+  );
+
+  for (const commitment of commitments) {
+    if (excludedCommitmentIds?.has(commitment.id)) {
+      results.set(commitment.id, {
+        covered: 0,
+        remaining: 0,
+        fundingEvents: [],
+        status: "covered",
+      });
+    }
+  }
 
   for (const envelope of ["needs", "wants"] as const) {
     const eventRemaining = new Map<string, number>();
@@ -118,7 +146,12 @@ export function computeAllCommitmentCoverage(params: {
       }
     }
 
-    const envelopeCommitments = commitments
+    const boostAmount = coverageBoost?.[envelope] ?? 0;
+    if (boostAmount > 0) {
+      eventRemaining.set(`__boost_${envelope}__`, boostAmount);
+    }
+
+    const envelopeCommitments = activeCommitments
       .filter((commitment) => commitment.envelope === envelope)
       .sort((a, b) => {
         const dueDiff = a.dueDay - b.dueDay;
@@ -157,7 +190,7 @@ export function computeAllCommitmentCoverage(params: {
     }
   }
 
-  for (const commitment of commitments) {
+  for (const commitment of activeCommitments) {
     if (results.has(commitment.id)) continue;
 
     results.set(commitment.id, {

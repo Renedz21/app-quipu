@@ -99,3 +99,73 @@ export async function triggerCoachNudge(client: ConvexHttpClient) {
   await registerWantsExpense(client, 10_000, "Smoke burn 2");
   return client.query(api.coachEngine.getActiveNudge, {});
 }
+
+export async function createFixedCommitment(
+  client: ConvexHttpClient,
+  params: {
+    name: string;
+    amount: number;
+    envelope: "needs" | "wants";
+    dueDay: number;
+  },
+) {
+  return client.mutation(api.fixedCommitments.createFixedCommitment, params);
+}
+
+export async function getDashboardCoach(client: ConvexHttpClient) {
+  const summary = await client.query(api.dashboard.getSummary, {});
+  return summary?.coach ?? null;
+}
+
+export async function applyCoverFromCycleSavings(client: ConvexHttpClient) {
+  return client.mutation(api.coachEngine.applyCoverFromCycleSavings, {});
+}
+
+export async function postponeCommitmentForCycle(
+  client: ConvexHttpClient,
+  commitmentId: Id<"fixedCommitments">,
+) {
+  return client.mutation(api.coachEngine.postponeCommitmentForCycle, {
+    commitmentId,
+  });
+}
+
+export async function snoozeCrisisCoach(client: ConvexHttpClient) {
+  return client.mutation(api.coachEngine.snoozeCrisisCoach, {});
+}
+
+/** Overspend wants slightly to land in coach `warning` (not crisis). */
+/** Needs overspend within buffer - coach warning (no wants overflow nudge). */
+export async function seedWarningCoachState(client: ConvexHttpClient) {
+  await seedActiveCycle(client, 100_000);
+  await client.mutation(api.expenses.registerExpense, {
+    amount: 51_000,
+    description: "Smoke warning needs overspend",
+    envelopeType: "needs",
+  });
+}
+
+export async function seedCrisisFromUncoveredCommitment(
+  client: ConvexHttpClient,
+) {
+  await createFixedCommitment(client, {
+    name: "Alquiler smoke",
+    amount: 80_000,
+    envelope: "needs",
+    dueDay: 15,
+  });
+  await seedActiveCycle(client, 100_000);
+  await registerWantsExpense(client, 100, "Smoke exit early cycle");
+}
+
+/** Heavy wants overspend → coach `crisis` via failed compliance. */
+export async function seedCrisisFromFailedCompliance(
+  client: ConvexHttpClient,
+) {
+  await seedActiveCycle(client, 100_000);
+  await client.mutation(api.expenses.registerExpense, {
+    amount: 55_000,
+    description: "Smoke crisis needs overspend",
+    envelopeType: "needs",
+  });
+}

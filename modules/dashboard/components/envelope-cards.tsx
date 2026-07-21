@@ -8,6 +8,7 @@ import {
   ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,
   ENVELOPE_EARLY_SAVINGS_SUBCOPY,
   ENVELOPE_LABELS,
+  DASHBOARD_ENVELOPES_SECTION_ID,
 } from "../constants";
 import { clampPercent } from "../lib/dashboard-math";
 import type { DashboardEnvelope } from "../types";
@@ -53,9 +54,12 @@ export function EnvelopeCards({
   }
 
   return (
-    <section aria-labelledby="dashboard-envelopes">
+    <section
+      id={DASHBOARD_ENVELOPES_SECTION_ID}
+      aria-labelledby="dashboard-envelopes-heading"
+    >
       <EnvelopeSectionLabel />
-      <div id="dashboard-envelopes" className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-3">
         {envelopes.map((envelope) => {
           const styles = ENVELOPE_STYLES[envelope.type];
           const percent = clampPercent(envelope.percentRemaining);

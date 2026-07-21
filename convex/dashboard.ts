@@ -6,6 +6,7 @@ import {
   computeUncoveredCommitmentRemainingCents,
   mapCoverageStatusToDashboard,
 } from "./lib/commitmentCoverage";
+import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
   resolveCoachPresentation,
 } from "./lib/coachState";
@@ -221,6 +222,14 @@ export const getSummary = query({
         distributionApplied: income.distributionApplied,
       })),
       now,
+      coverageBoost: activeCycle.coverageBoost ?? undefined,
+      excludedCommitmentIds: new Set(
+        commitmentsRaw
+          .filter(
+            (commitment) => commitment.postponedForCycleId === activeCycle._id,
+          )
+          .map((commitment) => commitment._id),
+      ),
     });
 
     const commitments = sortCommitmentsByDue(
@@ -264,6 +273,21 @@ export const getSummary = query({
       })),
     );
 
+    const savingsRemaining =
+      envelopeByType.get("savings")?.remainingAmount ?? 0;
+    const crisisOptions = buildCrisisCoachOptions({
+      commitments: commitments.map((commitment) => ({
+        id: commitment.id,
+        name: commitment.name,
+        amount: commitment.amount,
+        remaining: commitment.remaining,
+        envelope: commitment.envelope,
+        dueDay: commitment.dueDay,
+      })),
+      savingsRemaining,
+      currencySymbol: profile.currencySymbol,
+    });
+
     const coachPresentation = resolveCoachPresentation({
       pendingCoach: pendingCoach
         ? {
@@ -279,6 +303,10 @@ export const getSummary = query({
       profileName: profile.name,
       surplusCents: computeSurplusProjection(envelopes),
       currencySymbol: profile.currencySymbol,
+      crisisSnoozed:
+        profile.coachCrisisSnoozedUntil != null &&
+        profile.coachCrisisSnoozedUntil > now,
+      crisisOptions,
     });
 
     const coach = {
@@ -288,6 +316,7 @@ export const getSummary = query({
         | Id<"coachInteractions">
         | undefined,
       options: coachPresentation.options,
+      crisisOptions: coachPresentation.crisisOptions,
       rescueSuggestion: pendingCoach?.rescueSuggestion ?? undefined,
       awaitingRescueConfirmation:
         pendingCoach?.selectedOptionId === "suggest_rescue" &&

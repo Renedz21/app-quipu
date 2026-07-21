@@ -16,6 +16,7 @@ import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
+import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as profiles from "../profiles.js";
 
 import type {
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   incomeEvents: typeof incomeEvents;
   "lib/budgetMath": typeof lib_budgetMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
+  "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   profiles: typeof profiles;
 }>;
 

@@ -186,7 +186,7 @@ export const createIncomeEvent = mutation({
       });
     }
     await ctx.db.patch(cycle._id, {
-      totalIncomeReceived: (cycle.totalIncomeReceived ?? 0) + args.amount,
+      totalIncomeReceived: cycle.totalIncomeReceived + args.amount,
     });
 
     return { eventId, cycleId, isNewCycle };
@@ -249,7 +249,7 @@ export const deleteIncomeEvent = mutation({
 
     // Reverse the cycle's total.
     await ctx.db.patch(cycle._id, {
-      totalIncomeReceived: (cycle.totalIncomeReceived ?? 0) - event.amount,
+      totalIncomeReceived: cycle.totalIncomeReceived - event.amount,
     });
 
     await ctx.db.delete(args.eventId);

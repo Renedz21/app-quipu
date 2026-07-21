@@ -23,8 +23,10 @@ export const appTables = {
     currencySymbol: v.string(), // e.g., "S/"
 
     // v2.5: how the user organizes their income cycle
-    incomeModel: v.optional(
-      v.union(v.literal("fixed"), v.literal("variable"), v.literal("mixed")),
+    incomeModel: v.union(
+      v.literal("fixed"),
+      v.literal("variable"),
+      v.literal("mixed"),
     ),
     cycleDurationDays: v.optional(v.number()), // 15 or 30 for variable income
     mixedFixedAmount: v.optional(v.number()), // centimos, estimado de la parte fija en modelo mixed
@@ -66,7 +68,7 @@ export const appTables = {
     endDate: v.number(), // Próxima fecha estimada de recarga
     status: v.union(v.literal("active"), v.literal("closed")),
     // v2.5: unified total, snapshot materializado de los incomeEvents del ciclo
-    totalIncomeReceived: v.optional(v.number()),
+    totalIncomeReceived: v.number(),
   }).index("by_profile_status", ["profileId", "status"]),
 
   // SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -102,9 +104,7 @@ export const appTables = {
     amount: v.number(),
     envelope: v.union(v.literal("needs"), v.literal("wants")),
     // v2.5: día del mes (Lima) en que se descuenta el compromiso. 1-31.
-    // Endurecer a required cuando P0-3 cierre (después de que el wizard esté
-    // completo y todos los profiles nuevos lo traigan seteado).
-    dueDay: v.optional(v.number()),
+    dueDay: v.number(),
   })
     .index("by_profileId", ["profileId"])
     .index("by_profile_dueDay", ["profileId", "dueDay"]),

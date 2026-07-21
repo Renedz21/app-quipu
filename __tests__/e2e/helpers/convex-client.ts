@@ -9,7 +9,10 @@ export function createAuthenticatedConvexClient(token: string) {
   return client;
 }
 
-export async function seedOnboardedUser(client: ConvexHttpClient) {
+export async function seedOnboardedUser(
+  client: ConvexHttpClient,
+  options?: { plan?: "free" | "premium" },
+) {
   await client.mutation(api.profiles.createProfile, {
     country: "PE",
     currencyCode: "PEN",
@@ -20,6 +23,7 @@ export async function seedOnboardedUser(client: ConvexHttpClient) {
     allocationNeeds: 50,
     allocationWants: 30,
     allocationSavings: 20,
+    plan: options?.plan,
   });
 }
 
@@ -56,6 +60,37 @@ export async function resolveCoachInteraction(
     interactionId,
     optionId,
   });
+}
+
+export async function applyRescueTransfer(
+  client: ConvexHttpClient,
+  interactionId: Id<"coachInteractions">,
+) {
+  return client.mutation(api.coachEngine.applyRescueTransfer, {
+    interactionId,
+  });
+}
+
+export async function dismissRescueSuggestion(
+  client: ConvexHttpClient,
+  interactionId: Id<"coachInteractions">,
+) {
+  return client.mutation(api.coachEngine.dismissRescueSuggestion, {
+    interactionId,
+  });
+}
+
+export async function getEnvelopeBalances(client: ConvexHttpClient) {
+  const summary = await client.query(api.dashboard.getSummary, {});
+  if (!summary?.envelopes) return null;
+  const byType = Object.fromEntries(
+    summary.envelopes.map((envelope) => [envelope.type, envelope.remainingAmount]),
+  );
+  return {
+    needs: byType.needs ?? 0,
+    wants: byType.wants ?? 0,
+    savings: byType.savings ?? 0,
+  };
 }
 
 export async function triggerCoachNudge(client: ConvexHttpClient) {

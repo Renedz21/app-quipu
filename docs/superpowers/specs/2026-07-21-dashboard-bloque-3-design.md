@@ -34,6 +34,20 @@
 - Sin sobres, coach ni movimientos.
 - Compromisos del onboarding sí se listan si existen.
 
+## Estado vacío temprano (ciclo activo, sin gastos)
+
+Cuando hay ciclo + sobres pero aún no hay gastos registrados (`detectEarlyCycle`):
+sin gastos en el ciclo y (`daysElapsed <= 1` o `movementCount === 0`).
+
+- **Detección:** `convex/lib/dashboardMath.ts` → `detectEarlyCycle`; expuesto como `isEarlyCycle` en `getSummary`.
+- **Hero:** mantiene "Disponible hoy" + monto diario; copy "Tu presupuesto ya está repartido…"; badge **Recién empiezas** (`starting`).
+- **Sobres:** montos asignados completos; subcopy needs/wants "completo · aún sin gastos"; savings "se aparta al final del ciclo".
+- **Compromisos vacíos:** card con icono calendario, copy explicativo, CTA "+ Añadir compromiso" (placeholder).
+- **Coach:** kind `contigo`, badge **Contigo**, mensaje bienvenida 50/30/20, CTAs "Registrar primer gasto" / "Ver mi sistema" (placeholder).
+- **Movimientos:** card borde punteado centrado; copy "Tu primer movimiento aparecerá aquí…" (oculta ingresos del ciclo en esta fase).
+
+El estado **sin ciclo activo** (`DashboardEmptyCycle`) no cambia.
+
 ## UI — 5 niveles (§3.7)
 
 1. **Hero** — Newsreader 64/34px, gradient `--qp-gradient`, badge, barra días. LCP + skeleton.

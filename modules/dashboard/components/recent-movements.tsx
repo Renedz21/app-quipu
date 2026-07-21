@@ -1,6 +1,7 @@
 import { formatLimaDateTime } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import {
+  MOVEMENTS_EMPTY_BODY,
   MOVEMENTS_SECTION_LABEL,
   MOVEMENTS_VIEW_ALL,
   MOVEMENTS_VIEW_ALL_HINT,
@@ -10,6 +11,7 @@ import type { DashboardMovement } from "../types";
 type Props = {
   movements: DashboardMovement[];
   currencyCode: string;
+  isEarlyCycle?: boolean;
 };
 
 const MOVEMENT_DOT = {
@@ -29,7 +31,29 @@ function movementDotClass(movement: DashboardMovement): string {
   return MOVEMENT_DOT.expense.default;
 }
 
-export function RecentMovements({ movements, currencyCode }: Props) {
+function MovementsEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center px-4 py-8 text-center md:px-6 md:py-10">
+      <span
+        className="mb-3 flex size-10 items-center justify-center rounded-full border border-dashed border-line bg-surface-warm"
+        aria-hidden
+      >
+        <span className="size-2 rounded-full bg-mute/70" />
+      </span>
+      <p className="max-w-sm text-sm leading-relaxed text-mute">
+        {MOVEMENTS_EMPTY_BODY}
+      </p>
+    </div>
+  );
+}
+
+export function RecentMovements({
+  movements,
+  currencyCode,
+  isEarlyCycle = false,
+}: Props) {
+  const showEmptyState = isEarlyCycle || movements.length === 0;
+
   return (
     <section aria-labelledby="dashboard-movements">
       <div className="mb-2 flex items-center gap-2">
@@ -49,11 +73,15 @@ export function RecentMovements({ movements, currencyCode }: Props) {
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-[14px] border border-line bg-card">
-        {movements.length === 0 ? (
-          <p className="px-4 py-5 text-sm text-mute">
-            Aún no hay movimientos en este ciclo.
-          </p>
+      <div
+        className={`overflow-hidden rounded-[14px] bg-card ${
+          showEmptyState
+            ? "border border-dashed border-line"
+            : "border border-line"
+        }`}
+      >
+        {showEmptyState ? (
+          <MovementsEmptyState />
         ) : (
           <ul>
             {movements.map((movement, index) => (

@@ -66,6 +66,7 @@
   --color-faint: var(--qp-faint);
   --color-faint-soft: var(--qp-faint-soft);
   --color-line: var(--qp-line);
+  --color-line-strong: var(--qp-line-strong);
   --color-line-soft: var(--qp-line-soft);
   --color-line-muted: var(--qp-line-muted);
   --color-line-section: var(--qp-line-section);
@@ -102,7 +103,7 @@
   --color-clay: var(--qp-clay);
   --color-clay-soft: var(--qp-clay-soft);
 
-  /* Error */
+  /* Error / crisis (terracota §3.3) */
   --color-danger: var(--danger);
   --color-danger-line: var(--danger-line);
   --color-danger-bg: var(--danger-bg);
@@ -110,6 +111,12 @@
   --color-danger-banner-line: var(--danger-banner-line);
   --color-danger-ink: var(--danger-ink);
   --color-danger-text: var(--danger-text);
+
+  /* Advertencia (ámbar §3.3) */
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-warning-text: var(--warning-text);
 
   /* Temporales diseño */
   --color-suggested-bg: var(--suggested-bg);
@@ -127,13 +134,18 @@
  * Stay hardcoded (no dark mode switching needed).
  */
 @theme {
+  --shadow-sm: 0 1px 2px rgba(35, 32, 28, 0.03);
+  --shadow-md: 0 2px 4px rgba(35, 32, 28, 0.05);
   --shadow-card: 0 22px 55px -30px rgba(35, 32, 28, 0.4), 0 2px 4px rgba(35, 32, 28, 0.05);
   --shadow-card-header: 0 24px 60px -30px rgba(35, 32, 28, 0.3), 0 2px 4px rgba(35, 32, 28, 0.04);
   --shadow-dashboard: 0 26px 60px -30px rgba(35, 32, 28, 0.42), 0 2px 4px rgba(35, 32, 28, 0.05);
   --shadow-mobile: 0 26px 60px -28px rgba(35, 32, 28, 0.55);
   --shadow-modal: 0 40px 90px -25px rgba(0, 0, 0, 0.5);
+  --shadow-sheet: 0 -20px 50px -20px rgba(0, 0, 0, 0.35);
   --shadow-overlay: rgba(35, 32, 28, 0.34);
   --shadow-glow: 0 14px 34px -14px rgba(60, 125, 110, 0.7);
+  --shadow-amber: 0 8px 24px -14px rgba(120, 90, 30, 0.3);
+  --shadow-crisis: 0 16px 40px -18px rgba(176, 104, 90, 0.4);
   --shadow-shield: 0 16px 40px -20px rgba(60, 125, 110, 0.5);
   --shadow-fab: 0 12px 30px -8px rgba(35, 32, 28, 0.6);
 
@@ -173,6 +185,7 @@
   --qp-faint: oklch(0.7088 0.0122 71.85);
   --qp-faint-soft: oklch(0.7404 0.0145 78.24);
   --qp-line: oklch(0.8962 0.0121 79.78);
+  --qp-line-strong: oklch(0.9127 0.0118 84.57);
   --qp-line-soft: oklch(0.9412 0.0103 81.79);
   --qp-line-muted: oklch(0.9239 0.0109 76.6);
   --qp-line-section: oklch(0.8931 0.0121 79.78);
@@ -216,6 +229,31 @@
   --danger-ink: oklch(0.4436 0.0863 33.35);
   --danger-text: oklch(0.5267 0.0839 32.85);
 
+  /* §3.3 estados — advertencia (ámbar) */
+  --warning: oklch(0.6993 0.1078 73.48);
+  --warning-bg: oklch(0.9574 0.0278 90.48);
+  --warning-border: oklch(0.8931 0.0579 88.17);
+  --warning-text: oklch(0.4582 0.0776 72.48);
+
+  /* §3.3 aliases — theme switcher intercambia --qp / --qp-deep / … */
+  --qpA: var(--qp);
+  --qpB: var(--qp-deep);
+  --qpC: var(--qp-text);
+  --qpSoft: var(--qp-moss);
+  --qpD: var(--qp-dot);
+  --qp01: var(--qp-tint);
+  --qp02: var(--qp-border);
+  --qp04: var(--qp-sidebar);
+  --qp05: var(--qp-selected);
+  --qp06: var(--qp-gradient);
+  --qp07: var(--qp-coach-from);
+  --qp08: var(--qp-coach-to);
+  --qp09: var(--qp-success);
+  --qp15: var(--qp-subtle-border);
+  --qp16: var(--qp-divider);
+  --qp17: var(--qp-track);
+  --qp25: var(--qp-track);
+
   --suggested-bg: oklch(0.9634 0.0096 72.66);
   --suggested-border: oklch(0.892 0.0276 72.79);
   --suggested-text: oklch(0.5491 0.0578 62.36);
@@ -250,6 +288,7 @@
   --qp-faint: oklch(0.5 0.005 80);
   --qp-faint-soft: oklch(0.45 0.005 80);
   --qp-line: oklch(0.3 0.005 80);
+  --qp-line-strong: oklch(0.32 0.005 80);
   --qp-line-soft: oklch(0.28 0.005 80);
   --qp-line-muted: oklch(0.26 0.005 80);
   --qp-line-section: oklch(0.25 0.005 80);
@@ -263,6 +302,11 @@
   --qp-moss-soft: oklch(0.3 0.05 150.44 / 0.2);
   --qp-clay: #c9a68a;
   --qp-clay-soft: oklch(0.3 0.05 75.64 / 0.2);
+
+  --warning: #d4a84a;
+  --warning-bg: oklch(0.25 0.03 90 / 0.25);
+  --warning-border: oklch(0.35 0.04 90 / 0.35);
+  --warning-text: #c9a86a;
 }
 
 @layer base {

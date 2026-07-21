@@ -50,6 +50,7 @@ export const createProfile = mutation({
     allocationNeeds: v.number(),
     allocationWants: v.number(),
     allocationSavings: v.number(),
+    plan: v.optional(v.union(v.literal("free"), v.literal("premium"))),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -136,7 +137,7 @@ export const createProfile = mutation({
       allocationWants: args.allocationWants,
       allocationSavings: args.allocationSavings,
       onboardingComplete: true,
-      plan: "free",
+      plan: args.plan ?? "free",
       createdAt: Date.now(),
     });
 

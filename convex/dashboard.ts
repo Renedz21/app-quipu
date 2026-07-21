@@ -1,17 +1,26 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import {
-  buildTranquilCoachMessage,
+  computeAllCommitmentCoverage,
+  computeCoverageProgressPercent,
+  computeUncoveredCommitmentRemainingCents,
+  mapCoverageStatusToDashboard,
+} from "./lib/commitmentCoverage";
+import {
+  resolveCoachPresentation,
+} from "./lib/coachState";
+import {
+  buildEarlyCycleHeroBody,
   buildValidationCopy,
-  computeCommitmentCoverageMvp,
   computeCycleDayMetrics,
   computeDailyAvailable,
   computeDisplayDailyCents,
   computeEnvelopePercentRemaining,
   computeSurplusProjection,
   daysUntilDueDay,
+  detectEarlyCycle,
   evaluateCycleCompliance,
-  mapComplianceToBadge,
+  resolveHeroStatusBadge,
   mergeRecentMovements,
   sortCommitmentsByDue,
 } from "./lib/dashboardMath";
@@ -64,7 +73,11 @@ export const getSummary = query({
           envelope: commitment.envelope,
           dueDay: commitment.dueDay,
           daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
+          covered: 0,
+          remaining: commitment.amount,
+          progressPercent: 0,
           coverageStatus: "uncovered" as const,
+          cascadeStatus: "not-started" as const,
         })),
       );
 
@@ -80,6 +93,7 @@ export const getSummary = query({
         commitments: emptyCommitments,
         coach: null,
         movements: [],
+        isEarlyCycle: false,
       };
     }
 
@@ -103,90 +117,11 @@ export const getSummary = query({
     );
 
     const compliance = evaluateCycleCompliance(envelopesRaw);
-    const statusBadge = mapComplianceToBadge(compliance);
     const wantsEnvelope = envelopeByType.get("wants");
     const dailyAvailableCents = computeDailyAvailable(
       wantsEnvelope?.remainingAmount ?? 0,
       cycleMetrics.daysRemaining,
     );
-
-    const hero = {
-      dailyAvailableCents,
-      displayDailyCents: computeDisplayDailyCents(dailyAvailableCents),
-      validationCopy: buildValidationCopy(statusBadge),
-      statusBadge,
-    };
-
-    const envelopes = ENVELOPE_ORDER.map((type) => {
-      const envelope = envelopeByType.get(type);
-      const remainingAmount = envelope?.remainingAmount ?? 0;
-      const allocatedAmount = envelope?.allocatedAmount ?? 0;
-      return {
-        type,
-        remainingAmount,
-        allocatedAmount,
-        percentRemaining: computeEnvelopePercentRemaining(
-          remainingAmount,
-          allocatedAmount,
-        ),
-      };
-    });
-
-    const commitments = sortCommitmentsByDue(
-      commitmentsRaw.map((commitment) => {
-        const envelopeRemaining =
-          envelopeByType.get(commitment.envelope)?.remainingAmount ?? 0;
-        return {
-          id: commitment._id,
-          name: commitment.name,
-          amount: commitment.amount,
-          envelope: commitment.envelope,
-          dueDay: commitment.dueDay,
-          daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
-          coverageStatus: computeCommitmentCoverageMvp(
-            commitment.amount,
-            envelopeRemaining,
-          ),
-        };
-      }),
-    );
-
-    const pendingCoach = await ctx.db
-      .query("coachInteractions")
-      .withIndex("by_profile_status", (q) =>
-        q.eq("profileId", profile._id).eq("status", "pending"),
-      )
-      .order("desc")
-      .first();
-
-    let coach: {
-      kind: "tranquil" | "crisis" | "suggestion";
-      message: string;
-      interactionId?: Id<"coachInteractions">;
-      options?: Array<{ id: string; label: string }>;
-    } | null = null;
-
-    if (pendingCoach) {
-      coach = {
-        kind:
-          pendingCoach.triggerEvent === "WANTS_OVERFLOW_60"
-            ? "crisis"
-            : "suggestion",
-        message: pendingCoach.initialNudge,
-        interactionId: pendingCoach._id,
-        options: pendingCoach.options,
-      };
-    } else {
-      const surplusCents = computeSurplusProjection(envelopes);
-      coach = {
-        kind: "tranquil",
-        message: buildTranquilCoachMessage(
-          profile.name,
-          surplusCents,
-          profile.currencySymbol,
-        ),
-      };
-    }
 
     const [expensesRaw, incomesForCycle] = await Promise.all([
       ctx.db
@@ -201,6 +136,8 @@ export const getSummary = query({
         .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
         .collect(),
     ]);
+
+    const expenseCount = expensesRaw.length;
 
     const incomesRaw = incomesForCycle
       .sort((a, b) => b.occurredAt - a.occurredAt)
@@ -232,6 +169,131 @@ export const getSummary = query({
         : undefined,
     }));
 
+    const isEarlyCycle = detectEarlyCycle({
+      expenseCount,
+      daysElapsed: cycleMetrics.daysElapsed,
+      movementCount: movements.length,
+    });
+
+    const statusBadge = resolveHeroStatusBadge(compliance, isEarlyCycle);
+
+    const hero = {
+      dailyAvailableCents,
+      displayDailyCents: computeDisplayDailyCents(dailyAvailableCents),
+      bodyCopy: isEarlyCycle
+        ? buildEarlyCycleHeroBody()
+        : undefined,
+      validationCopy: isEarlyCycle
+        ? undefined
+        : buildValidationCopy(statusBadge),
+      statusBadge,
+    };
+
+    const envelopes = ENVELOPE_ORDER.map((type) => {
+      const envelope = envelopeByType.get(type);
+      const remainingAmount = envelope?.remainingAmount ?? 0;
+      const allocatedAmount = envelope?.allocatedAmount ?? 0;
+      return {
+        type,
+        remainingAmount,
+        allocatedAmount,
+        percentRemaining: computeEnvelopePercentRemaining(
+          remainingAmount,
+          allocatedAmount,
+        ),
+      };
+    });
+
+    const commitmentCoverageById = computeAllCommitmentCoverage({
+      commitments: commitmentsRaw.map((commitment) => ({
+        id: commitment._id,
+        amount: commitment.amount,
+        envelope: commitment.envelope,
+        dueDay: commitment.dueDay,
+      })),
+      cycle: {
+        startDate: activeCycle.startDate,
+        endDate: activeCycle.endDate,
+      },
+      incomeEvents: incomesForCycle.map((income) => ({
+        id: income._id,
+        occurredAt: income.occurredAt,
+        distributionApplied: income.distributionApplied,
+      })),
+      now,
+    });
+
+    const commitments = sortCommitmentsByDue(
+      commitmentsRaw.map((commitment) => {
+        const coverage = commitmentCoverageById.get(commitment._id);
+        const covered = coverage?.covered ?? 0;
+        const remaining = coverage?.remaining ?? commitment.amount;
+        const cascadeStatus = coverage?.status ?? "not-started";
+
+        return {
+          id: commitment._id,
+          name: commitment.name,
+          amount: commitment.amount,
+          envelope: commitment.envelope,
+          dueDay: commitment.dueDay,
+          daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
+          covered,
+          remaining,
+          progressPercent: computeCoverageProgressPercent(
+            covered,
+            commitment.amount,
+          ),
+          coverageStatus: mapCoverageStatusToDashboard(cascadeStatus),
+          cascadeStatus,
+        };
+      }),
+    );
+
+    const pendingCoach = await ctx.db
+      .query("coachInteractions")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "pending"),
+      )
+      .order("desc")
+      .first();
+
+    const uncoveredCommitmentsCents = computeUncoveredCommitmentRemainingCents(
+      commitments.map((commitment) => ({
+        remaining: commitment.remaining,
+        status: commitment.cascadeStatus,
+      })),
+    );
+
+    const coachPresentation = resolveCoachPresentation({
+      pendingCoach: pendingCoach
+        ? {
+            id: pendingCoach._id,
+            triggerEvent: pendingCoach.triggerEvent,
+            initialNudge: pendingCoach.initialNudge,
+            options: pendingCoach.options,
+          }
+        : null,
+      isEarlyCycle,
+      compliance,
+      uncoveredCommitmentsCents,
+      profileName: profile.name,
+      surplusCents: computeSurplusProjection(envelopes),
+      currencySymbol: profile.currencySymbol,
+    });
+
+    const coach = {
+      kind: coachPresentation.kind,
+      message: coachPresentation.message,
+      interactionId: coachPresentation.interactionId as
+        | Id<"coachInteractions">
+        | undefined,
+      options: coachPresentation.options,
+      rescueSuggestion: pendingCoach?.rescueSuggestion ?? undefined,
+      awaitingRescueConfirmation:
+        pendingCoach?.selectedOptionId === "suggest_rescue" &&
+        pendingCoach?.rescueSuggestion != null,
+    };
+
     return {
       profile: {
         name: profile.name,
@@ -249,6 +311,7 @@ export const getSummary = query({
       commitments,
       coach,
       movements,
+      isEarlyCycle,
     };
   },
 });

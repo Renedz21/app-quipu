@@ -105,6 +105,9 @@ export const appTables = {
     envelope: v.union(v.literal("needs"), v.literal("wants")),
     // v2.5: día del mes (Lima) en que se descuenta el compromiso. 1-31.
     dueDay: v.number(),
+    // P1-1: cobertura persistida cuando los incomeEvents del ciclo lo financian.
+    coveredAt: v.optional(v.number()),
+    coveredBy: v.optional(v.array(v.id("incomeEvents"))),
   })
     .index("by_profileId", ["profileId"])
     .index("by_profile_dueDay", ["profileId", "dueDay"]),
@@ -135,7 +138,17 @@ export const appTables = {
       }),
     ),
     selectedOptionId: v.optional(v.string()), // Almacena la decisión del usuario
-    status: v.union(v.literal("pending"), v.literal("resolved")),
+    rescueSuggestion: v.optional(
+      v.object({
+        transfer: v.number(),
+        projectedDeficit: v.number(),
+      }),
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("resolved"),
+      v.literal("applied"),
+    ),
     createdAt: v.number(),
   }).index("by_profile_status", ["profileId", "status"]),
 

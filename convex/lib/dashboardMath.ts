@@ -4,8 +4,14 @@ export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const LIMA_TIMEZONE = "America/Lima";
 
 export type CycleCompliance = ReturnType<typeof evaluateCycleCompliance>;
-export type StatusBadge = "stable" | "attention" | "risk";
+export type StatusBadge = "stable" | "attention" | "risk" | "starting";
 export type CommitmentCoverage = "covered" | "partial" | "uncovered";
+export type CoachKind =
+  | "tranquil"
+  | "warning"
+  | "suggestion"
+  | "crisis"
+  | "contigo";
 
 export type MovementRecord = {
   id: string;
@@ -97,6 +103,15 @@ export function computeCycleDayMetrics(
   return { daysTotal, daysRemaining, daysElapsed, progressPercent };
 }
 
+export function detectEarlyCycle(params: {
+  expenseCount: number;
+  daysElapsed: number;
+  movementCount: number;
+}): boolean {
+  if (params.expenseCount > 0) return false;
+  return params.daysElapsed <= 1 || params.movementCount === 0;
+}
+
 export function mapComplianceToBadge(compliance: CycleCompliance): StatusBadge {
   switch (compliance) {
     case "compliant":
@@ -106,6 +121,14 @@ export function mapComplianceToBadge(compliance: CycleCompliance): StatusBadge {
     case "failed":
       return "risk";
   }
+}
+
+export function resolveHeroStatusBadge(
+  compliance: CycleCompliance,
+  isEarlyCycle: boolean,
+): StatusBadge {
+  if (isEarlyCycle) return "starting";
+  return mapComplianceToBadge(compliance);
 }
 
 export function computeCommitmentCoverageMvp(
@@ -147,7 +170,17 @@ export function buildValidationCopy(statusBadge: StatusBadge): string {
       return "Vas bien, pero conviene ir con cuidado.";
     case "risk":
       return "Hay presión en tus sobres. Resolvámoslo con calma.";
+    case "starting":
+      return "";
   }
+}
+
+export function buildEarlyCycleHeroBody(): string {
+  return "Tu presupuesto ya está repartido en sobres. Registra tu primer gasto cuando llegue.";
+}
+
+export function buildEarlyCycleCoachMessage(profileName: string): string {
+  return `${profileName}, tu sistema 50/30/20 ya está listo. Cuando registres tu primer gasto, Quipu te mostrará cómo va el ciclo.`;
 }
 
 export function buildTranquilCoachMessage(

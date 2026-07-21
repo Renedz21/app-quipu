@@ -38,6 +38,11 @@ export function getStatusBadgeClasses(status: StatusBadge): {
         container: "border-danger-line bg-danger-bg text-danger-ink",
         dot: "bg-danger",
       };
+    case "starting":
+      return {
+        container: "border-qp-border bg-qp-soft text-qp-deep",
+        dot: "bg-qp",
+      };
     default: {
       const _exhaustive: never = status;
       return _exhaustive;

@@ -8,6 +8,14 @@ export function useResolveNudgeAction() {
   return useMutation(api.coachEngine.resolveNudgeAction);
 }
 
+export function useApplyRescueTransfer() {
+  return useMutation(api.coachEngine.applyRescueTransfer);
+}
+
+export function useDismissRescueSuggestion() {
+  return useMutation(api.coachEngine.dismissRescueSuggestion);
+}
+
 export type ResolveNudgeOptionId = "freeze_wants" | "suggest_rescue" | "ignore";
 
 export async function resolveNudgeAction(
@@ -16,4 +24,18 @@ export async function resolveNudgeAction(
   optionId: ResolveNudgeOptionId,
 ) {
   return mutate({ interactionId, optionId });
+}
+
+export async function applyRescueTransfer(
+  mutate: ReturnType<typeof useApplyRescueTransfer>,
+  interactionId: Id<"coachInteractions">,
+) {
+  return mutate({ interactionId });
+}
+
+export async function dismissRescueSuggestion(
+  mutate: ReturnType<typeof useDismissRescueSuggestion>,
+  interactionId: Id<"coachInteractions">,
+) {
+  return mutate({ interactionId });
 }

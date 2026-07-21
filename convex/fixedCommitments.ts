@@ -1,6 +1,12 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import {
+  computeAllCommitmentCoverage,
+  computeCoverageProgressPercent,
+  daysUntilDueDay,
+  mapCoverageStatusToDashboard,
+} from "./lib/commitmentCoverage";
 
 export const listMyCommitments = query({
   args: {},
@@ -189,5 +195,109 @@ export const createCommitmentsBulk = mutation({
       ids.push(id);
     }
     return ids;
+  },
+});
+
+export const getCommitmentCoverage = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) return null;
+
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique();
+
+    const commitments = await ctx.db
+      .query("fixedCommitments")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    const now = Date.now();
+
+    if (!activeCycle) {
+      return {
+        cycleId: null,
+        commitments: commitments.map((commitment) => ({
+          id: commitment._id,
+          name: commitment.name,
+          amount: commitment.amount,
+          envelope: commitment.envelope,
+          dueDay: commitment.dueDay,
+          daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
+          covered: 0,
+          remaining: commitment.amount,
+          progressPercent: 0,
+          coverageStatus: "uncovered" as const,
+          cascadeStatus: "not-started" as const,
+          fundingEvents: [],
+          coveredAt: commitment.coveredAt,
+        })),
+      };
+    }
+
+    const incomeEvents = await ctx.db
+      .query("incomeEvents")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+      .collect();
+
+    const coverageById = computeAllCommitmentCoverage({
+      commitments: commitments.map((commitment) => ({
+        id: commitment._id,
+        amount: commitment.amount,
+        envelope: commitment.envelope,
+        dueDay: commitment.dueDay,
+      })),
+      cycle: {
+        startDate: activeCycle.startDate,
+        endDate: activeCycle.endDate,
+      },
+      incomeEvents: incomeEvents.map((event) => ({
+        id: event._id,
+        occurredAt: event.occurredAt,
+        distributionApplied: event.distributionApplied,
+      })),
+      now,
+    });
+
+    return {
+      cycleId: activeCycle._id,
+      commitments: commitments
+        .map((commitment) => {
+          const coverage = coverageById.get(commitment._id);
+          const covered = coverage?.covered ?? 0;
+          const remaining = coverage?.remaining ?? commitment.amount;
+          const cascadeStatus = coverage?.status ?? "not-started";
+
+          return {
+            id: commitment._id,
+            name: commitment.name,
+            amount: commitment.amount,
+            envelope: commitment.envelope,
+            dueDay: commitment.dueDay,
+            daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
+            covered,
+            remaining,
+            progressPercent: computeCoverageProgressPercent(
+              covered,
+              commitment.amount,
+            ),
+            coverageStatus: mapCoverageStatusToDashboard(cascadeStatus),
+            cascadeStatus,
+            fundingEvents: coverage?.fundingEvents ?? [],
+            coveredAt: commitment.coveredAt,
+          };
+        })
+        .sort((a, b) => a.daysUntilDue - b.daysUntilDue),
+    };
   },
 });

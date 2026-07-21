@@ -16,8 +16,12 @@ import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
+import type * as lib_coachState from "../lib/coachState.js";
+import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
+import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
+import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as profiles from "../profiles.js";
 
@@ -36,8 +40,12 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   incomeEvents: typeof incomeEvents;
   "lib/budgetMath": typeof lib_budgetMath;
+  "lib/coachState": typeof lib_coachState;
+  "lib/commitmentCoverage": typeof lib_commitmentCoverage;
   "lib/dashboardMath": typeof lib_dashboardMath;
+  "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
+  "lib/rescueTransfer": typeof lib_rescueTransfer;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   profiles: typeof profiles;
 }>;

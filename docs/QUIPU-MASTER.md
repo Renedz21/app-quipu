@@ -371,7 +371,7 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta e
 | 4 | Registrar gasto | ¿De qué sobre sale? | ⬜ Pendiente |
 | 5 | Ingresos | ¿Cuánto entró y a dónde va? | ⬜ Pendiente |
 | 6 | Ahorros | ¿Qué estoy construyendo? | ⬜ Pendiente |
-| 7 | Coach | ¿Qué decisión debería tomar? | 🟨 Backend parcial (2 de 4 estados) |
+| 7 | Coach | ¿Qué decisión debería tomar? | 🟨 Backend + dashboard (4 estados; apply rescue ✅ P1-2) |
 | 8 | Gamificación | ¿Qué he logrado? | ⬜ No existe |
 | 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ⬜ Parcial (sin plan/preferencias) |
 
@@ -687,7 +687,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `financialCycles` | profileId, startDate, endDate, status (active/closed), `totalIncomeReceived?` | Snapshot materializado mantenido por `createIncomeEvent` |
 | `envelopes` | profileId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount, frozenUntil? | Saldo vivo O(1) para el dashboard |
 | `subEnvelopes` | profileId, parentEnvelopeType (**solo "savings"**), label, emoji, currentAmount, targetAmount?, isSystemDefault | Metas de ahorro; `isSystemDefault` = Fondo de Emergencia |
-| `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay?` (1–31, Lima) | El compromiso vive en el calendario; no se descuenta automáticamente |
+| `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay?` (1–31, Lima), `coveredAt?`, `coveredBy?` | El compromiso vive en el calendario; cobertura cascada desde incomeEvents del ciclo |
 | `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp | Hechos inmutables |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
@@ -701,11 +701,14 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/profiles.ts` | `getMyProfile` (query), `createProfile`, `updateProfileSettings` (mutations) |
 | `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations) |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense` (mutations), `getRecentExpenses` (query) |
-| `convex/fixedCommitments.ts` | `listMyCommitments` (query), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
-| `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction` (mutation) — sugiere, no aplica |
+| `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
+| `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion` (mutations) — sugiere, confirma, aplica |
+| `convex/lib/rescueTransfer.ts` | Puras: `validateRescueTransferApply`, `computeRescueEnvelopePatches` (con tests) |
 | `convex/auth.ts` | `authComponent`, `createAuthOptions`, `createAuth`, triggers onCreate/onUpdate/onDelete |
 | `convex/http.ts` | Router HTTP (endpoints auth) |
 | `convex/lib/budgetMath.ts` | Puras + constantes: `computeAllocations`, `isValidAllocations`, `isValidPaydays`, `computeRescueTransfer`, `suggestRescueTransfer`, `shouldWarnWantsBurn`, `evaluateCycleCompliance` (con tests) |
+| `convex/lib/commitmentCoverage.ts` | Puras: `computeCommitmentCoverage`, `computeAllCommitmentCoverage`, `mapCoverageStatusToDashboard` (con tests) |
+| `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
 | `convex/lib/incomeEventLogic.ts` | `resolveCycleForEvent` (pura, con tests) |
 
 ### 5.3 Reglas de dominio v2.5
@@ -713,7 +716,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **`incomeModel` reemplazó a `workerType`** (v2.0 → v2.5, migración widen→migrate→narrow ejecutada 2026-07-08). `workerType` y `frequency` ya no existen en el schema ni en el código.
 - **`incomeEvents` unificó** `adHocIncomes` + sueldo. Migración 1:1 con `source: "other"` (trade-off aceptado).
 - **`fixedCommitments.dueDay`** reemplazó `frequency` (first/second/every_payday). Migración de `every_payday` con pérdida aceptada (→ primer payday).
-- **Cobertura de compromisos se calcula on-the-fly**, no se persiste (motor de cascada pendiente: P1-1).
+- **Cobertura de compromisos:** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
 - **Plan Free ilimitado y manual** (`FREE_PLAN_MONTHLY_LIMIT` eliminado); Premium se justifica por automatización, no por más registros.
@@ -942,8 +945,7 @@ revisa solo cuando el usuario declare la app completa.
 **No existe todavía:**
 - Bloques 3–9 (dashboard real, registrar gasto, ingresos, ahorros, gamificación, perfil/ajustes completos).
   `/dashboard` es placeholder. No hay `app/page.tsx` (la raíz `/` no tiene home).
-- Coach: solo 2 de 4 estados (tranquilo y crisis). Faltan advertencia y sugerencia.
-- `applyRescueTransfer` (el coach sugiere pero no hay mutation que aplique tras confirmación).
+- Coach: 4 estados en dashboard (`tranquil`, `warning`, `suggestion`, `crisis` + `contigo` early cycle). `resolveCoachPresentation` + UI ámbar/sugerencia. `applyRescueTransfer` + diálogo de confirmación (P1-2 ✅ 2026-07-21).
 - Motor de cascada de compromisos (cobertura de commitments desde incomeEvents).
 - Theme switcher a CSS variables; tokens de diseño no migrados a `@theme` (acento hardcoded a verde).
 - Sistema de componentes codificado según §3.5 (los primitivos shadcn existen, las variantes canon no).
@@ -968,12 +970,12 @@ revisa solo cuando el usuario declare la app completa.
 
 | Item | Qué | Detalle condensado (5-8 líneas) |
 |---|---|---|
-| P1-1 | Motor de cascada de compromisos (`mixed`/`variable`) | Función pura `computeCommitmentCoverage({commitment, cycle, incomeEvents, now})` → `{covered, remaining, fundingEvents}` con TDD (covered/partial/not-started/overdue). Schema: agregar `coveredAt` (y evaluar `coveredBy[]`) a `fixedCommitments`. `createIncomeEvent` dispara evaluación. Query `getCommitmentCoverage` + card de progreso en dashboard. Cierre: compromiso se marca cubierto cuando los incomeEvents de la ventana lo financian; UI muestra progreso real. |
-| P1-2 | `applyRescueTransfer` + confirmación del coach | Mutation `applyRescueTransfer({interactionId})`: auth+ownership → leer sugerencia → validar saldos (savings ≥ transfer, wants < 0) → patch atómico → interaction `applied`. + `dismissRescueSuggestion`. UI: diálogo de confirmación con 2 botones en `modules/coach/`. Cierre: sugerencia → usuario confirma → transferencia atómica; si rechaza, nada se aplica. |
+| P1-1 | Motor de cascada de compromisos (`mixed`/`variable`) | ✅ **Cerrado 2026-07-21.** `computeCommitmentCoverage` + TDD (covered/partial/not-started/overdue). Schema `coveredAt` / `coveredBy`. Evaluación en `createIncomeEvent` / `deleteIncomeEvent`. Query `getCommitmentCoverage`. Dashboard con progreso real (barra + % parcial). |
+| P1-2 | `applyRescueTransfer` + confirmación del coach | ✅ **Cerrado 2026-07-21.** `applyRescueTransfer({interactionId})` + `dismissRescueSuggestion`; validación pura en `convex/lib/rescueTransfer.ts` (TDD); `resolveNudgeAction(suggest_rescue)` guarda sugerencia y deja pending; UI diálogo 2 botones en `modules/coach/`. |
 | P1-3 | Actualizar arquitectura a v2.5 | ✅ **Superseded por este documento maestro** (2026-07-20). |
-| P1-4 | Bloque 3 — Dashboard | ✅ **Cerrado 2026-07-21.** `convex/dashboard.getSummary`, `modules/dashboard/`, shell sidebar+bottom nav+FAB, 5 niveles §3.7, empty state sin ciclo, skeletons LCP. Cobertura compromisos **MVP heurístico** (`remaining >= amount`); upgrade real en P1-1. |
-| P1-5 | Coach: estados advertencia y sugerencia | Backend tiene tranquilo y crisis; agregar los 2 estados intermedios (disparadores en `coachEngine.ts` + UI de banner ámbar y card de sugerencia). Prerequisito de P1-2 para que sugerencia tenga acción. |
-| P1-6 | Migrar tokens de diseño a Tailwind `@theme` | Llevar la tabla §3.3 completa (`--qp*` + neutros + sobres + estados) a `@theme` en `app/globals.css`; eliminar hex hardcodeados; dejar base para theme switcher futuro. |
+| P1-4 | Bloque 3 — Dashboard | ✅ **Cerrado 2026-07-21.** `convex/dashboard.getSummary`, `modules/dashboard/`, shell sidebar+bottom nav+FAB, 5 niveles §3.7, empty state sin ciclo + **early cycle** (`detectEarlyCycle`: ciclo activo sin gastos → layout completo con badges Recién empiezas/Contigo y empty states por sección), skeletons LCP. Cobertura compromisos vía motor P1-1 (barra + % parcial). |
+| P1-5 | Coach: estados advertencia y sugerencia | ✅ **Cerrado 2026-07-21.** `convex/lib/coachState.ts` (`resolveCoachPresentation`, TDD), pending nudge → `suggestion`, `warning` vía compliance, `crisis` vía failed/uncovered; copy suggest-only sin emojis en `WANTS_OVERFLOW_60`; UI ámbar + fila propia en `coach-card.tsx`. |
+| P1-6 | Migrar tokens de diseño a Tailwind `@theme` | ✅ **Cerrado 2026-07-21.** Tokens §3.3 en `app/globals.css` (`@theme` + `:root`): neutros, acento `--qp*`, sobres, estados (warning ámbar + crisis terracota), sombras (`shadow-amber`, `shadow-crisis`), aliases `--qpA`…`--qp25` para theme switcher. Hex eliminados en `coach-card`, auth y onboarding. |
 
 **P2 — backlog:**
 
@@ -991,11 +993,11 @@ revisa solo cuando el usuario declare la app completa.
 |---|---|
 | 1. Auth | Pantallas auxiliares (recovery, error, loading, success); panel lateral "Disponible hoy" muestra datos reales cuando exista dashboard. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | Cobertura compromisos real (P1-1); CTAs registrar/ingreso activos (Bloques 4–5); "Ver todo" movimientos. |
+| 3. Dashboard | CTAs registrar/ingreso activos (Bloques 4–5); "Ver todo" movimientos. |
 | 4. Registrar gasto | Todo: 3 variantes (A/B/C), keypad, sugerencia de sobre, <10s. |
 | 5. Ingresos | Todo: registro con preview de impacto + confirmación con deltas. |
 | 6. Ahorros | Todo: hero del Fondo ("el Fondo manda"), detalle, metas. |
-| 7. Coach | 2 estados faltantes (P1-5) + aplicación de sugerencias (P1-2). |
+| 7. Coach | CTAs advertencia/crisis activos cuando existan rutas. |
 | 8. Gamificación | Todo desde cero: racha, logros, recompensas, personalización. |
 | 9. Perfil/Ajustes | Plan Quipu Plus (Polar.sh), preferencias, gestión de passkeys, ciclo y porcentajes editables. |
 

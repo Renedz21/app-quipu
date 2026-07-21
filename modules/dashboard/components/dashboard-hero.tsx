@@ -41,10 +41,16 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
             {formatCents(hero.displayDailyCents, { currency: currencyCode })}
           </p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-secondary md:text-[14.5px]">
-            {HERO_AVAILABLE_BODY}{" "}
-            <span className="font-semibold text-qp-deep">
-              {hero.validationCopy}
-            </span>
+            {hero.bodyCopy ? (
+              hero.bodyCopy
+            ) : (
+              <>
+                {HERO_AVAILABLE_BODY}{" "}
+                <span className="font-semibold text-qp-deep">
+                  {hero.validationCopy}
+                </span>
+              </>
+            )}
           </p>
         </div>
 

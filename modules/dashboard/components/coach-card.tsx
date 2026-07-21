@@ -1,23 +1,83 @@
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
-import { COACH_KIND_LABELS } from "../constants";
+import { Button } from "@/shared/components/ui/button";
+import {
+  COACH_CRISIS_LATER_CTA,
+  COACH_CTA_HINT,
+  COACH_EARLY_CTA_HINT,
+  COACH_EARLY_REGISTER_CTA,
+  COACH_EARLY_VIEW_SYSTEM_CTA,
+  COACH_KIND_LABELS,
+  COACH_WARNING_ADJUST_CTA,
+  COACH_WARNING_VIEW_CTA,
+} from "../constants";
 import type { DashboardCoach } from "../types";
 
 type Props = {
   coach: DashboardCoach;
+  currencyCode: string;
+  layout?: "inline" | "full";
 };
 
-export function CoachCard({ coach }: Props) {
+function coachSectionClass(kind: DashboardCoach["kind"], layout: "inline" | "full") {
+  const fullRow = layout === "full";
+
+  switch (kind) {
+    case "warning":
+      return [
+        "border-warning-border bg-warning-bg",
+        fullRow ? "shadow-amber" : "",
+      ].join(" ");
+    case "crisis":
+      return [
+        "border-danger-line bg-danger-banner",
+        fullRow ? "border-[1.5px] shadow-crisis" : "",
+      ].join(" ");
+    case "suggestion":
+      return "border-qp-border bg-[linear-gradient(160deg,var(--qp-coach-from),var(--qp-coach-to))]";
+    default:
+      return "border-qp-border bg-[linear-gradient(160deg,var(--qp-coach-from),var(--qp-coach-to))]";
+  }
+}
+
+function coachBadgeClass(kind: DashboardCoach["kind"]) {
+  switch (kind) {
+    case "warning":
+      return "bg-warning-border text-warning-text";
+    case "crisis":
+      return "bg-danger-line text-danger-ink";
+    case "suggestion":
+      return "bg-qp-soft text-qp-deep";
+    default:
+      return "bg-qp-soft text-qp-deep";
+  }
+}
+
+function coachIconClass(kind: DashboardCoach["kind"]) {
+  switch (kind) {
+    case "warning":
+      return "bg-warning";
+    case "crisis":
+      return "bg-danger";
+    default:
+      return "bg-qp";
+  }
+}
+
+export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
+  const isContigo = coach.kind === "contigo";
+  const isWarning = coach.kind === "warning";
   const isCrisis = coach.kind === "crisis";
+  const isSuggestion = coach.kind === "suggestion";
 
   return (
     <section
       aria-labelledby="dashboard-coach"
-      className={`flex flex-col rounded-[14px] border bg-[linear-gradient(160deg,var(--qp-coach-from),var(--qp-coach-to))] p-4 md:p-5 ${
-        isCrisis ? "border-danger-line md:col-span-2" : "border-qp-border"
-      }`}
+      className={`flex flex-col rounded-[14px] border p-4 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex size-7 items-center justify-center rounded-[9px] bg-qp">
+        <span
+          className={`flex size-7 items-center justify-center rounded-[9px] ${coachIconClass(coach.kind)}`}
+        >
           <span className="flex flex-col gap-0.5" aria-hidden>
             <span className="h-0.5 w-2.5 rounded-sm bg-canvas" />
             <span className="h-0.5 w-2 rounded-sm bg-canvas" />
@@ -27,20 +87,92 @@ export function CoachCard({ coach }: Props) {
         <h2 id="dashboard-coach" className="text-sm font-semibold text-ink">
           Coach
         </h2>
-        <span className="ml-auto rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
+        <span
+          className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${coachBadgeClass(coach.kind)}`}
+        >
           {COACH_KIND_LABELS[coach.kind]}
         </span>
       </div>
 
-      <p className="font-serif text-[15px] leading-snug text-ink md:text-[19px] md:leading-normal">
+      <p
+        className={`font-serif text-[15px] leading-snug md:text-[19px] md:leading-normal ${
+          isCrisis ? "text-danger-ink" : "text-ink"
+        }`}
+      >
         {coach.message}
       </p>
 
-      {coach.interactionId && coach.options?.length ? (
+      {isContigo ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            disabled
+            title={COACH_EARLY_CTA_HINT}
+            className="rounded-[11px] bg-ink text-canvas hover:bg-ink/90"
+          >
+            {COACH_EARLY_REGISTER_CTA}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled
+            title={COACH_EARLY_CTA_HINT}
+            className="rounded-[11px] border-line bg-canvas/70 text-ink-secondary"
+          >
+            {COACH_EARLY_VIEW_SYSTEM_CTA}
+          </Button>
+        </div>
+      ) : null}
+
+      {isWarning ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            disabled
+            title={COACH_CTA_HINT}
+            className="rounded-[11px] bg-warning text-canvas hover:bg-warning/90"
+          >
+            {COACH_WARNING_ADJUST_CTA}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled
+            title={COACH_CTA_HINT}
+            className="rounded-[11px] border-warning-border bg-canvas/70 text-warning-text"
+          >
+            {COACH_WARNING_VIEW_CTA}
+          </Button>
+        </div>
+      ) : null}
+
+      {isSuggestion && coach.interactionId ? (
         <CoachNudgeActions
           interactionId={coach.interactionId}
-          options={coach.options}
+          options={coach.options ?? []}
+          currencyCode={currencyCode}
+          rescueSuggestion={coach.rescueSuggestion}
+          awaitingRescueConfirmation={coach.awaitingRescueConfirmation}
         />
+      ) : null}
+
+      {isCrisis ? (
+        <div className="mt-4">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled
+            title={COACH_CTA_HINT}
+            className="rounded-[11px] border-danger-line bg-canvas/70 text-danger-ink"
+          >
+            {COACH_CRISIS_LATER_CTA}
+          </Button>
+        </div>
       ) : null}
     </section>
   );

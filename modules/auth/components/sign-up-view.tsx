@@ -36,11 +36,11 @@ function isUserAlreadyExists(error: {
 }
 
 const bgByStep: Record<Step, string> = {
-  form: "bg-[radial-gradient(110%_70%_at_50%_-10%,#F5F3EF,#FFFFFF_60%)]",
+  form: "bg-[radial-gradient(110%_70%_at_50%_-10%,var(--qp-surface-warm),var(--qp-surface)_60%)]",
   passkey:
-    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-selected),#FFFFFF_62%)]",
+    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-selected),var(--qp-surface)_62%)]",
   success:
-    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-success),#FFFFFF_60%)]",
+    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-success),var(--qp-surface)_60%)]",
 };
 
 const stepLabel: Record<Step, string> = {

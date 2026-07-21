@@ -15,6 +15,16 @@ import { DashboardHeroSkeleton } from "./dashboard-hero-skeleton";
 import { EnvelopeCards } from "./envelope-cards";
 import { EnvelopeCardsSkeleton } from "./envelope-cards-skeleton";
 import { RecentMovements } from "./recent-movements";
+import type { DashboardCoach } from "../types";
+
+function isFullWidthCoach(coach: DashboardCoach | null | undefined): boolean {
+  if (!coach) return false;
+  return (
+    coach.kind === "warning" ||
+    coach.kind === "suggestion" ||
+    coach.kind === "crisis"
+  );
+}
 
 type Props = {
   profileName: string;
@@ -71,19 +81,35 @@ function DashboardContent({ profileName }: Props) {
           <EnvelopeCards
             envelopes={summary.envelopes}
             currencyCode={summary.profile.currencyCode}
+            isEarlyCycle={summary.isEarlyCycle}
           />
 
           <div className="grid gap-3 lg:grid-cols-[1.25fr_1fr]">
             <CommitmentsList
               commitments={summary.commitments}
               currencyCode={summary.profile.currencyCode}
+              isEarlyCycle={summary.isEarlyCycle}
             />
-            {summary.coach ? <CoachCard coach={summary.coach} /> : null}
+            {summary.coach && !isFullWidthCoach(summary.coach) ? (
+              <CoachCard
+                coach={summary.coach}
+                currencyCode={summary.profile.currencyCode}
+              />
+            ) : null}
           </div>
+
+          {summary.coach && isFullWidthCoach(summary.coach) ? (
+            <CoachCard
+              coach={summary.coach}
+              currencyCode={summary.profile.currencyCode}
+              layout="full"
+            />
+          ) : null}
 
           <RecentMovements
             movements={summary.movements}
             currencyCode={summary.profile.currencyCode}
+            isEarlyCycle={summary.isEarlyCycle}
           />
         </div>
       </Suspense>

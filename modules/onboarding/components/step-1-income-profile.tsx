@@ -82,10 +82,10 @@ function IncomeModelRow({
         "flex items-center gap-4 rounded-[14px] px-5 py-[18px] text-left transition-colors",
         selected
           ? "border-[1.5px] border-primary bg-primary-soft"
-          : "border border-[#E7E3DC] bg-white hover:border-primary/50",
+          : "border border-line-strong bg-surface hover:border-primary/50",
       )}
     >
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-qp-border bg-white">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-qp-border bg-surface">
         {icon}
       </div>
       <div className="flex-1">

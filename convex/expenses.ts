@@ -1,9 +1,12 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { shouldWarnWantsBurn } from "./lib/budgetMath";
+import {
+  buildWantsOverflowNudge,
+  WANTS_OVERFLOW_EVENT,
+} from "./lib/coachState";
 
 const RECENT_EXPENSES_LIMIT = 5;
-const WANTS_OVERFLOW_EVENT = "WANTS_OVERFLOW_60";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export const registerExpense = mutation({
@@ -106,23 +109,18 @@ export const registerExpense = mutation({
             envelope.allocatedAmount) *
           100;
         const daysElapsed = (now - activeCycle.startDate) / MS_PER_DAY;
+        const nudge = buildWantsOverflowNudge({
+          profileName: profile.name,
+          burnPercent: burnPct,
+          daysElapsed,
+        });
 
         await ctx.db.insert("coachInteractions", {
           profileId: profile._id,
           cycleId: activeCycle._id,
-          triggerEvent: WANTS_OVERFLOW_EVENT,
-          initialNudge: `${profile.name}, has quemado el ${burnPct.toFixed(0)}% de tu sobre de Gustos en solo ${daysElapsed.toFixed(0)} días. A este ritmo te quedarás a cero antes de tu próximo pago. ¿Cómo deseas proceder?`,
-          options: [
-            {
-              id: "freeze_wants",
-              label: "❄️ Congelar sobre de Gustos por 3 días",
-            },
-            {
-              id: "suggest_rescue",
-              label: "🛡️ Activar Modo Rescate preventivo",
-            },
-            { id: "ignore", label: "📉 Asumir la pérdida y continuar" },
-          ],
+          triggerEvent: nudge.triggerEvent,
+          initialNudge: nudge.initialNudge,
+          options: nudge.options,
           status: "pending",
           createdAt: now,
         });

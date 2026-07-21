@@ -1,6 +1,11 @@
+import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import {
   COMMITMENTS_COVERED_HEADER,
+  COMMITMENTS_EMPTY_BODY,
+  COMMITMENTS_EMPTY_CTA,
+  COMMITMENTS_EMPTY_CTA_HINT,
+  COMMITMENTS_EMPTY_TITLE,
   COMMITMENTS_SECTION_LABEL,
   COMMITMENTS_UNCOVERED_HEADER,
   ENVELOPE_LABELS,
@@ -11,6 +16,7 @@ import type { DashboardCommitment } from "../types";
 type Props = {
   commitments: DashboardCommitment[];
   currencyCode: string;
+  isEarlyCycle?: boolean;
 };
 
 function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
@@ -29,8 +35,67 @@ function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
   );
 }
 
-export function CommitmentsList({ commitments, currencyCode }: Props) {
+function CommitmentsEmptyState() {
+  return (
+    <div className="flex flex-col items-center px-2 py-4 text-center md:px-4 md:py-6">
+      <span
+        className="mb-3 flex size-10 items-center justify-center rounded-[11px] bg-surface-warm"
+        aria-hidden
+      >
+        <span className="relative size-4 rounded-[3px] border-[1.6px] border-mute">
+          <span className="absolute -top-1 left-1/2 h-1.5 w-2 -translate-x-1/2 rounded-t-[2px] border-x-[1.6px] border-t-[1.6px] border-mute" />
+          <span className="absolute left-1/2 top-[3px] size-0.5 -translate-x-1/2 rounded-full bg-mute" />
+        </span>
+      </span>
+      <p className="text-sm font-semibold text-ink">{COMMITMENTS_EMPTY_TITLE}</p>
+      <p className="mt-2 max-w-xs text-sm leading-relaxed text-mute">
+        {COMMITMENTS_EMPTY_BODY}
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        disabled
+        title={COMMITMENTS_EMPTY_CTA_HINT}
+        className="mt-4 rounded-[11px] border-line px-4 text-ink-secondary"
+      >
+        {COMMITMENTS_EMPTY_CTA}
+      </Button>
+    </div>
+  );
+}
+
+function formatCoverageLabel(commitment: DashboardCommitment): string {
+  if (commitment.coverageStatus === "covered") return "";
+  if (commitment.cascadeStatus === "overdue") return " · vencido";
+  if (commitment.coverageStatus === "partial") return " · parcial";
+  return " · sin cubrir";
+}
+
+function CommitmentProgress({
+  progressPercent,
+}: {
+  progressPercent: number;
+}) {
+  return (
+    <div
+      className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-surface-warm"
+      aria-hidden
+    >
+      <div
+        className="h-full rounded-full bg-qp transition-[width]"
+        style={{ width: `${progressPercent}%` }}
+      />
+    </div>
+  );
+}
+
+export function CommitmentsList({
+  commitments,
+  currencyCode,
+  isEarlyCycle = false,
+}: Props) {
   const covered = allCommitmentsCovered(commitments);
+  const showRichEmpty = isEarlyCycle && commitments.length === 0;
 
   return (
     <section
@@ -44,21 +109,25 @@ export function CommitmentsList({ commitments, currencyCode }: Props) {
         >
           {COMMITMENTS_SECTION_LABEL}
         </h2>
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-qp-deep">
-          {covered ? (
-            <>
-              <span className="flex size-4 items-center justify-center rounded-full bg-qp-soft">
-                <span className="inline-block size-1.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-qp" />
-              </span>
-              {COMMITMENTS_COVERED_HEADER}
-            </>
-          ) : (
-            COMMITMENTS_UNCOVERED_HEADER
-          )}
-        </span>
+        {!showRichEmpty ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-qp-deep">
+            {covered ? (
+              <>
+                <span className="flex size-4 items-center justify-center rounded-full bg-qp-soft">
+                  <span className="inline-block size-1.5 rotate-45 border-r-[1.5px] border-b-[1.5px] border-qp" />
+                </span>
+                {COMMITMENTS_COVERED_HEADER}
+              </>
+            ) : (
+              COMMITMENTS_UNCOVERED_HEADER
+            )}
+          </span>
+        ) : null}
       </div>
 
-      {commitments.length === 0 ? (
+      {showRichEmpty ? (
+        <CommitmentsEmptyState />
+      ) : commitments.length === 0 ? (
         <p className="text-sm text-mute">
           Aún no tienes compromisos registrados.
         </p>
@@ -77,14 +146,24 @@ export function CommitmentsList({ commitments, currencyCode }: Props) {
                 <div className="text-[11.5px] text-mute">
                   {formatDueInDays(commitment.daysUntilDue)} ·{" "}
                   {ENVELOPE_LABELS[commitment.envelope]}
-                  {commitment.coverageStatus !== "covered"
-                    ? ` · ${commitment.coverageStatus === "partial" ? "parcial" : "sin cubrir"}`
-                    : ""}
+                  {formatCoverageLabel(commitment)}
                 </div>
+                {commitment.coverageStatus !== "covered" ? (
+                  <CommitmentProgress
+                    progressPercent={commitment.progressPercent}
+                  />
+                ) : null}
               </div>
-              <span className="font-serif text-base text-ink">
-                {formatCents(commitment.amount, { currency: currencyCode })}
-              </span>
+              <div className="shrink-0 text-right">
+                <span className="font-serif text-base text-ink">
+                  {formatCents(commitment.amount, { currency: currencyCode })}
+                </span>
+                {commitment.coverageStatus === "partial" ? (
+                  <div className="text-[10.5px] text-mute">
+                    {commitment.progressPercent}% cubierto
+                  </div>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

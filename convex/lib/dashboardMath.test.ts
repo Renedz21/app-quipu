@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildEarlyCycleCoachMessage,
+  buildEarlyCycleHeroBody,
   computeCommitmentCoverageMvp,
   computeCycleProgress,
   computeDailyAvailable,
   computeDisplayDailyCents,
   daysUntilDueDay,
+  detectEarlyCycle,
   MS_PER_DAY,
   mapComplianceToBadge,
   mergeRecentMovements,
+  resolveHeroStatusBadge,
 } from "./dashboardMath";
 
 describe("computeDailyAvailable", () => {
@@ -50,6 +54,66 @@ describe("mapComplianceToBadge", () => {
     expect(mapComplianceToBadge("compliant")).toBe("stable");
     expect(mapComplianceToBadge("warning")).toBe("attention");
     expect(mapComplianceToBadge("failed")).toBe("risk");
+  });
+});
+
+describe("detectEarlyCycle", () => {
+  it("returns false when the cycle already has expenses", () => {
+    expect(
+      detectEarlyCycle({
+        expenseCount: 1,
+        daysElapsed: 0,
+        movementCount: 0,
+      }),
+    ).toBe(false);
+  });
+
+  it("returns true on day one without expenses", () => {
+    expect(
+      detectEarlyCycle({
+        expenseCount: 0,
+        daysElapsed: 1,
+        movementCount: 2,
+      }),
+    ).toBe(true);
+  });
+
+  it("returns true with zero movements even after day one", () => {
+    expect(
+      detectEarlyCycle({
+        expenseCount: 0,
+        daysElapsed: 5,
+        movementCount: 0,
+      }),
+    ).toBe(true);
+  });
+
+  it("returns false after day one when movements exist but no expenses", () => {
+    expect(
+      detectEarlyCycle({
+        expenseCount: 0,
+        daysElapsed: 5,
+        movementCount: 1,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("resolveHeroStatusBadge", () => {
+  it("uses the starting badge during early cycle", () => {
+    expect(resolveHeroStatusBadge("compliant", true)).toBe("starting");
+  });
+
+  it("falls back to compliance mapping after early cycle", () => {
+    expect(resolveHeroStatusBadge("warning", false)).toBe("attention");
+  });
+});
+
+describe("early cycle copy", () => {
+  it("builds hero and coach messages for the welcome state", () => {
+    expect(buildEarlyCycleHeroBody()).toContain("Registra tu primer gasto");
+    expect(buildEarlyCycleCoachMessage("Ana")).toContain("50/30/20");
+    expect(buildEarlyCycleCoachMessage("Ana")).toContain("Ana");
   });
 });
 

@@ -2,6 +2,10 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import { computeAllocations, CYCLE_DAYS } from "./lib/budgetMath";
+import {
+  clearCommitmentCoverageForProfile,
+  evaluateCommitmentCoverageForCycle,
+} from "./lib/evaluateCommitmentCoverage";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -114,6 +118,7 @@ export const createIncomeEvent = mutation({
         totalIncomeReceived: 0,
       });
       isNewCycle = true;
+      await clearCommitmentCoverageForProfile(ctx, profile._id);
     }
 
     // Compute distribution with the profile's current allocations.
@@ -189,6 +194,13 @@ export const createIncomeEvent = mutation({
       totalIncomeReceived: cycle.totalIncomeReceived + args.amount,
     });
 
+    await evaluateCommitmentCoverageForCycle(
+      ctx,
+      profile._id,
+      cycleId,
+      now,
+    );
+
     return { eventId, cycleId, isNewCycle };
   },
 });
@@ -253,6 +265,14 @@ export const deleteIncomeEvent = mutation({
     });
 
     await ctx.db.delete(args.eventId);
+
+    await evaluateCommitmentCoverageForCycle(
+      ctx,
+      profile._id,
+      cycle._id,
+      Date.now(),
+    );
+
     return { success: true };
   },
 });

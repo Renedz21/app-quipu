@@ -1,5 +1,9 @@
 import { formatCents } from "@/shared/lib/money";
-import { ENVELOPE_LABELS } from "../constants";
+import {
+  ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,
+  ENVELOPE_EARLY_SAVINGS_SUBCOPY,
+  ENVELOPE_LABELS,
+} from "../constants";
 import { clampPercent } from "../lib/dashboard-math";
 import type { DashboardEnvelope } from "../types";
 import { EnvelopeSectionLabel } from "./envelope-cards-skeleton";
@@ -7,6 +11,7 @@ import { EnvelopeSectionLabel } from "./envelope-cards-skeleton";
 type Props = {
   envelopes: DashboardEnvelope[];
   currencyCode: string;
+  isEarlyCycle?: boolean;
 };
 
 const ENVELOPE_STYLES = {
@@ -27,7 +32,11 @@ const ENVELOPE_STYLES = {
   },
 } as const;
 
-export function EnvelopeCards({ envelopes, currencyCode }: Props) {
+export function EnvelopeCards({
+  envelopes,
+  currencyCode,
+  isEarlyCycle = false,
+}: Props) {
   return (
     <section aria-labelledby="dashboard-envelopes">
       <EnvelopeSectionLabel />
@@ -56,15 +65,30 @@ export function EnvelopeCards({ envelopes, currencyCode }: Props) {
                 ) : null}
               </div>
               <p className="font-serif text-2xl text-ink">
-                {formatCents(Math.max(0, envelope.remainingAmount), {
-                  currency: currencyCode,
-                })}
+                {formatCents(
+                  isEarlyCycle
+                    ? envelope.allocatedAmount
+                    : Math.max(0, envelope.remainingAmount),
+                  {
+                    currency: currencyCode,
+                  },
+                )}
               </p>
               <p className="mt-1 text-xs text-mute">
-                {envelope.type === "savings" ? "apartado" : "disponible"} de{" "}
-                {formatCents(envelope.allocatedAmount, {
-                  currency: currencyCode,
-                })}
+                {isEarlyCycle ? (
+                  envelope.type === "savings" ? (
+                    ENVELOPE_EARLY_SAVINGS_SUBCOPY
+                  ) : (
+                    ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY
+                  )
+                ) : (
+                  <>
+                    {envelope.type === "savings" ? "apartado" : "disponible"} de{" "}
+                    {formatCents(envelope.allocatedAmount, {
+                      currency: currencyCode,
+                    })}
+                  </>
+                )}
               </p>
               <div className="mt-3 h-1.5 overflow-hidden rounded-[4px] bg-qp-track">
                 <div

@@ -29,10 +29,10 @@ import {
 export function CommitmentsViewSkeleton() {
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
-      <Skeleton className="h-4 w-20" />
-      <Skeleton className="mt-4 h-9 w-48" />
-      <Skeleton className="mt-2 h-4 w-full max-w-md" />
-      <Skeleton className="mt-6 h-72 w-full rounded-[14px]" />
+      <Skeleton variant="line" className="h-4 w-20" />
+      <Skeleton className="mt-4 h-9 w-48 rounded-lg" />
+      <Skeleton variant="line" className="mt-2 h-4 w-full max-w-md" />
+      <Skeleton className="mt-6 h-72 w-full rounded-[14px] [animation-delay:150ms]" />
     </div>
   );
 }

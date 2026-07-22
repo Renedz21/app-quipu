@@ -36,8 +36,8 @@ export function ProgressRewardsView() {
   if (rewards === undefined) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-32 w-full rounded-[13px]" />
+        <Skeleton className="h-8 w-40 rounded-lg" />
+        <Skeleton className="h-32 w-full rounded-[13px] [animation-delay:150ms]" />
       </div>
     );
   }

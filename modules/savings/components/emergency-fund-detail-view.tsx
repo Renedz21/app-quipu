@@ -29,9 +29,9 @@ export function EmergencyFundDetailView() {
   if (detail === undefined) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 md:py-8">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="mt-4 h-10 w-56" />
-        <Skeleton className="mt-6 h-40 w-full rounded-[13px]" />
+        <Skeleton variant="line" className="h-4 w-24" />
+        <Skeleton className="mt-4 h-10 w-56 rounded-lg" />
+        <Skeleton className="mt-6 h-40 w-full rounded-[13px] [animation-delay:150ms]" />
       </div>
     );
   }

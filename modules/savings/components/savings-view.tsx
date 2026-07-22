@@ -26,14 +26,14 @@ import {
   SAVINGS_TOTAL_SAVED_LABEL,
 } from "../constants";
 import { buildCycleContributionSubtitle } from "../lib/savingsCopy";
-import { EmergencyFundHero } from "./emergency-fund-hero";
-import { NewGoalDialog } from "./new-goal-dialog";
-import { SavingsGoalCard } from "./savings-goal-card";
+import { useCycleSavingsBreakdown } from "../queries";
 import {
   CycleSavingsSection,
   CycleSavingsSectionSkeleton,
 } from "./cycle-savings-section";
-import { useCycleSavingsBreakdown } from "../queries";
+import { EmergencyFundHero } from "./emergency-fund-hero";
+import { NewGoalDialog } from "./new-goal-dialog";
+import { SavingsGoalCard } from "./savings-goal-card";
 
 export function SavingsView() {
   const overview = useQuery(api.savings.getOverview, {});
@@ -184,17 +184,31 @@ export function SavingsView() {
   );
 }
 
+/** Canon bloque 6 "Cargando": cabecera con acción, hero del fondo y
+ *  rejilla de metas con pulso escalonado. */
 function SavingsViewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <Skeleton className="h-8 w-40" />
-      <Skeleton className="mt-2 h-4 w-64" />
-      <Skeleton className="mt-6 h-56 w-full rounded-[20px]" />
-      <CycleSavingsSectionSkeleton />
-      <div className="mt-6 grid gap-3 md:grid-cols-3">
-        <Skeleton className="h-28 rounded-[13px]" />
-        <Skeleton className="h-28 rounded-[13px]" />
-        <Skeleton className="h-28 rounded-[13px]" />
+    <div
+      role="status"
+      aria-label="Cargando tus ahorros"
+      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-[30px] w-[180px] rounded-lg" />
+        <Skeleton className="hidden h-[34px] w-[170px] rounded-lg [animation-delay:150ms] md:block" />
+      </div>
+      <Skeleton className="mt-5 h-[168px] w-full rounded-[20px] [animation-delay:150ms]" />
+      <Skeleton
+        variant="line"
+        className="mt-5 h-[11px] w-[90px] rounded-[5px]"
+      />
+      <div className="mt-3.5 grid gap-3 md:grid-cols-3">
+        <Skeleton className="h-[78px] rounded-[13px]" />
+        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:150ms]" />
+        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:300ms]" />
+        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:150ms]" />
+        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:300ms]" />
+        <Skeleton className="h-[78px] rounded-[13px]" />
       </div>
     </div>
   );

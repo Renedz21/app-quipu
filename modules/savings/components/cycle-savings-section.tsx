@@ -203,13 +203,13 @@ export function CycleSavingsSection({ breakdown }: Props) {
 export function CycleSavingsSectionSkeleton() {
   return (
     <section className="mt-6 space-y-3">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="h-4 w-40" />
-      <Skeleton className="h-48 w-full rounded-[20px]" />
+      <Skeleton className="h-8 w-56 rounded-lg" />
+      <Skeleton variant="line" className="h-4 w-40" />
+      <Skeleton className="h-48 w-full rounded-[20px] [animation-delay:150ms]" />
       <div className="grid gap-3 md:grid-cols-3">
         <Skeleton className="h-28 rounded-[14px]" />
-        <Skeleton className="h-28 rounded-[14px]" />
-        <Skeleton className="h-28 rounded-[14px]" />
+        <Skeleton className="h-28 rounded-[14px] [animation-delay:150ms]" />
+        <Skeleton className="h-28 rounded-[14px] [animation-delay:300ms]" />
       </div>
     </section>
   );

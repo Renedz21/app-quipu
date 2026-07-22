@@ -89,12 +89,33 @@ function AchievementCard({
   );
 }
 
+/** Canon bloque 8 "Cargando": hero de racha + rejilla de logros. */
 function ProgressOverviewSkeleton() {
   return (
-    <div className="space-y-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-40 w-full rounded-[18px]" />
-      <Skeleton className="h-24 w-full rounded-[14px]" />
+    <div
+      role="status"
+      aria-label="Reuniendo tu progreso"
+      className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 md:py-8"
+    >
+      <Skeleton variant="line" className="h-3 w-[60px] rounded-[5px]" />
+      <Skeleton className="mt-3.5 h-[30px] w-[200px] rounded-lg" />
+      <Skeleton
+        variant="line"
+        className="mt-2 h-[13px] w-[300px] max-w-full rounded-[5px]"
+      />
+      <Skeleton className="mt-6 h-[130px] w-full rounded-[18px] [animation-delay:150ms]" />
+      <Skeleton
+        variant="line"
+        className="mt-5 h-[11px] w-[70px] rounded-[5px]"
+      />
+      <div className="mt-3.5 grid gap-2 md:grid-cols-3 md:gap-3">
+        <Skeleton className="h-[74px] rounded-[14px]" />
+        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:150ms]" />
+        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:300ms]" />
+        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:150ms]" />
+        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:300ms]" />
+        <Skeleton className="h-[74px] rounded-[14px]" />
+      </div>
     </div>
   );
 }

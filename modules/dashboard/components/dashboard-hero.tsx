@@ -24,7 +24,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
   return (
     <section
       aria-labelledby="dashboard-hero-title"
-      className="mb-3.5 rounded-[18px] border border-line bg-qp-gradient p-5 shadow-[0_1px_2px_color-mix(in_oklch,var(--qp-ink)_3%,transparent)] md:p-7"
+      className="mb-3.5 rounded-[18px] border border-line bg-linear-to-tr from-qp-gradient to-qp-gradient/10 p-5 shadow-[0_1px_2px_color-mix(in_oklch,var(--qp-ink)_3%,transparent)] md:p-7"
     >
       <div className="flex flex-col gap-6 md:flex-row md:gap-9">
         <div className="flex-[1.3]">
@@ -32,7 +32,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
             <span className="size-1.5 rounded-full bg-qp" aria-hidden />
             <p
               id="dashboard-hero-title"
-              className="font-mono text-[11px] uppercase tracking-[0.1em] text-qp-deep"
+              className="font-mono text-[11px] uppercase tracking-widest text-qp-deep"
             >
               {HERO_AVAILABLE_LABEL}
             </p>

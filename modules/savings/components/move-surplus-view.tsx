@@ -331,9 +331,9 @@ function BackLink() {
 function MoveSurplusSkeleton() {
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="mt-4 h-8 w-48" />
-      <Skeleton className="mt-6 h-32 w-full rounded-[14px]" />
+      <Skeleton variant="line" className="h-4 w-24" />
+      <Skeleton className="mt-4 h-8 w-48 rounded-lg" />
+      <Skeleton className="mt-6 h-32 w-full rounded-[14px] [animation-delay:150ms]" />
     </div>
   );
 }

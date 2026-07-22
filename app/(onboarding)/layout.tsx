@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { isAuthenticated } from "@/auth/auth-server";
+import { privateAreaMetadata } from "@/core/seo";
+
+export const metadata: Metadata = privateAreaMetadata;
 
 /**
  * Layout del grupo `(onboarding)`.

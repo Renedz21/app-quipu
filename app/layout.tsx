@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Hanken_Grotesk, Newsreader } from "next/font/google";
 import "./globals.css";
 import { getToken } from "@/auth/auth-server";
+import { rootMetadata, siteConfig } from "@/core/seo";
 import { AppearanceSync } from "@/modules/progress/components/appearance-sync";
 import { ConvexClientProvider } from "@/shared/components/providers/convex-provider";
+import { SiteJsonLd } from "@/shared/components/seo/site-json-ld";
 import { AppToaster } from "@/shared/components/ui/toaster";
 import { cn } from "@/shared/lib/utils";
 
@@ -27,10 +29,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Quipu — Tu sueldo, con disciplina",
-  description:
-    "Sabe si puedes gastar, en segundos. Quipu ordena tu dinero en tres sobres.",
+export const metadata: Metadata = rootMetadata;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#2a2926" },
+  ],
 };
 
 export default async function RootLayout({
@@ -41,7 +48,7 @@ export default async function RootLayout({
   const initialToken = await getToken();
   return (
     <html
-      lang="es"
+      lang={siteConfig.language}
       className={cn(
         "h-full",
         "antialiased",
@@ -52,6 +59,7 @@ export default async function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
+        <SiteJsonLd />
         <ConvexClientProvider initialToken={initialToken}>
           <AppearanceSync />
           {children}

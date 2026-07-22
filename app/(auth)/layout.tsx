@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { siteConfig } from "@/core/seo";
+
+export const metadata: Metadata = {
+  title: {
+    default: siteConfig.name,
+    template: `%s · ${siteConfig.name}`,
+  },
+};
 
 /**
  * Shell canon del bloque auth: canvas neutro, sin chrome de template.

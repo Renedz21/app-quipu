@@ -25,6 +25,7 @@ vi.mock("@convex-dev/better-auth/nextjs", () => ({
 
 vi.mock("@/core/env", () => ({
   clientEnv: {
+    NEXT_PUBLIC_APP_URL: "http://localhost:3000",
     NEXT_PUBLIC_CONVEX_URL: "https://convex.test",
     NEXT_PUBLIC_CONVEX_SITE_URL: "https://convex-site.test",
   },

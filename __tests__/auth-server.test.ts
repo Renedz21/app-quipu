@@ -3,9 +3,8 @@ import type { Doc } from "@/convex/_generated/dataModel";
 
 const mockRedirect = vi.fn<(url: string) => never>();
 const mockIsAuthenticated = vi.fn<() => Promise<boolean>>();
-const mockFetchAuthQuery = vi.fn<
-  (query: unknown, args: Record<string, never>) => Promise<unknown>
->();
+const mockFetchAuthQuery =
+  vi.fn<(query: unknown, args: Record<string, never>) => Promise<unknown>>();
 
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => mockRedirect(url),
@@ -25,6 +24,7 @@ vi.mock("@convex-dev/better-auth/nextjs", () => ({
 
 vi.mock("@/core/env", () => ({
   clientEnv: {
+    NEXT_PUBLIC_APP_URL: "http://localhost:3000",
     NEXT_PUBLIC_CONVEX_URL: "https://convex.test",
     NEXT_PUBLIC_CONVEX_SITE_URL: "https://convex-site.test",
   },

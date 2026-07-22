@@ -1,20 +1,29 @@
 import Link from "next/link";
 import { requireOnboardedProfile } from "@/auth/auth-server";
+import { pageMetadata } from "@/core/seo";
 import {
   SETTINGS_BACK_LINK,
   SETTINGS_CYCLE_STUB_BODY,
   SETTINGS_CYCLE_STUB_TITLE,
 } from "@/modules/settings/constants";
-import { buttonVariants } from "@/shared/components/ui/button";
 import { BackLink } from "@/shared/components/ui/back-link";
+import { buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
+
+export const metadata = pageMetadata({
+  title: "Ciclo de ingresos",
+  path: "/settings/cycle",
+});
 
 export default async function SettingsCyclePage() {
   await requireOnboardedProfile();
 
   return (
     <div className="mx-auto w-full max-w-lg px-5 py-6">
-      <BackLink href="/settings" className="text-[12.5px] text-mute hover:text-ink">
+      <BackLink
+        href="/settings"
+        className="text-[12.5px] text-mute hover:text-ink"
+      >
         {SETTINGS_BACK_LINK}
       </BackLink>
       <h1 className="mt-3 font-serif text-[23px] font-medium text-ink">

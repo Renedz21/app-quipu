@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Check } from "reicon-react";
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { buttonVariants } from "@/shared/components/ui/button";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -13,6 +13,7 @@ import {
   INCOME_SUCCESS_BODY_PREFIX,
   INCOME_SUCCESS_BODY_SUFFIX,
   INCOME_SUCCESS_DAILY_LABEL,
+  INCOME_SUCCESS_MOVE_SURPLUS_CTA,
   INCOME_SUCCESS_TITLE,
 } from "../constants";
 import type { IncomeRegisterResult } from "../types";
@@ -20,9 +21,14 @@ import type { IncomeRegisterResult } from "../types";
 type Props = {
   result: IncomeRegisterResult;
   currencyCode: string;
+  showMoveSurplusLink?: boolean;
 };
 
-export function IncomeConfirmation({ result, currencyCode }: Props) {
+export function IncomeConfirmation({
+  result,
+  currencyCode,
+  showMoveSurplusLink = false,
+}: Props) {
   const sourceLabel = getIncomeSourceLabel(result.source);
 
   return (
@@ -95,6 +101,18 @@ export function IncomeConfirmation({ result, currencyCode }: Props) {
         >
           {INCOME_HOME_CTA}
         </Link>
+
+        {showMoveSurplusLink ? (
+          <Link
+            href="/savings/move?from=wants"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "mt-3 inline-flex h-11 rounded-[11px] border-extraordinary-border bg-extraordinary-surface px-6 text-[14px] font-medium text-extraordinary-b hover:bg-extraordinary-surface/80",
+            )}
+          >
+            {INCOME_SUCCESS_MOVE_SURPLUS_CTA}
+          </Link>
+        ) : null}
       </div>
     </div>
   );

@@ -24,13 +24,22 @@ export function IncomeRegisterFlow({
 
   const [step, setStep] = useState<IncomeFlowStep>("form");
   const [result, setResult] = useState<IncomeRegisterResult | undefined>();
+  const [showMoveSurplusLink, setShowMoveSurplusLink] = useState(false);
 
   const currencyCode =
-    summary?.profile.currencyCode ?? serverCurrencyCode ?? DEFAULT_CURRENCY.code;
+    summary?.profile.currencyCode ??
+    serverCurrencyCode ??
+    DEFAULT_CURRENCY.code;
   const currencySymbol = DEFAULT_CURRENCY.symbol;
 
   if (step === "success" && result) {
-    return <IncomeConfirmation result={result} currencyCode={currencyCode} />;
+    return (
+      <IncomeConfirmation
+        result={result}
+        currencyCode={currencyCode}
+        showMoveSurplusLink={showMoveSurplusLink}
+      />
+    );
   }
 
   return (
@@ -40,7 +49,8 @@ export function IncomeRegisterFlow({
       profile={profile}
       summary={summary ?? undefined}
       createIncomeEvent={createIncomeEvent}
-      onSuccess={(response) => {
+      onSuccess={(response, options) => {
+        setShowMoveSurplusLink(options?.incomeKind === "extraordinary");
         setResult(response);
         setStep("success");
       }}

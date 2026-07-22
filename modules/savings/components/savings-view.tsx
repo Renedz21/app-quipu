@@ -29,9 +29,15 @@ import { buildCycleContributionSubtitle } from "../lib/savingsCopy";
 import { EmergencyFundHero } from "./emergency-fund-hero";
 import { NewGoalDialog } from "./new-goal-dialog";
 import { SavingsGoalCard } from "./savings-goal-card";
+import {
+  CycleSavingsSection,
+  CycleSavingsSectionSkeleton,
+} from "./cycle-savings-section";
+import { useCycleSavingsBreakdown } from "../queries";
 
 export function SavingsView() {
   const overview = useQuery(api.savings.getOverview, {});
+  const cycleBreakdown = useCycleSavingsBreakdown();
   const [newGoalOpen, setNewGoalOpen] = useState(false);
 
   if (overview === undefined) {
@@ -121,6 +127,14 @@ export function SavingsView() {
         />
       ) : null}
 
+      {overview.hasActiveCycle ? (
+        cycleBreakdown === undefined ? (
+          <CycleSavingsSectionSkeleton />
+        ) : cycleBreakdown ? (
+          <CycleSavingsSection breakdown={cycleBreakdown} />
+        ) : null
+      ) : null}
+
       <section className="mt-6">
         <div className="mb-3.5 flex items-center gap-2">
           <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-faint">
@@ -176,6 +190,7 @@ function SavingsViewSkeleton() {
       <Skeleton className="h-8 w-40" />
       <Skeleton className="mt-2 h-4 w-64" />
       <Skeleton className="mt-6 h-56 w-full rounded-[20px]" />
+      <CycleSavingsSectionSkeleton />
       <div className="mt-6 grid gap-3 md:grid-cols-3">
         <Skeleton className="h-28 rounded-[13px]" />
         <Skeleton className="h-28 rounded-[13px]" />

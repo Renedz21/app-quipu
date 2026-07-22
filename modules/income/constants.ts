@@ -14,11 +14,17 @@ export const INCOME_IMPACT_TITLE = "Impacto en tus sobres";
 export const INCOME_NEW_DAILY_LABEL = "Nuevo disponible hoy";
 export const INCOME_CANCEL_CTA = "Volver";
 export const INCOME_SUBMIT_CTA = "Registrar ingreso";
+export const INCOME_EXTRAORDINARY_KIND_LABEL = "Tipo de ingreso";
+export const INCOME_EXTRAORDINARY_TYPE_LABEL = "¿Qué ingreso es?";
+export const INCOME_EXTRAORDINARY_CUSTOM_LABEL = "Descripción";
+export const INCOME_EXTRAORDINARY_DESTINATION_LABEL = "¿A dónde va?";
 export const INCOME_SUCCESS_TITLE = "Ingreso registrado";
 export const INCOME_SUCCESS_BODY_PREFIX = "ya se repartieron.";
 export const INCOME_SUCCESS_BODY_SUFFIX = "Tu ciclo respira mejor.";
 export const INCOME_SUCCESS_DAILY_LABEL = "Disponible hoy ahora";
 export const INCOME_HOME_CTA = "Volver al inicio";
+export const INCOME_SUCCESS_MOVE_SURPLUS_CTA =
+  "Prefiero ahorrar más de este ingreso";
 
 export const INCOME_SOURCE_OPTIONS: ReadonlyArray<{
   value: IncomeSource;

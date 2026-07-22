@@ -50,6 +50,41 @@ export const appTables = {
     allocationWants: v.number(), // Default: 30
     allocationSavings: v.number(), // Default: 20
 
+    extraordinaryRules: v.optional(
+      v.object({
+        cts: v.union(
+          v.literal("all_to_emergency_fund"),
+          v.literal("profile_default"),
+          v.literal("all_to_savings"),
+          v.literal("ask_each_time"),
+        ),
+        gratifications: v.union(
+          v.literal("all_to_emergency_fund"),
+          v.literal("profile_default"),
+          v.literal("all_to_savings"),
+          v.literal("ask_each_time"),
+        ),
+        corporate_bonus: v.union(
+          v.literal("all_to_emergency_fund"),
+          v.literal("profile_default"),
+          v.literal("all_to_savings"),
+          v.literal("ask_each_time"),
+        ),
+        profit_sharing: v.union(
+          v.literal("all_to_emergency_fund"),
+          v.literal("profile_default"),
+          v.literal("all_to_savings"),
+          v.literal("ask_each_time"),
+        ),
+        custom: v.union(
+          v.literal("all_to_emergency_fund"),
+          v.literal("profile_default"),
+          v.literal("all_to_savings"),
+          v.literal("ask_each_time"),
+        ),
+      }),
+    ),
+
     // Estado del SaaS (Sincronizado vía Webhooks de Polar.sh)
     onboardingComplete: v.boolean(),
     plan: v.union(v.literal("free"), v.literal("premium")),
@@ -219,9 +254,35 @@ export const appTables = {
       wants: v.number(),
       savings: v.number(),
     }),
+    incomeKind: v.optional(
+      v.union(v.literal("habitual"), v.literal("extraordinary")),
+    ),
+    extraordinaryType: v.optional(
+      v.union(
+        v.literal("gratification_july"),
+        v.literal("gratification_december"),
+        v.literal("cts"),
+        v.literal("corporate_bonus"),
+        v.literal("profit_sharing"),
+        v.literal("custom"),
+      ),
+    ),
+    extraordinaryLabel: v.optional(v.string()),
+    distributionPolicy: v.optional(
+      v.union(v.literal("profile_default"), v.literal("all_to_savings")),
+    ),
   })
     .index("by_cycle", ["cycleId"])
     .index("by_profile_time", ["profileId", "occurredAt"]),
+
+  surplusContributions: defineTable({
+    profileId: v.id("profiles"),
+    cycleId: v.id("financialCycles"),
+    fromEnvelope: v.union(v.literal("needs"), v.literal("wants")),
+    amount: v.number(),
+    subEnvelopeId: v.id("subEnvelopes"),
+    createdAt: v.number(),
+  }).index("by_cycle", ["cycleId"]),
 };
 
 const schema = defineSchema(appTables);

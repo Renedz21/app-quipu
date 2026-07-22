@@ -1,6 +1,7 @@
 # Bloque 6 — Ahorros "¿Qué estoy construyendo?" — Spec (2026-07-21)
 
 > Pantalla de ahorros con Fondo de Emergencia como hero, detalle del fondo y metas secundarias.
+> **Extensión ciclo (6N):** ver `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md` (P2-7).
 
 ## Decisiones
 

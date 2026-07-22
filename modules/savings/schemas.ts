@@ -53,3 +53,17 @@ export function newGoalFormToMutationArgs(values: NewGoalFormValues) {
     targetAmount: parseOptionalTargetCents(values.targetInput),
   };
 }
+
+const surplusFromEnvelopeValues = ["needs", "wants"] as const;
+
+export const moveSurplusInputSchema = z.object({
+  fromEnvelope: z.enum(surplusFromEnvelopeValues),
+  amount: z
+    .number()
+    .int("El monto debe ser un número entero de céntimos.")
+    .positive("El monto debe ser mayor a cero.")
+    .max(KEYPAD_MAX_CENTS, "El monto supera el máximo permitido."),
+  toSubEnvelopeId: z.string().min(1, "Elige un destino.").optional(),
+});
+
+export type MoveSurplusInput = z.infer<typeof moveSurplusInputSchema>;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { KEYPAD_MAX_CENTS } from "@/modules/expenses/lib/keypad";
 import {
   createNewGoalSchema,
+  moveSurplusInputSchema,
   newGoalFormToMutationArgs,
 } from "@/modules/savings/schemas";
 
@@ -57,5 +58,27 @@ describe("newGoalFormToMutationArgs", () => {
     expect(
       newGoalFormToMutationArgs({ label: "Viaje", targetInput: "3000" }),
     ).toEqual({ label: "Viaje", targetAmount: 300_000 });
+  });
+});
+
+describe("moveSurplusInputSchema", () => {
+  it("accepts valid move surplus payload", () => {
+    expect(
+      moveSurplusInputSchema.safeParse({
+        fromEnvelope: "wants",
+        amount: 5_000,
+        toSubEnvelopeId: "sub123",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects zero amount", () => {
+    expect(
+      moveSurplusInputSchema.safeParse({
+        fromEnvelope: "needs",
+        amount: 0,
+        toSubEnvelopeId: "sub123",
+      }).success,
+    ).toBe(false);
   });
 });

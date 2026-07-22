@@ -14,3 +14,7 @@ export type SavingsGoal = SavingsOverview["goals"][number];
 export type EmergencyFundDetail = NonNullable<
   FunctionReturnType<typeof api.savings.getEmergencyFundDetail>
 >;
+
+export type CycleSavingsBreakdown = NonNullable<
+  FunctionReturnType<typeof api.savings.getCycleSavingsBreakdown>
+>;

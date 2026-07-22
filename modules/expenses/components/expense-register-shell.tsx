@@ -8,6 +8,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { cn } from "@/shared/lib/utils";
 
 type Props = {
   open: boolean;
@@ -66,14 +67,9 @@ function FlowProgress({ step }: { step: "amount" | "envelope" | "success" }) {
   const activeIndex = steps.indexOf(step);
 
   return (
-    <div className="flex gap-1" aria-hidden>
+    <div className="flex items-center gap-1" aria-hidden>
       {steps.map((item, index) => (
-        <span
-          key={item}
-          className={`h-1 w-[22px] rounded-sm ${
-            index <= activeIndex ? "bg-ink" : "bg-line"
-          }`}
-        />
+        <span key={item} className={cn("h-1 w-5.5 rounded-sm", index <= activeIndex ? "bg-ink" : "bg-line")} />
       ))}
     </div>
   );

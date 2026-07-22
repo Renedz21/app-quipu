@@ -16,7 +16,6 @@ export function DashboardFab() {
   return (
     <Button
       type="button"
-      size="icon-lg"
       aria-label={hasActiveCycle ? REGISTER_CTA : HERO_EMPTY_CTA}
       onClick={() => {
         if (hasActiveCycle) {
@@ -25,9 +24,9 @@ export function DashboardFab() {
         }
         router.push("/income/register");
       }}
-      className="size-[52px] rounded-full bg-ink text-canvas shadow-[0_10px_24px_-8px_color-mix(in_oklch,var(--qp-ink)_50%,transparent)] hover:bg-ink/90"
+      className="size-13 rounded-full bg-ink text-canvas shadow-[0_10px_24px_-8px_color-mix(in_oklch,var(--qp-ink)_50%,transparent)] hover:bg-ink/90"
     >
-      <Add size={22} color="var(--qp-canvas)" aria-hidden />
+      <Add size={48} color="var(--qp-canvas)" aria-hidden />
     </Button>
   );
 }

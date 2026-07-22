@@ -4,7 +4,7 @@ export const SIDEBAR_ITEMS: Array<{
   disabled?: boolean;
 }> = [
   { href: "/dashboard", label: "Inicio" },
-  { href: "#", label: "Registrar", disabled: true },
+  { href: "/income/register", label: "Registrar" },
   { href: "/savings", label: "Ahorros" },
   { href: "/commitments", label: "Compromisos" },
   { href: "/settings", label: "Ajustes" },

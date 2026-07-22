@@ -33,7 +33,7 @@ export function AppBottomNav({ className }: Props) {
           const active = !item.disabled && navItemActive(pathname, item.href);
           const content = (
             <>
-              <AppNavIcon label={item.label} active={active} size={18} />
+              <AppNavIcon label={item.label} active={active} size={24} />
               <span className={cn(active && "font-semibold text-qp-deep")}>
                 {item.label}
               </span>

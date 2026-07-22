@@ -1,7 +1,7 @@
 "use client";
 
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { Button } from "@/shared/components/ui/button";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
   ENVELOPE_EXPENSE_STYLES,
   EXPENSE_CONFIRM_CTA,

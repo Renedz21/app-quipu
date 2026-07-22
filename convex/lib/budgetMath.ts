@@ -1,3 +1,4 @@
+import { computeAllocations as computeAllocationsShared } from "../../shared/lib/allocations";
 import type { Doc } from "../_generated/dataModel";
 
 export const OVER_BUDGET_BUFFER = 0.05;
@@ -77,43 +78,12 @@ export function evaluateCycleCompliance(
   return hasWarning ? "warning" : "compliant";
 }
 
-// Reparto entero con largest-remainder: los céntimos sobrantes van a las mayores
-// partes fraccionarias, garantizando que los 3 sobres sumen exacto el neto.
+// Reparto entero con largest-remainder (implementación en shared/lib/allocations).
 export function computeAllocations(
   netAvailableCents: number,
   weights: AllocationWeights,
 ): Record<EnvelopeType, number> {
-  const w: Record<EnvelopeType, number> = {
-    needs: weights.allocationNeeds,
-    wants: weights.allocationWants,
-    savings: weights.allocationSavings,
-  };
-  const total = w.needs + w.wants + w.savings;
-  if (total <= 0)
-    throw new Error("La distribución del perfil es inválida (suma 0).");
-
-  const parts = ENVELOPE_TYPES.map((type) => {
-    const exact = (netAvailableCents * w[type]) / total;
-    const floor = Math.floor(exact);
-    return { type, floor, frac: exact - floor };
-  });
-
-  const result: Record<EnvelopeType, number> = {
-    needs: 0,
-    wants: 0,
-    savings: 0,
-  };
-  for (const p of parts) result[p.type] = p.floor;
-
-  let remainder =
-    netAvailableCents - parts.reduce((acc, p) => acc + p.floor, 0);
-  const byFracDesc = [...parts].sort((a, b) => b.frac - a.frac);
-  for (let i = 0; remainder > 0; i++, remainder--) {
-    const part = byFracDesc[i % byFracDesc.length];
-    if (part) result[part.type] += 1;
-  }
-
-  return result;
+  return computeAllocationsShared(netAvailableCents, weights);
 }
 
 export function isValidAllocations(

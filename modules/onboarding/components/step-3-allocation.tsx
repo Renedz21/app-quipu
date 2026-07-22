@@ -3,8 +3,8 @@
 import { useTransition } from "react";
 import { ArrowRight } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
-import { completeOnboardingAction } from "../actions";
 import { ENVELOPES } from "@/shared/constants/envelopes";
+import { completeOnboardingAction } from "../actions";
 import { ALLOCATION_DEFAULTS } from "../lib/allocation";
 import { AllocationBar } from "./allocation-bar";
 import { AllocationRow } from "./allocation-row";

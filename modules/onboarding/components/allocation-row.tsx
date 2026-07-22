@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { cn } from "@/shared/lib/utils";
 import type { EnvelopeKey } from "@/shared/constants/envelopes";
+import { cn } from "@/shared/lib/utils";
 import { type Allocation, distributeEnvelope } from "../lib/allocation";
 
 type Props = {

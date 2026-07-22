@@ -160,6 +160,7 @@ export const getSummary = query({
         description: income.description,
         amount: income.amount,
         occurredAt: income.occurredAt,
+        incomeKind: income.incomeKind,
       })),
       4,
     ).map((movement) => ({
@@ -220,13 +221,15 @@ export const getSummary = query({
       })),
       now,
       coverageBoost: activeCycle.coverageBoost ?? undefined,
-      excludedCommitmentIds: new Set(
-        commitmentsRaw
-          .filter(
-            (commitment) => commitment.postponedForCycleId === activeCycle._id,
-          )
-          .map((commitment) => commitment._id),
-      ),
+      excludedCommitmentIds: (() => {
+        const ids = new Set<Id<"fixedCommitments">>();
+        for (const commitment of commitmentsRaw) {
+          if (commitment.postponedForCycleId === activeCycle._id) {
+            ids.add(commitment._id);
+          }
+        }
+        return ids;
+      })(),
     });
 
     const commitments = sortCommitmentsByDue(

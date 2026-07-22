@@ -18,9 +18,7 @@ const serverSchema = z.object({
   CONVEX_DEPLOY_KEY: z.string().optional(),
 
   // Better Auth
-  BETTER_AUTH_SECRET: z
-    .string()
-    .min(32, "BETTER_AUTH_SECRET debe tener al menos 32 caracteres"),
+  BETTER_AUTH_SECRET: z.string(),
 
   // Polar.sh (webhooks de pago)
   POLAR_WEBHOOK_SECRET: z.string().optional(),
@@ -28,13 +26,22 @@ const serverSchema = z.object({
 });
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_CONVEX_URL: z
+  /** URL pública de la app (metadataBase, canonical, sitemap). Sin barra final. */
+  NEXT_PUBLIC_APP_URL: z.url(
+    "NEXT_PUBLIC_APP_URL debe ser una URL válida (p. ej. http://localhost:3000)",
+  ),
+  NEXT_PUBLIC_CONVEX_URL: z.url(
+    "NEXT_PUBLIC_CONVEX_URL debe ser una URL válida",
+  ),
+  NEXT_PUBLIC_CONVEX_SITE_URL: z.url(
+    "NEXT_PUBLIC_CONVEX_SITE_URL debe ser una URL válida",
+  ),
+  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: z
     .string()
-    .url("NEXT_PUBLIC_CONVEX_URL debe ser una URL válida"),
-  NEXT_PUBLIC_CONVEX_SITE_URL: z
-    .string()
-    .url("NEXT_PUBLIC_CONVEX_SITE_URL debe ser una URL válida"),
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    .min(1, "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN es obligatorio"),
+  NEXT_PUBLIC_POSTHOG_HOST: z.url(
+    "NEXT_PUBLIC_POSTHOG_HOST debe ser una URL válida",
+  ),
 });
 
 /**
@@ -42,17 +49,20 @@ const clientSchema = z.object({
  * archivo (incluidos Client Components) porque solo exponen lo público.
  */
 export const clientEnv = clientSchema.parse({
+  NEXT_PUBLIC_APP_URL:
+    process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
   NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN:
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
+  NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
 });
 
 /**
- * Validador de variables de servidor. Solo se ejecuta cuando se importa desde
- * un archivo del servidor (RSC, Route Handler, Server Action). En build de
- * cliente falla si falta una variable crítica.
+ * Validador de variables de servidor. Usar vía `@/core/env.server` (`serverEnv`),
+ * nunca desde el cliente: secrets no existen en el bundle del navegador.
  */
-function parseServerEnv() {
+export function parseServerEnv() {
   const parsed = serverSchema.safeParse(process.env);
   if (!parsed.success) {
     const { formErrors, fieldErrors } = z.flattenError(parsed.error);
@@ -65,8 +75,6 @@ function parseServerEnv() {
   }
   return parsed.data;
 }
-
-export const serverEnv = parseServerEnv();
 
 /**
  * Type exports para uso externo.

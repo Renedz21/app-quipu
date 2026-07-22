@@ -1,48 +1,29 @@
+import {
+  type AllocationWeights,
+  applyDistributionPolicy,
+  computeAllocations,
+  type DistributionPolicy,
+  type EnvelopeAmounts,
+} from "@/shared/lib/allocations";
+
+export type { AllocationWeights } from "@/shared/lib/allocations";
+
 export type EnvelopeType = "needs" | "wants" | "savings";
+export type EnvelopeBalances = EnvelopeAmounts;
 
-export type AllocationWeights = {
-  allocationNeeds: number;
-  allocationWants: number;
-  allocationSavings: number;
-};
-
-export type EnvelopeBalances = Record<EnvelopeType, number>;
-
-const ENVELOPE_TYPES: EnvelopeType[] = ["needs", "wants", "savings"];
-
-/** Mirrors convex/lib/budgetMath.computeAllocations for client-safe preview. */
 export function computeIncomeDistribution(
   netAvailableCents: number,
   weights: AllocationWeights,
 ): EnvelopeBalances {
-  const w: EnvelopeBalances = {
-    needs: weights.allocationNeeds,
-    wants: weights.allocationWants,
-    savings: weights.allocationSavings,
-  };
-  const total = w.needs + w.wants + w.savings;
-  if (total <= 0) {
-    throw new Error("La distribución del perfil es inválida (suma 0).");
-  }
+  return computeAllocations(netAvailableCents, weights);
+}
 
-  const parts = ENVELOPE_TYPES.map((type) => {
-    const exact = (netAvailableCents * w[type]) / total;
-    const floor = Math.floor(exact);
-    return { type, floor, frac: exact - floor };
-  });
-
-  const result: EnvelopeBalances = { needs: 0, wants: 0, savings: 0 };
-  for (const part of parts) result[part.type] = part.floor;
-
-  let remainder =
-    netAvailableCents - parts.reduce((acc, part) => acc + part.floor, 0);
-  const byFracDesc = [...parts].sort((a, b) => b.frac - a.frac);
-  for (let i = 0; remainder > 0; i++, remainder--) {
-    const part = byFracDesc[i % byFracDesc.length];
-    if (part) result[part.type] += 1;
-  }
-
-  return result;
+export function computeIncomeDistributionWithPolicy(
+  netAvailableCents: number,
+  weights: AllocationWeights,
+  policy: DistributionPolicy,
+): EnvelopeBalances {
+  return applyDistributionPolicy(netAvailableCents, weights, policy);
 }
 
 export function computeDailyAvailableCents(
@@ -83,6 +64,7 @@ export type ImpactPreviewInput = {
   weights: AllocationWeights;
   currentEnvelopes: EnvelopeBalances;
   daysRemaining: number;
+  distributionPolicy?: DistributionPolicy;
 };
 
 export type ImpactPreviewResult = {
@@ -98,9 +80,11 @@ export function computeImpactPreview(
 ): ImpactPreviewResult | null {
   if (input.amountCents <= 0) return null;
 
-  const distribution = computeIncomeDistribution(
+  const policy = input.distributionPolicy ?? "profile_default";
+  const distribution = applyDistributionPolicy(
     input.amountCents,
     input.weights,
+    policy,
   );
   const totalWeight =
     input.weights.allocationNeeds +
@@ -124,19 +108,21 @@ export function computeImpactPreview(
   );
 
   const weightPercents: EnvelopeBalances =
-    totalWeight > 0
-      ? {
-          needs: Math.round(
-            (input.weights.allocationNeeds / totalWeight) * 100,
-          ),
-          wants: Math.round(
-            (input.weights.allocationWants / totalWeight) * 100,
-          ),
-          savings: Math.round(
-            (input.weights.allocationSavings / totalWeight) * 100,
-          ),
-        }
-      : { needs: 0, wants: 0, savings: 0 };
+    policy === "all_to_savings"
+      ? { needs: 0, wants: 0, savings: 100 }
+      : totalWeight > 0
+        ? {
+            needs: Math.round(
+              (input.weights.allocationNeeds / totalWeight) * 100,
+            ),
+            wants: Math.round(
+              (input.weights.allocationWants / totalWeight) * 100,
+            ),
+            savings: Math.round(
+              (input.weights.allocationSavings / totalWeight) * 100,
+            ),
+          }
+        : { needs: 0, wants: 0, savings: 0 };
 
   return {
     distribution,

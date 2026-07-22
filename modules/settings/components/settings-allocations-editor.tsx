@@ -8,9 +8,9 @@ import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
 import type { Allocation } from "@/modules/onboarding/lib/allocation";
-import { ENVELOPES } from "@/shared/constants/envelopes";
-import { Button } from "@/shared/components/ui/button";
 import { BackLink } from "@/shared/components/ui/back-link";
+import { Button } from "@/shared/components/ui/button";
+import { ENVELOPES } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import { useUpdateAllocations } from "../actions";
 import {
@@ -80,7 +80,10 @@ export function SettingsAllocationsEditor({
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-lg flex-col px-5 py-4 md:py-8">
-      <BackLink href="/settings" className="text-[12.5px] text-mute hover:text-ink">
+      <BackLink
+        href="/settings"
+        className="text-[12.5px] text-mute hover:text-ink"
+      >
         {SETTINGS_BACK_LINK}
       </BackLink>
       <h1 className="mt-3 font-serif text-[23px] font-medium text-ink">

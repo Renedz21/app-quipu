@@ -206,6 +206,51 @@ export const updateAllocations = mutation({
   },
 });
 
+const extraordinaryProfileRuleValidator = v.union(
+  v.literal("all_to_emergency_fund"),
+  v.literal("profile_default"),
+  v.literal("all_to_savings"),
+  v.literal("ask_each_time"),
+);
+
+export const updateExtraordinaryRules = mutation({
+  args: {
+    extraordinaryRules: v.object({
+      cts: extraordinaryProfileRuleValidator,
+      gratifications: extraordinaryProfileRuleValidator,
+      corporate_bonus: extraordinaryProfileRuleValidator,
+      profit_sharing: extraordinaryProfileRuleValidator,
+      custom: extraordinaryProfileRuleValidator,
+    }),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
+    }
+
+    await ctx.db.patch(profile._id, {
+      extraordinaryRules: args.extraordinaryRules,
+    });
+
+    return { success: true };
+  },
+});
+
 export const updateNotificationPreferences = mutation({
   args: {
     dailySummaryEnabled: v.optional(v.boolean()),

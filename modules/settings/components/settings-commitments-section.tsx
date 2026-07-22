@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useSettingsCommitments } from "../queries";
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -12,6 +11,7 @@ import {
   SETTINGS_COMMITMENTS_LABEL,
   SETTINGS_COMMITMENTS_TOTAL_SUFFIX,
 } from "../constants";
+import { useSettingsCommitments } from "../queries";
 
 function envelopeDot(envelope: "needs" | "wants") {
   return envelope === "needs" ? "bg-needs" : "bg-clay";
@@ -42,7 +42,7 @@ export function SettingsCommitmentsSection({
     <section
       id="settings-commitments"
       className={cn(
-        "rounded-2xl border border-line bg-card px-5 py-5 md:px-[22px] md:py-5",
+        "flex flex-col rounded-2xl border border-line bg-card px-5 py-5 md:px-[22px] md:py-5",
         className,
       )}
     >
@@ -58,11 +58,11 @@ export function SettingsCommitmentsSection({
       </div>
 
       {commitments.length === 0 ? (
-        <p className="mb-3 text-[13px] text-mute">
+        <p className="mb-3 flex-1 text-[13px] text-mute md:mb-0">
           {SETTINGS_COMMITMENTS_EMPTY}
         </p>
       ) : (
-        <ul className="divide-y divide-line-subtle">
+        <ul className="flex-1 divide-y divide-line-subtle">
           {commitments.map((commitment) => (
             <li
               key={commitment._id}
@@ -94,7 +94,7 @@ export function SettingsCommitmentsSection({
       <button
         type="button"
         onClick={() => setAddOpen(true)}
-        className="mt-3 w-full rounded-[11px] border border-dashed border-qp-border bg-card py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft"
+        className="mt-3 w-full shrink-0 rounded-[11px] border border-dashed border-qp-border bg-card py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft md:mt-auto"
       >
         {ADD_COMMITMENT_CTA}
       </button>

@@ -74,11 +74,15 @@ export async function evaluateClosedCycle(
     incomeEvents: incomeEventSlices,
     now,
     coverageBoost: cycle.coverageBoost ?? undefined,
-    excludedCommitmentIds: new Set(
-      commitments
-        .filter((commitment) => commitment.postponedForCycleId === cycleId)
-        .map((commitment) => commitment._id),
-    ),
+    excludedCommitmentIds: (() => {
+      const ids = new Set<Id<"fixedCommitments">>();
+      for (const commitment of commitments) {
+        if (commitment.postponedForCycleId === cycleId) {
+          ids.add(commitment._id);
+        }
+      }
+      return ids;
+    })(),
   });
 
   const allCommitmentsCovered =

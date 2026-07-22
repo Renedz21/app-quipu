@@ -2,8 +2,8 @@
 
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar as CalendarIcon } from "reicon-react";
 import { useState } from "react";
+import { Calendar as CalendarIcon } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import { Calendar } from "@/shared/components/ui/calendar";
 import {

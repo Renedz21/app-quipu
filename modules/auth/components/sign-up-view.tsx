@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
-import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -15,7 +14,7 @@ import {
 } from "@/shared/components/ui/field";
 import { cn } from "@/shared/lib/utils";
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
-
+import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { signUpSchema } from "../schemas";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";

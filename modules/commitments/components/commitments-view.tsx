@@ -1,14 +1,13 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
-import { buttonVariants } from "@/shared/components/ui/button";
 import { BackLink } from "@/shared/components/ui/back-link";
+import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
 import { formatLimaDate } from "@/shared/lib/date";
@@ -27,7 +26,7 @@ import {
   COMMITMENTS_TOTAL_SUFFIX,
 } from "../constants";
 
-function CommitmentsViewSkeleton() {
+export function CommitmentsViewSkeleton() {
   return (
     <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
       <Skeleton className="h-4 w-20" />

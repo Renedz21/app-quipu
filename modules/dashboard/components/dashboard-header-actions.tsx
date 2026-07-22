@@ -7,11 +7,7 @@ import { buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { DashboardRegisterButton } from "./dashboard-register-button";
 
-type Props = {
-  className?: string;
-};
-
-export function DashboardHeaderActions({ className }: Props) {
+export function DashboardHeaderActions() {
   const summary = useDashboardSummary();
   const hasActiveCycle = Boolean(summary?.cycle);
 

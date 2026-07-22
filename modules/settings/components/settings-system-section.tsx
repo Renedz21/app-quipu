@@ -4,11 +4,11 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
-import { useUpdateNotificationPreferences } from "../actions";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { cn } from "@/shared/lib/utils";
+import { useUpdateNotificationPreferences } from "../actions";
 import {
   SETTINGS_ADJUST_ALLOCATIONS,
   SETTINGS_CHANGE_CYCLE,
@@ -25,7 +25,6 @@ import {
   SETTINGS_PERCENTAGES_LABEL,
   SETTINGS_PERCENTAGES_SUM_OK,
   SETTINGS_PREFERENCES_LABEL,
-  SETTINGS_SYSTEM_HEADING,
   SETTINGS_SYSTEM_LABEL,
 } from "../constants";
 import {
@@ -110,7 +109,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
             {SETTINGS_CYCLE_LABEL}
           </span>
           <span className="text-[11.5px] text-faint">
-            {profile.cycleDurationDays ?? 30} dÃ­as
+            {profile.cycleDurationDays ?? 30} días
           </span>
           <ListRowChevron />
         </Link>
@@ -121,10 +120,6 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           <ListRowChevron />
         </div>
       </div>
-
-      <h2 className="hidden font-serif text-2xl font-medium text-ink md:block">
-        {SETTINGS_SYSTEM_HEADING}
-      </h2>
 
       <div className="hidden flex-col gap-3.5 md:flex">
         <div className="rounded-2xl border border-line bg-card px-5 py-5 md:px-[22px] md:py-5">
@@ -177,7 +172,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
             {SETTINGS_CYCLE_LABEL}
           </div>
-          <div className="flex flex-col gap-2.5 sm:flex-row">
+          <div className="flex flex-col gap-2.5 md:flex-row">
             {(
               [
                 { label: SETTINGS_CYCLE_TYPE, value: formatCycleType(profile) },

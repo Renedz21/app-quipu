@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BOTTOM_NAV_ITEMS } from "@/shared/constants/navigation";
 import { AppNavIcon } from "@/shared/components/app-nav-icon";
+import { BOTTOM_NAV_ITEMS } from "@/shared/constants/navigation";
 import { cn } from "@/shared/lib/utils";
 import { DashboardFab } from "./dashboard-fab";
 

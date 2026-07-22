@@ -1,4 +1,3 @@
-import type { SettingsOverviewQueryResult } from "../queries";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { MODEL_DISPLAY_LABELS } from "@/modules/onboarding/constants";
 import {
@@ -6,6 +5,7 @@ import {
   SETTINGS_PLAN_PLUS_PRICE,
   SETTINGS_PLAN_RENEWAL_STUB,
 } from "../constants";
+import type { SettingsOverviewQueryResult } from "../queries";
 import type { SettingsOverview } from "../types";
 
 export type ConvexSettingsOverview = NonNullable<SettingsOverviewQueryResult>;

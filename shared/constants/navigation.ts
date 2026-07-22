@@ -7,7 +7,6 @@ export const SIDEBAR_ITEMS: Array<{
   { href: "#", label: "Registrar", disabled: true },
   { href: "/savings", label: "Ahorros" },
   { href: "/commitments", label: "Compromisos" },
-  { href: "#", label: "Coach", disabled: true },
   { href: "/settings", label: "Ajustes" },
 ];
 

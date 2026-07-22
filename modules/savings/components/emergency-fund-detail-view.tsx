@@ -3,8 +3,8 @@
 import { useQuery } from "convex/react";
 import { Safe } from "reicon-react";
 import { api } from "@/convex/_generated/api";
-import { Button } from "@/shared/components/ui/button";
 import { BackLink } from "@/shared/components/ui/back-link";
+import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
 import {

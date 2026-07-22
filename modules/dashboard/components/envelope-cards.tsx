@@ -3,8 +3,8 @@
 import type { KeyboardEvent } from "react";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import type { ExpenseEnvelopeType } from "@/modules/expenses/lib/envelopeSuggestion";
-import { formatCents } from "@/shared/lib/money";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
+import { formatCents } from "@/shared/lib/money";
 import {
   DASHBOARD_ENVELOPES_SECTION_ID,
   ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY,

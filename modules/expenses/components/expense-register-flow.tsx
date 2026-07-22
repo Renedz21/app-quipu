@@ -4,8 +4,8 @@ import { useMutation } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { DEFAULT_CURRENCY } from "@/core/constants";
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
   EXPENSE_FLOW_TITLE,
   EXPENSE_VARIANT_B_TITLE_PREFIX,

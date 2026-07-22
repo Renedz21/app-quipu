@@ -10,3 +10,7 @@ export function useUpdateAllocations() {
 export function useUpdateNotificationPreferences() {
   return useMutation(api.settings.updateNotificationPreferences);
 }
+
+export function useUpdateExtraordinaryRules() {
+  return useMutation(api.settings.updateExtraordinaryRules);
+}

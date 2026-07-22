@@ -59,6 +59,12 @@ export const SETTINGS_CYCLE_STUB_BODY =
   "Pronto podrás ajustar tu ciclo desde aquí. Por ahora, tu configuración sigue la del onboarding.";
 
 export const SETTINGS_PREFERENCES_LABEL = "Preferencias";
+export const SETTINGS_EXTRAORDINARY_LABEL = "Ingresos extraordinarios";
+export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
+export const SETTINGS_EXTRAORDINARY_CTS = "CTS";
+export const SETTINGS_EXTRAORDINARY_BONUS = "Bono corporativo";
+export const SETTINGS_EXTRAORDINARY_PROFIT = "Utilidades";
+export const SETTINGS_EXTRAORDINARY_CUSTOM = "Otros extraordinarios";
 export const SETTINGS_CURRENCY_LABEL = "Moneda";
 export const SETTINGS_CURRENCY_VALUE = "Sol peruano · S/";
 export const SETTINGS_LANGUAGE_LABEL = "Idioma";

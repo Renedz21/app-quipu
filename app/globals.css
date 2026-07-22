@@ -127,6 +127,11 @@
   --color-needs-tag-muted: var(--needs-tag-muted);
   --color-needs-tag-border: var(--needs-tag-border);
   --color-icon-luz: var(--icon-luz);
+
+  --color-extraordinary-a: var(--extraordinary-a);
+  --color-extraordinary-b: var(--extraordinary-b);
+  --color-extraordinary-surface: var(--extraordinary-surface);
+  --color-extraordinary-border: var(--extraordinary-border);
 }
 
 /**
@@ -222,6 +227,11 @@
   --qp-moss: oklch(0.6011 0.0582 166.73);
   --qp-moss-soft: oklch(0.9507 0.0108 158.84);
   --qp-clay: oklch(0.6368 0.0561 57.05);
+
+  --extraordinary-a: #b08430;
+  --extraordinary-b: #86651f;
+  --extraordinary-surface: #f6efde;
+  --extraordinary-border: #e8dabc;
   --qp-clay-soft: oklch(0.9483 0.0097 72.66);
 
   --danger: oklch(0.5939 0.0957 31.84);

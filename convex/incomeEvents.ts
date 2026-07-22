@@ -1,11 +1,11 @@
 import { ConvexError, v } from "convex/values";
+import {
+  applyDistributionPolicy,
+  type DistributionPolicy,
+} from "../shared/lib/allocations";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
-import {
-  CYCLE_DAYS,
-  computeAllocations,
-  ENVELOPE_TYPES,
-} from "./lib/budgetMath";
+import { CYCLE_DAYS, ENVELOPE_TYPES } from "./lib/budgetMath";
 import {
   computeCycleDayMetrics,
   computeDailyAvailable,
@@ -16,10 +16,29 @@ import {
   clearCommitmentCoverageForProfile,
   evaluateCommitmentCoverageForCycle,
 } from "./lib/evaluateCommitmentCoverage";
+import {
+  canonicalExtraordinaryDescription,
+  type ExtraordinaryType,
+  sourceForExtraordinaryType,
+} from "./lib/extraordinaryIncome";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const HORIZON_DAYS = 15; // v2.5 initial: fixed at 15 for variable income model.
+
+const extraordinaryTypeValidator = v.union(
+  v.literal("gratification_july"),
+  v.literal("gratification_december"),
+  v.literal("cts"),
+  v.literal("corporate_bonus"),
+  v.literal("profit_sharing"),
+  v.literal("custom"),
+);
+
+const distributionPolicyValidator = v.union(
+  v.literal("profile_default"),
+  v.literal("all_to_savings"),
+);
 
 export const createIncomeEvent = mutation({
   args: {
@@ -35,6 +54,12 @@ export const createIncomeEvent = mutation({
     ),
     description: v.string(),
     occurredAt: v.number(),
+    incomeKind: v.optional(
+      v.union(v.literal("habitual"), v.literal("extraordinary")),
+    ),
+    extraordinaryType: v.optional(extraordinaryTypeValidator),
+    extraordinaryLabel: v.optional(v.string()),
+    distributionPolicy: v.optional(distributionPolicyValidator),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -51,13 +76,76 @@ export const createIncomeEvent = mutation({
         data: { field: "amount" },
       });
     }
-    const description = args.description.trim();
-    if (!description) {
-      throw new ConvexError({
-        code: "VALIDATION_ERROR",
-        message: "La descripción es obligatoria.",
-        data: { field: "description" },
-      });
+    const incomeKind = args.incomeKind ?? "habitual";
+    let resolvedSource = args.source;
+    let resolvedDescription = "";
+    let distributionPolicy: DistributionPolicy = "profile_default";
+    let extraordinaryType: ExtraordinaryType | undefined;
+    let extraordinaryLabel: string | undefined;
+
+    if (incomeKind === "extraordinary") {
+      if (!args.extraordinaryType) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "Elige un tipo de ingreso extraordinario.",
+          data: { field: "extraordinaryType" },
+        });
+      }
+      extraordinaryType = args.extraordinaryType;
+      if (extraordinaryType === "custom") {
+        const label = args.extraordinaryLabel?.trim() ?? "";
+        if (!label || label.length > 80) {
+          throw new ConvexError({
+            code: "VALIDATION_ERROR",
+            message:
+              "Describe el ingreso (1–80 caracteres) para «Otro extraordinario».",
+            data: { field: "extraordinaryLabel" },
+          });
+        }
+        extraordinaryLabel = label;
+      } else if (args.extraordinaryLabel?.trim()) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            "La etiqueta personalizada solo aplica a «Otro extraordinario».",
+          data: { field: "extraordinaryLabel" },
+        });
+      }
+
+      if (!args.distributionPolicy) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "Confirma a dónde va este ingreso extraordinario.",
+          data: { field: "distributionPolicy" },
+        });
+      }
+      distributionPolicy = args.distributionPolicy;
+      resolvedSource = sourceForExtraordinaryType(extraordinaryType);
+      resolvedDescription = canonicalExtraordinaryDescription(
+        extraordinaryType,
+        extraordinaryLabel,
+      );
+    } else {
+      const description = args.description.trim();
+      if (!description) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "La descripción es obligatoria.",
+          data: { field: "description" },
+        });
+      }
+      resolvedDescription = description;
+      if (
+        args.extraordinaryType !== undefined ||
+        args.distributionPolicy !== undefined ||
+        args.extraordinaryLabel !== undefined
+      ) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            "Los campos extraordinarios solo aplican a ingresos extraordinarios.",
+        });
+      }
     }
 
     const profile = await ctx.db
@@ -132,21 +220,30 @@ export const createIncomeEvent = mutation({
       await clearCommitmentCoverageForProfile(ctx, profile._id);
     }
 
-    // Compute distribution with the profile's current allocations.
-    const distribution = computeAllocations(args.amount, {
+    const weights = {
       allocationNeeds: profile.allocationNeeds,
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
-    });
+    };
+    const distribution = applyDistributionPolicy(
+      args.amount,
+      weights,
+      distributionPolicy,
+    );
 
-    // Insert the event.
     const eventId = await ctx.db.insert("incomeEvents", {
       profileId: profile._id,
       cycleId,
       amount: args.amount,
-      source: args.source,
-      description,
+      source: resolvedSource,
+      description: resolvedDescription,
       occurredAt: args.occurredAt,
+      incomeKind,
+      ...(extraordinaryType !== undefined && {
+        extraordinaryType,
+        extraordinaryLabel,
+        distributionPolicy,
+      }),
       distributionApplied: distribution,
     });
 
@@ -235,8 +332,8 @@ export const createIncomeEvent = mutation({
       cycleId,
       isNewCycle,
       amount: args.amount,
-      source: args.source,
-      description,
+      source: resolvedSource,
+      description: resolvedDescription,
       distributionApplied: distribution,
       envelopes: ENVELOPE_TYPES.map((type) => {
         const envelope = updatedEnvelopes.find((env) => env.type === type);

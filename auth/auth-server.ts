@@ -2,8 +2,8 @@ import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { api } from "@/convex/_generated/api";
-import { clientEnv } from "@/core/env";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { clientEnv } from "@/core/env";
 
 export const {
   handler,

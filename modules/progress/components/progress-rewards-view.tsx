@@ -1,11 +1,10 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
-import { buttonVariants } from "@/shared/components/ui/button";
 import { BackLink } from "@/shared/components/ui/back-link";
+import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import {

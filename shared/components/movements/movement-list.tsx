@@ -8,6 +8,7 @@ export type MovementItem = {
   envelopeLabel?: string;
   amount: number;
   timestamp: number;
+  isExtraordinaryIncome?: boolean;
 };
 
 const MOVEMENT_DOT = {
@@ -51,6 +52,11 @@ export function MovementList({ movements, currencyCode }: Props) {
               {movement.kind === "income" ? "Ingreso · " : ""}
               {movement.label}
             </span>
+            {movement.isExtraordinaryIncome ? (
+              <span className="ml-1.5 inline-flex rounded-full border border-extraordinary-border bg-extraordinary-surface px-1.5 py-0.5 text-[10px] font-semibold text-extraordinary-b">
+                Extraordinario
+              </span>
+            ) : null}
             {movement.envelopeLabel ? (
               <span className="text-xs text-mute">
                 {" "}

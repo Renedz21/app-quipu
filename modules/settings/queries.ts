@@ -1,7 +1,7 @@
 "use client";
 
-import type { FunctionReturnType } from "convex/server";
 import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 
 /** Convex query refs for settings module (single import boundary for UI). */

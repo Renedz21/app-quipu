@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Add,
-  CalendarCheck,
-  ChatRound,
-  Home,
-  Money,
-  Settings,
-} from "reicon-react";
+import { Add, CalendarCheck, Home, Money, Settings } from "reicon-react";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -39,8 +32,6 @@ export function AppNavIcon({ label, active, className, size = 16 }: Props) {
       return <Money {...iconProps} />;
     case "Compromisos":
       return <CalendarCheck {...iconProps} />;
-    case "Coach":
-      return <ChatRound {...iconProps} />;
     case "Ajustes":
       return <Settings {...iconProps} />;
     default:

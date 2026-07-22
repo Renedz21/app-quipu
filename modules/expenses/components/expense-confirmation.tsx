@@ -2,6 +2,7 @@
 
 import { Check } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import {
   ENVELOPE_EXPENSE_STYLES,
@@ -13,7 +14,6 @@ import {
 } from "../constants";
 import type { ExpenseEnvelopeType } from "../lib/envelopeSuggestion";
 import { formatElapsedSeconds } from "../lib/keypad";
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 
 type Props = {
   amountCents: number;

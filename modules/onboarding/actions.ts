@@ -17,7 +17,7 @@ export async function completeOnboardingAction(input: unknown) {
     ...clean,
   });
   try {
-    await fetchAuthMutation(api.profiles.createProfile, parsed);
+    return await fetchAuthMutation(api.profiles.createProfile, parsed);
   } catch (error) {
     throw fromConvexError(error);
   }

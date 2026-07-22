@@ -1,8 +1,8 @@
 "use client";
 
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
   ENVELOPE_EXPENSE_STYLES,
   EXPENSE_AMOUNT_LABEL,

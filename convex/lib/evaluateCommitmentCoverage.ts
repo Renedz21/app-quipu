@@ -67,11 +67,15 @@ export async function evaluateCommitmentCoverageForCycle(
     incomeEvents: incomeEventSlices,
     now,
     coverageBoost: cycle.coverageBoost ?? undefined,
-    excludedCommitmentIds: new Set(
-      commitments
-        .filter((commitment) => commitment.postponedForCycleId === cycleId)
-        .map((commitment) => commitment._id),
-    ),
+    excludedCommitmentIds: (() => {
+      const ids = new Set<Id<"fixedCommitments">>();
+      for (const commitment of commitments) {
+        if (commitment.postponedForCycleId === cycleId) {
+          ids.add(commitment._id);
+        }
+      }
+      return ids;
+    })(),
   });
 
   await Promise.all(
@@ -80,10 +84,13 @@ export async function evaluateCommitmentCoverageForCycle(
       if (!coverage) return Promise.resolve();
 
       if (coverage.status === "covered") {
-        const coveredBy = coverage.fundingEvents
-          .map((funding) => funding.eventId)
-          .filter((eventId) => !eventId.startsWith("__boost_"))
-          .map((eventId) => eventId as Id<"incomeEvents">);
+        const coveredBy: Id<"incomeEvents">[] = [];
+        for (const funding of coverage.fundingEvents) {
+          const eventId = funding.eventId;
+          if (!eventId.startsWith("__boost_")) {
+            coveredBy.push(eventId as Id<"incomeEvents">);
+          }
+        }
 
         if (commitment.postponedForCycleId === cycleId) {
           return ctx.db.patch(commitment._id, {

@@ -62,4 +62,3 @@ export const MOVEMENTS_EMPTY_BODY =
   "Tu primer movimiento aparecerá aquí. Registrar un gasto toma menos de diez segundos.";
 
 export const REGISTER_CTA = "Registrar";
-

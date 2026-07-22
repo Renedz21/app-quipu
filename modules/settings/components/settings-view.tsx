@@ -1,11 +1,11 @@
 "use client";
 
 import { authClient } from "@/auth/auth-client";
-import { PLAN_LABELS } from "@/shared/constants/plan";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { PLAN_LABELS } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_ERROR_BODY,
@@ -19,10 +19,12 @@ import {
   SETTINGS_PLAN_PLUS_PRICE,
   SETTINGS_PROFILE_LABEL,
   SETTINGS_SECURITY_LABEL,
+  SETTINGS_SYSTEM_HEADING,
 } from "../constants";
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
 import { useSettingsOverview } from "../queries";
 import { SettingsCommitmentsSection } from "./settings-commitments-section";
+import { SettingsExtraordinarySection } from "./settings-extraordinary-section";
 import { SettingsPlanCard } from "./settings-plan-card";
 import { SettingsProfileCard } from "./settings-profile-card";
 import { SettingsSecurityCard } from "./settings-security-card";
@@ -176,12 +178,20 @@ export function SettingsView() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-3.5">
-        <SettingsSystemSection className="flex-1" />
-        <SettingsCommitmentsSection className="w-full lg:max-w-md" />
-      </div>
+      <section className="mt-6">
+        <h2 className="mb-[22px] hidden font-serif text-2xl font-medium text-ink md:block">
+          {SETTINGS_SYSTEM_HEADING}
+        </h2>
+        <div className="flex flex-col gap-3.5 md:flex-row md:items-stretch">
+          <div className="flex min-w-0 flex-col gap-3.5 md:flex-[1.1]">
+            <SettingsSystemSection />
+            <SettingsExtraordinarySection />
+          </div>
+          <SettingsCommitmentsSection className="flex min-w-0 flex-col md:flex-1" />
+        </div>
+      </section>
 
-      <div className="mt-3 md:mt-4">
+      <div className="mt-6 md:mt-8">
         <SettingsSignOutItem />
       </div>
     </div>

@@ -87,6 +87,7 @@ export const listForActiveCycle = query({
           description: income.description,
           amount: income.amount,
           occurredAt: income.occurredAt,
+          incomeKind: income.incomeKind,
         })),
       MOVEMENTS_LIST_LIMIT,
     ).map((movement) => ({

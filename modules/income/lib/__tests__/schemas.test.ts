@@ -7,6 +7,7 @@ const NOW = new Date("2026-07-21T18:00:00.000Z").getTime();
 
 function validBase() {
   return {
+    incomeKind: "habitual" as const,
     amountCents: 150_00,
     source: "payroll" as const,
     concept: "",

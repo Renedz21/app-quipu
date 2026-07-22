@@ -138,11 +138,12 @@ async function getCycleCoverageContext(
       .collect(),
   ]);
 
-  const excludedCommitmentIds = new Set(
-    commitmentsRaw
-      .filter((commitment) => commitment.postponedForCycleId === cycleId)
-      .map((commitment) => commitment._id),
-  );
+  const excludedCommitmentIds = new Set<Id<"fixedCommitments">>();
+  for (const commitment of commitmentsRaw) {
+    if (commitment.postponedForCycleId === cycleId) {
+      excludedCommitmentIds.add(commitment._id);
+    }
+  }
 
   const coverageById = computeAllCommitmentCoverage({
     commitments: commitmentsRaw.map((commitment) => ({

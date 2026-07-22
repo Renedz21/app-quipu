@@ -127,11 +127,18 @@ export const registerExpense = mutation({
       }
     }
 
+    const daysRemainingInCycle = Math.max(
+      0,
+      Math.ceil((activeCycle.endDate - now) / MS_PER_DAY),
+    );
+
     return {
       expenseId,
       envelopeType: args.envelopeType,
       amount: args.amount,
       remainingAmount: newRemainingAmount,
+      cycleId: activeCycle._id,
+      daysRemainingInCycle,
     };
   },
 });

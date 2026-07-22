@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import type { FunctionReturnType } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { api } from "@/convex/_generated/api";
@@ -12,7 +12,9 @@ import { formatKeypadDisplay } from "@/modules/expenses/lib/keypad";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
+import type { DistributionPolicy } from "@/shared/lib/allocations";
 import { limaStartOfDay } from "@/shared/lib/date";
+import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import { cn } from "@/shared/lib/utils";
 import {
   getIncomeSourceLabel,
@@ -36,6 +38,10 @@ import {
 } from "../schemas";
 import type { IncomeRegisterResult, IncomeSource } from "../types";
 import { IncomeDatePicker } from "./income-date-picker";
+import {
+  IncomeExtraordinaryPanel,
+  policyForExtraordinaryType,
+} from "./income-extraordinary-panel";
 import { IncomeImpactPreview } from "./income-impact-preview";
 import { IncomeSourceChips } from "./income-source-chips";
 
@@ -46,13 +52,13 @@ type Props = {
   currencySymbol: string;
   profile: Doc<"profiles">;
   summary: DashboardSummary | undefined;
-  onSuccess: (result: IncomeRegisterResult) => void;
-  createIncomeEvent: (args: {
-    amount: number;
-    source: IncomeSource;
-    description: string;
-    occurredAt: number;
-  }) => Promise<IncomeRegisterResult>;
+  onSuccess: (
+    result: IncomeRegisterResult,
+    options?: { incomeKind: "habitual" | "extraordinary" },
+  ) => void;
+  createIncomeEvent: (
+    args: FunctionArgs<typeof api.incomeEvents.createIncomeEvent>,
+  ) => Promise<IncomeRegisterResult>;
 };
 
 export function IncomeRegisterForm({
@@ -65,21 +71,47 @@ export function IncomeRegisterForm({
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
   const formSchema = useMemo(() => createIncomeRegisterSchema(), []);
+  const silentSet = { dontValidate: true } as const;
 
   const form = useForm({
     defaultValues: {
+      incomeKind: "habitual" as "habitual" | "extraordinary",
       amountCents: 0,
       source: "payroll" as IncomeSource,
       concept: "",
       occurredAt: limaStartOfDay(),
+      extraordinaryType: undefined as ExtraordinaryType | undefined,
+      extraordinaryLabel: "",
+      distributionPolicy: undefined as DistributionPolicy | undefined,
     } satisfies IncomeRegisterFormValues,
     validators: {
-      onChange: formSchema,
-      onSubmit: formSchema,
+      onSubmit: ({ value }) => {
+        const parsed = formSchema.safeParse(value);
+        if (parsed.success) return undefined;
+        return parsed.error.issues[0]?.message ?? "Revisa el formulario.";
+      },
     },
     onSubmit: async ({ value }) => {
       setServerError(null);
       try {
+        if (value.incomeKind === "extraordinary") {
+          const response = await createIncomeEvent({
+            amount: value.amountCents,
+            source: "payroll",
+            description: value.extraordinaryLabel.trim() || "Extraordinario",
+            occurredAt: value.occurredAt,
+            incomeKind: "extraordinary",
+            extraordinaryType: value.extraordinaryType,
+            extraordinaryLabel:
+              value.extraordinaryType === "custom"
+                ? value.extraordinaryLabel.trim()
+                : undefined,
+            distributionPolicy: value.distributionPolicy,
+          });
+          onSuccess(response, { incomeKind: "extraordinary" });
+          return;
+        }
+
         const description = buildIncomeDescription(
           getIncomeSourceLabel(value.source),
           value.concept,
@@ -89,8 +121,9 @@ export function IncomeRegisterForm({
           source: value.source,
           description,
           occurredAt: value.occurredAt,
+          incomeKind: "habitual",
         });
-        onSuccess(response);
+        onSuccess(response, { incomeKind: "habitual" });
       } catch (error) {
         setServerError(fromConvexError(error).message);
       }
@@ -115,7 +148,9 @@ export function IncomeRegisterForm({
 
       <form.Subscribe
         selector={(state) => ({
+          incomeKind: state.values.incomeKind,
           amountCents: state.values.amountCents,
+          distributionPolicy: state.values.distributionPolicy,
           allocationNeeds: profile.allocationNeeds,
           allocationWants: profile.allocationWants,
           allocationSavings: profile.allocationSavings,
@@ -130,39 +165,130 @@ export function IncomeRegisterForm({
           const previewInput =
             previewDeps.amountCents > 0
               ? computeImpactPreview({
-                  amountCents: previewDeps.amountCents,
-                  weights: {
-                    allocationNeeds: previewDeps.allocationNeeds,
-                    allocationWants: previewDeps.allocationWants,
-                    allocationSavings: previewDeps.allocationSavings,
-                  },
-                  currentEnvelopes: {
-                    needs:
-                      previewDeps.envelopes?.find(
-                        (envelope) => envelope.type === "needs",
-                      )?.remainingAmount ?? 0,
-                    wants:
-                      previewDeps.envelopes?.find(
-                        (envelope) => envelope.type === "wants",
-                      )?.remainingAmount ?? 0,
-                    savings:
-                      previewDeps.envelopes?.find(
-                        (envelope) => envelope.type === "savings",
-                      )?.remainingAmount ?? 0,
-                  },
-                  daysRemaining:
-                    previewDeps.daysRemaining ??
-                    resolveCycleDaysForPreview({
-                      incomeModel: previewDeps.incomeModel,
-                      payFrequency: previewDeps.payFrequency,
-                      cycleDurationDays: previewDeps.cycleDurationDays,
-                    }),
-                })
+                amountCents: previewDeps.amountCents,
+                weights: {
+                  allocationNeeds: previewDeps.allocationNeeds,
+                  allocationWants: previewDeps.allocationWants,
+                  allocationSavings: previewDeps.allocationSavings,
+                },
+                currentEnvelopes: {
+                  needs:
+                    previewDeps.envelopes?.find(
+                      (envelope) => envelope.type === "needs",
+                    )?.remainingAmount ?? 0,
+                  wants:
+                    previewDeps.envelopes?.find(
+                      (envelope) => envelope.type === "wants",
+                    )?.remainingAmount ?? 0,
+                  savings:
+                    previewDeps.envelopes?.find(
+                      (envelope) => envelope.type === "savings",
+                    )?.remainingAmount ?? 0,
+                },
+                daysRemaining:
+                  previewDeps.daysRemaining ??
+                  resolveCycleDaysForPreview({
+                    incomeModel: previewDeps.incomeModel,
+                    payFrequency: previewDeps.payFrequency,
+                    cycleDurationDays: previewDeps.cycleDurationDays,
+                  }),
+                distributionPolicy:
+                  previewDeps.incomeKind === "extraordinary"
+                    ? previewDeps.distributionPolicy
+                    : undefined,
+              })
               : null;
+
+          const isExtraordinary = previewDeps.incomeKind === "extraordinary";
 
           return (
             <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-7">
               <div className="space-y-5">
+                <form.Field name="incomeKind">
+                  {(incomeKindField) => (
+                    <form.Field name="extraordinaryType">
+                      {(extraordinaryTypeField) => (
+                        <form.Field name="extraordinaryLabel">
+                          {(extraordinaryLabelField) => (
+                            <form.Field name="distributionPolicy">
+                              {(distributionPolicyField) => (
+                                <IncomeExtraordinaryPanel
+                                  incomeKind={incomeKindField.state.value}
+                                  onIncomeKindChange={(kind) => {
+                                    incomeKindField.handleChange(kind);
+                                    if (kind === "habitual") {
+                                      form.setFieldValue(
+                                        "extraordinaryType",
+                                        undefined,
+                                        silentSet,
+                                      );
+                                      extraordinaryLabelField.handleChange("");
+                                      form.setFieldValue(
+                                        "distributionPolicy",
+                                        undefined,
+                                        silentSet,
+                                      );
+                                    }
+                                  }}
+                                  extraordinaryType={
+                                    extraordinaryTypeField.state.value
+                                  }
+                                  onExtraordinaryTypeChange={(type) => {
+                                    extraordinaryTypeField.handleChange(type);
+                                    distributionPolicyField.handleChange(
+                                      policyForExtraordinaryType(
+                                        type,
+                                        profile.extraordinaryRules,
+                                      ),
+                                    );
+                                  }}
+                                  extraordinaryLabel={
+                                    extraordinaryLabelField.state.value ?? ""
+                                  }
+                                  onExtraordinaryLabelChange={(label) =>
+                                    extraordinaryLabelField.handleChange(label)
+                                  }
+                                  distributionPolicy={
+                                    distributionPolicyField.state.value
+                                  }
+                                  onDistributionPolicyChange={(policy) =>
+                                    distributionPolicyField.handleChange(policy)
+                                  }
+                                  profileRules={profile.extraordinaryRules}
+                                  fieldErrors={{
+                                    extraordinaryType:
+                                      extraordinaryTypeField.state.meta
+                                        .isTouched &&
+                                        !extraordinaryTypeField.state.meta.isValid
+                                        ? extraordinaryTypeField.state.meta
+                                          .errors[0]
+                                        : undefined,
+                                    extraordinaryLabel:
+                                      extraordinaryLabelField.state.meta
+                                        .isTouched &&
+                                        !extraordinaryLabelField.state.meta
+                                          .isValid
+                                        ? extraordinaryLabelField.state.meta
+                                          .errors[0]
+                                        : undefined,
+                                    distributionPolicy:
+                                      distributionPolicyField.state.meta
+                                        .isTouched &&
+                                        !distributionPolicyField.state.meta
+                                          .isValid
+                                        ? distributionPolicyField.state.meta
+                                          .errors[0]
+                                        : undefined,
+                                  }}
+                                />
+                              )}
+                            </form.Field>
+                          )}
+                        </form.Field>
+                      )}
+                    </form.Field>
+                  )}
+                </form.Field>
                 <form.Field name="amountCents">
                   {(field) => {
                     const isInvalid =
@@ -200,33 +326,6 @@ export function IncomeRegisterForm({
                   }}
                 </form.Field>
 
-                <form.Field name="source">
-                  {(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel className="mb-2.5 block text-[12.5px] font-medium text-ink-secondary">
-                          {INCOME_SOURCE_LABEL}
-                        </FieldLabel>
-                        <IncomeSourceChips
-                          value={field.state.value}
-                          onChange={(source) => {
-                            field.handleChange(source);
-                            field.handleBlur();
-                          }}
-                        />
-                        {isInvalid ? (
-                          <FieldError
-                            className="mt-2"
-                            errors={field.state.meta.errors}
-                          />
-                        ) : null}
-                      </Field>
-                    );
-                  }}
-                </form.Field>
-
                 <form.Field name="occurredAt">
                   {(field) => (
                     <IncomeDatePicker
@@ -239,40 +338,73 @@ export function IncomeRegisterForm({
                   )}
                 </form.Field>
 
-                <form.Field name="concept">
-                  {(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel
-                          htmlFor="income-concept"
-                          className="mb-2 block text-[12.5px] font-medium text-ink-secondary"
-                        >
-                          {INCOME_CONCEPT_LABEL}{" "}
-                          <span className="font-normal text-mute">
-                            {INCOME_CONCEPT_OPTIONAL}
-                          </span>
-                        </FieldLabel>
-                        <Input
-                          id="income-concept"
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
-                          placeholder="Ej. pago de cliente"
-                          aria-invalid={isInvalid}
-                          className="h-[46px] rounded-[11px] border-line bg-card text-[14.5px]"
-                        />
-                        {isInvalid ? (
-                          <FieldError errors={field.state.meta.errors} />
-                        ) : null}
-                      </Field>
-                    );
-                  }}
-                </form.Field>
+                {!isExtraordinary ? (
+                  <>
+                    <form.Field name="source">
+                      {(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel className="mb-2.5 block text-[12.5px] font-medium text-ink-secondary">
+                              {INCOME_SOURCE_LABEL}
+                            </FieldLabel>
+                            <IncomeSourceChips
+                              value={field.state.value}
+                              onChange={(source) => {
+                                field.handleChange(source);
+                                field.handleBlur();
+                              }}
+                            />
+                            {isInvalid ? (
+                              <FieldError
+                                className="mt-2"
+                                errors={field.state.meta.errors}
+                              />
+                            ) : null}
+                          </Field>
+                        );
+                      }}
+                    </form.Field>
+
+                    <form.Field name="concept">
+                      {(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid;
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel
+                              htmlFor="income-concept"
+                              className="mb-2 block text-[12.5px] font-medium text-ink-secondary"
+                            >
+                              {INCOME_CONCEPT_LABEL}{" "}
+                              <span className="font-normal text-mute">
+                                {INCOME_CONCEPT_OPTIONAL}
+                              </span>
+                            </FieldLabel>
+                            <Input
+                              id="income-concept"
+                              name={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              placeholder="Ej. pago de cliente"
+                              aria-invalid={isInvalid}
+                              className="h-[46px] rounded-[11px] border-line bg-card text-[14.5px]"
+                            />
+                            {isInvalid ? (
+                              <FieldError errors={field.state.meta.errors} />
+                            ) : null}
+                          </Field>
+                        );
+                      }}
+                    </form.Field>
+                  </>
+                ) : null}
               </div>
 
               <IncomeImpactPreview

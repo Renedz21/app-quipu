@@ -14,6 +14,7 @@ export type CycleSavingsIncomeEvent = {
 
 export type SurplusContributionSlice = {
   amount: number;
+  fromEnvelope?: "needs" | "wants" | "extraordinary";
 };
 
 export type SavingsEnvelopeSlice = {

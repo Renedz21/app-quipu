@@ -1,5 +1,6 @@
 import type { FunctionReturnType } from "convex/server";
 import type { api } from "@/convex/_generated/api";
+import type { SurplusFromEnvelope } from "./schemas";
 
 export type SavingsOverview = NonNullable<
   FunctionReturnType<typeof api.savings.getOverview>
@@ -18,3 +19,9 @@ export type EmergencyFundDetail = NonNullable<
 export type CycleSavingsBreakdown = NonNullable<
   FunctionReturnType<typeof api.savings.getCycleSavingsBreakdown>
 >;
+
+export type MoveSurplusContext = NonNullable<
+  FunctionReturnType<typeof api.savings.getMoveSurplusContext>
+>;
+
+export type SurplusFromSource = SurplusFromEnvelope;

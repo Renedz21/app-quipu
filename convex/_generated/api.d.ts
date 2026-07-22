@@ -24,6 +24,7 @@ import type * as lib_dashboardMath from "../lib/dashboardMath.js";
 import type * as lib_evaluateClosedCycle from "../lib/evaluateClosedCycle.js";
 import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
 import type * as lib_extraordinaryIncome from "../lib/extraordinaryIncome.js";
+import type * as lib_extraordinarySavingsSurplus from "../lib/extraordinarySavingsSurplus.js";
 import type * as lib_gamificationMath from "../lib/gamificationMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
@@ -37,6 +38,7 @@ import type * as progress from "../progress.js";
 import type * as resetDb from "../resetDb.js";
 import type * as savings from "../savings.js";
 import type * as settings from "../settings.js";
+import type * as testing from "../testing.js";
 
 import type {
   ApiFromModules,
@@ -61,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   "lib/evaluateClosedCycle": typeof lib_evaluateClosedCycle;
   "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
   "lib/extraordinaryIncome": typeof lib_extraordinaryIncome;
+  "lib/extraordinarySavingsSurplus": typeof lib_extraordinarySavingsSurplus;
   "lib/gamificationMath": typeof lib_gamificationMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
   "lib/rescueTransfer": typeof lib_rescueTransfer;
@@ -74,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   resetDb: typeof resetDb;
   savings: typeof savings;
   settings: typeof settings;
+  testing: typeof testing;
 }>;
 
 /**

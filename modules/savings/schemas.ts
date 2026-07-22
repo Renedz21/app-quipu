@@ -54,7 +54,15 @@ export function newGoalFormToMutationArgs(values: NewGoalFormValues) {
   };
 }
 
-const surplusFromEnvelopeValues = ["needs", "wants"] as const;
+export const surplusFromEnvelopeValues = [
+  "needs",
+  "wants",
+  "extraordinary",
+] as const;
+
+export type SurplusFromEnvelope = (typeof surplusFromEnvelopeValues)[number];
+
+export const moveSurplusFromSources = surplusFromEnvelopeValues;
 
 export const moveSurplusInputSchema = z.object({
   fromEnvelope: z.enum(surplusFromEnvelopeValues),
@@ -67,3 +75,42 @@ export const moveSurplusInputSchema = z.object({
 });
 
 export type MoveSurplusInput = z.infer<typeof moveSurplusInputSchema>;
+
+export function createMoveSurplusFormSchema(
+  availableBySource: Record<SurplusFromEnvelope, number>,
+) {
+  return z
+    .object({
+      fromSource: z.enum(surplusFromEnvelopeValues),
+      amountCents: z
+        .number()
+        .int("El monto debe ser un número entero de céntimos.")
+        .positive("El monto debe ser mayor a cero.")
+        .max(KEYPAD_MAX_CENTS, "El monto supera el máximo permitido."),
+      destinationId: z.string().min(1, "Elige un destino."),
+    })
+    .superRefine((data, ctx) => {
+      const available = availableBySource[data.fromSource];
+      if (data.amountCents > available) {
+        ctx.addIssue({
+          code: "custom",
+          message: "No puedes mover más del sobrante disponible.",
+          path: ["amountCents"],
+        });
+      }
+    });
+}
+
+export type MoveSurplusFormValues = z.infer<
+  ReturnType<typeof createMoveSurplusFormSchema>
+>;
+
+export function moveSurplusFormToMutationArgs(
+  values: MoveSurplusFormValues,
+): MoveSurplusInput {
+  return {
+    fromEnvelope: values.fromSource,
+    amount: values.amountCents,
+    toSubEnvelopeId: values.destinationId,
+  };
+}

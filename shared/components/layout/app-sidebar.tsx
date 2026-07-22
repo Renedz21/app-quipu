@@ -31,7 +31,7 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
   return (
     <div
       className={cn(
-        "flex h-full w-[228px] flex-col border-r border-line px-4 py-6",
+        "flex h-full w-57 flex-col border-r border-line px-4 py-6",
         className,
       )}
     >

@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import Link from "next/link";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { buttonVariants } from "@/shared/components/ui/button";
@@ -9,20 +8,22 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
+  GOALS_EMPTY_BODY,
+  GOALS_EMPTY_BODY_MOBILE,
+  GOALS_EMPTY_TITLE,
   GOALS_NEW_CTA,
   GOALS_NEW_MOBILE_CTA,
   GOALS_SECTION_LABEL,
   SAVINGS_CYCLE_CONTRIBUTION_PREFIX,
   SAVINGS_CYCLE_CONTRIBUTION_SUFFIX,
-  SAVINGS_EMPTY_BODY,
-  SAVINGS_EMPTY_CTA,
-  SAVINGS_EMPTY_TITLE,
   SAVINGS_ERROR_BODY,
   SAVINGS_ERROR_RETRY,
   SAVINGS_ERROR_TITLE,
   SAVINGS_MOBILE_SUBTITLE,
   SAVINGS_PAGE_SUBTITLE,
   SAVINGS_PAGE_TITLE,
+  SAVINGS_PRE_TRACTION_MOBILE_SUBTITLE,
+  SAVINGS_PRE_TRACTION_SUBTITLE,
   SAVINGS_TOTAL_SAVED_LABEL,
 } from "../constants";
 import { buildCycleContributionSubtitle } from "../lib/savingsCopy";
@@ -69,6 +70,30 @@ export function SavingsView() {
     overview.cycleContributionCents,
     overview.hasActiveCycle,
   );
+  const isPreTraction =
+    overview.emergencyFund !== null &&
+    overview.emergencyFund.currentAmount === 0;
+
+  const headerSubtitle = cycleSubtitleActive ? (
+    <>
+      {SAVINGS_CYCLE_CONTRIBUTION_PREFIX}{" "}
+      {formatCents(overview.cycleContributionCents, {
+        currency: overview.profile.currencyCode,
+      })}{" "}
+      {SAVINGS_CYCLE_CONTRIBUTION_SUFFIX}
+    </>
+  ) : isPreTraction ? (
+    <>
+      <span className="md:hidden">{SAVINGS_PRE_TRACTION_MOBILE_SUBTITLE}</span>
+      <span className="hidden md:inline">{SAVINGS_PRE_TRACTION_SUBTITLE}</span>
+    </>
+  ) : (
+    SAVINGS_MOBILE_SUBTITLE
+  );
+
+  const showGoalsEmptyState =
+    overview.goals.length === 0 &&
+    (isPreTraction || overview.emergencyFund?.currentAmount === 0);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
@@ -81,17 +106,7 @@ export function SavingsView() {
             {SAVINGS_PAGE_TITLE}
           </h1>
           <p className="mt-1 text-[12.5px] text-mute-subtle md:text-[13.5px]">
-            {cycleSubtitleActive ? (
-              <>
-                {SAVINGS_CYCLE_CONTRIBUTION_PREFIX}{" "}
-                {formatCents(overview.cycleContributionCents, {
-                  currency: overview.profile.currencyCode,
-                })}{" "}
-                {SAVINGS_CYCLE_CONTRIBUTION_SUFFIX}
-              </>
-            ) : (
-              SAVINGS_MOBILE_SUBTITLE
-            )}
+            {headerSubtitle}
           </p>
         </div>
         <span className="hidden rounded-lg border border-line bg-card px-3 py-2 font-mono text-[11px] text-mute md:inline">
@@ -102,28 +117,11 @@ export function SavingsView() {
         </span>
       </header>
 
-      {!overview.hasActiveCycle ? (
-        <section className="mb-5 rounded-[14px] border border-line bg-card p-5 md:p-6">
-          <h2 className="font-serif text-2xl text-ink">
-            {SAVINGS_EMPTY_TITLE}
-          </h2>
-          <p className="mt-2 text-sm text-mute">{SAVINGS_EMPTY_BODY}</p>
-          <Link
-            href="/income/register"
-            className={cn(
-              buttonVariants(),
-              "mt-4 inline-flex w-full md:w-auto",
-            )}
-          >
-            {SAVINGS_EMPTY_CTA}
-          </Link>
-        </section>
-      ) : null}
-
       {overview.emergencyFund ? (
         <EmergencyFundHero
           fund={overview.emergencyFund}
           currencyCode={overview.profile.currencyCode}
+          hasActiveCycle={overview.hasActiveCycle}
         />
       ) : null}
 
@@ -141,7 +139,7 @@ export function SavingsView() {
             {GOALS_SECTION_LABEL}
           </span>
           <div className="h-px flex-1 bg-line-divider" />
-          {overview.canCreateGoal ? (
+          {overview.canCreateGoal && !showGoalsEmptyState ? (
             <button
               type="button"
               className="text-[12.5px] font-medium text-qp-deep md:hidden"
@@ -150,7 +148,7 @@ export function SavingsView() {
               {GOALS_NEW_MOBILE_CTA}
             </button>
           ) : null}
-          {overview.canCreateGoal ? (
+          {overview.canCreateGoal && !showGoalsEmptyState ? (
             <button
               type="button"
               className="hidden text-[12.5px] font-medium text-qp-deep md:inline"
@@ -171,11 +169,46 @@ export function SavingsView() {
               />
             ))}
           </div>
+        ) : showGoalsEmptyState ? (
+          <div className="flex flex-col items-center gap-1.5 rounded-[14px] border border-dashed border-line bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
+            <span
+              className="flex size-10 items-center justify-center rounded-full border border-dashed border-mute md:size-10"
+              aria-hidden
+            >
+              <span className="size-3.5 rounded-full border-[1.7px] border-mute-subtle" />
+            </span>
+            <p className="text-sm font-semibold text-ink-secondary md:text-sm">
+              {GOALS_EMPTY_TITLE}
+            </p>
+            <p className="max-w-xs text-[12.5px] leading-normal text-faint md:text-[12.5px]">
+              <span className="md:hidden">{GOALS_EMPTY_BODY_MOBILE}</span>
+              <span className="hidden md:inline">{GOALS_EMPTY_BODY}</span>
+            </p>
+          </div>
         ) : (
-          <p className="rounded-[13px] border border-dashed border-line bg-surface-soft px-4 py-5 text-sm text-mute">
-            Crea tu primera meta cuando quieras ir más allá del fondo de
-            emergencia.
-          </p>
+          <div className="flex flex-col items-center gap-1.5 rounded-[14px] border border-dashed border-line bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
+            <span
+              className="flex size-10 items-center justify-center rounded-full border border-dashed border-mute"
+              aria-hidden
+            >
+              <span className="size-3.5 rounded-full border-[1.7px] border-mute-subtle" />
+            </span>
+            <p className="text-sm font-semibold text-ink-secondary">
+              {GOALS_EMPTY_TITLE}
+            </p>
+            <p className="max-w-xs text-[12.5px] leading-normal text-faint">
+              {GOALS_EMPTY_BODY}
+            </p>
+            {overview.canCreateGoal ? (
+              <button
+                type="button"
+                className="mt-2 text-[12.5px] font-medium text-qp-deep"
+                onClick={() => setNewGoalOpen(true)}
+              >
+                {GOALS_NEW_CTA}
+              </button>
+            ) : null}
+          </div>
         )}
       </section>
 

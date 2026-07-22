@@ -3,6 +3,11 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
+  buildCycleSavingsContextLabel,
+  computeCycleSavingsBreakdown,
+} from "./lib/cycleSavingsBreakdown";
+import { computeAvailableExtraordinarySavingsForMove } from "./lib/extraordinarySavingsSurplus";
+import {
   buildMonthsCoveredCopy,
   computeCyclesToComplete,
   computeEmergencyFundTargetCents,
@@ -13,10 +18,6 @@ import {
   MAX_SAVINGS_GOALS,
   resolveEmergencyFundTargetCents,
 } from "./lib/savingsMath";
-import {
-  buildCycleSavingsContextLabel,
-  computeCycleSavingsBreakdown,
-} from "./lib/cycleSavingsBreakdown";
 
 function mapGoal(subEnvelope: Doc<"subEnvelopes">) {
   const targetAmount = subEnvelope.targetAmount ?? 0;
@@ -323,6 +324,7 @@ const cycleSavingsBreakdownValidator = v.object({
   underTargetByCents: v.number(),
   wantsSurplusCents: v.number(),
   needsSurplusCents: v.number(),
+  extraordinarySurplusCents: v.number(),
 });
 
 async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
@@ -364,7 +366,9 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
     distributionApplied: event.distributionApplied,
   }));
 
-  const savingsEnvelope = envelopes.find((envelope) => envelope.type === "savings");
+  const savingsEnvelope = envelopes.find(
+    (envelope) => envelope.type === "savings",
+  );
   const wantsEnvelope = envelopes.find((envelope) => envelope.type === "wants");
   const needsEnvelope = envelopes.find((envelope) => envelope.type === "needs");
 
@@ -390,12 +394,30 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
     numbers.savingsObjectiveCents - numbers.savingsSetAsideCents,
   );
 
+  const extraordinarySurplusCents = computeAvailableExtraordinarySavingsForMove(
+    {
+      incomeEvents: breakdownEvents.map((event) => ({
+        incomeKind: event.incomeKind,
+        distributionApplied: event.distributionApplied,
+      })),
+      surplusContributions: surplusContributions.map((row) => ({
+        fromEnvelope: row.fromEnvelope,
+        amount: row.amount,
+      })),
+      savingsEnvelopeRemainingCents: Math.max(
+        0,
+        savingsEnvelope?.remainingAmount ?? 0,
+      ),
+    },
+  );
+
   return {
     currencyCode: profile.currencyCode,
     cycleContextLabel,
     allocationSavingsPercent: profile.allocationSavings,
     wantsSurplusCents: Math.max(0, wantsEnvelope?.remainingAmount ?? 0),
     needsSurplusCents: Math.max(0, needsEnvelope?.remainingAmount ?? 0),
+    extraordinarySurplusCents,
     showAboveTargetCelebration: numbers.status === "above_objective",
     showUnderTargetMessage: numbers.status === "below_objective",
     aboveTargetByCents: numbers.savingsAdditionalCents,
@@ -542,7 +564,12 @@ export const contributeToGoal = mutation({
 const surplusFromEnvelopeValidator = v.union(
   v.literal("needs"),
   v.literal("wants"),
+  v.literal("extraordinary"),
 );
+
+const moveSurplusSourceValidator = v.object({
+  availableCents: v.number(),
+});
 
 async function getOwnedProfileAndActiveCycle(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -573,7 +600,8 @@ async function getOwnedProfileAndActiveCycle(ctx: QueryCtx | MutationCtx) {
   if (!activeCycle) {
     throw new ConvexError({
       code: "NO_ACTIVE_CYCLE",
-      message: "Registra un ingreso para activar tu ciclo antes de mover sobrante.",
+      message:
+        "Registra un ingreso para activar tu ciclo antes de mover sobrante.",
     });
   }
 
@@ -587,8 +615,9 @@ export const getMoveSurplusContext = query({
     v.object({
       currencyCode: v.string(),
       sources: v.object({
-        needs: v.object({ availableCents: v.number() }),
-        wants: v.object({ availableCents: v.number() }),
+        needs: moveSurplusSourceValidator,
+        wants: moveSurplusSourceValidator,
+        extraordinary: moveSurplusSourceValidator,
       }),
       destinations: v.array(
         v.object({
@@ -617,7 +646,14 @@ export const getMoveSurplusContext = query({
       .unique();
     if (!activeCycle) return null;
 
-    const [needsEnvelope, wantsEnvelope, subEnvelopes] = await Promise.all([
+    const [
+      needsEnvelope,
+      wantsEnvelope,
+      savingsEnvelope,
+      subEnvelopes,
+      incomeEvents,
+      surplusContributions,
+    ] = await Promise.all([
       ctx.db
         .query("envelopes")
         .withIndex("by_cycle_type", (q) =>
@@ -631,8 +667,22 @@ export const getMoveSurplusContext = query({
         )
         .unique(),
       ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", "savings"),
+        )
+        .unique(),
+      ctx.db
         .query("subEnvelopes")
         .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+        .collect(),
+      ctx.db
+        .query("incomeEvents")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("surplusContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
         .collect(),
     ]);
 
@@ -652,6 +702,22 @@ export const getMoveSurplusContext = query({
 
     if (destinations.length === 0) return null;
 
+    const breakdownEvents = incomeEvents.map((event) => ({
+      incomeKind: event.incomeKind,
+      distributionApplied: event.distributionApplied,
+    }));
+    const extraordinaryAvailable = computeAvailableExtraordinarySavingsForMove({
+      incomeEvents: breakdownEvents,
+      surplusContributions: surplusContributions.map((row) => ({
+        fromEnvelope: row.fromEnvelope,
+        amount: row.amount,
+      })),
+      savingsEnvelopeRemainingCents: Math.max(
+        0,
+        savingsEnvelope?.remainingAmount ?? 0,
+      ),
+    });
+
     return {
       currencyCode: profile.currencyCode,
       sources: {
@@ -660,6 +726,9 @@ export const getMoveSurplusContext = query({
         },
         wants: {
           availableCents: Math.max(0, wantsEnvelope?.remainingAmount ?? 0),
+        },
+        extraordinary: {
+          availableCents: extraordinaryAvailable,
         },
       },
       destinations,
@@ -700,6 +769,12 @@ export const moveSurplusToSavings = mutation({
     fromEnvelope: surplusFromEnvelopeValidator,
     subEnvelopeId: v.id("subEnvelopes"),
     subEnvelopeLabel: v.string(),
+    savingsObjectiveCents: v.number(),
+    savingsAdditionalCents: v.number(),
+    savingsTotalCents: v.number(),
+    allocationNeeds: v.number(),
+    allocationWants: v.number(),
+    allocationSavings: v.number(),
   }),
   handler: async (ctx, args) => {
     const { profile, activeCycle } = await getOwnedProfileAndActiveCycle(ctx);
@@ -728,35 +803,99 @@ export const moveSurplusToSavings = mutation({
       });
     }
 
-    const fromEnvelopeDoc = await ctx.db
-      .query("envelopes")
-      .withIndex("by_cycle_type", (q) =>
-        q.eq("cycleId", activeCycle._id).eq("type", args.fromEnvelope),
-      )
-      .unique();
-    if (!fromEnvelopeDoc) {
+    if (args.fromEnvelope === "extraordinary") {
+      const savingsEnvelope = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", "savings"),
+        )
+        .unique();
+      if (!savingsEnvelope) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "No se encontró el sobre de ahorro en el ciclo actual.",
+        });
+      }
+
+      const [incomeEvents, surplusContributions] = await Promise.all([
+        ctx.db
+          .query("incomeEvents")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+        ctx.db
+          .query("surplusContributions")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+      ]);
+
+      const available = computeAvailableExtraordinarySavingsForMove({
+        incomeEvents: incomeEvents.map((event) => ({
+          incomeKind: event.incomeKind,
+          distributionApplied: event.distributionApplied,
+        })),
+        surplusContributions: surplusContributions.map((row) => ({
+          fromEnvelope: row.fromEnvelope,
+          amount: row.amount,
+        })),
+        savingsEnvelopeRemainingCents: Math.max(
+          0,
+          savingsEnvelope.remainingAmount,
+        ),
+      });
+
+      if (args.amount > available) {
+        throw new ConvexError({
+          code: "INSUFFICIENT_ENVELOPE_BALANCE",
+          message: "No puedes mover más del saldo disponible de gratificación.",
+          data: {
+            envelope: args.fromEnvelope,
+            requested: args.amount,
+            available,
+          },
+        });
+      }
+
+      await ctx.db.patch(savingsEnvelope._id, {
+        remainingAmount: savingsEnvelope.remainingAmount - args.amount,
+      });
+    } else if (args.fromEnvelope === "needs" || args.fromEnvelope === "wants") {
+      const fromType = args.fromEnvelope;
+      const fromEnvelopeDoc = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", fromType),
+        )
+        .unique();
+      if (!fromEnvelopeDoc) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "No se encontró el sobre de origen en el ciclo actual.",
+        });
+      }
+
+      const available = Math.max(0, fromEnvelopeDoc.remainingAmount);
+      if (args.amount > available) {
+        throw new ConvexError({
+          code: "INSUFFICIENT_ENVELOPE_BALANCE",
+          message: "No puedes mover más del sobrante disponible en ese sobre.",
+          data: {
+            envelope: args.fromEnvelope,
+            requested: args.amount,
+            available,
+          },
+        });
+      }
+
+      await ctx.db.patch(fromEnvelopeDoc._id, {
+        remainingAmount: fromEnvelopeDoc.remainingAmount - args.amount,
+      });
+    } else {
       throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "No se encontró el sobre de origen en el ciclo actual.",
+        code: "VALIDATION_ERROR",
+        message: "Origen de sobrante no válido.",
+        data: { field: "fromEnvelope" },
       });
     }
-
-    const available = Math.max(0, fromEnvelopeDoc.remainingAmount);
-    if (args.amount > available) {
-      throw new ConvexError({
-        code: "INSUFFICIENT_ENVELOPE_BALANCE",
-        message: "No puedes mover más del sobrante disponible en ese sobre.",
-        data: {
-          envelope: args.fromEnvelope,
-          requested: args.amount,
-          available,
-        },
-      });
-    }
-
-    await ctx.db.patch(fromEnvelopeDoc._id, {
-      remainingAmount: fromEnvelopeDoc.remainingAmount - args.amount,
-    });
     await ctx.db.patch(subEnvelope._id, {
       currentAmount: subEnvelope.currentAmount + args.amount,
     });
@@ -769,11 +908,54 @@ export const moveSurplusToSavings = mutation({
       createdAt: Date.now(),
     });
 
+    const [incomeEvents, surplusContributions, envelopesAfter] =
+      await Promise.all([
+        ctx.db
+          .query("incomeEvents")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+        ctx.db
+          .query("surplusContributions")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+        ctx.db
+          .query("envelopes")
+          .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+      ]);
+
+    const breakdownEvents = incomeEvents.map((event) => ({
+      incomeKind: event.incomeKind,
+      distributionPolicy: event.distributionPolicy,
+      distributionApplied: event.distributionApplied,
+    }));
+    const savingsEnvelopeAfter = envelopesAfter.find(
+      (envelope) => envelope.type === "savings",
+    );
+    const cycleNumbers = computeCycleSavingsBreakdown({
+      incomeEvents: breakdownEvents,
+      surplusContributions: surplusContributions.map((row) => ({
+        amount: row.amount,
+      })),
+      savingsEnvelope: savingsEnvelopeAfter
+        ? {
+            allocatedAmount: savingsEnvelopeAfter.allocatedAmount,
+            remainingAmount: savingsEnvelopeAfter.remainingAmount,
+          }
+        : null,
+    });
+
     return {
       amount: args.amount,
       fromEnvelope: args.fromEnvelope,
       subEnvelopeId: subEnvelope._id,
       subEnvelopeLabel: subEnvelope.label,
+      savingsObjectiveCents: cycleNumbers.savingsObjectiveCents,
+      savingsAdditionalCents: cycleNumbers.savingsAdditionalCents,
+      savingsTotalCents: cycleNumbers.savingsTotalCents,
+      allocationNeeds: profile.allocationNeeds,
+      allocationWants: profile.allocationWants,
+      allocationSavings: profile.allocationSavings,
     };
   },
 });

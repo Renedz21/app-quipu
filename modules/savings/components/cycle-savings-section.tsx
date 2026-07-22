@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { useState } from "react";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
@@ -18,6 +19,8 @@ import {
   CYCLE_SAVINGS_BELOW_OBJECTIVE_LABEL,
   CYCLE_SAVINGS_BELOW_PROGRESS_LABEL,
   CYCLE_SAVINGS_BELOW_REASSURANCE_BODY,
+  CYCLE_SAVINGS_BELOW_ACK_CTA,
+  CYCLE_SAVINGS_BELOW_MOVE_CTA,
   CYCLE_SAVINGS_BELOW_REASSURANCE_TITLE,
   CYCLE_SAVINGS_BELOW_SAVED_LABEL,
   CYCLE_SAVINGS_BELOW_TITLE,
@@ -27,7 +30,10 @@ import {
   CYCLE_SAVINGS_LEGEND_OBJECTIVE_SHORT,
   CYCLE_SAVINGS_META_WAS_PREFIX,
   CYCLE_SAVINGS_MOVE_CTA,
+  CYCLE_SAVINGS_MOVE_MORE_TITLE,
   CYCLE_SAVINGS_MOVE_SURPLUS_COPY,
+  CYCLE_SAVINGS_ROUND_UP_TITLE_PREFIX,
+  cycleSavingsRoundUpBody,
   CYCLE_SAVINGS_OBJECTIVE_LABEL,
   CYCLE_SAVINGS_SAVED_THIS_CYCLE_SUFFIX,
   CYCLE_SAVINGS_SECTION_ID,
@@ -50,6 +56,15 @@ export function CycleSavingsSection({ breakdown }: Props) {
   const surplusAvailableCents = Math.max(
     breakdown.wantsSurplusCents,
     breakdown.needsSurplusCents,
+    breakdown.extraordinarySurplusCents ?? 0,
+  );
+  const hasAnySurplus =
+    breakdown.wantsSurplusCents > 0 ||
+    breakdown.needsSurplusCents > 0 ||
+    (breakdown.extraordinarySurplusCents ?? 0) > 0;
+  const roundUp = computeRoundUpSuggestion(
+    breakdown.savingsTotalCents,
+    surplusAvailableCents,
   );
 
   if (breakdown.showUnderTargetMessage) {
@@ -81,7 +96,7 @@ export function CycleSavingsSection({ breakdown }: Props) {
 
         {breakdown.showAboveTargetCelebration &&
         breakdown.aboveTargetByCents > 0 ? (
-          <div className="relative mb-4 inline-flex items-center gap-2 rounded-full border border-qp-shield-line bg-qp-panel px-3 py-1.5">
+          <div className="relative mb-4 inline-flex items-center gap-2 rounded-full border border-qp-shield-line bg-qp-panel px-3 py-1.5 md:px-[13px] md:py-1.5">
             <span
               className="size-1.5 rounded-full bg-moss"
               aria-hidden
@@ -145,7 +160,25 @@ export function CycleSavingsSection({ breakdown }: Props) {
         ) : null}
       </article>
 
-      <div className="mt-3 grid gap-3 md:mt-4 md:grid-cols-3">
+      <div className="mt-3 flex flex-col gap-2 md:hidden">
+        <MobileMetricRow
+          label={CYCLE_SAVINGS_OBJECTIVE_LABEL}
+          amount={format(breakdown.savingsObjectiveCents)}
+          variant="objective"
+        />
+        <MobileMetricRow
+          label={CYCLE_SAVINGS_ADDITIONAL_LABEL}
+          amount={format(breakdown.savingsAdditionalCents)}
+          variant="additional"
+          amountClassName="text-qp-deep"
+        />
+        <MobileMetricRow
+          label={CYCLE_SAVINGS_TOTAL_LABEL}
+          amount={format(breakdown.savingsTotalCents)}
+          variant="total"
+        />
+      </div>
+      <div className="mt-3 hidden gap-3 md:mt-4 md:grid md:grid-cols-3">
         <MetricCard
           label={CYCLE_SAVINGS_OBJECTIVE_LABEL}
           hint={cycleSavingsObjectiveHint(breakdown.allocationSavingsPercent)}
@@ -167,7 +200,7 @@ export function CycleSavingsSection({ breakdown }: Props) {
         />
       </div>
 
-      {surplusAvailableCents > 0 ? (
+      {hasAnySurplus ? (
         <div className="mt-4 flex flex-col gap-4 rounded-[14px] border border-qp-shield-line bg-card p-4 md:flex-row md:items-center md:justify-between md:p-5">
           <div className="flex items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-qp-panel text-qp-deep">
@@ -177,16 +210,23 @@ export function CycleSavingsSection({ breakdown }: Props) {
               </span>
             </span>
             <div>
-              <p className="text-sm font-semibold text-ink">
-                ¿Quieres mover más al ahorro?
+              <p className="text-sm font-semibold text-ink md:text-[14.5px]">
+                {roundUp
+                  ? `${CYCLE_SAVINGS_ROUND_UP_TITLE_PREFIX} ${format(roundUp.targetCents)}?`
+                  : CYCLE_SAVINGS_MOVE_MORE_TITLE}
               </p>
               <p className="mt-0.5 text-[12.5px] text-mute">
-                {CYCLE_SAVINGS_MOVE_SURPLUS_COPY}
+                {roundUp
+                  ? cycleSavingsRoundUpBody(format(roundUp.moveCents))
+                  : CYCLE_SAVINGS_MOVE_SURPLUS_COPY}
               </p>
             </div>
           </div>
           <Link
-            href={buildMoveSurplusHref(breakdown)}
+            href={buildMoveSurplusHref(
+              breakdown,
+              roundUp?.moveCents,
+            )}
             className={cn(
               buttonVariants(),
               "w-full shrink-0 md:w-auto",
@@ -206,7 +246,12 @@ export function CycleSavingsSectionSkeleton() {
       <Skeleton className="h-8 w-56 rounded-lg" />
       <Skeleton variant="line" className="h-4 w-40" />
       <Skeleton className="h-48 w-full rounded-[20px] [animation-delay:150ms]" />
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="flex flex-col gap-2 md:hidden">
+        <Skeleton className="h-[46px] rounded-xl" />
+        <Skeleton className="h-[46px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[46px] rounded-xl [animation-delay:300ms]" />
+      </div>
+      <div className="hidden gap-3 md:grid md:grid-cols-3">
         <Skeleton className="h-28 rounded-[14px]" />
         <Skeleton className="h-28 rounded-[14px] [animation-delay:150ms]" />
         <Skeleton className="h-28 rounded-[14px] [animation-delay:300ms]" />
@@ -215,14 +260,44 @@ export function CycleSavingsSectionSkeleton() {
   );
 }
 
-function buildMoveSurplusHref(breakdown: CycleSavingsBreakdown): string {
+const HUNDRED_SOLES_CENTS = 10_000;
+
+function computeRoundUpSuggestion(
+  totalCents: number,
+  surplusCents: number,
+): { targetCents: number; moveCents: number } | null {
+  if (totalCents <= 0 || surplusCents <= 0) {
+    return null;
+  }
+  const nextHundredCents =
+    Math.ceil(totalCents / HUNDRED_SOLES_CENTS) * HUNDRED_SOLES_CENTS;
+  if (nextHundredCents <= totalCents) {
+    return null;
+  }
+  const moveCents = nextHundredCents - totalCents;
+  if (moveCents > surplusCents) {
+    return null;
+  }
+  return { targetCents: nextHundredCents, moveCents };
+}
+
+function buildMoveSurplusHref(
+  breakdown: CycleSavingsBreakdown,
+  amountCents?: number,
+): string {
   const from =
     breakdown.wantsSurplusCents > 0
       ? "wants"
       : breakdown.needsSurplusCents > 0
         ? "needs"
-        : "wants";
-  return `/savings/move?from=${from}`;
+        : (breakdown.extraordinarySurplusCents ?? 0) > 0
+          ? "extraordinary"
+          : "wants";
+  const params = new URLSearchParams({ from });
+  if (amountCents !== undefined && amountCents > 0) {
+    params.set("amount", String(amountCents));
+  }
+  return `/savings/move?${params.toString()}`;
 }
 
 function SectionHeader({
@@ -260,14 +335,29 @@ function BelowObjectivePanel({
   format: (cents: number) => string;
 }) {
   const progressPercent = breakdown.objectiveProgressPercent;
+  const [ctaDismissed, setCtaDismissed] = useState(false);
+  const hasSurplus =
+    breakdown.wantsSurplusCents > 0 ||
+    breakdown.needsSurplusCents > 0 ||
+    (breakdown.extraordinarySurplusCents ?? 0) > 0;
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-serif text-[22px] font-medium text-ink md:text-[25px]">
-          {CYCLE_SAVINGS_BELOW_TITLE}
-        </h3>
-        <p className="mt-2 text-sm text-qp-text text-pretty">
+        <div className="flex items-center gap-3">
+          <span
+            className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-clay-soft"
+            aria-hidden
+          >
+            <span className="flex size-3.5 items-center justify-center rounded-full border-2 border-clay">
+              <span className="size-0.5 rounded-full bg-clay shadow-[0_3px_0_var(--color-clay)]" />
+            </span>
+          </span>
+          <h3 className="font-serif text-[22px] font-medium text-ink md:text-[25px]">
+            {CYCLE_SAVINGS_BELOW_TITLE}
+          </h3>
+        </div>
+        <p className="mt-2 text-sm text-qp-text text-pretty md:mt-0 md:pl-12">
           {CYCLE_SAVINGS_BELOW_BODY_PREFIX}{" "}
           <strong className="font-semibold text-ink">
             {format(breakdown.savingsSetAsideCents)}
@@ -319,14 +409,91 @@ function BelowObjectivePanel({
         </p>
       </div>
 
-      {breakdown.wantsSurplusCents > 0 || breakdown.needsSurplusCents > 0 ? (
-        <Link
-          href={buildMoveSurplusHref(breakdown)}
-          className={cn(buttonVariants({ variant: "outline" }), "w-full md:w-auto")}
-        >
-          {CYCLE_SAVINGS_MOVE_CTA}
-        </Link>
+      {!ctaDismissed ? (
+        hasSurplus ? (
+          <div className="flex flex-col gap-2.5 sm:flex-row">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto flex-1 rounded-[11px] py-[13px] text-[14.5px]"
+              onClick={() => setCtaDismissed(true)}
+            >
+              {CYCLE_SAVINGS_BELOW_ACK_CTA}
+            </Button>
+            <Link
+              href={buildMoveSurplusHref(breakdown)}
+              className={cn(
+                buttonVariants(),
+                "h-auto flex-1 rounded-[11px] py-[13px] text-center text-[14.5px]",
+              )}
+            >
+              {CYCLE_SAVINGS_BELOW_MOVE_CTA}
+            </Link>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto w-full rounded-[11px] py-[13px] text-[14.5px] md:w-auto"
+            onClick={() => setCtaDismissed(true)}
+          >
+            {CYCLE_SAVINGS_BELOW_ACK_CTA}
+          </Button>
+        )
       ) : null}
+    </div>
+  );
+}
+
+function MobileMetricRow({
+  label,
+  amount,
+  variant,
+  amountClassName,
+}: {
+  label: string;
+  amount: string;
+  variant: "objective" | "additional" | "total";
+  amountClassName?: string;
+}) {
+  const isTotal = variant === "total";
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between rounded-xl px-[15px] py-3",
+        isTotal
+          ? "border-[1.5px] border-qp-shield-line bg-qp-success"
+          : "border border-line bg-card",
+      )}
+    >
+      <span
+        className={cn(
+          "flex items-center gap-2 text-[13px]",
+          isTotal ? "font-semibold text-qp-deep" : "text-ink",
+        )}
+      >
+        {variant !== "total" ? (
+          <span
+            className={cn(
+              "size-2.5 rounded-sm",
+              variant === "objective"
+                ? "bg-moss-soft"
+                : "bg-[repeating-linear-gradient(45deg,var(--moss-soft,#7fb39f),var(--moss-soft,#7fb39f)_3px,#9cc6b6_3px,#9cc6b6_6px)]",
+            )}
+            aria-hidden
+          />
+        ) : null}
+        {label}
+      </span>
+      <span
+        className={cn(
+          "font-serif text-base text-ink",
+          amountClassName,
+        )}
+      >
+        {amount}
+      </span>
     </div>
   );
 }

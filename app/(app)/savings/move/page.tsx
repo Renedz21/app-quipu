@@ -8,7 +8,14 @@ export const metadata = pageMetadata({
   path: "/savings/move",
 });
 
-type SearchParams = Promise<{ from?: string }>;
+type SearchParams = Promise<{ from?: string; amount?: string }>;
+
+function parseInitialAmountCents(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw === "") return undefined;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
+  return parsed;
+}
 
 export default async function MoveSurplusPage({
   searchParams,
@@ -18,7 +25,17 @@ export default async function MoveSurplusPage({
   await requireOnboardedProfile();
   const params = await searchParams;
   const initialFromEnvelope =
-    params.from === "needs" || params.from === "wants" ? params.from : undefined;
+    params.from === "needs" ||
+    params.from === "wants" ||
+    params.from === "extraordinary"
+      ? params.from
+      : undefined;
+  const initialAmountCents = parseInitialAmountCents(params.amount);
 
-  return <MoveSurplusView initialFromEnvelope={initialFromEnvelope} />;
+  return (
+    <MoveSurplusView
+      initialFromEnvelope={initialFromEnvelope}
+      initialAmountCents={initialAmountCents}
+    />
+  );
 }

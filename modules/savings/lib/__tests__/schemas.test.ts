@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { KEYPAD_MAX_CENTS } from "@/modules/expenses/lib/keypad";
 import {
+  createMoveSurplusFormSchema,
   createNewGoalSchema,
+  moveSurplusFormToMutationArgs,
   moveSurplusInputSchema,
   newGoalFormToMutationArgs,
 } from "@/modules/savings/schemas";
@@ -72,6 +74,15 @@ describe("moveSurplusInputSchema", () => {
     ).toBe(true);
   });
 
+  it("accepts extraordinary fromEnvelope", () => {
+    expect(
+      moveSurplusInputSchema.safeParse({
+        fromEnvelope: "extraordinary",
+        amount: 10_000,
+      }).success,
+    ).toBe(true);
+  });
+
   it("rejects zero amount", () => {
     expect(
       moveSurplusInputSchema.safeParse({
@@ -80,5 +91,37 @@ describe("moveSurplusInputSchema", () => {
         toSubEnvelopeId: "sub123",
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("createMoveSurplusFormSchema", () => {
+  const schema = createMoveSurplusFormSchema({
+    needs: 50_000,
+    wants: 80_000,
+    extraordinary: 20_000,
+  });
+
+  it("rejects amount above selected source", () => {
+    expect(
+      schema.safeParse({
+        fromSource: "wants",
+        amountCents: 90_000,
+        destinationId: "sub1",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("maps to mutation args", () => {
+    expect(
+      moveSurplusFormToMutationArgs({
+        fromSource: "extraordinary",
+        amountCents: 10_000,
+        destinationId: "sub1",
+      }),
+    ).toEqual({
+      fromEnvelope: "extraordinary",
+      amount: 10_000,
+      toSubEnvelopeId: "sub1",
+    });
   });
 });

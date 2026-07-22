@@ -278,7 +278,11 @@ export const appTables = {
   surplusContributions: defineTable({
     profileId: v.id("profiles"),
     cycleId: v.id("financialCycles"),
-    fromEnvelope: v.union(v.literal("needs"), v.literal("wants")),
+    fromEnvelope: v.union(
+      v.literal("needs"),
+      v.literal("wants"),
+      v.literal("extraordinary"),
+    ),
     amount: v.number(),
     subEnvelopeId: v.id("subEnvelopes"),
     createdAt: v.number(),

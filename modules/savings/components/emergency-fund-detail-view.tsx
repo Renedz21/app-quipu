@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Safe } from "reicon-react";
+import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
 import { api } from "@/convex/_generated/api";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { Button } from "@/shared/components/ui/button";
@@ -59,7 +59,7 @@ export function EmergencyFundDetailView() {
 
       <div className="mt-4 flex items-center gap-3">
         <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-moss text-white">
-          <Safe size={14} color="currentColor" aria-hidden />
+          <EmergencyFundIcon size="md" />
         </span>
         <h1 className="font-serif text-[21px] font-medium text-ink md:text-[26px]">
           {EMERGENCY_FUND_LABEL}

@@ -350,7 +350,7 @@ Discoverable (dashed, ícono faint) · Locked (opacity .75).
 **FAB (solo dashboard móvil):** 52px, bg `--text-strong`, elevado `translateY(-14px)` desde bottom nav.
 
 **Sidebar (web):** 228px, bg `--surface-warm`, **5 ítems** + avatar al fondo (34px, `--qp03`, inicial serif):
-Inicio · Registrar (CTA vía header, ítem no navega) · Ahorros · Compromisos · Ajustes.
+Inicio · Registrar → `/income/register` (ingreso habitual/extraordinario; también CTAs header/FAB) · Ahorros · Compromisos · Ajustes.
 **Sin ítem Coach:** el bloque 7 vive embebido en `/dashboard` (canon bloque 7); el canvas `quipu-2.html` aún muestra Coach en sidebar — tratar como IA obsoleta, no producto.
 Active: bg `--qp04` + 600. **Bottom nav (móvil):** 76px, bg `rgba(251,250,247,.94)` + blur,
 4 items + FAB central; active `--qpB` 600.
@@ -449,6 +449,10 @@ total, barra sólida+rayada; P2-7) y CTA mover sobrante voluntario (≠ rescate 
 Detalle del fondo: 3 sub-cards (aporte / completa en ~N meses / racha) + "Aportar ahora" + "Ajustar aporte".
 Otras metas: grid 3-col, máx 6 visibles, "+ Nueva meta", sin fecha objetivo obligatoria.
 El progreso se actualiza con aporte explícito, no al registrar gasto. **El aporte al fondo es automático desde el sobre Ahorro.**
+**Mover sobrante (6N-B/C):** `/savings/move` — TanStack Form + Zod (`move-surplus-form.tsx`): chips Desde
+(Necesidades / Gustos / gratificación vía origen `extraordinary`), fila de monto + slider + pills, destino
+en cards, banner verde “solo este ciclo”; móvil = bottom sheet (`SavingsFormShell`). Sin keypad de gastos.
+Tras mutación → `/savings/move/success` (6N-C) con snapshot en query params + breakdown del ciclo.
 Sin metas compartidas, inversiones, cripto ni plazos.
 Spec: misma ruta que Bloque 5 arriba.
 
@@ -731,7 +735,8 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/lib/budgetMath.ts` | Puras + constantes: `computeAllocations`, `isValidAllocations`, `isValidPaydays`, `computeRescueTransfer`, `suggestRescueTransfer`, `shouldWarnWantsBurn`, `evaluateCycleCompliance` (con tests) |
 | `convex/lib/commitmentCoverage.ts` | Puras: `computeCommitmentCoverage`, `computeAllCommitmentCoverage`, `mapCoverageStatusToDashboard` (con tests) |
 | `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
-| `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations); P2-7: `getCycleSavingsBreakdown`, `moveSurplusToSavings` |
+| `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail`, `getMoveSurplusContext` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations); P2-7: `getCycleSavingsBreakdown`, `moveSurplusToSavings` |
+| `convex/lib/extraordinarySavingsSurplus.ts` | Puras: pool movible desde ingresos extraordinarios (TDD; origen `extraordinary` en mover sobrante) |
 | `convex/settings.ts` | `getSettingsOverview`, `listMyPasskeys` (queries); `updateAllocations`, `updateNotificationPreferences`, `updateExtraordinaryRules` (mutations; última P2-7) |
 | `convex/progress.ts` | `getOverview`, `getRewards`, `getAppearance` (queries), `updateAppearance` (mutation) |
 | `convex/lib/gamificationMath.ts` | Puras: racha, chart, logros, umbrales recompensa (con tests) |
@@ -749,7 +754,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
 - **Plan Free ilimitado y manual** (`FREE_PLAN_MONTHLY_LIMIT` eliminado); Premium se justifica por automatización, no por más registros.
 - **Dinero en céntimos enteros, siempre** (`shared/lib/money.ts`). **Fechas en `America/Lima`** (`shared/lib/date.ts`).
-- **Ingresos extraordinarios (P2-7):** siguen siendo `incomeEvents`; `incomeKind: "extraordinary"` exige `extraordinaryType`. Reglas en `profiles.extraordinaryRules` solo **sugieren** destino al registrar; el usuario confirma `distributionPolicy` por evento. Defaults si ausentes: gratificaciones/bono/utilidades/custom → `profile_default`; CTS → `all_to_emergency_fund` (UI traduce a política de reparto documentada en spec). **`moveSurplusToSavings`** (voluntario) ≠ **`applyCoverFromCycleSavings`** (crisis P1-10).
+- **Ingresos extraordinarios (P2-7):** siguen siendo `incomeEvents`; `incomeKind: "extraordinary"` exige `extraordinaryType`. Reglas en `profiles.extraordinaryRules` solo **sugieren** destino al registrar; el usuario confirma `distributionPolicy` por evento. Defaults si ausentes: gratificaciones/bono/utilidades/custom → `profile_default`; CTS → `all_to_emergency_fund` (UI traduce a política de reparto documentada en spec). **`moveSurplusToSavings`** (voluntario; orígenes `needs` | `wants` | `extraordinary` en `surplusContributions`) ≠ **`applyCoverFromCycleSavings`** (crisis P1-10). Origen `extraordinary` mueve saldo del pool de ahorro atribuible a ingresos extraordinarios (`convex/lib/extraordinarySavingsSurplus.ts`).
 
 ### 5.4 Auth (Better Auth + passkey)
 
@@ -764,8 +769,15 @@ componente `convex/betterAuth/` y no se re-exportan.
   UVPA (`isUserVerifyingPlatformAuthenticatorAvailable`) es solo informativo. Gatear en UVPA
   mintió a usuarios con security keys/PIN. Lección: los tests deben verificar el comportamiento
   del usuario, no la implementación.
-- **Sign-up captura email y nombre reales** (bug P0-8: antes todos compartían `placeholder@quipu.pe`).
-  La contraseña interna es aleatoria y el usuario no la conoce (gap registrado).
+- **Sign-up captura email, nombre y contraseña reales** (bug P0-8: antes todos compartían
+  `placeholder@quipu.pe`). **Sin verificación de email ni recuperación de cuenta** — deuda
+  registrada con plan en `docs/security-debt.md` (D1, se resuelve con Resend).
+- **Postura de seguridad (auditoría 2026-07-22):** passkey `resolveUser` rechaza emails ya
+  registrados (cierra account takeover anónimo); `createProfile` fija `plan: "free"` en servidor;
+  `resetDb.resetAll` es `internalAction` (solo CLI/dashboard, dev); headers de seguridad en
+  `next.config.ts`; rate limit explícito con regla estricta `/passkey/*`; session recording de
+  PostHog enmascara el texto del área privada (`data-ph-mask` en el shell). Deuda viva: D1–D4
+  en `docs/security-debt.md`.
 - `USER_ALREADY_EXISTS` en sign-up → redirect `/sign-in?email=X&reason=exists` con banner "Ya tienes cuenta".
 - `passkeyClient()` y `convexClient()` en `auth/auth-client.ts` son obligatorios (sin ellos Better Auth no conecta con Convex).
 
@@ -819,7 +831,8 @@ mensajes en español peruano accionables (`Field` / `FieldError` de `shared/comp
 
 **Referencia canónica:** `modules/auth/components/sign-in-view.tsx` (wizard + form) y
 `modules/income/components/income-register-flow.tsx` + `income-register-form.tsx` (container +
-form).
+form); **mover sobrante:** `modules/savings/components/move-surplus-view.tsx` +
+`move-surplus-form.tsx` (schema en `modules/savings/schemas.ts`).
 
 **`useState` permitido solo para UI de flujo**, no para valores de campos:
 
@@ -1055,7 +1068,7 @@ revisa solo cuando el usuario declare la app completa.
 | P2-3 | Auditoría de vistas que leen campos viejos | ✅ Cerrado (grep de `workerType`/`frequency` limpio al 2026-07-20). |
 | P2-5 | Extraer AuthHeader a shared | ✅ Cerrado sin implementar (sin duplicación real). |
 | P2-6 | Deuda de lint (13 errors + 31 warnings) | ⬜ Pendiente. Offenders: `!` non-null en `auth/auth-server.ts`, `as any` en betterAuth, parse error CSS `oklch(...)` en `globals.css`. Cierre: `pnpm lint` en 0/0 (excluyendo `convex/_generated/`). Bloqueará CI cuando se endurezca. |
-| P2-7 | Bloques 5N/6N — Ingresos extraordinarios + ahorro del ciclo | 🟡 **Parcial 2026-07-21.** **UI bloque 5 alineada:** `/income/register` habitual + extraordinario (5N-A/B/C) vs. `quipu-2.html` — input monto (sin keypad), toggle segmentado, grid tipos, dialog destino, settings 5N-D polish. Backend/schema/`extraordinaryRules`/`createIncomeEvent` en prod. **Pendiente P2-7:** bloque 6 (card ahorro del ciclo, pulir `move-surplus-view`), smoke grati E2E, cierre roadmap completo. Specs: `2026-07-21-ingresos-bloque-5-design.md`, `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`. |
+| P2-7 | Bloques 5N/6N — Ingresos extraordinarios + ahorro del ciclo | 🟡 **Parcial 2026-07-22.** Bloque 5 ✅. **Bloque 6:** card ahorro del ciclo + **`/savings/move`** (6N-B, form canon sin keypad, origen `extraordinary`) + **`/savings/move/success`** (6N-C). Pendiente: smoke gratificación E2E, pulir copy fino vs. HTML. Specs: `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`. |
 
 ### 8.4 Delta diseño v3.0 vs código (backlog de UI por bloque)
 
@@ -1066,7 +1079,7 @@ revisa solo cuando el usuario declare la app completa.
 | 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
 | 5. Ingresos | ✅ **UI bloque 5 alineada (2026-07-21):** input monto, flujo 5N, badge dorado movimientos. Pendiente bloque 6 (P2-7). Selector fecha retroactiva fuera v2.5. |
-| 6. Ahorros | P2-7: card "Tu ahorro este ciclo", mover sobrante voluntario. Aporte a metas custom desde UI; "Ajustar aporte" del fondo. |
+| 6. Ahorros | ✅ Overview + fondo + metas (bloque 6). P2-7: card ciclo 6N-A/D, `/savings/move` + success 6N-B/C, origen `extraordinary`. Pendiente: aporte a metas custom UI; "Ajustar aporte" del fondo. |
 | 7. Coach | Tranquilo CTAs ("Ver detalle", "Guardar de más") en card del **inicio**; alinear canvas sidebar (quitar Coach del mock cuando se toque `quipu-2.html`). |
 | 8. Gamificación | Informe anual descargable (PDF). |
 | 9. Perfil/Ajustes | Polar.sh billing, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. **Hecho:** `/settings`, reparto editable, compromisos + toggles preferencias, enlace progreso. |
@@ -1172,6 +1185,7 @@ Auth vía API (`sign-up/email` + `convex/token`). Cada test crea usuario único 
 | `docs/manuales-de-sistema.md` | 6 system prompts de rigor (uso en §7.4). |
 | `docs/superpowers/plans/` · `specs/` | Histórico de planes y specs ejecutados (migración v2.5, auth, onboarding v3). Consulta, no edición. |
 | `docs/migrations/2026-07-07-v25-migration.md` | Runbook de la migración de datos v2.0→v2.5. |
+| `docs/security-debt.md` | Deuda de seguridad (D1–D4) con planes de resolución. Origen: auditoría 2026-07-22. |
 | `quipu-2.html` (raíz) | Canvas visual oficial del diseño: los 9 bloques renderizados en web y móvil + theme switcher. Fuente de §3. |
 | `convex/_generated/ai/guidelines.md` | Guías de la API de Convex (leer antes de tocar `convex/`). Se regenera con `npx convex ai-files install`. |
 
@@ -1192,6 +1206,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-22 — §5.4 / §10.1.** Auditoría de seguridad: 7 fixes aplicados (2 críticos: account takeover vía passkey y wipe público de BD; 1 alto: auto-premium en `createProfile`), deuda D1–D4 registrada en `docs/security-debt.md`. Corregida línea desactualizada de "contraseña aleatoria" (el sign-up actual pide contraseña real).
 - **2026-07-21 — §3.5 / §8.4 / Bloque 7.** Coach solo embebido en dashboard; sidebar app sin ítem Coach; sin ruta `/coach`. Canvas HTML sidebar pendiente alinear.
 - **2026-07-21 — P2-7 + §2.5/§3/§5.** Ingresos extraordinarios (5N/6N): spec `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`, tokens §3.3, delta §8.4, roadmap P2-7.
 - **2026-07-21 — §8 delta Compromisos.** Pantalla `/commitments` (`getCommitmentCoverage` + total ciclo), nav activa, «Ver todo» en dashboard, diálogo agregar en `shared/components/commitments/`.

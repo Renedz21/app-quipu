@@ -103,9 +103,10 @@ Si no, no pertenece a Quipu.
 1. **Disciplina ≠ austeridad.** Disciplina es saber cuánto tienes, cuánto puedes gastar
    y qué compromisos cubrir; decidir antes del impulso. La app no restringe: elimina ansiedad.
 2. **Quipu no trabaja con salarios; trabaja con eventos.** Nunca pregunta "¿cuánto ganas?".
-   Pregunta "¿cuánto dinero entró?". No necesita sueldo anual, empresa, AFP ni CTS.
-   Cada ingreso es un `incomeEvent` (ver §5.3). No hay ingresos "principales" ni
-   "secundarios": solo dinero que llegó.
+   Pregunta "¿cuánto dinero entró?". **No modela nómina** (boletas, deducciones, AFP, proyecciones).
+   Opcionalmente el usuario **etiqueta** ingresos de planilla peruana (gratificación, CTS, bono,
+   utilidades) para que Quipu **sugiera** un reparto sin tocar su 50/30/20 global — sigue siendo
+   un solo `incomeEvent` (ver §5.3). No hay totales separados "sueldo vs extraordinario" en el ciclo.
 3. **Tres sobres, nada más:**
    - **Necesidades** — "¿qué necesito para sobrevivir este ciclo?" (alquiler, comida, transporte, servicios).
    - **Gustos** — "¿qué puedo disfrutar sin culpa?" (salidas, compras, caprichos).
@@ -167,6 +168,8 @@ Debe sentirse cercano, maduro, claro, tranquilo y humano. La emoción objetivo e
 4. **Elegante antes que lindo.** Cero emojis, cero decoración gratuita.
 5. **Espacio en lugar de borde.** Se separa con espacio en blanco, no con líneas.
 6. **El acento hace una sola cosa:** "todo va bien" y CTA principal. Nada más.
+7. **Categoría extraordinaria (dorado):** ingresos etiquetados de planilla usan tokens
+   `--extraordinary-*` (ver §3.3). Es **semántica de tipo**, no un segundo acento de CTA.
 
 ### 3.2 Tipografía
 
@@ -261,6 +264,15 @@ Extras: badge "Sugerido" bg `#EEE1D2`; luz compromisos `#B7C0D0`; tag "auto" `#A
 
 Input en error: bg `#FDF7F5`, borde 1.5px `#C98E80`, mensaje 12px `#B0685A`.
 
+**Categoría extraordinaria (ingresos de planilla etiquetados):** capa semántica dorada; no sustituye al acento verde en CTAs.
+
+| Token | Hex | Uso |
+|---|---|---|
+| `--extraordinary-a` | `#B08430` | Ícono, borde activo, check |
+| `--extraordinary-b` | `#86651F` | Texto badge "Extraordinario" |
+| `--extraordinary-surface` | `#F6EFDE` | Fondos suaves, cards tipo |
+| `--extraordinary-border` | `#E8DABC` | Bordes |
+
 **Reglas duras:**
 - **No hay rojo brillante** (errores = terracota, nunca `#EF4444`).
 - **No hay verde WhatsApp** (el verde de Quipu es musgo-sereno `#3C7D6E`).
@@ -337,7 +349,9 @@ Discoverable (dashed, ícono faint) · Locked (opacity .75).
 
 **FAB (solo dashboard móvil):** 52px, bg `--text-strong`, elevado `translateY(-14px)` desde bottom nav.
 
-**Sidebar (web):** 228px, bg `--surface-warm`, 6 items + avatar al fondo (34px, `--qp03`, inicial serif).
+**Sidebar (web):** 228px, bg `--surface-warm`, **5 ítems** + avatar al fondo (34px, `--qp03`, inicial serif):
+Inicio · Registrar (CTA vía header, ítem no navega) · Ahorros · Compromisos · Ajustes.
+**Sin ítem Coach:** el bloque 7 vive embebido en `/dashboard` (canon bloque 7); el canvas `quipu-2.html` aún muestra Coach en sidebar — tratar como IA obsoleta, no producto.
 Active: bg `--qp04` + 600. **Bottom nav (móvil):** 76px, bg `rgba(251,250,247,.94)` + blur,
 4 items + FAB central; active `--qpB` 600.
 
@@ -416,20 +430,27 @@ móvil = bottom sheets. Sin OCR, QR, bancos ni geolocalización.
 (En el HTML móvil falta la Variante B.)
 
 **Bloque 5 — Ingresos "¿Cuánto entró y a dónde va?"**
-Solo manual. Web 2-col: inputs (monto Newsreader 34 + origen en chips + fecha default hoy) y
-**preview de impacto siempre visible antes de confirmar** (3 sobres + nuevo disponible hoy).
-Confirmación con deltas por sobre. Decisiones: origen es chip, no texto libre; **todo ingreso
-se reparte automáticamente** según porcentajes (no hay "no repartir"); sin edición retroactiva
-en este flujo. Móvil: full-screen, no sheet.
+Solo manual. **Un solo** `/income/register`: toggle **Habitual / Extraordinario** (P2-7).
+Habitual: web 2-col inputs (monto Newsreader 34 + origen en chips + fecha default hoy) y
+**preview de impacto siempre visible** (3 sobres + nuevo disponible hoy); confirmación con deltas.
+Extraordinario: grid de tipos (gratificación jul/dic, CTS, bono, utilidades, otro), regla sugerida
+desde perfil (Ajustes → Automatizaciones), destino por evento (habitual / todo a ahorro; personalizar
+por sobre diferido), preview incluye **Nuevo disponible hoy**, confirmación con capa dorada y badge
+en movimientos. Decisiones: origen sigue siendo chip/enum backend; **todo ingreso se reparte** según
+política confirmada (50/30/20 del perfil o override de ese evento); `distributionApplied` no se
+recalcula; sin edición retroactiva en este flujo. Móvil: full-screen, no sheet.
+Spec: `docs/superpowers/specs/2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`.
 
 **Bloque 6 — Ahorros "¿Qué estoy construyendo?"**
 **El Fondo de Emergencia siempre hero** (fila entera, gradient `--qp20`→`--qp21`, badge "Prioridad",
 cifra Newsreader 52, progress con 3 marks de meses, "1.2 de 3 meses cubiertos · vas seguro",
-aporte automático por ciclo). Detalle del fondo: 3 sub-cards (aporte / completa en ~N meses /
-racha) + "Aportar ahora" + "Ajustar aporte". Otras metas: grid 3-col, máx 6 visibles,
-"+ Nueva meta", sin fecha objetivo obligatoria. El progreso se actualiza con aporte explícito,
-no al registrar gasto. **El aporte al fondo es automático desde el sobre Ahorro.**
+aporte automático por ciclo). **Debajo del hero:** card **Tu ahorro este ciclo** (objetivo / adicional /
+total, barra sólida+rayada; P2-7) y CTA mover sobrante voluntario (≠ rescate crisis P1-10).
+Detalle del fondo: 3 sub-cards (aporte / completa en ~N meses / racha) + "Aportar ahora" + "Ajustar aporte".
+Otras metas: grid 3-col, máx 6 visibles, "+ Nueva meta", sin fecha objetivo obligatoria.
+El progreso se actualiza con aporte explícito, no al registrar gasto. **El aporte al fondo es automático desde el sobre Ahorro.**
 Sin metas compartidas, inversiones, cripto ni plazos.
+Spec: misma ruta que Bloque 5 arriba.
 
 **Bloque 7 — Coach "¿Qué decisión debería tomar?"**
 Asistente **declarativo**; ocupa espacio proporcional a la gravedad:
@@ -441,8 +462,8 @@ Asistente **declarativo**; ocupa espacio proporcional a la gravedad:
 | Sugerencia | Card, fila propia | gradient verde | "[Acción concreta]. ¿Lo hacemos?" | "Hacerlo" / "Ahora no" |
 | Crisis | Hero, toma la pantalla | terracota | "Te faltan S/ X para cubrir tus compromisos. Resolvámoslo ahora en un paso." | 2 opciones explícitas + "Lo veo más tarde" |
 
-Reglas duras: nunca más de 1 pregunta; sin historial conversacional; no proactivo fuera del
-dashboard; copy de crisis directo, no dramático; en tranquilo es visible por defecto (refuerza orden);
+Reglas duras: nunca más de 1 pregunta; sin historial conversacional; **no ruta ni ítem de nav propio**
+(solo nivel 4 del dashboard; no `/coach`); no proactivo fuera del dashboard; copy de crisis directo, no dramático; en tranquilo es visible por defecto (refuerza orden);
 no personaliza más allá del nombre. Sin chat, voz, historial ni ML visible.
 (En el HTML móvil falta el estado Sugerencia.)
 
@@ -683,7 +704,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 
 | Tabla | Campos clave | Notas de dominio |
 |---|---|---|
-| `profiles` | userId, name, country, currencyCode/Symbol, `incomeModel` (fixed/variable/mixed), `cycleDurationDays?` (15/30), `mixedFixedAmount?` (céntimos), `variableIncomeSources?`, `payFrequency?` (monthly/biweekly/weekly/variable), `paydays?`, allocationNeeds/Wants/Savings (default 50/30/20), onboardingComplete, plan (free/premium), polarCustomerId/SubscriptionId?, `appearanceTheme?` (light/tinta), `accentPreset?` (moss/steel/clay), `appIconVariant?` (light/dark), coachCrisisSnoozedUntil? | `incomeModel` required desde P0-3 (2026-07-21) |
+| `profiles` | userId, name, country, currencyCode/Symbol, `incomeModel` (fixed/variable/mixed), `cycleDurationDays?` (15/30), `mixedFixedAmount?` (céntimos), `variableIncomeSources?`, `payFrequency?` (monthly/biweekly/weekly/variable), `paydays?`, allocationNeeds/Wants/Savings (default 50/30/20), `extraordinaryRules?` (CTS/gratificaciones/bono/utilidades/custom → policy), onboardingComplete, plan (free/premium), polarCustomerId/SubscriptionId?, `appearanceTheme?` (light/tinta), `accentPreset?` (moss/steel/clay), `appIconVariant?` (light/dark), coachCrisisSnoozedUntil? | `incomeModel` required desde P0-3 (2026-07-21); reglas extraordinarias P2-7 |
 | `financialCycles` | profileId, startDate, endDate, status (active/closed), `totalIncomeReceived?` | Snapshot materializado mantenido por `createIncomeEvent` |
 | `envelopes` | profileId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount, frozenUntil? | Saldo vivo O(1) para el dashboard |
 | `subEnvelopes` | profileId, parentEnvelopeType (**solo "savings"**), label, emoji, currentAmount, targetAmount?, isSystemDefault | Metas de ahorro; `isSystemDefault` = Fondo de Emergencia |
@@ -692,14 +713,14 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
-| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}` | Log unificado de ingresos; `distributionApplied` nunca se recalcula |
+| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings) | Log unificado; `distributionApplied` nunca se recalcula; campos extraordinarios P2-7 |
 
 ### 5.2 Funciones por archivo
 
 | Archivo | Funciones |
 |---|---|
 | `convex/profiles.ts` | `getMyProfile` (query), `createProfile`, `updateProfileSettings` (mutations) |
-| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations) |
+| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations; P2-7 extiende args extraordinarios) |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense` (mutations), `getRecentExpenses` (query) |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
 | `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach` (mutations) — sugiere, confirma, aplica |
@@ -710,12 +731,13 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/lib/budgetMath.ts` | Puras + constantes: `computeAllocations`, `isValidAllocations`, `isValidPaydays`, `computeRescueTransfer`, `suggestRescueTransfer`, `shouldWarnWantsBurn`, `evaluateCycleCompliance` (con tests) |
 | `convex/lib/commitmentCoverage.ts` | Puras: `computeCommitmentCoverage`, `computeAllCommitmentCoverage`, `mapCoverageStatusToDashboard` (con tests) |
 | `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
-| `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations) |
+| `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations); P2-7: `getCycleSavingsBreakdown`, `moveSurplusToSavings` |
+| `convex/settings.ts` | `getSettingsOverview`, `listMyPasskeys` (queries); `updateAllocations`, `updateNotificationPreferences`, `updateExtraordinaryRules` (mutations; última P2-7) |
 | `convex/progress.ts` | `getOverview`, `getRewards`, `getAppearance` (queries), `updateAppearance` (mutation) |
-| `convex/settings.ts` | `getSettingsOverview`, `listMyPasskeys` (queries); `updateAllocations`, `updateNotificationPreferences` (mutations) |
 | `convex/lib/gamificationMath.ts` | Puras: racha, chart, logros, umbrales recompensa (con tests) |
 | `convex/lib/evaluateClosedCycle.ts` | Persiste `cycleHistory` + actualiza `streaks` al cerrar ciclo |
 | `convex/lib/savingsMath.ts` | Puras: meta fondo 3 meses, meses cubiertos, progreso, ciclos para completar (con tests) |
+| `convex/lib/cycleSavingsBreakdown.ts` | Puras: objetivo / adicional / total del ciclo (TDD; P2-7) |
 
 ### 5.3 Reglas de dominio v2.5
 
@@ -727,6 +749,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
 - **Plan Free ilimitado y manual** (`FREE_PLAN_MONTHLY_LIMIT` eliminado); Premium se justifica por automatización, no por más registros.
 - **Dinero en céntimos enteros, siempre** (`shared/lib/money.ts`). **Fechas en `America/Lima`** (`shared/lib/date.ts`).
+- **Ingresos extraordinarios (P2-7):** siguen siendo `incomeEvents`; `incomeKind: "extraordinary"` exige `extraordinaryType`. Reglas en `profiles.extraordinaryRules` solo **sugieren** destino al registrar; el usuario confirma `distributionPolicy` por evento. Defaults si ausentes: gratificaciones/bono/utilidades/custom → `profile_default`; CTS → `all_to_emergency_fund` (UI traduce a política de reparto documentada en spec). **`moveSurplusToSavings`** (voluntario) ≠ **`applyCoverFromCycleSavings`** (crisis P1-10).
 
 ### 5.4 Auth (Better Auth + passkey)
 
@@ -1019,7 +1042,7 @@ revisa solo cuando el usuario declare la app completa.
 | P1-7 | Bloque 4 — Registrar gasto | ✅ **Cerrado 2026-07-21.** Variantes A/B: `modules/expenses/` (keypad, sugerencia sobre, confirmación con saldo restante), CTAs dashboard activos (FAB, header, tarjetas needs/wants, coach early). Variante C diferida (sin detección automática). TDD `keypad` + `envelopeSuggestion`; smoke E2E UI. |
 | P1-8 | Bloque 5 — Ingresos | ✅ **Cerrado 2026-07-21.** `/income/register` full-screen; preview 3 sobres + disponible hoy; chips origen → `createIncomeEvent`; confirmación con deltas; CTAs empty/header/FAB; TDD `impactPreview`; smoke E2E ingreso. |
 | P1-9 | Bloque 6 — Ahorros | ✅ **Cerrado 2026-07-21.** `/savings` + `/savings/fund`; hero Fondo (Prioridad, progreso 3 meses), detalle con stats, `contributeToSubEnvelope`, `createSavingsGoal` (máx 6 metas), TDD `savingsMath`; nav Ahorros activa. Ajustar aporte y aporte a metas custom en UI diferidos. |
-| P1-10 | Bloque 7 — Coach CTAs advertencia/crisis | ✅ **Cerrado 2026-07-21.** Warning: `/income/register` + scroll sobres. Crisis: `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`; `crisisResolution` (TDD), `coverageBoost`/`postponedForCycleId`; UI `coach-crisis-actions`. Tranquilo CTAs y pantalla coach dedicada diferidos. |
+| P1-10 | Bloque 7 — Coach CTAs advertencia/crisis | ✅ **Cerrado 2026-07-21.** Warning: `/income/register` + scroll sobres. Crisis: `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`; `crisisResolution` (TDD), `coverageBoost`/`postponedForCycleId`; UI `coach-crisis-actions`. Tranquilo CTAs en card del dashboard diferidos. **Sin** pantalla ni nav Coach (decisión 2026-07-21). |
 | P1-11 | Bloque 8 — Gamificación | ✅ **Cerrado 2026-07-21.** `/progress` (racha Newsreader + chart 12 ciclos + logros) y `/progress/rewards` (Tinta/Arcilla/informe + acento/tema/ícono). Motor: `evaluateClosedCycle` en cierre de ciclo (`createIncomeEvent`), `gamificationMath` (TDD), `convex/progress.ts`, `AppearanceSync`. Informe anual PDF diferido. Enlace desde `/settings` (perfil). |
 | P1-12 | Bloque 9 — Perfil y ajustes | ✅ **Cerrado 2026-07-21 (MVP).** `/settings` + `/settings/allocations` + `/settings/cycle` (stub); `modules/settings/` cuenta + sistema + compromisos; `convex/settings.ts` (`getSettingsOverview`, `listMyPasskeys`, `updateAllocations`, `updateNotificationPreferences`); nav Ajustes activa; smoke E2E. Diferido: Polar.sh, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. |
 
@@ -1032,6 +1055,7 @@ revisa solo cuando el usuario declare la app completa.
 | P2-3 | Auditoría de vistas que leen campos viejos | ✅ Cerrado (grep de `workerType`/`frequency` limpio al 2026-07-20). |
 | P2-5 | Extraer AuthHeader a shared | ✅ Cerrado sin implementar (sin duplicación real). |
 | P2-6 | Deuda de lint (13 errors + 31 warnings) | ⬜ Pendiente. Offenders: `!` non-null en `auth/auth-server.ts`, `as any` en betterAuth, parse error CSS `oklch(...)` en `globals.css`. Cierre: `pnpm lint` en 0/0 (excluyendo `convex/_generated/`). Bloqueará CI cuando se endurezca. |
+| P2-7 | Bloques 5N/6N — Ingresos extraordinarios + ahorro del ciclo | 🟡 **Parcial 2026-07-21.** **UI bloque 5 alineada:** `/income/register` habitual + extraordinario (5N-A/B/C) vs. `quipu-2.html` — input monto (sin keypad), toggle segmentado, grid tipos, dialog destino, settings 5N-D polish. Backend/schema/`extraordinaryRules`/`createIncomeEvent` en prod. **Pendiente P2-7:** bloque 6 (card ahorro del ciclo, pulir `move-surplus-view`), smoke grati E2E, cierre roadmap completo. Specs: `2026-07-21-ingresos-bloque-5-design.md`, `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`. |
 
 ### 8.4 Delta diseño v3.0 vs código (backlog de UI por bloque)
 
@@ -1041,9 +1065,9 @@ revisa solo cuando el usuario declare la app completa.
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
 | 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
-| 5. Ingresos | Selector de fecha retroactiva (fuera de v2.5). |
-| 6. Ahorros | Aporte a metas custom desde UI; "Ajustar aporte" del fondo. |
-| 7. Coach | Tranquilo CTAs ("Ver detalle", "Guardar de más"); pantalla/nav Coach dedicada. |
+| 5. Ingresos | ✅ **UI bloque 5 alineada (2026-07-21):** input monto, flujo 5N, badge dorado movimientos. Pendiente bloque 6 (P2-7). Selector fecha retroactiva fuera v2.5. |
+| 6. Ahorros | P2-7: card "Tu ahorro este ciclo", mover sobrante voluntario. Aporte a metas custom desde UI; "Ajustar aporte" del fondo. |
+| 7. Coach | Tranquilo CTAs ("Ver detalle", "Guardar de más") en card del **inicio**; alinear canvas sidebar (quitar Coach del mock cuando se toque `quipu-2.html`). |
 | 8. Gamificación | Informe anual descargable (PDF). |
 | 9. Perfil/Ajustes | Polar.sh billing, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. **Hecho:** `/settings`, reparto editable, compromisos + toggles preferencias, enlace progreso. |
 
@@ -1168,6 +1192,8 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-21 — §3.5 / §8.4 / Bloque 7.** Coach solo embebido en dashboard; sidebar app sin ítem Coach; sin ruta `/coach`. Canvas HTML sidebar pendiente alinear.
+- **2026-07-21 — P2-7 + §2.5/§3/§5.** Ingresos extraordinarios (5N/6N): spec `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`, tokens §3.3, delta §8.4, roadmap P2-7.
 - **2026-07-21 — §8 delta Compromisos.** Pantalla `/commitments` (`getCommitmentCoverage` + total ciclo), nav activa, «Ver todo» en dashboard, diálogo agregar en `shared/components/commitments/`.
 - **2026-07-21 — §8 delta B3.** Lista de movimientos (`/movements`, `convex/movements.listForActiveCycle`, enlace dashboard).
 - **2026-07-21 — §8 P1-12.** Bloque 9 Ajustes MVP (`getSettingsOverview`, `/settings`, nav, smoke).

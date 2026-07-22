@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { KEYPAD_MAX_CENTS } from "@/modules/expenses/lib/keypad";
+import { INCOME_MAX_CENTS } from "@/modules/income/constants";
 import { createIncomeRegisterSchema } from "@/modules/income/schemas";
 import { limaStartOfDay } from "@/shared/lib/date";
 
@@ -28,9 +28,9 @@ describe("createIncomeRegisterSchema", () => {
     );
   });
 
-  it("rejects amount above keypad max", () => {
+  it("rejects amount above income max", () => {
     expect(
-      schema.safeParse({ ...validBase(), amountCents: KEYPAD_MAX_CENTS + 1 })
+      schema.safeParse({ ...validBase(), amountCents: INCOME_MAX_CENTS + 1 })
         .success,
     ).toBe(false);
   });

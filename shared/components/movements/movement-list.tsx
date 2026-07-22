@@ -21,7 +21,11 @@ const MOVEMENT_DOT = {
 } as const;
 
 function movementDotClass(movement: MovementItem): string {
-  if (movement.kind === "income") return MOVEMENT_DOT.income;
+  if (movement.kind === "income") {
+    return movement.isExtraordinaryIncome
+      ? "bg-extraordinary-a"
+      : MOVEMENT_DOT.income;
+  }
   if (movement.envelopeLabel === "Necesidades")
     return MOVEMENT_DOT.expense.needs;
   if (movement.envelopeLabel === "Gustos") return MOVEMENT_DOT.expense.wants;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { KEYPAD_MAX_CENTS } from "@/modules/expenses/lib/keypad";
+import { INCOME_MAX_CENTS } from "./constants";
 import { limaIncomeDateMinTimestamp, limaStartOfDay } from "@/shared/lib/date";
 import { EXTRAORDINARY_TYPES } from "@/shared/lib/extraordinaryIncome";
 import type { IncomeSource } from "./types";
@@ -28,7 +28,7 @@ export function createIncomeRegisterSchema(now: number = Date.now()) {
         .int("El monto debe ser un número entero.")
         .min(1, "Ingresa un monto mayor a cero.")
         .max(
-          KEYPAD_MAX_CENTS,
+          INCOME_MAX_CENTS,
           "El monto supera el máximo permitido para registrar.",
         ),
       source: z.enum(incomeSourceValues, {

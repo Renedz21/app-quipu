@@ -7,26 +7,25 @@ import { useMemo, useState } from "react";
 import type { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
-import { ExpenseKeypad } from "@/modules/expenses/components/expense-keypad";
-import { formatKeypadDisplay } from "@/modules/expenses/lib/keypad";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
-import { Input } from "@/shared/components/ui/input";
 import type { DistributionPolicy } from "@/shared/lib/allocations";
-import { limaStartOfDay } from "@/shared/lib/date";
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
+import { limaStartOfDay } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import {
+  getExtraordinarySubmitCta,
   getIncomeSourceLabel,
-  INCOME_AMOUNT_LABEL,
   INCOME_CANCEL_CTA,
-  INCOME_CONCEPT_LABEL,
-  INCOME_CONCEPT_OPTIONAL,
+  INCOME_EXTRAORDINARY_CONTINUE_CTA,
+  INCOME_EXTRAORDINARY_DETAILS_SUBTITLE,
+  INCOME_EXTRAORDINARY_PICK_HINT,
+  INCOME_EXTRAORDINARY_TYPE_SECTION,
   INCOME_PAGE_SUBTITLE,
+  INCOME_PAGE_SUBTITLE_KIND,
   INCOME_PAGE_TITLE,
-  INCOME_SOURCE_LABEL,
   INCOME_SUBMIT_CTA,
 } from "../constants";
+import { policyForExtraordinaryType } from "../lib/extraordinaryPolicy";
 import {
   computeImpactPreview,
   resolveCycleDaysForPreview,
@@ -37,41 +36,50 @@ import {
   type IncomeRegisterFormValues,
 } from "../schemas";
 import type { IncomeRegisterResult, IncomeSource } from "../types";
-import { IncomeDatePicker } from "./income-date-picker";
-import {
-  IncomeExtraordinaryPanel,
-  policyForExtraordinaryType,
-} from "./income-extraordinary-panel";
+import { IncomeDestinationDialog } from "./income-destination-dialog";
+import { IncomeExtraordinaryDetailsFields } from "./income-extraordinary-details-fields";
+import { IncomeExtraordinaryRuleBanner } from "./income-extraordinary-rule-banner";
+import { IncomeExtraordinaryTypeGrid } from "./income-extraordinary-type-grid";
 import { IncomeImpactPreview } from "./income-impact-preview";
-import { IncomeSourceChips } from "./income-source-chips";
+import { IncomeKindToggle } from "./income-kind-toggle";
+import { IncomeRegisterHabitualFields } from "./income-register-habitual-fields";
+import type { IncomeFormField } from "./income-form-field";
 
 type DashboardSummary = FunctionReturnType<typeof api.dashboard.getSummary>;
+type ExtraStep = "pickType" | "details";
 
 type Props = {
   currencyCode: string;
-  currencySymbol: string;
   profile: Doc<"profiles">;
   summary: DashboardSummary | undefined;
   onSuccess: (
     result: IncomeRegisterResult,
-    options?: { incomeKind: "habitual" | "extraordinary" },
+    options?: {
+      incomeKind: "habitual" | "extraordinary";
+      distributionPolicy?: DistributionPolicy;
+    },
   ) => void;
   createIncomeEvent: (
     args: FunctionArgs<typeof api.incomeEvents.createIncomeEvent>,
   ) => Promise<IncomeRegisterResult>;
 };
 
+const silentSet = { dontValidate: true } as const;
+
 export function IncomeRegisterForm({
   currencyCode,
-  currencySymbol,
   profile,
   summary,
   onSuccess,
   createIncomeEvent,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [extraStep, setExtraStep] = useState<ExtraStep>("pickType");
+  const [destinationOpen, setDestinationOpen] = useState(false);
+  const [destinationSubmitAfterConfirm, setDestinationSubmitAfterConfirm] =
+    useState(false);
+  const [pickTypeError, setPickTypeError] = useState<string | null>(null);
   const formSchema = useMemo(() => createIncomeRegisterSchema(), []);
-  const silentSet = { dontValidate: true } as const;
 
   const form = useForm({
     defaultValues: {
@@ -95,10 +103,15 @@ export function IncomeRegisterForm({
       setServerError(null);
       try {
         if (value.incomeKind === "extraordinary") {
+          if (!value.distributionPolicy) {
+            setDestinationSubmitAfterConfirm(true);
+            setDestinationOpen(true);
+            return;
+          }
           const response = await createIncomeEvent({
             amount: value.amountCents,
             source: "payroll",
-            description: value.extraordinaryLabel.trim() || "Extraordinario",
+            description: "",
             occurredAt: value.occurredAt,
             incomeKind: "extraordinary",
             extraordinaryType: value.extraordinaryType,
@@ -108,7 +121,10 @@ export function IncomeRegisterForm({
                 : undefined,
             distributionPolicy: value.distributionPolicy,
           });
-          onSuccess(response, { incomeKind: "extraordinary" });
+          onSuccess(response, {
+            incomeKind: "extraordinary",
+            distributionPolicy: value.distributionPolicy,
+          });
           return;
         }
 
@@ -130,6 +146,14 @@ export function IncomeRegisterForm({
     },
   });
 
+  const resetExtraordinary = () => {
+    setExtraStep("pickType");
+    setPickTypeError(null);
+    form.setFieldValue("extraordinaryType", undefined, silentSet);
+    form.setFieldValue("extraordinaryLabel", "", silentSet);
+    form.setFieldValue("distributionPolicy", undefined, silentSet);
+  };
+
   return (
     <form
       className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
@@ -139,313 +163,265 @@ export function IncomeRegisterForm({
         void form.handleSubmit();
       }}
     >
-      <div className="mb-6 md:mb-8">
-        <h1 className="font-serif text-[27px] font-medium text-ink md:text-[27px]">
-          {INCOME_PAGE_TITLE}
-        </h1>
-        <p className="mt-1 text-[13.5px] text-mute">{INCOME_PAGE_SUBTITLE}</p>
-      </div>
+      <form.Subscribe selector={(state) => state.values}>
+        {(values) => {
+          const isExtraordinary = values.incomeKind === "extraordinary";
+          const showPick =
+            isExtraordinary && extraStep === "pickType";
+          const showDetails =
+            isExtraordinary &&
+            extraStep === "details" &&
+            values.extraordinaryType;
 
-      <form.Subscribe
-        selector={(state) => ({
-          incomeKind: state.values.incomeKind,
-          amountCents: state.values.amountCents,
-          distributionPolicy: state.values.distributionPolicy,
-          allocationNeeds: profile.allocationNeeds,
-          allocationWants: profile.allocationWants,
-          allocationSavings: profile.allocationSavings,
-          incomeModel: profile.incomeModel,
-          payFrequency: profile.payFrequency,
-          cycleDurationDays: profile.cycleDurationDays,
-          daysRemaining: summary?.cycle?.daysRemaining,
-          envelopes: summary?.envelopes,
-        })}
-      >
-        {(previewDeps) => {
+          const subtitle = isExtraordinary
+            ? showPick
+              ? INCOME_PAGE_SUBTITLE_KIND
+              : INCOME_EXTRAORDINARY_DETAILS_SUBTITLE
+            : INCOME_PAGE_SUBTITLE;
+
           const previewInput =
-            previewDeps.amountCents > 0
+            values.amountCents > 0
               ? computeImpactPreview({
-                amountCents: previewDeps.amountCents,
-                weights: {
-                  allocationNeeds: previewDeps.allocationNeeds,
-                  allocationWants: previewDeps.allocationWants,
-                  allocationSavings: previewDeps.allocationSavings,
-                },
-                currentEnvelopes: {
-                  needs:
-                    previewDeps.envelopes?.find(
-                      (envelope) => envelope.type === "needs",
-                    )?.remainingAmount ?? 0,
-                  wants:
-                    previewDeps.envelopes?.find(
-                      (envelope) => envelope.type === "wants",
-                    )?.remainingAmount ?? 0,
-                  savings:
-                    previewDeps.envelopes?.find(
-                      (envelope) => envelope.type === "savings",
-                    )?.remainingAmount ?? 0,
-                },
-                daysRemaining:
-                  previewDeps.daysRemaining ??
-                  resolveCycleDaysForPreview({
-                    incomeModel: previewDeps.incomeModel,
-                    payFrequency: previewDeps.payFrequency,
-                    cycleDurationDays: previewDeps.cycleDurationDays,
-                  }),
-                distributionPolicy:
-                  previewDeps.incomeKind === "extraordinary"
-                    ? previewDeps.distributionPolicy
+                  amountCents: values.amountCents,
+                  weights: {
+                    allocationNeeds: profile.allocationNeeds,
+                    allocationWants: profile.allocationWants,
+                    allocationSavings: profile.allocationSavings,
+                  },
+                  currentEnvelopes: {
+                    needs:
+                      summary?.envelopes?.find((e) => e.type === "needs")
+                        ?.remainingAmount ?? 0,
+                    wants:
+                      summary?.envelopes?.find((e) => e.type === "wants")
+                        ?.remainingAmount ?? 0,
+                    savings:
+                      summary?.envelopes?.find((e) => e.type === "savings")
+                        ?.remainingAmount ?? 0,
+                  },
+                  daysRemaining:
+                    summary?.cycle?.daysRemaining ??
+                    resolveCycleDaysForPreview({
+                      incomeModel: profile.incomeModel,
+                      payFrequency: profile.payFrequency,
+                      cycleDurationDays: profile.cycleDurationDays,
+                    }),
+                  distributionPolicy: isExtraordinary
+                    ? values.distributionPolicy
                     : undefined,
-              })
+                })
               : null;
 
-          const isExtraordinary = previewDeps.incomeKind === "extraordinary";
+          const submitLabel =
+            isExtraordinary && values.extraordinaryType
+              ? getExtraordinarySubmitCta(values.extraordinaryType)
+              : INCOME_SUBMIT_CTA;
 
           return (
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-7">
-              <div className="space-y-5">
-                <form.Field name="incomeKind">
-                  {(incomeKindField) => (
-                    <form.Field name="extraordinaryType">
-                      {(extraordinaryTypeField) => (
-                        <form.Field name="extraordinaryLabel">
-                          {(extraordinaryLabelField) => (
-                            <form.Field name="distributionPolicy">
-                              {(distributionPolicyField) => (
-                                <IncomeExtraordinaryPanel
-                                  incomeKind={incomeKindField.state.value}
-                                  onIncomeKindChange={(kind) => {
-                                    incomeKindField.handleChange(kind);
-                                    if (kind === "habitual") {
-                                      form.setFieldValue(
-                                        "extraordinaryType",
-                                        undefined,
-                                        silentSet,
-                                      );
-                                      extraordinaryLabelField.handleChange("");
-                                      form.setFieldValue(
-                                        "distributionPolicy",
-                                        undefined,
-                                        silentSet,
-                                      );
-                                    }
-                                  }}
-                                  extraordinaryType={
-                                    extraordinaryTypeField.state.value
-                                  }
-                                  onExtraordinaryTypeChange={(type) => {
-                                    extraordinaryTypeField.handleChange(type);
-                                    distributionPolicyField.handleChange(
-                                      policyForExtraordinaryType(
-                                        type,
-                                        profile.extraordinaryRules,
-                                      ),
-                                    );
-                                  }}
-                                  extraordinaryLabel={
-                                    extraordinaryLabelField.state.value ?? ""
-                                  }
-                                  onExtraordinaryLabelChange={(label) =>
-                                    extraordinaryLabelField.handleChange(label)
-                                  }
-                                  distributionPolicy={
-                                    distributionPolicyField.state.value
-                                  }
-                                  onDistributionPolicyChange={(policy) =>
-                                    distributionPolicyField.handleChange(policy)
-                                  }
-                                  profileRules={profile.extraordinaryRules}
-                                  fieldErrors={{
-                                    extraordinaryType:
-                                      extraordinaryTypeField.state.meta
-                                        .isTouched &&
-                                        !extraordinaryTypeField.state.meta.isValid
-                                        ? extraordinaryTypeField.state.meta
-                                          .errors[0]
-                                        : undefined,
-                                    extraordinaryLabel:
-                                      extraordinaryLabelField.state.meta
-                                        .isTouched &&
-                                        !extraordinaryLabelField.state.meta
-                                          .isValid
-                                        ? extraordinaryLabelField.state.meta
-                                          .errors[0]
-                                        : undefined,
-                                    distributionPolicy:
-                                      distributionPolicyField.state.meta
-                                        .isTouched &&
-                                        !distributionPolicyField.state.meta
-                                          .isValid
-                                        ? distributionPolicyField.state.meta
-                                          .errors[0]
-                                        : undefined,
-                                  }}
-                                />
-                              )}
-                            </form.Field>
-                          )}
-                        </form.Field>
-                      )}
-                    </form.Field>
-                  )}
-                </form.Field>
-                <form.Field name="amountCents">
-                  {(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field data-invalid={isInvalid}>
-                        <FieldLabel className="mb-2 block text-[12.5px] font-medium text-ink-secondary">
-                          {INCOME_AMOUNT_LABEL}
-                        </FieldLabel>
-                        <div className="rounded-[14px] border border-line bg-card px-5 py-4">
-                          <p className="font-serif text-[34px] leading-none text-ink">
-                            {formatKeypadDisplay(
-                              field.state.value,
-                              currencySymbol,
-                            )}
-                          </p>
-                        </div>
-                        <div className="mt-3">
-                          <ExpenseKeypad
-                            amountCents={field.state.value}
-                            onChange={(cents) => {
-                              field.handleChange(cents);
-                              field.handleBlur();
-                            }}
-                          />
-                        </div>
-                        {isInvalid ? (
-                          <FieldError
-                            className="mt-2"
-                            errors={field.state.meta.errors}
-                          />
-                        ) : null}
-                      </Field>
-                    );
+            <>
+              {!showDetails ? (
+                <div className="mb-6 md:mb-8">
+                  <h1 className="font-serif text-[27px] font-medium text-ink">
+                    {INCOME_PAGE_TITLE}
+                  </h1>
+                  <p className="mt-1 text-[13.5px] text-mute">{subtitle}</p>
+                </div>
+              ) : null}
+
+              <div className="mb-6">
+                <IncomeKindToggle
+                  value={values.incomeKind}
+                  onChange={(kind) => {
+                    form.setFieldValue("incomeKind", kind);
+                    if (kind === "habitual") resetExtraordinary();
+                    else setExtraStep("pickType");
                   }}
-                </form.Field>
-
-                <form.Field name="occurredAt">
-                  {(field) => (
-                    <IncomeDatePicker
-                      value={field.state.value}
-                      onChange={(timestamp) => {
-                        field.handleChange(timestamp);
-                        field.handleBlur();
-                      }}
-                    />
-                  )}
-                </form.Field>
-
-                {!isExtraordinary ? (
-                  <>
-                    <form.Field name="source">
-                      {(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !field.state.meta.isValid;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel className="mb-2.5 block text-[12.5px] font-medium text-ink-secondary">
-                              {INCOME_SOURCE_LABEL}
-                            </FieldLabel>
-                            <IncomeSourceChips
-                              value={field.state.value}
-                              onChange={(source) => {
-                                field.handleChange(source);
-                                field.handleBlur();
-                              }}
-                            />
-                            {isInvalid ? (
-                              <FieldError
-                                className="mt-2"
-                                errors={field.state.meta.errors}
-                              />
-                            ) : null}
-                          </Field>
-                        );
-                      }}
-                    </form.Field>
-
-                    <form.Field name="concept">
-                      {(field) => {
-                        const isInvalid =
-                          field.state.meta.isTouched &&
-                          !field.state.meta.isValid;
-                        return (
-                          <Field data-invalid={isInvalid}>
-                            <FieldLabel
-                              htmlFor="income-concept"
-                              className="mb-2 block text-[12.5px] font-medium text-ink-secondary"
-                            >
-                              {INCOME_CONCEPT_LABEL}{" "}
-                              <span className="font-normal text-mute">
-                                {INCOME_CONCEPT_OPTIONAL}
-                              </span>
-                            </FieldLabel>
-                            <Input
-                              id="income-concept"
-                              name={field.name}
-                              value={field.state.value}
-                              onBlur={field.handleBlur}
-                              onChange={(event) =>
-                                field.handleChange(event.target.value)
-                              }
-                              placeholder="Ej. pago de cliente"
-                              aria-invalid={isInvalid}
-                              className="h-[46px] rounded-[11px] border-line bg-card text-[14.5px]"
-                            />
-                            {isInvalid ? (
-                              <FieldError errors={field.state.meta.errors} />
-                            ) : null}
-                          </Field>
-                        );
-                      }}
-                    </form.Field>
-                  </>
-                ) : null}
+                />
               </div>
 
-              <IncomeImpactPreview
-                preview={previewInput}
-                currencyCode={currencyCode}
-              />
-            </div>
+              {showPick ? (
+                <>
+                  <p className="mb-3 font-mono text-[10.5px] tracking-[0.1em] text-mute uppercase">
+                    {INCOME_EXTRAORDINARY_TYPE_SECTION}
+                  </p>
+                  <IncomeExtraordinaryTypeGrid
+                    value={values.extraordinaryType}
+                    onChange={(type) => {
+                      setPickTypeError(null);
+                      form.setFieldValue("extraordinaryType", type);
+                      form.setFieldValue(
+                        "distributionPolicy",
+                        policyForExtraordinaryType(
+                          type,
+                          profile.extraordinaryRules,
+                        ),
+                        silentSet,
+                      );
+                    }}
+                    error={pickTypeError ?? undefined}
+                  />
+                  <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-[12.5px] text-mute">
+                      {INCOME_EXTRAORDINARY_PICK_HINT}
+                    </p>
+                    <Button
+                      type="button"
+                      className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas"
+                      onClick={() => {
+                        if (!values.extraordinaryType) {
+                          setPickTypeError(
+                            "Elige un tipo de ingreso extraordinario.",
+                          );
+                          return;
+                        }
+                        setExtraStep("details");
+                      }}
+                    >
+                      {INCOME_EXTRAORDINARY_CONTINUE_CTA}
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+
+              {!isExtraordinary || showDetails ? (
+                <div
+                  className={cn(
+                    "grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-7",
+                    showDetails && "mt-2",
+                  )}
+                >
+                  <div className="space-y-5">
+                    {isExtraordinary && showDetails && values.extraordinaryType ? (
+                      <form.Field name="amountCents">
+                        {(amountField) => (
+                          <form.Field name="occurredAt">
+                            {(occurredAtField) => (
+                              <form.Field name="extraordinaryLabel">
+                                {(labelField) => (
+                                  <IncomeExtraordinaryDetailsFields
+                                    currencyCode={currencyCode}
+                                    extraordinaryType={values.extraordinaryType!}
+                                    amountField={amountField}
+                                    occurredAtField={occurredAtField}
+                                    labelField={
+                                      labelField as IncomeFormField<"extraordinaryLabel">
+                                    }
+                                  />
+                                )}
+                              </form.Field>
+                            )}
+                          </form.Field>
+                        )}
+                      </form.Field>
+                    ) : !isExtraordinary ? (
+                      <form.Field name="amountCents">
+                        {(amountField) => (
+                          <form.Field name="occurredAt">
+                            {(occurredAtField) => (
+                              <form.Field name="source">
+                                {(sourceField) => (
+                                  <form.Field name="concept">
+                                    {(conceptField) => (
+                                      <IncomeRegisterHabitualFields
+                                        currencyCode={currencyCode}
+                                        amountField={amountField}
+                                        occurredAtField={occurredAtField}
+                                        sourceField={sourceField}
+                                        conceptField={conceptField}
+                                      />
+                                    )}
+                                  </form.Field>
+                                )}
+                              </form.Field>
+                            )}
+                          </form.Field>
+                        )}
+                      </form.Field>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-col gap-3.5">
+                    {showDetails && values.extraordinaryType ? (
+                      <IncomeExtraordinaryRuleBanner
+                        extraordinaryType={values.extraordinaryType}
+                        profileRules={profile.extraordinaryRules}
+                        allocationNeeds={profile.allocationNeeds}
+                        allocationWants={profile.allocationWants}
+                        allocationSavings={profile.allocationSavings}
+                        onChangeDestination={() => {
+                          setDestinationSubmitAfterConfirm(false);
+                          setDestinationOpen(true);
+                        }}
+                      />
+                    ) : null}
+                    <IncomeImpactPreview
+                      preview={previewInput}
+                      currencyCode={currencyCode}
+                      moveSurplusHref={
+                        showDetails ? "/savings/move?from=wants" : undefined
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {showDetails && values.extraordinaryType ? (
+                <IncomeDestinationDialog
+                  open={destinationOpen}
+                  onOpenChange={setDestinationOpen}
+                  extraordinaryType={values.extraordinaryType}
+                  amountCents={values.amountCents}
+                  currencyCode={currencyCode}
+                  preview={previewInput}
+                  value={values.distributionPolicy}
+                  onConfirm={(policy) => {
+                    form.setFieldValue("distributionPolicy", policy);
+                    if (destinationSubmitAfterConfirm) {
+                      setDestinationSubmitAfterConfirm(false);
+                      void form.handleSubmit();
+                    }
+                  }}
+                />
+              ) : null}
+
+              {serverError ? (
+                <p className="mt-4 text-sm text-danger" role="alert">
+                  {serverError}
+                </p>
+              ) : null}
+
+              {(!isExtraordinary || showDetails) && (
+                <div className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+                  <Link
+                    href="/dashboard"
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "inline-flex h-[46px] rounded-[11px] border-line bg-card px-[22px] text-[14.5px] font-semibold text-mute hover:bg-surface-soft",
+                    )}
+                  >
+                    {INCOME_CANCEL_CTA}
+                  </Link>
+                  <form.Subscribe
+                    selector={(state) =>
+                      [state.canSubmit, state.isSubmitting] as const
+                    }
+                  >
+                    {([canSubmit, isSubmitting]) => (
+                      <Button
+                        type="submit"
+                        disabled={!canSubmit || isSubmitting}
+                        className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas hover:bg-ink/90"
+                      >
+                        {isSubmitting ? "Registrando…" : submitLabel}
+                      </Button>
+                    )}
+                  </form.Subscribe>
+                </div>
+              )}
+            </>
           );
         }}
       </form.Subscribe>
-
-      {serverError ? (
-        <p className="mt-4 text-sm text-danger" role="alert">
-          {serverError}
-        </p>
-      ) : null}
-
-      <div className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
-        <Link
-          href="/dashboard"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "inline-flex h-[46px] rounded-[11px] border-line bg-card px-[22px] text-[14.5px] font-semibold text-mute hover:bg-surface-soft",
-          )}
-        >
-          {INCOME_CANCEL_CTA}
-        </Link>
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting] as const}
-        >
-          {([canSubmit, isSubmitting]) => (
-            <Button
-              type="submit"
-              disabled={!canSubmit || isSubmitting}
-              className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas hover:bg-ink/90"
-            >
-              {isSubmitting ? "Registrando…" : INCOME_SUBMIT_CTA}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
     </form>
   );
 }

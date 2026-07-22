@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import {
   ENVELOPE_INCOME_STYLES,
+  INCOME_IMPACT_MOVE_SURPLUS,
   INCOME_IMPACT_TITLE,
   INCOME_NEW_DAILY_LABEL,
 } from "../constants";
@@ -12,9 +14,14 @@ import type { ImpactPreviewResult } from "../lib/impactPreview";
 type Props = {
   preview: ImpactPreviewResult | null;
   currencyCode: string;
+  moveSurplusHref?: string;
 };
 
-export function IncomeImpactPreview({ preview, currencyCode }: Props) {
+export function IncomeImpactPreview({
+  preview,
+  currencyCode,
+  moveSurplusHref,
+}: Props) {
   return (
     <div className="rounded-2xl border border-qp-border bg-[linear-gradient(160deg,var(--qp-soft),var(--qp-canvas)_70%)] p-5 md:p-6">
       <p className="mb-4 font-mono text-[10.5px] tracking-[0.1em] text-qp-deep uppercase">
@@ -71,6 +78,22 @@ export function IncomeImpactPreview({ preview, currencyCode }: Props) {
               })}
             </span>
           </div>
+
+          {moveSurplusHref ? (
+            <Link
+              href={moveSurplusHref}
+              className="mt-4 flex items-center justify-between rounded-[11px] border border-qp-border bg-card px-3.5 py-2.5 text-[13px] font-semibold text-qp-deep no-underline hover:bg-qp-soft/50"
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  className="size-2 rounded-full bg-moss"
+                  aria-hidden
+                />
+                {INCOME_IMPACT_MOVE_SURPLUS}
+              </span>
+              <span aria-hidden>→</span>
+            </Link>
+          ) : null}
         </>
       )}
     </div>

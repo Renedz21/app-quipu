@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "reicon-react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
@@ -13,11 +14,18 @@ import { cn } from "@/shared/lib/utils";
 import { useUpdateExtraordinaryRules } from "../actions";
 import {
   SETTINGS_EXTRAORDINARY_BONUS,
+  SETTINGS_EXTRAORDINARY_BONUS_HINT,
   SETTINGS_EXTRAORDINARY_CTS,
+  SETTINGS_EXTRAORDINARY_CTS_HINT,
   SETTINGS_EXTRAORDINARY_CUSTOM,
+  SETTINGS_EXTRAORDINARY_CUSTOM_HINT,
+  SETTINGS_EXTRAORDINARY_DESCRIPTION,
+  SETTINGS_EXTRAORDINARY_FOOTER,
   SETTINGS_EXTRAORDINARY_GRATIFICATIONS,
+  SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT,
   SETTINGS_EXTRAORDINARY_LABEL,
   SETTINGS_EXTRAORDINARY_PROFIT,
+  SETTINGS_EXTRAORDINARY_PROFIT_HINT,
 } from "../constants";
 
 const RULE_OPTIONS: ExtraordinaryProfileRule[] = [
@@ -30,13 +38,78 @@ const RULE_OPTIONS: ExtraordinaryProfileRule[] = [
 const ROWS: ReadonlyArray<{
   key: keyof ExtraordinaryRules;
   label: string;
+  subtitle: string;
+  icon: "grati" | "cts" | "bonus" | "profit" | "custom";
 }> = [
-  { key: "gratifications", label: SETTINGS_EXTRAORDINARY_GRATIFICATIONS },
-  { key: "cts", label: SETTINGS_EXTRAORDINARY_CTS },
-  { key: "corporate_bonus", label: SETTINGS_EXTRAORDINARY_BONUS },
-  { key: "profit_sharing", label: SETTINGS_EXTRAORDINARY_PROFIT },
-  { key: "custom", label: SETTINGS_EXTRAORDINARY_CUSTOM },
+  {
+    key: "gratifications",
+    label: SETTINGS_EXTRAORDINARY_GRATIFICATIONS,
+    subtitle: SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT,
+    icon: "grati",
+  },
+  {
+    key: "cts",
+    label: SETTINGS_EXTRAORDINARY_CTS,
+    subtitle: SETTINGS_EXTRAORDINARY_CTS_HINT,
+    icon: "cts",
+  },
+  {
+    key: "corporate_bonus",
+    label: SETTINGS_EXTRAORDINARY_BONUS,
+    subtitle: SETTINGS_EXTRAORDINARY_BONUS_HINT,
+    icon: "bonus",
+  },
+  {
+    key: "profit_sharing",
+    label: SETTINGS_EXTRAORDINARY_PROFIT,
+    subtitle: SETTINGS_EXTRAORDINARY_PROFIT_HINT,
+    icon: "profit",
+  },
+  {
+    key: "custom",
+    label: SETTINGS_EXTRAORDINARY_CUSTOM,
+    subtitle: SETTINGS_EXTRAORDINARY_CUSTOM_HINT,
+    icon: "custom",
+  },
 ];
+
+function RowIcon({ kind }: { kind: (typeof ROWS)[number]["icon"] }) {
+  return (
+    <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-[#F4EFE5]">
+      {kind === "grati" ? (
+        <span
+          className="size-3 rotate-45 rounded-[3px] bg-extraordinary-a"
+          aria-hidden
+        />
+      ) : null}
+      {kind === "cts" ? (
+        <span
+          className="h-[11px] w-[15px] rounded-[3px] border-2 border-extraordinary-a"
+          aria-hidden
+        />
+      ) : null}
+      {kind === "bonus" ? (
+        <span
+          className="size-3 rounded-full border-2 border-extraordinary-a"
+          aria-hidden
+        />
+      ) : null}
+      {kind === "profit" ? (
+        <span className="flex gap-0.5" aria-hidden>
+          <span className="h-3 w-0.5 rounded-sm bg-extraordinary-a" />
+          <span className="h-3 w-0.5 rounded-sm bg-extraordinary-a" />
+          <span className="h-3 w-0.5 rounded-sm bg-extraordinary-a" />
+        </span>
+      ) : null}
+      {kind === "custom" ? (
+        <span className="relative size-3.5" aria-hidden>
+          <span className="absolute top-1.5 left-0 h-0.5 w-3.5 rounded-full bg-extraordinary-a" />
+          <span className="absolute top-0 left-1.5 h-3.5 w-0.5 rounded-full bg-extraordinary-a" />
+        </span>
+      ) : null}
+    </span>
+  );
+}
 
 export function SettingsExtraordinarySection({
   className,
@@ -66,41 +139,81 @@ export function SettingsExtraordinarySection({
   return (
     <section
       className={cn(
-        "rounded-[14px] border border-extraordinary-border bg-card px-4 py-3",
+        "rounded-[14px] border border-line bg-card px-[18px] py-4 md:px-5",
         className,
       )}
     >
-      <p className="mb-3 font-mono text-[9.5px] uppercase tracking-[0.1em] text-extraordinary-b">
-        {SETTINGS_EXTRAORDINARY_LABEL}
-      </p>
-      <ul className="divide-y divide-line-subtle">
-        {ROWS.map((row) => (
-          <li
-            key={row.key}
-            className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <span className="text-[13.5px] text-ink">{row.label}</span>
-            <select
-              className="h-9 min-w-[12rem] rounded-[9px] border border-line bg-canvas px-2 text-[13px] text-ink"
-              value={rules[row.key]}
-              onChange={(event) =>
-                void onRuleChange(
-                  row.key,
-                  event.target.value as ExtraordinaryProfileRule,
-                )
-              }
+      <div className="mb-4 flex items-center gap-2.5">
+        <span className="flex size-[30px] items-center justify-center rounded-[9px] bg-extraordinary-a">
+          <span
+            className="size-3 rotate-45 rounded-[3px] border-2 border-canvas"
+            aria-hidden
+          />
+        </span>
+        <div>
+          <p className="font-serif text-[22px] font-medium text-ink md:text-[25px]">
+            {SETTINGS_EXTRAORDINARY_LABEL}
+          </p>
+          <p className="text-[13.5px] text-mute">
+            {SETTINGS_EXTRAORDINARY_DESCRIPTION}
+          </p>
+        </div>
+      </div>
+
+      <ul className="flex flex-col gap-2.5">
+        {ROWS.map((row) => {
+          const current = rules[row.key];
+          const savingsRule =
+            current === "all_to_savings" || current === "all_to_emergency_fund";
+          return (
+            <li
+              key={row.key}
+              className="flex flex-col gap-3 rounded-[14px] border border-line bg-canvas px-[18px] py-[15px] sm:flex-row sm:items-center sm:gap-3.5"
             >
-              {RULE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {extraordinaryProfileRuleLabel(option)}
-                </option>
-              ))}
-            </select>
-          </li>
-        ))}
+              <RowIcon kind={row.icon} />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-[15px] text-ink">{row.label}</div>
+                <div className="text-[12.5px] text-mute">{row.subtitle}</div>
+              </div>
+              <label className="relative inline-flex min-w-[12rem] items-center">
+                <select
+                  className={cn(
+                    "h-10 w-full cursor-pointer appearance-none rounded-[10px] border py-2 pr-9 pl-3.5 text-[13.5px] font-semibold outline-none",
+                    savingsRule
+                      ? "border-qp-border bg-qp-soft text-qp-deep"
+                      : "border-line bg-[#F4F1EB] text-ink-secondary",
+                  )}
+                  value={current}
+                  onChange={(event) =>
+                    void onRuleChange(
+                      row.key,
+                      event.target.value as ExtraordinaryProfileRule,
+                    )
+                  }
+                >
+                  {RULE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {extraordinaryProfileRuleLabel(option)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="pointer-events-none absolute right-3 text-mute"
+                  aria-hidden
+                />
+              </label>
+            </li>
+          );
+        })}
       </ul>
-      <p className="mt-2 text-[11.5px] text-mute">
-        Sugieren destino al registrar; siempre confirmas en el ingreso.
+
+      <p className="mt-4 flex items-start gap-2.5 rounded-[12px] border border-extraordinary-border bg-[#FBF6EA] px-[15px] py-3 text-[13px] leading-snug text-[#7E611F]">
+        <span
+          className="mt-1 size-2 shrink-0 rotate-45 rounded-sm bg-extraordinary-a"
+          aria-hidden
+        />
+        {SETTINGS_EXTRAORDINARY_FOOTER}
       </p>
     </section>
   );

@@ -1,6 +1,7 @@
 # Bloque 5 — Ingresos "¿Cuánto entró y a dónde va?" — Spec (2026-07-21)
 
 > Registro manual de ingresos con preview de impacto siempre visible y confirmación con deltas por sobre.
+> **Extensión extraordinaria (5N):** ver `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md` (P2-7).
 
 ## Decisiones
 
@@ -17,7 +18,7 @@
 
 ## Flujo
 
-1. Usuario ingresa monto (keypad reutilizado de expenses), elige origen (chip), ve preview en vivo.
+1. Usuario ingresa monto en campo alto editable (`inputMode="decimal"`, Newsreader 34px; `parseToCents` / validación Zod — **sin** keypad de gastos), elige origen (chip), ve preview en vivo.
 2. "Registrar ingreso" → `createIncomeEvent`.
 3. Pantalla de éxito: deltas por sobre + nuevo disponible hoy + "Volver al inicio".
 

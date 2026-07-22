@@ -31,14 +31,26 @@ import { SettingsSecurityCard } from "./settings-security-card";
 import { SettingsSignOutItem } from "./settings-sign-out-item";
 import { SettingsSystemSection } from "./settings-system-section";
 
+/** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
+ *  a la derecha. */
 function SettingsViewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <Skeleton className="h-8 w-40" />
-      <Skeleton className="mt-2 h-4 w-64" />
+    <div
+      role="status"
+      aria-label="Abriendo ajustes"
+      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
+    >
+      <Skeleton className="h-[30px] w-[150px] rounded-lg" />
+      <Skeleton
+        variant="line"
+        className="mt-2 h-[13px] w-[280px] max-w-full rounded-[5px]"
+      />
       <div className="mt-6 flex flex-col gap-3.5 md:flex-row">
-        <Skeleton className="h-64 flex-1 rounded-2xl" />
-        <Skeleton className="h-64 flex-1 rounded-2xl" />
+        <div className="flex flex-1 flex-col gap-3.5">
+          <Skeleton className="h-[150px] rounded-2xl" />
+          <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
+        </div>
+        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] md:self-start" />
       </div>
     </div>
   );

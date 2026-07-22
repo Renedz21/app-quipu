@@ -59,12 +59,22 @@ export const SETTINGS_CYCLE_STUB_BODY =
   "Pronto podrás ajustar tu ciclo desde aquí. Por ahora, tu configuración sigue la del onboarding.";
 
 export const SETTINGS_PREFERENCES_LABEL = "Preferencias";
-export const SETTINGS_EXTRAORDINARY_LABEL = "Ingresos extraordinarios";
+export const SETTINGS_EXTRAORDINARY_LABEL = "Automatizaciones";
+export const SETTINGS_EXTRAORDINARY_TAGLINE = "Decide una vez, repite siempre";
+export const SETTINGS_EXTRAORDINARY_DESCRIPTION =
+  "Qué hace Quipu cuando llega cada ingreso extraordinario. Siempre puedes cambiarlo en el momento.";
+export const SETTINGS_EXTRAORDINARY_FOOTER =
+  "Una regla es una sugerencia, no una jaula: cuando registres el ingreso podrás aceptarla o cambiar el destino ahí mismo.";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
+export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT = "Julio y diciembre";
 export const SETTINGS_EXTRAORDINARY_CTS = "CTS";
+export const SETTINGS_EXTRAORDINARY_CTS_HINT = "Mayo y noviembre";
 export const SETTINGS_EXTRAORDINARY_BONUS = "Bono corporativo";
+export const SETTINGS_EXTRAORDINARY_BONUS_HINT = "Desempeño, cierre, campaña";
 export const SETTINGS_EXTRAORDINARY_PROFIT = "Utilidades";
+export const SETTINGS_EXTRAORDINARY_PROFIT_HINT = "Reparto anual";
 export const SETTINGS_EXTRAORDINARY_CUSTOM = "Otros extraordinarios";
+export const SETTINGS_EXTRAORDINARY_CUSTOM_HINT = "Cualquier otro ingreso";
 export const SETTINGS_CURRENCY_LABEL = "Moneda";
 export const SETTINGS_CURRENCY_VALUE = "Sol peruano · S/";
 export const SETTINGS_LANGUAGE_LABEL = "Idioma";

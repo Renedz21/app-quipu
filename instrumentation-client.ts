@@ -13,5 +13,5 @@ posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, {
   },
   enable_recording_console_log: true,
   capture_performance: true,
-  debug: process.env.NODE_ENV === "development",
+  debug: process.env.NODE_ENV === "development"
 });

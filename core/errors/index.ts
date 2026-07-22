@@ -211,7 +211,10 @@ export class RateLimitedError extends AppError {
 export function toAppError(error: unknown): AppError {
   if (error instanceof AppError) return error;
   if (error instanceof Error) {
-    return new InternalError(error.message, error);
+    // El message crudo puede filtrar internals del backend a la UI
+    // (nombres de funciones, paths). Se conserva solo como `cause`
+    // para debugging; el usuario ve el mensaje genérico.
+    return new InternalError(undefined, error);
   }
   return new InternalError("Error desconocido");
 }

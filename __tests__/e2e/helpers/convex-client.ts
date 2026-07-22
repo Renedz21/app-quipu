@@ -23,8 +23,11 @@ export async function seedOnboardedUser(
     allocationNeeds: 50,
     allocationWants: 30,
     allocationSavings: 20,
-    plan: options?.plan,
   });
+  if (options?.plan && options.plan !== "free") {
+    // Solo funciona en deployments dev (guard en convex/testing.ts).
+    await client.mutation(api.testing.setMyPlan, { plan: options.plan });
+  }
 }
 
 export async function seedActiveCycle(

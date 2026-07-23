@@ -38,7 +38,6 @@ import type * as lib_savingsMath from "../lib/savingsMath.js";
 import type * as lib_settingsCopy from "../lib/settingsCopy.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as movements from "../movements.js";
-import type * as ops_appDataSnapshot from "../ops/appDataSnapshot.js";
 import type * as polar from "../polar.js";
 import type * as profiles from "../profiles.js";
 import type * as progress from "../progress.js";
@@ -84,7 +83,6 @@ declare const fullApi: ApiFromModules<{
   "lib/settingsCopy": typeof lib_settingsCopy;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   movements: typeof movements;
-  "ops/appDataSnapshot": typeof ops_appDataSnapshot;
   polar: typeof polar;
   profiles: typeof profiles;
   progress: typeof progress;

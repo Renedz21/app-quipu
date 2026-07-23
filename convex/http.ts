@@ -1,92 +1,67 @@
 import { httpRouter } from "convex/server";
 import { internal } from "./_generated/api";
-import { authComponent, createAuth } from "./betterAuth/auth";
+import type { ActionCtx } from "./_generated/server";
+import { authComponent, createAuth } from "./auth";
+import { extractUserIdFromPolarCustomerMetadata } from "./lib/billingSync";
 import { polar } from "./polar";
 
 const http = httpRouter();
 
 authComponent.registerRoutes(http, createAuth);
 
-// ─── Polar Webhooks ───────────────────────────────────────────────────────────
-// @convex-dev/polar handles signature verification automatically.
-// The webhook URL to configure in Polar dashboard:
-//   {NEXT_PUBLIC_CONVEX_SITE_URL}/webhooks/polar
-//
-// Required Convex env vars (npx convex env set <KEY> <VALUE>):
-//   POLAR_ORGANIZATION_TOKEN
-//   POLAR_WEBHOOK_SECRET
-//   POLAR_SERVER              ("sandbox" | "production")
-//   POLAR_PRODUCT_ID_PREMIUM
-
-export type PolarSubscriptionExtras = {
-  id: string;
-  customerId: string;
-  status: string;
-  metadata?: Record<string, string | undefined>;
-  customer?: {
-    externalId?: string;
-    metadata?: Record<string, string | undefined>;
+type PolarSubscriptionWebhookEvent = {
+  data: {
+    id: string;
+    customerId: string;
+    productId: string;
+    status: string;
+    currentPeriodEnd: Date | string | null;
+    cancelAtPeriodEnd: boolean;
+    customer: {
+      metadata?: Record<string, unknown>;
+      externalId?: string | null;
+    };
   };
 };
 
-export const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"];
-
-/**
- * Pure decision helper: returns true when a subscription status should trigger
- * premium revocation.
- */
-export function shouldRevokePremium(status: string): boolean {
-  return !ACTIVE_SUBSCRIPTION_STATUSES.includes(status);
-}
-
-/**
- * Pure helper: extracts the userId from Polar subscription webhook payload.
- */
-export function extractUserIdFromSubscriptionEvent(
-  data: PolarSubscriptionExtras,
-): string | undefined {
-  return (
-    data.metadata?.userId ??
-    data.customer?.externalId ??
-    data.customer?.metadata?.userId
+async function syncProfileFromPolarEvent(
+  ctx: ActionCtx,
+  event: PolarSubscriptionWebhookEvent,
+) {
+  const userId = extractUserIdFromPolarCustomerMetadata(
+    event.data.customer.metadata,
+    event.data.customer.externalId,
   );
+  if (!userId) {
+    console.warn("Polar webhook: missing userId on customer metadata");
+    return;
+  }
+
+  const currentPeriodEnd =
+    event.data.currentPeriodEnd instanceof Date
+      ? event.data.currentPeriodEnd.toISOString()
+      : event.data.currentPeriodEnd;
+
+  await ctx.runMutation(internal.billing.applyProfilePlanFromPolar, {
+    userId,
+    polarCustomerId: event.data.customerId,
+    polarSubscriptionId: event.data.id,
+    productId: event.data.productId,
+    status: event.data.status,
+    currentPeriodEnd,
+    cancelAtPeriodEnd: event.data.cancelAtPeriodEnd,
+  });
 }
 
 polar.registerRoutes(http, {
-  path: "/webhooks/polar",
-
-  onSubscriptionCreated: async (ctx, event) => {
-    const { id: polarSubscriptionId, customerId: polarCustomerId } = event.data;
-
-    // Primary: userId embedded in checkout metadata by createPremiumCheckout
-    // Fallback: externalId or customer metadata (for manual Polar dashboard subscriptions)
-    // The Polar SDK types don't expose metadata/customer fields directly, so we extend the type.
-    const data = event.data as typeof event.data & PolarSubscriptionExtras;
-    const userId = extractUserIdFromSubscriptionEvent(data);
-
-    if (userId) {
-      await ctx.runMutation(internal.subscriptions.linkPolarCustomer, {
-        userId,
-        polarCustomerId,
-        polarSubscriptionId,
-      });
-    } else {
-      // Fallback: activate by customerId (e.g. manual subscription in dashboard)
-      await ctx.runMutation(internal.subscriptions.activatePremium, {
-        polarCustomerId,
-        polarSubscriptionId,
-      });
-    }
-  },
-
-  onSubscriptionUpdated: async (ctx, event) => {
-    const { id: polarSubscriptionId, status } = event.data;
-    // Revoke premium if the subscription is no longer active
-    if (shouldRevokePremium(status)) {
-      await ctx.runMutation(internal.subscriptions.revokePremium, {
-        polarSubscriptionId,
-      });
-    }
+  path: "/webhook/polar",
+  events: {
+    "subscription.created": async (ctx, event) => {
+      await syncProfileFromPolarEvent(ctx as ActionCtx, event);
+    },
+    "subscription.updated": async (ctx, event) => {
+      await syncProfileFromPolarEvent(ctx as ActionCtx, event);
+    },
   },
 });
 

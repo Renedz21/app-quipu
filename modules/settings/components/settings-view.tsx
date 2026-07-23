@@ -1,397 +1,246 @@
 "use client";
 
-import type { Preloaded } from "convex/react";
-import { Controller, useWatch } from "react-hook-form";
-import type { api } from "@/convex/_generated/api";
-import { PremiumBadge } from "@/core/components/shared/premium-badge";
-import { PremiumGate } from "@/core/components/shared/premium-gate";
-import { Button } from "@/core/components/ui/button";
+import { useMutation } from "convex/react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { authClient } from "@/auth/auth-client";
+import { api } from "@/convex/_generated/api";
+import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
+import { buttonVariants } from "@/shared/components/ui/button";
+import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { PLAN_LABELS } from "@/shared/constants/plan";
+import { cn } from "@/shared/lib/utils";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/core/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/core/components/ui/field";
-import { Input } from "@/core/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/core/components/ui/select";
-import { Separator } from "@/core/components/ui/separator";
-import { Slider } from "@/core/components/ui/slider";
-import { Switch } from "@/core/components/ui/switch";
-import dynamic from "next/dynamic";
-import { useSettings } from "../hooks/use-settings";
-import { CommitmentItem } from "./commitment-item";
+  SETTINGS_CHECKOUT_SUCCESS,
+  SETTINGS_ERROR_BODY,
+  SETTINGS_ERROR_RETRY,
+  SETTINGS_ERROR_TITLE,
+  SETTINGS_MOBILE_ACCOUNT_LABEL,
+  SETTINGS_PAGE_SUBTITLE,
+  SETTINGS_PAGE_TITLE,
+  SETTINGS_PLAN_ACTIVE_BADGE,
+  SETTINGS_PLAN_LABEL,
+  SETTINGS_PLAN_PLUS_PRICE,
+  SETTINGS_PROFILE_LABEL,
+  SETTINGS_SECURITY_LABEL,
+  SETTINGS_SYSTEM_HEADING,
+} from "../constants";
+import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
+import { useSettingsOverview } from "../queries";
+import { SettingsCommitmentsSection } from "./settings-commitments-section";
+import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
+import { SettingsExportDataItem } from "./settings-export-data-item";
+import { SettingsExtraordinarySection } from "./settings-extraordinary-section";
+import { SettingsPlanCard } from "./settings-plan-card";
+import { SettingsProfileCard } from "./settings-profile-card";
+import { SettingsSecurityCard } from "./settings-security-card";
+import { SettingsSignOutItem } from "./settings-sign-out-item";
+import { SettingsSystemSection } from "./settings-system-section";
 
-// Modal: loaded on demand when the dialog is opened
-const AddCommitmentDialog = dynamic(
-  () => import("./add-commitment-dialog").then((m) => m.AddCommitmentDialog),
-  { ssr: false },
-);
+/** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
+ *  a la derecha. */
+export function SettingsViewSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Abriendo ajustes"
+      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
+    >
+      <Skeleton className="h-[30px] w-[150px] rounded-lg" />
+      <Skeleton
+        variant="line"
+        className="mt-2 h-[13px] w-[280px] max-w-full rounded-[5px]"
+      />
+      <div className="mt-6 flex flex-col gap-3.5 md:flex-row">
+        <div className="flex flex-1 flex-col gap-3.5">
+          <Skeleton className="h-[150px] rounded-2xl" />
+          <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
+        </div>
+        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] md:self-start" />
+      </div>
+    </div>
+  );
+}
 
-// Rarely used — defer until the section is visible in the page
-const DeleteAccountSection = dynamic(
-  () => import("./delete-account-section").then((m) => m.DeleteAccountSection),
-  { ssr: false },
-);
-
-type Props = {
-  preloaded: Preloaded<typeof api.profiles.getMyProfile>;
-};
-
-export default function SettingsView({ preloaded }: Props) {
-  const {
-    form,
-    commitments,
-    commitmentsLoading,
-    handleSubmit,
-    handleDeleteCommitment,
-    isSubmitting,
-    profile,
-  } = useSettings(preloaded);
-
-  const { control, formState } = form;
-  const coupleModeEnabled = useWatch({ control, name: "coupleModeEnabled" });
-  const needsPct = useWatch({ control, name: "allocationNeeds" });
-  const wantsPct = useWatch({ control, name: "allocationWants" });
-  const savingsPct = useWatch({ control, name: "allocationSavings" });
-  const payFrequency = useWatch({ control, name: "payFrequency" });
-
-  const total = needsPct + wantsPct + savingsPct;
-  const currencySymbol = profile?.currencySymbol ?? "$";
+function MobileAccountSummary({
+  name,
+  plan,
+}: {
+  name: string;
+  plan: "free" | "premium";
+}) {
+  const planLine =
+    plan === "premium"
+      ? `${PLAN_LABELS.premium} · ${SETTINGS_PLAN_PLUS_PRICE}`
+      : PLAN_LABELS.free;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-        <p className="text-muted-foreground mt-1">Ajusta tu plan financiero.</p>
+    <div className="mb-3 flex items-center gap-3 md:hidden">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-qp-tint font-serif text-[21px] text-qp-deep">
+        {getInitial(name)}
+      </span>
+      <div className="min-w-0">
+        <div className="truncate text-base font-semibold text-ink">{name}</div>
+        <div className="truncate text-xs text-mute-subtle">{planLine}</div>
+      </div>
+    </div>
+  );
+}
+
+function MobileAccountList({
+  passkeyCount,
+  isPremium,
+}: {
+  passkeyCount: number;
+  isPremium: boolean;
+}) {
+  return (
+    <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5 md:hidden">
+      <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_PROFILE_LABEL}
+        </span>
+        <ListRowChevron />
+      </div>
+      <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_PLAN_LABEL}
+        </span>
+        {isPremium ? (
+          <span className="rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
+            {SETTINGS_PLAN_ACTIVE_BADGE}
+          </span>
+        ) : null}
+        <ListRowChevron />
+      </div>
+      <div className="flex items-center gap-2 py-2.5">
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_SECURITY_LABEL}
+        </span>
+        {passkeyCount > 0 ? (
+          <span className="text-[11px] text-faint">{passkeyCount}</span>
+        ) : null}
+        <ListRowChevron />
+      </div>
+    </div>
+  );
+}
+
+export function SettingsView() {
+  const settingsData = useSettingsOverview();
+  const searchParams = useSearchParams();
+  const checkoutSuccess = searchParams.get("checkout") === "success";
+  const [showCheckoutBanner] = useState(checkoutSuccess);
+  const reconcileMyPlan = useMutation(api.billing.reconcileMyPlan);
+
+  const shouldReconcileCheckout =
+    checkoutSuccess && settingsData !== undefined && settingsData !== null;
+
+  useEffect(() => {
+    if (!shouldReconcileCheckout) return;
+    void reconcileMyPlan({});
+    window.history.replaceState(null, "", `${window.location.pathname}#plan`);
+  }, [shouldReconcileCheckout, reconcileMyPlan]);
+
+  const passkeysQuery = authClient.useListPasskeys();
+  const passkeyCount = passkeysQuery.data?.length ?? 0;
+
+  if (settingsData === undefined) {
+    return <SettingsViewSkeleton />;
+  }
+
+  if (settingsData === null) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+        <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+          <h2 className="text-base font-semibold text-danger-ink">
+            {SETTINGS_ERROR_TITLE}
+          </h2>
+          <p className="mt-2 text-sm text-danger-text">{SETTINGS_ERROR_BODY}</p>
+          <button
+            type="button"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "mt-4 border-danger-line text-danger-ink hover:bg-danger-banner",
+            )}
+            onClick={() => window.location.reload()}
+          >
+            {SETTINGS_ERROR_RETRY}
+          </button>
+        </section>
+      </div>
+    );
+  }
+
+  const overview = mapConvexSettingsOverview(settingsData);
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+      <header className="mb-5 md:mb-6">
+        <h1 className="font-serif text-[23px] font-medium text-ink md:text-[27px]">
+          {SETTINGS_PAGE_TITLE}
+        </h1>
+        <p className="mt-1 text-[12.5px] text-mute-subtle md:text-[13.5px]">
+          {SETTINGS_PAGE_SUBTITLE}
+        </p>
+      </header>
+
+      <MobileAccountSummary
+        name={overview.profile.name}
+        plan={overview.profile.plan}
+      />
+
+      <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint md:hidden">
+        {SETTINGS_MOBILE_ACCOUNT_LABEL}
+      </p>
+
+      <MobileAccountList
+        passkeyCount={passkeyCount}
+        isPremium={overview.profile.plan === "premium"}
+      />
+
+      <div className="flex flex-col gap-3.5 md:flex-row md:gap-3.5">
+        <div className="flex flex-1 flex-col gap-3.5">
+          <SettingsProfileCard profile={overview.profile} />
+          <div>
+            <SettingsPlanCard subscription={overview.subscription} />
+            {showCheckoutBanner ? (
+              <p
+                className="mt-2 text-[12.5px] leading-snug text-mute-subtle"
+                role="status"
+              >
+                {SETTINGS_CHECKOUT_SUCCESS}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex-1">
+          <SettingsSecurityCard
+            sessionsApiReady={overview.sessionsApiReady}
+            activeSessionCount={overview.activeSessionCount}
+          />
+        </div>
       </div>
 
-      <form id="settings-form" onSubmit={handleSubmit} className="space-y-6">
-        {/* Ingresos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>💰 Ingresos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldGroup>
-              <Controller
-                name="monthlyIncome"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="settings-income">
-                      Ingreso mensual neto ({currencySymbol})
-                    </FieldLabel>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
-                        {currencySymbol}
-                      </span>
-                      <Input
-                        id="settings-income"
-                        type="number"
-                        min={0}
-                        step="any"
-                        placeholder="0"
-                        className="pl-10"
-                        value={field.value === 0 ? "" : field.value}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? 0 : Number(val));
-                        }}
-                      />
-                    </div>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
+      <section className="mt-6">
+        <h2 className="mb-[22px] hidden font-serif text-2xl font-medium text-ink md:block">
+          {SETTINGS_SYSTEM_HEADING}
+        </h2>
+        <div className="flex flex-col gap-3.5 md:flex-row md:items-stretch">
+          <div className="flex min-w-0 flex-col gap-3.5 md:flex-[1.1]">
+            <SettingsSystemSection />
+            <SettingsExtraordinarySection />
+          </div>
+          <SettingsCommitmentsSection className="flex min-w-0 flex-col md:flex-1" />
+        </div>
+      </section>
 
-              <Controller
-                name="payFrequency"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="settings-pay-frequency">
-                      Frecuencia de pago
-                    </FieldLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.setValue(
-                          "paydays",
-                          value === "monthly" ? [1] : [15, 30],
-                        );
-                      }}
-                    >
-                      <SelectTrigger id="settings-pay-frequency">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="monthly">Mensual</SelectItem>
-                        <SelectItem value="biweekly">Quincenal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FieldDescription>
-                      {payFrequency === "monthly"
-                        ? "Recibes tu ingreso una vez al mes."
-                        : "Recibes tu ingreso dos veces al mes."}
-                    </FieldDescription>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </CardContent>
-        </Card>
-
-        {/* Plan de asignación */}
-        <Card>
-          <CardHeader>
-            <CardTitle>📊 Plan de asignación</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-3 gap-4">
-              <Controller
-                name="allocationNeeds"
-                control={control}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">Necesidades</span>
-                      <span className="text-muted-foreground">
-                        {field.value}%
-                      </span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(vals) => field.onChange(vals[0])}
-                    />
-                  </div>
-                )}
-              />
-              <Controller
-                name="allocationWants"
-                control={control}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">Gustos</span>
-                      <span className="text-muted-foreground">
-                        {field.value}%
-                      </span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(vals) => field.onChange(vals[0])}
-                    />
-                  </div>
-                )}
-              />
-              <Controller
-                name="allocationSavings"
-                control={control}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">Ahorro</span>
-                      <span className="text-muted-foreground">
-                        {field.value}%
-                      </span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(vals) => field.onChange(vals[0])}
-                    />
-                  </div>
-                )}
-              />
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Total asignado</span>
-              <span
-                className={
-                  total === 100
-                    ? "text-green-600 font-semibold"
-                    : "text-destructive font-semibold"
-                }
-              >
-                {total}%
-              </span>
-            </div>
-            {formState.errors.allocationNeeds && (
-              <FieldError>
-                {formState.errors.allocationNeeds.message}
-              </FieldError>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Modo Pareja */}
-        <PremiumGate featureName="Modo Pareja">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  👫 Modo Pareja
-                  <PremiumBadge />
-                </CardTitle>
-                <Controller
-                  name="coupleModeEnabled"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
-            </CardHeader>
-            {coupleModeEnabled && (
-              <CardContent>
-                <FieldGroup>
-                  <Controller
-                    name="couplePartnerName"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="couple-partner-name">
-                          Nombre de tu pareja
-                        </FieldLabel>
-                        <Input
-                          id="couple-partner-name"
-                          placeholder="Ej: María"
-                          {...field}
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                  <Controller
-                    name="coupleMonthlyBudget"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="couple-budget">
-                          Presupuesto mensual de pareja ({currencySymbol})
-                        </FieldLabel>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm pointer-events-none">
-                            {currencySymbol}
-                          </span>
-                          <Input
-                            id="couple-budget"
-                            type="number"
-                            min={0}
-                            step="any"
-                            placeholder="0"
-                            className="pl-10"
-                            value={field.value === 0 ? "" : field.value}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              field.onChange(val === "" ? 0 : Number(val));
-                            }}
-                          />
-                        </div>
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                </FieldGroup>
-              </CardContent>
-            )}
-          </Card>
-        </PremiumGate>
-
-        {formState.errors.root && (
-          <p className="text-destructive text-sm">
-            {formState.errors.root.message}
-          </p>
-        )}
-      </form>
-
-      {/* Cuotas y deudas: mutaciones propias en el diálogo; Guardar usa form="settings-form". */}
-      <PremiumGate featureName="Cuotas y deudas fijas">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              📋 Mis cuotas y deudas
-              <PremiumBadge />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              Pagos fijos que se descuentan antes de asignar tus sobres.
-            </p>
-            {commitmentsLoading ? (
-              <div className="space-y-2">
-                <div className="h-10 animate-pulse rounded-lg bg-muted" />
-                <div className="h-10 animate-pulse rounded-lg bg-muted" />
-              </div>
-            ) : commitments.length > 0 ? (
-              <div className="divide-y">
-                {commitments.map((c) => (
-                  <CommitmentItem
-                    key={c._id}
-                    id={c._id}
-                    name={c.name}
-                    amount={c.amount}
-                    envelope={c.envelope}
-                    currencySymbol={currencySymbol}
-                    onDelete={handleDeleteCommitment}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm italic">
-                No tienes cuotas registradas.
-              </p>
-            )}
-            <Separator />
-            <AddCommitmentDialog />
-          </CardContent>
-        </Card>
-      </PremiumGate>
-
-      <Button
-        type="submit"
-        form="settings-form"
-        className="w-full"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? "Guardando..." : "Guardar cambios"}
-      </Button>
-
-      <DeleteAccountSection />
+      <div className="mt-6 flex flex-col gap-2.5 md:mt-8">
+        <SettingsExportDataItem />
+        <SettingsSignOutItem />
+        <SettingsDeleteAccountItem />
+      </div>
     </div>
   );
 }

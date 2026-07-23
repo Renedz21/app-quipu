@@ -1,0 +1,22 @@
+/**
+ * Tablas de dominio Quipu (app), excluyendo Better Auth (componente).
+ * Fuente única para reset, backup y resumen pre/post deploy.
+ */
+export const APP_DATA_TABLES = [
+  "profiles",
+  "financialCycles",
+  "envelopes",
+  "subEnvelopes",
+  "fixedCommitments",
+  "expenses",
+  "coachInteractions",
+  "streaks",
+  "cycleHistory",
+  "incomeEvents",
+  "surplusContributions",
+] as const;
+
+export type AppDataTableName = (typeof APP_DATA_TABLES)[number];
+
+/** Versión del JSON de snapshot; subir si cambia la forma del export. */
+export const APP_DATA_SNAPSHOT_FORMAT = "quipu-app-snapshot-1" as const;

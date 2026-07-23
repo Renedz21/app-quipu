@@ -1,153 +1,70 @@
-import type { Metadata } from "next";
-import { DM_Sans, Space_Grotesk } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono, Hanken_Grotesk, Newsreader } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
-import Script from "next/script";
-import { Suspense } from "react";
-import { GlobalFallback } from "@/core/components/shared/global-fallback";
-import { ConvexClientProvider } from "@/core/components/providers/convex-client-provider";
-import { PostHogPageView } from "@/core/components/providers/posthog-pageview";
-import { PostHogProvider } from "@/core/components/providers/posthog-provider";
-import ToastProvider from "@/core/components/providers/toast-provider";
-import { TooltipProvider } from "@/core/components/ui/tooltip";
-import { getToken } from "@/lib/auth-server";
+import { getToken } from "@/auth/auth-server";
+import { rootMetadata, siteConfig } from "@/core/seo";
+import { AppearanceSync } from "@/modules/progress/components/appearance-sync";
+import { ConvexClientProvider } from "@/shared/components/providers/convex-provider";
+import { SiteJsonLd } from "@/shared/components/seo/site-json-ld";
+import { AppToaster } from "@/shared/components/ui/toaster";
+import { cn } from "@/shared/lib/utils";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+// Canon tipográfico (docs/QUIPU-MASTER.md §3.2):
+// Hanken Grotesk = interfaz · Newsreader = titulares/cifras · Geist Mono = micro-labels
+const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
-  display: "swap",
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const newsreader = Newsreader({
   subsets: ["latin"],
-  display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-serif",
+  style: ["normal", "italic"],
+  weight: ["400", "500", "600"],
 });
 
-const SITE_URL = process.env.SITE_URL ?? "https://quipu-finance.app";
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: "Quipu — Distribuye tu sueldo automáticamente",
-    template: "%s | Quipu",
-  },
-  description:
-    "Quipu reparte tu sueldo con la regla 50/30/20 antes de que lo gastes. Sin conectar tu banco: tú decides, Quipu ordena. Hecho para Perú.",
-  applicationName: "Quipu",
-  keywords: [
-    "presupuesto personal",
-    "regla 50 30 20",
-    "finanzas personales Perú",
-    "app de ahorro",
-    "control de gastos",
-    "sobres presupuesto",
-    "sueldo",
+export const metadata: Metadata = rootMetadata;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#2a2926" },
   ],
-  authors: [{ name: "Quipu" }],
-  creator: "Quipu",
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "es_PE",
-    url: SITE_URL,
-    siteName: "Quipu",
-    title: "Quipu — Distribuye tu sueldo automáticamente",
-    description:
-      "Reparte tu sueldo en Necesidades, Gustos y Ahorro. Sin banco, sin complicaciones.",
-    images: [
-      { url: "/og-image.png", width: 1200, height: 630, alt: "Quipu" },
-      { url: "/quipu.webp", width: 1200, height: 630, alt: "Quipu" },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Quipu — Distribuye tu sueldo automáticamente",
-    description: "Regla 50/30/20 aplicada a tu sueldo, sin tocar tu banco.",
-    images: ["/og-image.png"],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  icons: { icon: "/quipu-logo.webp" },
 };
 
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Quipu",
-  url: SITE_URL,
-  description:
-    "App de finanzas personales que distribuye tu sueldo con la regla 50/30/20.",
-  applicationCategory: "FinanceApplication",
-  operatingSystem: "Web",
-  inLanguage: "es-PE",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "PEN",
-  },
-};
-
-async function ConvexProviderWithToken({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const token = await getToken();
-  return (
-    <ConvexClientProvider initialToken={token}>
-      <TooltipProvider>
-        {children}
-        <ToastProvider />
-      </TooltipProvider>
-    </ConvexClientProvider>
-  );
-}
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialToken = await getToken();
   return (
-    <html lang="es">
-      <head>
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-scan/dist/auto.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
-      </head>
-      <body
-        className={`${dmSans.variable} ${spaceGrotesk.variable} antialiased`}
-      >
-        <Script
-          id="ld-organization"
-          type="application/ld+json"
-          strategy="beforeInteractive"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD requires raw script injection for structured data.
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationJsonLd),
-          }}
-        />
-        <PostHogProvider>
-          <Suspense fallback={<GlobalFallback />}>
-            <PostHogPageView />
-            <ConvexProviderWithToken>{children}</ConvexProviderWithToken>
-          </Suspense>
-        </PostHogProvider>
-        <Analytics mode="production" />
+    <html
+      lang={siteConfig.language}
+      className={cn(
+        "h-full",
+        "antialiased",
+        hankenGrotesk.variable,
+        newsreader.variable,
+        geistMono.variable,
+        "font-sans",
+      )}
+    >
+      <body className="min-h-full flex flex-col">
+        <SiteJsonLd />
+        <ConvexClientProvider initialToken={initialToken}>
+          <AppearanceSync />
+          {children}
+          <AppToaster />
+        </ConvexClientProvider>
       </body>
     </html>
   );

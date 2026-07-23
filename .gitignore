@@ -20,9 +20,17 @@
 # production
 /build
 
+# Design canvas (local only; not versioned)
+/quipu-2.html
+
 # misc
 .DS_Store
 *.pem
+# Windows reserved device names that sometimes leak into the working tree
+nul
+aux
+con
+prn
 
 # debug
 npm-debug.log*
@@ -32,8 +40,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
-
 
 # vercel
 .vercel
@@ -42,18 +48,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Sentry Config File
-.env.sentry-build-plugin
+# AI skills
+.agents/*
+.claude/*
+.cursor/*
+.codegraph/*
+
+# Ledger local de SDD (superpowers); docs/ sí se commitea
+/.superpowers/sdd/
 
 # Playwright
-node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
-.env.local
 
-.claude/
-.agents/
-.unlighthouse/
+# Convex prod snapshots (datos reales; no commitear)
+/backups/

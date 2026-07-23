@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, chore/quipu-2.0]
+  pull_request:
+    branches: [main, master, chore/quipu-2.0]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test run
+
+      - name: Unit tests
+        run: pnpm test run

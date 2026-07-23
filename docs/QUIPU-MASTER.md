@@ -1151,7 +1151,7 @@ flowchart LR
 
 | Bloque | Delta a cerrar |
 |---|---|
-| 1. Auth | ✅ Recuperación `/recuperar` + `/restablecer-contrasena` + alias `/reset-password` (2026-07-22). ✅ Verificación email (Resend en código, `requireEmailVerification`, `/verify-email`). Pendiente: panel lateral datos reales. |
+| 1. Auth | ✅ Recuperación `/recuperar` + `/restablecer-contrasena` (2026-07-22). ✅ Verificación email (Resend en código, `requireEmailVerification`, `/verify-email`). Pendiente: panel lateral datos reales. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
 | 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
@@ -1272,6 +1272,19 @@ Sin deployment Convex, E2E fallará aunque lint/typecheck pasen.
 - Env vars validadas en `core/env.ts` y `core/env.client.ts`. Secretos solo en servidor; `NEXT_PUBLIC_*` es hostil.
 - `convex/_generated/` es autogenerado: **nunca editar a mano**.
 - Turbopack es default; ante un bug raro de build, descartar con `next dev --turbopack=false`.
+
+**Cutover prod legacy → v2.5 (mismo deployment `patient-chihuahua-640` o similar):**
+
+Datos v2.0 **no** encajan schema v2.5 sin migración; despliegue «desde cero» = vaciar dominio app + auth tras **backup JSON**.
+
+| Paso | Comando (prod) |
+|---|---|
+| 1. Conteo | `npx convex run --prod ops/appDataSnapshot:summarizeAppData` |
+| 2. Backup | `npx convex run --prod ops/appDataSnapshot:exportAppDataSnapshot` → guardar `downloadUrl` en disco |
+| 3. Push schema v2.5 | `npx convex deploy --prod` (puede fallar si docs legacy invalidan; export antes) |
+| 4. Vacío controlado | `npx convex run --prod ops/appDataSnapshot:cutoverToFreshV25Deploy '{"confirm":"EXPORTED_BACKUP_AND_RESET_V25"}'` **solo** si ya descargaste el JSON |
+
+Implementación: `convex/ops/appDataSnapshot.ts` (internal). Better Auth no va en el JSON; usuarios prod se recrean al registrarse de nuevo.
 
 **Checklist Vercel (owner — P2-8):**
 

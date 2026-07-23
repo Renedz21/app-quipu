@@ -1,25 +1,14 @@
 import { internalMutation } from "../_generated/server";
-
-const APP_TABLES = [
-  "profiles",
-  "financialCycles",
-  "envelopes",
-  "subEnvelopes",
-  "fixedCommitments",
-  "expenses",
-  "coachInteractions",
-  "streaks",
-  "cycleHistory",
-  "incomeEvents",
-  "surplusContributions",
-] as const;
+import { v } from "convex/values";
+import { APP_DATA_TABLES } from "./appDataTables";
 
 export const resetAppTables = internalMutation({
   args: {},
+  returns: v.object({ deleted: v.record(v.string(), v.number()) }),
   handler: async (ctx) => {
     const counts: Record<string, number> = {};
 
-    for (const table of APP_TABLES) {
+    for (const table of APP_DATA_TABLES) {
       const docs = await ctx.db.query(table).collect();
       for (const doc of docs) {
         await ctx.db.delete(doc._id);

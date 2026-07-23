@@ -117,12 +117,6 @@ export function PasswordStep({
                   {field.state.meta.isTouched && !field.state.meta.isValid && (
                     <FieldError errors={field.state.meta.errors} />
                   )}
-                  <Link
-                    href="/forgot-password"
-                    className="mt-2 inline-block text-[12.5px] font-medium text-qp-deep hover:underline"
-                  >
-                    Olvidé mi contraseña
-                  </Link>
                 </Field>
               );
             }}

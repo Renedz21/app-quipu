@@ -20,6 +20,9 @@
 # production
 /build
 
+# Design canvas (local only; not versioned)
+/quipu-2.html
+
 # misc
 .DS_Store
 *.pem

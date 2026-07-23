@@ -13,7 +13,6 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
-import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_DELETE_ACCOUNT,
   SETTINGS_DELETE_ACCOUNT_BODY,
@@ -23,6 +22,7 @@ import {
   SETTINGS_DELETE_ACCOUNT_TITLE,
   SETTINGS_DELETE_ACCOUNT_WORKING,
 } from "../constants";
+import { SettingsAccountActionButton } from "./settings-account-action-button";
 
 type Props = {
   className?: string;
@@ -55,16 +55,13 @@ export function SettingsDeleteAccountItem({ className }: Props) {
 
   return (
     <>
-      <button
-        type="button"
+      <SettingsAccountActionButton
+        tone="danger"
         onClick={() => setOpen(true)}
-        className={cn(
-          "w-full rounded-[14px] border border-danger-line bg-card px-4 py-3.5 text-left text-[13.5px] font-medium text-danger-ink transition-colors hover:bg-danger-bg",
-          className,
-        )}
+        className={className}
       >
         {SETTINGS_DELETE_ACCOUNT}
-      </button>
+      </SettingsAccountActionButton>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent className="rounded-[22px] border-t-4 border-t-danger">

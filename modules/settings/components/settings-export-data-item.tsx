@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { limaDateToInputValue } from "@/shared/lib/date";
+import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_EXPORT_DATA,
   SETTINGS_EXPORT_DATA_ERROR,
   SETTINGS_EXPORT_DATA_PREPARING,
 } from "../constants";
 import { useExportMyData } from "../queries";
+import { SettingsAccountActionButton } from "./settings-account-action-button";
 
 type Props = {
   className?: string;
@@ -41,20 +43,21 @@ export function SettingsExportDataItem({ className }: Props) {
   };
 
   return (
-    <div className={className}>
-      <button
-        type="button"
+    <span
+      className={cn("inline-flex max-w-full flex-col items-start", className)}
+    >
+      <SettingsAccountActionButton
+        tone="neutral"
         onClick={handleExport}
         disabled={isExporting}
-        className="w-full rounded-[14px] border border-line bg-card px-4 py-3.5 text-left text-[13.5px] font-medium text-ink transition-colors hover:bg-surface-warm disabled:opacity-60"
       >
         {isExporting ? SETTINGS_EXPORT_DATA_PREPARING : SETTINGS_EXPORT_DATA}
-      </button>
+      </SettingsAccountActionButton>
       {hasError ? (
-        <p className="mt-1.5 text-[12px] text-danger-ink" role="alert">
+        <p className="mt-1 px-3 text-[12px] text-danger-ink" role="alert">
           {SETTINGS_EXPORT_DATA_ERROR}
         </p>
       ) : null}
-    </div>
+    </span>
   );
 }

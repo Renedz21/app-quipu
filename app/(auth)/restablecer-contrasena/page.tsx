@@ -19,8 +19,6 @@ export default async function RestablecerContrasenaPage({
   const { token, error } = await searchParams;
   const invalidFromCallback = error === "INVALID_TOKEN";
   return (
-    <ResetPasswordView
-      token={invalidFromCallback ? null : (token ?? null)}
-    />
+    <ResetPasswordView token={invalidFromCallback ? null : (token ?? null)} />
   );
 }

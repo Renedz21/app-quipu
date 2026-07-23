@@ -1,19 +1,24 @@
-import fs from "node:fs";
-import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 import { loadEnvLocal } from "./__tests__/e2e/helpers/env";
 
 loadEnvLocal();
 
-const authFile = path.join("playwright", ".auth", "session.json");
-
 export default defineConfig({
   testDir: "./__tests__/e2e",
-  fullyParallel: false,
+  // Cada test crea su propio usuario aislado (ver fixtures/smoke.ts +
+  // helpers/auth-api.ts), así que no hay estado compartido entre tests y se
+  // pueden correr en paralelo sin falsos positivos (flakiness).
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  reporter: [["list"], ["html", { open: "never" }]],
+  // 2 workers por proceso. En CI la suite además se reparte en shards
+  // (--shard=N/3), así que el paralelismo total es 3 shards × 2 workers.
+  workers: 2,
+  // En CI usamos el reporter `blob` para fusionar los shards en un único
+  // reporte HTML (job `merge-reports` del workflow de Playwright).
+  reporter: process.env.CI
+    ? [["blob"], ["list"]]
+    : [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
@@ -22,10 +27,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        storageState: fs.existsSync(authFile) ? authFile : undefined,
-      },
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
   ...(process.env.CI

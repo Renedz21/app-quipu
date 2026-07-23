@@ -12,13 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # pnpm debe instalarse ANTES de setup-node: `cache: pnpm` necesita pnpm
+      # en el PATH. action-setup lee la versión del campo `packageManager`.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: pnpm
-
-      - name: Enable Corepack
-        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -28,9 +30,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
-
-      - name: Unit tests
-        run: pnpm test run
 
       - name: Unit tests
         run: pnpm test run

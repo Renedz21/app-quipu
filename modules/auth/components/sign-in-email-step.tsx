@@ -97,7 +97,9 @@ export function EmailStep({
         </form.Subscribe>
       </form>
       <div className="flex justify-end">
-        <form.Subscribe selector={(s: { values: { email: string } }) => s.values.email}>
+        <form.Subscribe
+          selector={(s: { values: { email: string } }) => s.values.email}
+        >
           {(email: string) => <RecoverPasswordLink email={email} />}
         </form.Subscribe>
       </div>

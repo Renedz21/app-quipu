@@ -12,13 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Corepack debe ir ANTES de setup-node: `cache: pnpm` necesita que pnpm
+      # ya esté en el PATH para calcular la caché del store.
+      - name: Enable Corepack
+        run: corepack enable
+
       - uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: pnpm
-
-      - name: Enable Corepack
-        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -28,9 +30,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
-
-      - name: Unit tests
-        run: pnpm test run
 
       - name: Unit tests
         run: pnpm test run

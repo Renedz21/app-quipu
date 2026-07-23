@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  INCOME_KIND_EXTRAORDINARY,
-  INCOME_KIND_HABITUAL,
-} from "../constants";
 import { cn } from "@/shared/lib/utils";
+import { INCOME_KIND_EXTRAORDINARY, INCOME_KIND_HABITUAL } from "../constants";
 
 type Props = {
   value: "habitual" | "extraordinary";
@@ -36,10 +33,7 @@ export function IncomeKindToggle({ value, onChange }: Props) {
             )}
           >
             {marker === "dot" ? (
-              <span
-                className="size-2 rounded-full bg-moss"
-                aria-hidden
-              />
+              <span className="size-2 rounded-full bg-moss" aria-hidden />
             ) : (
               <span
                 className="size-2 rotate-45 rounded-sm bg-extraordinary-a"

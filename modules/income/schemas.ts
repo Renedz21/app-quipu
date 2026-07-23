@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { INCOME_MAX_CENTS } from "./constants";
 import { limaIncomeDateMinTimestamp, limaStartOfDay } from "@/shared/lib/date";
 import { EXTRAORDINARY_TYPES } from "@/shared/lib/extraordinaryIncome";
+import { INCOME_MAX_CENTS } from "./constants";
 import type { IncomeSource } from "./types";
 
 const incomeSourceValues = [

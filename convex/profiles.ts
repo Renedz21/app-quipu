@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 /**
  * Obtiene el perfil del usuario autenticado actual.
@@ -17,6 +17,18 @@ export const getMyProfile = query({
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .unique();
+  },
+});
+
+export const getMyInternalProfile = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Not authenticated");
+    return {
+      userId: identity.subject,
+      email: identity.email ?? "",
+    };
   },
 });
 
@@ -50,7 +62,6 @@ export const createProfile = mutation({
     allocationNeeds: v.number(),
     allocationWants: v.number(),
     allocationSavings: v.number(),
-    plan: v.optional(v.union(v.literal("free"), v.literal("premium"))),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -137,7 +148,7 @@ export const createProfile = mutation({
       allocationWants: args.allocationWants,
       allocationSavings: args.allocationSavings,
       onboardingComplete: true,
-      plan: args.plan ?? "free",
+      plan: "free",
       appearanceTheme: "light",
       accentPreset: "moss",
       appIconVariant: "light",

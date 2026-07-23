@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
+import { SETTINGS_SIDEBAR_PLUS_LINK } from "@/modules/settings/constants";
 import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { SIDEBAR_ITEMS } from "@/shared/constants/navigation";
@@ -88,6 +89,14 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
             <div className="truncate text-[11.5px] text-mute">
               {PLAN_LABELS[plan]}
             </div>
+            {plan === "free" ? (
+              <Link
+                href="/settings#plan"
+                className="mt-0.5 inline-block text-[11px] text-faint transition-colors hover:text-mute"
+              >
+                {SETTINGS_SIDEBAR_PLUS_LINK}
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

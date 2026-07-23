@@ -4,10 +4,10 @@ import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import {
+  extraordinaryTypeDisplayTitle,
   INCOME_EXTRAORDINARY_BADGE,
   INCOME_EXTRAORDINARY_CUSTOM_LABEL,
   INCOME_EXTRAORDINARY_DETAILS_SUBTITLE,
-  extraordinaryTypeDisplayTitle,
 } from "../constants";
 import { IncomeAmountField } from "./income-amount-field";
 import { IncomeDatePicker } from "./income-date-picker";
@@ -88,8 +88,7 @@ export function IncomeExtraordinaryDetailsFields({
             placeholder="Ej. bono por meta anual"
             className="h-[46px] rounded-[11px] border-line bg-card text-[14.5px]"
           />
-          {labelField.state.meta.isTouched &&
-          !labelField.state.meta.isValid ? (
+          {labelField.state.meta.isTouched && !labelField.state.meta.isValid ? (
             <FieldError errors={labelField.state.meta.errors} />
           ) : null}
         </Field>

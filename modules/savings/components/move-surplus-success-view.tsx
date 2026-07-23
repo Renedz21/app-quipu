@@ -47,8 +47,8 @@ export function MoveSurplusSuccessView({
           <span className="mb-1 block size-4 rotate-45 border-r-4 border-b-4 border-white" />
         </div>
         <h1 className="font-serif text-[30px] font-medium text-ink">
-          {MOVE_SURPLUS_SUCCESS_TITLE_PREFIX}{" "}
-          {format(movedCents)} {MOVE_SURPLUS_SUCCESS_TITLE_SUFFIX}
+          {MOVE_SURPLUS_SUCCESS_TITLE_PREFIX} {format(movedCents)}{" "}
+          {MOVE_SURPLUS_SUCCESS_TITLE_SUFFIX}
         </h1>
         <p className="mx-auto mt-2 max-w-md text-[15px] text-mute text-pretty">
           {MOVE_SURPLUS_SUCCESS_BODY_PREFIX} {format(savingsTotalCents)}{" "}
@@ -82,7 +82,10 @@ export function MoveSurplusSuccessView({
 
         <Link
           href="/savings"
-          className={cn(buttonVariants(), "mt-7 inline-flex rounded-[11px] px-8")}
+          className={cn(
+            buttonVariants(),
+            "mt-7 inline-flex rounded-[11px] px-8",
+          )}
         >
           {MOVE_SURPLUS_SUCCESS_HOME_CTA}
         </Link>
@@ -128,12 +131,7 @@ function SuccessMetric({
           {label}
         </span>
       </div>
-      <p
-        className={cn(
-          "font-serif text-[21px] text-ink",
-          amountClassName,
-        )}
-      >
+      <p className={cn("font-serif text-[21px] text-ink", amountClassName)}>
         {amount}
       </p>
     </article>

@@ -19,12 +19,19 @@ export type SettingsProfileOverview = {
   plan: Doc<"profiles">["plan"];
 };
 
+export type SettingsSubscriptionStatus =
+  | "free"
+  | "active"
+  | "canceled_at_period_end";
+
 export type SettingsSubscriptionOverview = {
   plan: Doc<"profiles">["plan"];
-  status: "active" | "free";
+  status: SettingsSubscriptionStatus;
   priceDisplay: string | null;
   renewalSummary: string | null;
   paymentMethodSummary: string | null;
+  checkoutAvailable: boolean;
+  premiumProductId: string | null;
 };
 
 export type SettingsPasskeyOverview = {

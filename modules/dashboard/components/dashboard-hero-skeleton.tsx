@@ -6,7 +6,7 @@ export function DashboardHeroSkeleton() {
     <Skeleton
       role="status"
       aria-label="Cargando disponible hoy"
-      className="h-[132px] w-full rounded-[18px] [animation-delay:150ms]"
+      className="h-33 w-full rounded-[18px] [animation-delay:150ms]"
     />
   );
 }

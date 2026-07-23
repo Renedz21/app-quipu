@@ -85,10 +85,7 @@ export function IncomeImpactPreview({
               className="mt-4 flex items-center justify-between rounded-[11px] border border-qp-border bg-card px-3.5 py-2.5 text-[13px] font-semibold text-qp-deep no-underline hover:bg-qp-soft/50"
             >
               <span className="flex items-center gap-2">
-                <span
-                  className="size-2 rounded-full bg-moss"
-                  aria-hidden
-                />
+                <span className="size-2 rounded-full bg-moss" aria-hidden />
                 {INCOME_IMPACT_MOVE_SURPLUS}
               </span>
               <span aria-hidden>→</span>

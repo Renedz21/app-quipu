@@ -2,10 +2,10 @@
 
 import type { ExtraordinaryProfileRule } from "@/shared/lib/extraordinaryIncome";
 import {
-  mergeExtraordinaryRules,
-  resolveExtraordinaryRuleKey,
   type ExtraordinaryRules,
   type ExtraordinaryType,
+  mergeExtraordinaryRules,
+  resolveExtraordinaryRuleKey,
 } from "@/shared/lib/extraordinaryIncome";
 import {
   INCOME_EXTRAORDINARY_RULE_CHANGE,
@@ -71,7 +71,8 @@ export function IncomeExtraordinaryRuleBanner({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-[13.5px] font-semibold text-[#7E611F]">
-          {INCOME_EXTRAORDINARY_RULE_PREFIX} · {ruleGroupLabel(extraordinaryType)}
+          {INCOME_EXTRAORDINARY_RULE_PREFIX} ·{" "}
+          {ruleGroupLabel(extraordinaryType)}
         </p>
         <p className="mt-0.5 text-[12.5px] leading-snug text-[#8A7742]">
           {ruleBodyCopy(

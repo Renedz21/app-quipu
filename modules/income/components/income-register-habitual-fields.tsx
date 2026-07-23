@@ -8,10 +8,10 @@ import {
   INCOME_SOURCE_LABEL,
 } from "../constants";
 import type { IncomeSource } from "../types";
-import { IncomeDatePicker } from "./income-date-picker";
-import { IncomeSourceChips } from "./income-source-chips";
 import { IncomeAmountField } from "./income-amount-field";
+import { IncomeDatePicker } from "./income-date-picker";
 import type { IncomeFormField } from "./income-form-field";
+import { IncomeSourceChips } from "./income-source-chips";
 
 type Props = {
   currencyCode: string;
@@ -59,8 +59,7 @@ export function IncomeRegisterHabitualFields({
             sourceField.handleBlur();
           }}
         />
-        {sourceField.state.meta.isTouched &&
-        !sourceField.state.meta.isValid ? (
+        {sourceField.state.meta.isTouched && !sourceField.state.meta.isValid ? (
           <FieldError className="mt-2" errors={sourceField.state.meta.errors} />
         ) : null}
       </Field>
@@ -83,7 +82,9 @@ export function IncomeRegisterHabitualFields({
           className="mb-2 block text-[12.5px] font-medium text-ink-secondary"
         >
           {INCOME_CONCEPT_LABEL}{" "}
-          <span className="font-normal text-mute">{INCOME_CONCEPT_OPTIONAL}</span>
+          <span className="font-normal text-mute">
+            {INCOME_CONCEPT_OPTIONAL}
+          </span>
         </FieldLabel>
         <Input
           id="income-concept"

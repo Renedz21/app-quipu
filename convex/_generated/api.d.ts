@@ -9,12 +9,14 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as billing from "../billing.js";
 import type * as coachEngine from "../coachEngine.js";
 import type * as dashboard from "../dashboard.js";
 import type * as expenses from "../expenses.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
+import type * as lib_billingSync from "../lib/billingSync.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
 import type * as lib_coachState from "../lib/coachState.js";
 import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
@@ -33,6 +35,7 @@ import type * as lib_savingsMath from "../lib/savingsMath.js";
 import type * as lib_settingsCopy from "../lib/settingsCopy.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as movements from "../movements.js";
+import type * as polar from "../polar.js";
 import type * as profiles from "../profiles.js";
 import type * as progress from "../progress.js";
 import type * as resetDb from "../resetDb.js";
@@ -48,12 +51,14 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  billing: typeof billing;
   coachEngine: typeof coachEngine;
   dashboard: typeof dashboard;
   expenses: typeof expenses;
   fixedCommitments: typeof fixedCommitments;
   http: typeof http;
   incomeEvents: typeof incomeEvents;
+  "lib/billingSync": typeof lib_billingSync;
   "lib/budgetMath": typeof lib_budgetMath;
   "lib/coachState": typeof lib_coachState;
   "lib/commitmentCoverage": typeof lib_commitmentCoverage;
@@ -72,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   "lib/settingsCopy": typeof lib_settingsCopy;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   movements: typeof movements;
+  polar: typeof polar;
   profiles: typeof profiles;
   progress: typeof progress;
   resetDb: typeof resetDb;
@@ -108,4 +114,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  polar: import("@convex-dev/polar/_generated/component.js").ComponentApi<"polar">;
 };

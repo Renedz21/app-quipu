@@ -172,7 +172,9 @@ export function SettingsExtraordinarySection({
             >
               <RowIcon kind={row.icon} />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[15px] text-ink">{row.label}</div>
+                <div className="font-semibold text-[15px] text-ink">
+                  {row.label}
+                </div>
                 <div className="text-[12.5px] text-mute">{row.subtitle}</div>
               </div>
               <label className="relative inline-flex min-w-[12rem] items-center">

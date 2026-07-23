@@ -1,9 +1,9 @@
 "use client";
 
 import { Check } from "reicon-react";
+import { Button } from "@/shared/components/ui/button";
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import { cn } from "@/shared/lib/utils";
-import { Button } from "@/shared/components/ui/button";
 import {
   EXTRAORDINARY_TYPE_CARDS,
   INCOME_EXTRAORDINARY_CONTINUE_CTA,
@@ -113,7 +113,9 @@ export function IncomeExtraordinaryTypeGrid({
               <span className="mb-3 flex size-[34px] items-center justify-center rounded-[10px] bg-[#F4EFE5]">
                 <TypeCardIcon type={card.type} />
               </span>
-              <div className="font-semibold text-[15px] text-ink">{card.title}</div>
+              <div className="font-semibold text-[15px] text-ink">
+                {card.title}
+              </div>
               <div className="mt-0.5 text-xs text-mute">{card.subtitle}</div>
             </button>
           );
@@ -126,7 +128,9 @@ export function IncomeExtraordinaryTypeGrid({
       ) : null}
       {showContinue ? (
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[12.5px] text-mute">{INCOME_EXTRAORDINARY_PICK_HINT}</p>
+          <p className="text-[12.5px] text-mute">
+            {INCOME_EXTRAORDINARY_PICK_HINT}
+          </p>
           <Button
             type="button"
             className="h-auto shrink-0 rounded-[11px] px-6 py-3.5 text-[14.5px] font-semibold"

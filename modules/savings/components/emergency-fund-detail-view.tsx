@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
 import { api } from "@/convex/_generated/api";
+import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";

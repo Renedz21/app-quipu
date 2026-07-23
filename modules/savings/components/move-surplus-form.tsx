@@ -53,11 +53,7 @@ type Props = {
   onSubmit: (values: MoveSurplusFormValues) => void | Promise<void>;
 };
 
-const SOURCE_ORDER: SurplusFromEnvelope[] = [
-  "wants",
-  "needs",
-  "extraordinary",
-];
+const SOURCE_ORDER: SurplusFromEnvelope[] = ["wants", "needs", "extraordinary"];
 
 function pickDefaultSource(
   sources: MoveSurplusSources,
@@ -176,10 +172,7 @@ export function MoveSurplusForm({
                         disabled={sourceAvailable <= 0}
                         onClick={() => {
                           form.setFieldValue("fromSource", source);
-                          form.setFieldValue(
-                            "amountCents",
-                            sourceAvailable,
-                          );
+                          form.setFieldValue("amountCents", sourceAvailable);
                         }}
                         className={cn(
                           "inline-flex items-center gap-2 rounded-[11px] border px-3.5 py-2.5 text-sm transition-colors",
@@ -358,20 +351,10 @@ export function MoveSurplusForm({
 
 function SourceDot({ source }: { source: SurplusFromEnvelope }) {
   if (source === "wants") {
-    return (
-      <span
-        className="size-2 rounded-full bg-clay"
-        aria-hidden
-      />
-    );
+    return <span className="size-2 rounded-full bg-clay" aria-hidden />;
   }
   if (source === "needs") {
-    return (
-      <span
-        className="size-2 rounded-full bg-needs"
-        aria-hidden
-      />
-    );
+    return <span className="size-2 rounded-full bg-needs" aria-hidden />;
   }
   return (
     <span

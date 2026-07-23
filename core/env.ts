@@ -11,57 +11,22 @@ import { z } from "zod";
  *
  * Convex y Better Auth leen `process.env` directamente desde sus archivos de
  * configuración; este módulo es la puerta de entrada para el resto del código.
+ *
+ * Las variables de cliente (NEXT_PUBLIC_) viven en `@/core/env.client` para
+ * que Convex (que no tiene acceso a ellas) no las evalúe al cargar este módulo.
  */
 
 const serverSchema = z.object({
-  // Convex
   CONVEX_DEPLOY_KEY: z.string().optional(),
 
-  // Better Auth
   BETTER_AUTH_SECRET: z.string(),
 
-  // Polar.sh (webhooks de pago)
   POLAR_WEBHOOK_SECRET: z.string().optional(),
-  POLAR_API_KEY: z.string().optional(),
+  POLAR_ORGANIZATION_TOKEN: z.string().optional(),
+  POLAR_PRODUCT_ID_PREMIUM: z.string(),
+  POLAR_SERVER: z.string(),
 });
 
-const clientSchema = z.object({
-  /** URL pública de la app (metadataBase, canonical, sitemap). Sin barra final. */
-  NEXT_PUBLIC_APP_URL: z.url(
-    "NEXT_PUBLIC_APP_URL debe ser una URL válida (p. ej. http://localhost:3000)",
-  ),
-  NEXT_PUBLIC_CONVEX_URL: z.url(
-    "NEXT_PUBLIC_CONVEX_URL debe ser una URL válida",
-  ),
-  NEXT_PUBLIC_CONVEX_SITE_URL: z.url(
-    "NEXT_PUBLIC_CONVEX_SITE_URL debe ser una URL válida",
-  ),
-  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: z
-    .string()
-    .min(1, "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN es obligatorio"),
-  NEXT_PUBLIC_POSTHOG_HOST: z.url(
-    "NEXT_PUBLIC_POSTHOG_HOST debe ser una URL válida",
-  ),
-});
-
-/**
- * Variables de entorno del cliente. Son seguras de importar desde cualquier
- * archivo (incluidos Client Components) porque solo exponen lo público.
- */
-export const clientEnv = clientSchema.parse({
-  NEXT_PUBLIC_APP_URL:
-    process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL,
-  NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
-  NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
-  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN:
-    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
-  NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-});
-
-/**
- * Validador de variables de servidor. Usar vía `@/core/env.server` (`serverEnv`),
- * nunca desde el cliente: secrets no existen en el bundle del navegador.
- */
 export function parseServerEnv() {
   const parsed = serverSchema.safeParse(process.env);
   if (!parsed.success) {
@@ -76,8 +41,4 @@ export function parseServerEnv() {
   return parsed.data;
 }
 
-/**
- * Type exports para uso externo.
- */
 export type ServerEnv = z.infer<typeof serverSchema>;
-export type ClientEnv = z.infer<typeof clientSchema>;

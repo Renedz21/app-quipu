@@ -69,7 +69,13 @@ function FlowProgress({ step }: { step: "amount" | "envelope" | "success" }) {
   return (
     <div className="flex items-center gap-1" aria-hidden>
       {steps.map((item, index) => (
-        <span key={item} className={cn("h-1 w-5.5 rounded-sm", index <= activeIndex ? "bg-ink" : "bg-line")} />
+        <span
+          key={item}
+          className={cn(
+            "h-1 w-5.5 rounded-sm",
+            index <= activeIndex ? "bg-ink" : "bg-line",
+          )}
+        />
       ))}
     </div>
   );

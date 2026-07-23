@@ -134,20 +134,14 @@ export function EmergencyFundHero({
         {!hasActiveCycle ? (
           <Link
             href="/income/register"
-            className={cn(
-              buttonVariants(),
-              "w-full sm:w-auto",
-            )}
+            className={cn(buttonVariants(), "w-full sm:w-auto")}
           >
             {SAVINGS_EMPTY_CTA}
           </Link>
         ) : (
           <Link
             href={detailHref}
-            className={cn(
-              buttonVariants(),
-              "w-full sm:w-auto",
-            )}
+            className={cn(buttonVariants(), "w-full sm:w-auto")}
           >
             {EMERGENCY_FUND_ACTIVATE_CTA}
           </Link>

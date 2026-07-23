@@ -13,12 +13,18 @@ export const SETTINGS_PLAN_FREE_NAME = "Plan Quipu";
 export const SETTINGS_PLAN_PLUS_PRICE = "S/ 14.90/mes";
 export const SETTINGS_PLAN_FREE_BODY =
   "Gratis, sin límite de registros manuales.";
-export const SETTINGS_PLAN_RENEWAL_STUB =
-  "Renovación automática · Polar.sh pronto";
+export const SETTINGS_PLAN_RENEWAL_AUTOMATIC = "Renovación automática";
+export const SETTINGS_PLAN_RENEWAL_PREFIX = "Próxima renovación";
+export const SETTINGS_PLAN_CANCELED_UNTIL = "Cancelado · activo hasta";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
+export const SETTINGS_PLAN_UPGRADE = "Pasar a Quipu Plus";
 export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
-export const SETTINGS_PLAN_MANAGE_HINT = "Facturación Polar.sh — próximamente";
-export const SETTINGS_PLAN_CHANGE_CARD = "Cambiar tarjeta";
+export const SETTINGS_PLAN_PREPARING = "Preparando…";
+export const SETTINGS_PLAN_BILLING_UNAVAILABLE =
+  "Facturación no disponible; intenta más tarde.";
+export const SETTINGS_CHECKOUT_SUCCESS =
+  "Listo. Tu plan se actualizará en unos segundos.";
+export const SETTINGS_SIDEBAR_PLUS_LINK = "Quipu Plus";
 
 export const SETTINGS_SECURITY_LABEL = "Seguridad y passkeys";
 export const SETTINGS_PASSKEY_ADD = "+ Agregar passkey";

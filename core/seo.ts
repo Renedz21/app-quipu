@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { clientEnv } from "@/core/env";
+import { clientEnv } from "@/core/env.client";
 
 /** Copy alineado a QUIPU-MASTER §2.1 */
 export const siteConfig = {

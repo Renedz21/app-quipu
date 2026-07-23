@@ -1,10 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/auth/auth-server";
 import { pageMetadata, siteConfig } from "@/core/seo";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 
-export const metadata = {
+export const metadata: Metadata = {
   ...pageMetadata({
     title: siteConfig.name,
     path: "/",
@@ -34,30 +35,30 @@ export default async function HomePage() {
         <span className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-qp">
           Disciplina financiera, sin ansiedad
         </span>
-        <h1 className="max-w-[620px] text-balance font-serif text-[34px] font-medium leading-[1.08] tracking-[-0.01em] text-ink sm:text-[47px]">
+        <h1 className="max-w-155 text-balance font-serif text-[34px] font-medium leading-[1.08] tracking-[-0.01em] text-ink sm:text-[47px]">
           Sabe si puedes gastar, en segundos.
         </h1>
-        <p className="mt-5 mb-8 max-w-[440px] text-[15px] leading-[1.55] text-mute sm:text-[17px]">
+        <p className="mt-5 mb-8 max-w-110 text-[15px] leading-[1.55] text-mute sm:text-[17px]">
           Quipu ordena tu dinero en tres sobres y te dice, de un vistazo, si vas
           por buen camino este ciclo.
         </p>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Link
             href="/sign-up"
-            className="rounded-[11px] bg-ink px-[26px] py-[14px] text-[15px] font-semibold text-canvas transition-colors hover:bg-ink/90"
+            className="rounded-[11px] bg-ink px-6.5 py-3.5 text-[15px] font-semibold text-canvas transition-colors hover:bg-ink/90"
           >
             Crear cuenta
           </Link>
           <Link
             href="/sign-in"
-            className="rounded-[11px] border border-line bg-surface px-[26px] py-[14px] text-[15px] font-semibold text-ink transition-colors hover:bg-surface-warm"
+            className="rounded-[11px] border border-line bg-surface px-6.5 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:bg-surface-warm"
           >
             Iniciar sesión
           </Link>
         </div>
       </main>
 
-      <footer className="flex justify-center gap-6 border-t border-line-soft pt-5 sm:gap-[30px]">
+      <footer className="flex justify-center gap-6 border-t border-line-soft pt-5 sm:gap-7.5">
         {landingSignals.map((signal) => (
           <span
             key={signal.label}

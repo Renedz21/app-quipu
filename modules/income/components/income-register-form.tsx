@@ -9,8 +9,8 @@ import type { Doc } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import type { DistributionPolicy } from "@/shared/lib/allocations";
-import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import { limaStartOfDay } from "@/shared/lib/date";
+import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import { cn } from "@/shared/lib/utils";
 import {
   getExtraordinarySubmitCta,
@@ -40,10 +40,10 @@ import { IncomeDestinationDialog } from "./income-destination-dialog";
 import { IncomeExtraordinaryDetailsFields } from "./income-extraordinary-details-fields";
 import { IncomeExtraordinaryRuleBanner } from "./income-extraordinary-rule-banner";
 import { IncomeExtraordinaryTypeGrid } from "./income-extraordinary-type-grid";
+import type { IncomeFormField } from "./income-form-field";
 import { IncomeImpactPreview } from "./income-impact-preview";
 import { IncomeKindToggle } from "./income-kind-toggle";
 import { IncomeRegisterHabitualFields } from "./income-register-habitual-fields";
-import type { IncomeFormField } from "./income-form-field";
 
 type DashboardSummary = FunctionReturnType<typeof api.dashboard.getSummary>;
 type ExtraStep = "pickType" | "details";
@@ -166,8 +166,7 @@ export function IncomeRegisterForm({
       <form.Subscribe selector={(state) => state.values}>
         {(values) => {
           const isExtraordinary = values.incomeKind === "extraordinary";
-          const showPick =
-            isExtraordinary && extraStep === "pickType";
+          const showPick = isExtraordinary && extraStep === "pickType";
           const showDetails =
             isExtraordinary &&
             extraStep === "details" &&
@@ -291,7 +290,9 @@ export function IncomeRegisterForm({
                   )}
                 >
                   <div className="space-y-5">
-                    {isExtraordinary && showDetails && values.extraordinaryType ? (
+                    {isExtraordinary &&
+                    showDetails &&
+                    values.extraordinaryType ? (
                       <form.Field name="amountCents">
                         {(amountField) => (
                           <form.Field name="occurredAt">
@@ -300,7 +301,9 @@ export function IncomeRegisterForm({
                                 {(labelField) => (
                                   <IncomeExtraordinaryDetailsFields
                                     currencyCode={currencyCode}
-                                    extraordinaryType={values.extraordinaryType!}
+                                    extraordinaryType={
+                                      values.extraordinaryType!
+                                    }
                                     amountField={amountField}
                                     occurredAtField={occurredAtField}
                                     labelField={

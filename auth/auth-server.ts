@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { clientEnv } from "@/core/env";
+import { clientEnv } from "@/core/env.client";
 
 export const {
   handler,

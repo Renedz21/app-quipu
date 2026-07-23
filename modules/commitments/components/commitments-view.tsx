@@ -97,7 +97,7 @@ export function CommitmentsView() {
           {COMMITMENTS_PAGE_SUBTITLE}
         </p>
         {cycleRange ? (
-          <p className="mt-2 font-mono text-[10.5px] uppercase tracking-[0.1em] text-mute">
+          <p className="mt-2 font-mono text-[10.5px] uppercase tracking-widest text-mute">
             Ciclo · {cycleRange}
           </p>
         ) : (
@@ -126,8 +126,8 @@ export function CommitmentsView() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-3 border-b border-line-divider px-4 py-3 md:px-[18px]">
-              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-mute">
+            <div className="flex items-center justify-between gap-3 border-b border-line-divider px-4 py-3 md:px-4.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-mute">
                 Próximos vencimientos
               </span>
               <span className="text-xs text-mute">
@@ -140,7 +140,7 @@ export function CommitmentsView() {
               currencyCode={data.currencyCode}
               showCoverageHeader
             />
-            <div className="border-t border-line-divider p-4 md:px-[18px]">
+            <div className="border-t border-line-divider p-4 md:px-4.5">
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}

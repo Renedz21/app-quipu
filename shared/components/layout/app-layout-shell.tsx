@@ -17,9 +17,7 @@ export function AppLayoutShell({ children }: Props) {
 
   return (
     <ExpenseRegisterProvider>
-      {/* data-ph-mask: el session recording de PostHog enmascara todo el texto
-          del área privada (saldos, gastos). Selector en instrumentation-client.ts. */}
-      <div data-ph-mask className="flex min-h-dvh bg-background">
+      <div className="flex min-h-dvh bg-background">
         <AppSidebar
           profileName={profileName}
           plan={plan}

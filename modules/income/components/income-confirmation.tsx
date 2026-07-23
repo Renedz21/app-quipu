@@ -40,7 +40,9 @@ export function IncomeConfirmation({
 }: Props) {
   const isExtraordinary = variant === "extraordinary";
   const sourceLabel = getIncomeSourceLabel(result.source);
-  const formattedAmount = formatCents(result.amount, { currency: currencyCode });
+  const formattedAmount = formatCents(result.amount, {
+    currency: currencyCode,
+  });
 
   const title = isExtraordinary
     ? `${result.description} ${INCOME_EXTRAORDINARY_SUCCESS_TITLE_SUFFIX}`
@@ -55,8 +57,8 @@ export function IncomeConfirmation({
     </>
   ) : (
     <>
-      {formattedAmount} de {sourceLabel.toLowerCase()} {INCOME_SUCCESS_BODY_PREFIX}{" "}
-      {INCOME_SUCCESS_BODY_SUFFIX}
+      {formattedAmount} de {sourceLabel.toLowerCase()}{" "}
+      {INCOME_SUCCESS_BODY_PREFIX} {INCOME_SUCCESS_BODY_SUFFIX}
     </>
   );
 
@@ -87,7 +89,9 @@ export function IncomeConfirmation({
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <h2 className="font-serif text-[30px] font-medium text-ink">{title}</h2>
+          <h2 className="font-serif text-[30px] font-medium text-ink">
+            {title}
+          </h2>
           {isExtraordinary ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-extraordinary-border bg-extraordinary-surface px-2.5 py-1 text-[11px] font-semibold text-extraordinary-b">
               <span
@@ -166,7 +170,9 @@ export function IncomeConfirmation({
           <div className="mt-5 flex items-center justify-center gap-2 rounded-[12px] border border-qp-border bg-qp-soft px-3.5 py-3.5 text-sm text-qp-deep">
             {INCOME_SUCCESS_DAILY_LABEL}{" "}
             <span className="font-serif text-[19px] text-ink">
-              {formatCents(result.displayDailyCents, { currency: currencyCode })}
+              {formatCents(result.displayDailyCents, {
+                currency: currencyCode,
+              })}
             </span>
           </div>
         ) : null}

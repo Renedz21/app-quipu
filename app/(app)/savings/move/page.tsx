@@ -1,7 +1,7 @@
 import { requireOnboardedProfile } from "@/auth/auth-server";
 import { pageMetadata } from "@/core/seo";
-import { MOVE_SURPLUS_PAGE_TITLE } from "@/modules/savings/constants";
 import { MoveSurplusView } from "@/modules/savings/components/move-surplus-view";
+import { MOVE_SURPLUS_PAGE_TITLE } from "@/modules/savings/constants";
 
 export const metadata = pageMetadata({
   title: MOVE_SURPLUS_PAGE_TITLE,

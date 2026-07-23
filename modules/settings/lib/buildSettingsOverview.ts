@@ -3,18 +3,27 @@ import { MODEL_DISPLAY_LABELS } from "@/modules/onboarding/constants";
 import {
   SETTINGS_PLAN_FREE_BODY,
   SETTINGS_PLAN_PLUS_PRICE,
-  SETTINGS_PLAN_RENEWAL_STUB,
+  SETTINGS_PLAN_RENEWAL_AUTOMATIC,
 } from "../constants";
 import type { SettingsOverviewQueryResult } from "../queries";
-import type { SettingsOverview } from "../types";
+import type { SettingsOverview, SettingsSubscriptionStatus } from "../types";
 
 export type ConvexSettingsOverview = NonNullable<SettingsOverviewQueryResult>;
+
+function mapSubscriptionStatus(
+  status: NonNullable<ConvexSettingsOverview["billing"]>["subscriptionStatus"],
+): SettingsSubscriptionStatus {
+  if (status === "canceled_at_period_end") return "canceled_at_period_end";
+  if (status === "active") return "active";
+  return "free";
+}
 
 export function mapConvexSettingsOverview(
   data: ConvexSettingsOverview,
 ): SettingsOverview {
   const tier = data.account.plan.tier;
   const isPremium = tier === "premium";
+  const billing = data.billing;
 
   return {
     profile: {
@@ -27,12 +36,18 @@ export function mapConvexSettingsOverview(
     },
     subscription: {
       plan: tier,
-      status: isPremium ? "active" : "free",
+      status: billing
+        ? mapSubscriptionStatus(billing.subscriptionStatus)
+        : isPremium
+          ? "active"
+          : "free",
       priceDisplay: data.account.plan.priceCopy ?? null,
-      renewalSummary: isPremium
-        ? SETTINGS_PLAN_RENEWAL_STUB
-        : SETTINGS_PLAN_FREE_BODY,
+      renewalSummary:
+        billing?.renewalSummary ??
+        (isPremium ? SETTINGS_PLAN_RENEWAL_AUTOMATIC : SETTINGS_PLAN_FREE_BODY),
       paymentMethodSummary: null,
+      checkoutAvailable: billing?.checkoutAvailable ?? false,
+      premiumProductId: billing?.premiumProductId ?? null,
     },
     passkeys: data.security.passkeys.map((pk) => ({
       id: pk.id,
@@ -76,9 +91,11 @@ export function buildSettingsOverviewFromProfile(
       status: isPremium ? "active" : "free",
       priceDisplay: isPremium ? SETTINGS_PLAN_PLUS_PRICE : null,
       renewalSummary: isPremium
-        ? SETTINGS_PLAN_RENEWAL_STUB
+        ? SETTINGS_PLAN_RENEWAL_AUTOMATIC
         : SETTINGS_PLAN_FREE_BODY,
       paymentMethodSummary: null,
+      checkoutAvailable: false,
+      premiumProductId: null,
     },
     passkeys: [],
     sessionsApiReady: false,

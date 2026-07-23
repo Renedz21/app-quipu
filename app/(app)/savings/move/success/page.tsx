@@ -1,6 +1,6 @@
 import { requireOnboardedProfile } from "@/auth/auth-server";
-import { pageMetadata } from "@/core/seo";
 import { DEFAULT_CURRENCY } from "@/core/constants";
+import { pageMetadata } from "@/core/seo";
 import { MoveSurplusSuccessView } from "@/modules/savings/components/move-surplus-success-view";
 
 export const metadata = pageMetadata({
@@ -61,7 +61,10 @@ export default async function MoveSurplusSuccessPage({
       savingsTotalCents={parseCents(params.total)}
       allocationNeeds={parsePercent(params.needs, profile.allocationNeeds)}
       allocationWants={parsePercent(params.wants, profile.allocationWants)}
-      allocationSavings={parsePercent(params.savings, profile.allocationSavings)}
+      allocationSavings={parsePercent(
+        params.savings,
+        profile.allocationSavings,
+      )}
     />
   );
 }

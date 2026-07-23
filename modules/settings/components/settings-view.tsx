@@ -1,6 +1,10 @@
 "use client";
 
+import { useMutation } from "convex/react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { authClient } from "@/auth/auth-client";
+import { api } from "@/convex/_generated/api";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
@@ -8,6 +12,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PLAN_LABELS } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 import {
+  SETTINGS_CHECKOUT_SUCCESS,
   SETTINGS_ERROR_BODY,
   SETTINGS_ERROR_RETRY,
   SETTINGS_ERROR_TITLE,
@@ -33,7 +38,7 @@ import { SettingsSystemSection } from "./settings-system-section";
 
 /** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
  *  a la derecha. */
-function SettingsViewSkeleton() {
+export function SettingsViewSkeleton() {
   return (
     <div
       role="status"
@@ -122,6 +127,19 @@ function MobileAccountList({
 
 export function SettingsView() {
   const settingsData = useSettingsOverview();
+  const searchParams = useSearchParams();
+  const checkoutSuccess = searchParams.get("checkout") === "success";
+  const [showCheckoutBanner] = useState(checkoutSuccess);
+  const reconcileMyPlan = useMutation(api.billing.reconcileMyPlan);
+
+  const shouldReconcileCheckout =
+    checkoutSuccess && settingsData !== undefined && settingsData !== null;
+
+  useEffect(() => {
+    if (!shouldReconcileCheckout) return;
+    void reconcileMyPlan({});
+    window.history.replaceState(null, "", `${window.location.pathname}#plan`);
+  }, [shouldReconcileCheckout, reconcileMyPlan]);
 
   const passkeysQuery = authClient.useListPasskeys();
   const passkeyCount = passkeysQuery.data?.length ?? 0;
@@ -183,7 +201,17 @@ export function SettingsView() {
       <div className="flex flex-col gap-3.5 md:flex-row md:gap-3.5">
         <div className="flex flex-1 flex-col gap-3.5">
           <SettingsProfileCard profile={overview.profile} />
-          <SettingsPlanCard subscription={overview.subscription} />
+          <div>
+            <SettingsPlanCard subscription={overview.subscription} />
+            {showCheckoutBanner ? (
+              <p
+                className="mt-2 text-[12.5px] leading-snug text-mute-subtle"
+                role="status"
+              >
+                {SETTINGS_CHECKOUT_SUCCESS}
+              </p>
+            ) : null}
+          </div>
         </div>
         <div className="flex-1">
           <SettingsSecurityCard sessionsApiReady={overview.sessionsApiReady} />

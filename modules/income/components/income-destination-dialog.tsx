@@ -13,10 +13,10 @@ import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
+  extraordinaryTypeDisplayTitle,
   INCOME_DESTINATION_DIALOG_BACK,
   INCOME_DESTINATION_DIALOG_CONFIRM,
   INCOME_DESTINATION_DIALOG_NOTE,
-  extraordinaryTypeDisplayTitle,
 } from "../constants";
 import type { ImpactPreviewResult } from "../lib/impactPreview";
 
@@ -36,7 +36,11 @@ const OPTIONS: ReadonlyArray<{
   title: string;
   recommended?: boolean;
 }> = [
-  { value: "profile_default", title: "Mi distribución habitual", recommended: true },
+  {
+    value: "profile_default",
+    title: "Mi distribución habitual",
+    recommended: true,
+  },
   { value: "all_to_savings", title: "Todo al ahorro" },
 ];
 
@@ -123,7 +127,8 @@ export function IncomeDestinationDialog({
                   <span
                     className={cn(
                       "size-[22px] shrink-0 rounded-full border-[6px] border-qp bg-card",
-                      !isSelected && "border-[1.7px] border-[#C9C3BA] bg-transparent",
+                      !isSelected &&
+                        "border-[1.7px] border-[#C9C3BA] bg-transparent",
                     )}
                     aria-hidden
                   />

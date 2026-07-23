@@ -8,14 +8,16 @@ export const SAVINGS_CYCLE_CONTRIBUTION_SUFFIX =
 export const SAVINGS_MOBILE_SUBTITLE = "Con calma, se nota.";
 export const SAVINGS_PRE_TRACTION_SUBTITLE =
   "Aquí vivirá tu red de seguridad. Todo empieza con el Fondo.";
-export const SAVINGS_PRE_TRACTION_MOBILE_SUBTITLE = "Todo empieza con el Fondo.";
+export const SAVINGS_PRE_TRACTION_MOBILE_SUBTITLE =
+  "Todo empieza con el Fondo.";
 
 export const EMERGENCY_FUND_LABEL = "Fondo de emergencia";
 export const EMERGENCY_FUND_PRIORITY_BADGE = "Prioridad";
 export const EMERGENCY_FUND_START_BADGE = "Empieza aquí";
 export const EMERGENCY_FUND_EMPTY_SUBTITLE =
   "Aquí vivirá tu red de seguridad. Todo empieza con el Fondo.";
-export const EMERGENCY_FUND_EMPTY_MOBILE_SUBTITLE = "Todo empieza con el Fondo.";
+export const EMERGENCY_FUND_EMPTY_MOBILE_SUBTITLE =
+  "Todo empieza con el Fondo.";
 export const EMERGENCY_FUND_EMPTY_BODY =
   "Quipu apartará tu aporte cada ciclo, antes de que puedas gastarlo. Tú decides cuánto.";
 export const EMERGENCY_FUND_EMPTY_MOBILE_BODY =
@@ -127,7 +129,9 @@ export function cycleSavingsRoundUpBody(moveFormatted: string): string {
   return `Mueve ${moveFormatted} más del sobrante de este ciclo. Tus % no cambian.`;
 }
 
-export function cycleSavingsObjectiveHint(allocationSavingsPercent: number): string {
+export function cycleSavingsObjectiveHint(
+  allocationSavingsPercent: number,
+): string {
   return `Tu ${allocationSavingsPercent}% de siempre`;
 }
 
@@ -168,7 +172,8 @@ export const MOVE_SURPLUS_SUCCESS_BODY_SUFFIX =
 export const MOVE_SURPLUS_SUCCESS_ALLOCATION_PREFIX =
   "Tus porcentajes siguen en";
 export const MOVE_SURPLUS_SUCCESS_HOME_CTA = "Volver a mis ahorros";
-export const MOVE_SURPLUS_SUCCESS_METRIC_OBJECTIVE = CYCLE_SAVINGS_OBJECTIVE_LABEL;
+export const MOVE_SURPLUS_SUCCESS_METRIC_OBJECTIVE =
+  CYCLE_SAVINGS_OBJECTIVE_LABEL;
 export const MOVE_SURPLUS_SUCCESS_METRIC_ADDITIONAL =
   CYCLE_SAVINGS_ADDITIONAL_LABEL;
 export const MOVE_SURPLUS_SUCCESS_METRIC_TOTAL = CYCLE_SAVINGS_TOTAL_LABEL;

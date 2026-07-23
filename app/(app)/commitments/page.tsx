@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { requireOnboardedProfile } from "@/auth/auth-server";
 import { pageMetadata } from "@/core/seo";
@@ -6,7 +7,7 @@ import {
   CommitmentsViewSkeleton,
 } from "@/modules/commitments/components/commitments-view";
 
-export const metadata = pageMetadata({
+export const metadata: Metadata = pageMetadata({
   title: "Compromisos",
   path: "/commitments",
 });

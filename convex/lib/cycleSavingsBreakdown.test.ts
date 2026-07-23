@@ -25,7 +25,10 @@ describe("countsTowardSavingsObjective", () => {
 describe("computeCycleSavingsBreakdown", () => {
   it("returns zeros with no inputs", () => {
     expect(
-      computeCycleSavingsBreakdown({ incomeEvents: [], surplusContributions: [] }),
+      computeCycleSavingsBreakdown({
+        incomeEvents: [],
+        surplusContributions: [],
+      }),
     ).toEqual({
       savingsObjectiveCents: 0,
       savingsAdditionalCents: 0,
@@ -86,7 +89,11 @@ describe("computeCycleSavingsBreakdown", () => {
     const result = computeCycleSavingsBreakdown({
       incomeEvents: [
         {
-          distributionApplied: { needs: 3_256_67, wants: 1_954_00, savings: 814_33 },
+          distributionApplied: {
+            needs: 3_256_67,
+            wants: 1_954_00,
+            savings: 814_33,
+          },
           distributionPolicy: "profile_default",
         },
       ],
@@ -107,7 +114,11 @@ describe("computeCycleSavingsBreakdown", () => {
     const result = computeCycleSavingsBreakdown({
       incomeEvents: [
         {
-          distributionApplied: { needs: 3_256_67, wants: 1_954_00, savings: 814_33 },
+          distributionApplied: {
+            needs: 3_256_67,
+            wants: 1_954_00,
+            savings: 814_33,
+          },
           distributionPolicy: "profile_default",
         },
       ],
@@ -126,9 +137,7 @@ describe("computeCycleSavingsBreakdown", () => {
 
 describe("computeObjectiveAdditionalBarPercents", () => {
   it("returns proportional bar segments", () => {
-    expect(
-      computeObjectiveAdditionalBarPercents(814_33, 150_000),
-    ).toEqual({
+    expect(computeObjectiveAdditionalBarPercents(814_33, 150_000)).toEqual({
       objectiveBarPercent: (814_33 / 150_000) * 100,
       additionalBarPercent: 100 - (814_33 / 150_000) * 100,
     });
@@ -159,7 +168,10 @@ describe("computeObjectiveProgressPercent", () => {
 describe("buildCycleSavingsContextLabel", () => {
   it("mentions sueldo + gratificación when both kinds exist", () => {
     const label = buildCycleSavingsContextLabel(Date.UTC(2026, 6, 1), [
-      { incomeKind: "habitual", distributionApplied: { needs: 0, wants: 0, savings: 1 } },
+      {
+        incomeKind: "habitual",
+        distributionApplied: { needs: 0, wants: 0, savings: 1 },
+      },
       {
         incomeKind: "extraordinary",
         distributionApplied: { needs: 0, wants: 0, savings: 1 },

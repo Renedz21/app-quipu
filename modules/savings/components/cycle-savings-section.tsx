@@ -13,14 +13,14 @@ import {
   CYCLE_SAVINGS_ABOVE_BADGE_SUFFIX,
   CYCLE_SAVINGS_ADDITIONAL_HINT,
   CYCLE_SAVINGS_ADDITIONAL_LABEL,
+  CYCLE_SAVINGS_BELOW_ACK_CTA,
   CYCLE_SAVINGS_BELOW_BODY_MIDDLE,
   CYCLE_SAVINGS_BELOW_BODY_PREFIX,
   CYCLE_SAVINGS_BELOW_BODY_SUFFIX,
+  CYCLE_SAVINGS_BELOW_MOVE_CTA,
   CYCLE_SAVINGS_BELOW_OBJECTIVE_LABEL,
   CYCLE_SAVINGS_BELOW_PROGRESS_LABEL,
   CYCLE_SAVINGS_BELOW_REASSURANCE_BODY,
-  CYCLE_SAVINGS_BELOW_ACK_CTA,
-  CYCLE_SAVINGS_BELOW_MOVE_CTA,
   CYCLE_SAVINGS_BELOW_REASSURANCE_TITLE,
   CYCLE_SAVINGS_BELOW_SAVED_LABEL,
   CYCLE_SAVINGS_BELOW_TITLE,
@@ -32,15 +32,15 @@ import {
   CYCLE_SAVINGS_MOVE_CTA,
   CYCLE_SAVINGS_MOVE_MORE_TITLE,
   CYCLE_SAVINGS_MOVE_SURPLUS_COPY,
-  CYCLE_SAVINGS_ROUND_UP_TITLE_PREFIX,
-  cycleSavingsRoundUpBody,
   CYCLE_SAVINGS_OBJECTIVE_LABEL,
+  CYCLE_SAVINGS_ROUND_UP_TITLE_PREFIX,
   CYCLE_SAVINGS_SAVED_THIS_CYCLE_SUFFIX,
   CYCLE_SAVINGS_SECTION_ID,
   CYCLE_SAVINGS_SECTION_TITLE,
   CYCLE_SAVINGS_TOTAL_HINT,
   CYCLE_SAVINGS_TOTAL_LABEL,
   cycleSavingsObjectiveHint,
+  cycleSavingsRoundUpBody,
 } from "../constants";
 import type { CycleSavingsBreakdown } from "../types";
 
@@ -97,10 +97,7 @@ export function CycleSavingsSection({ breakdown }: Props) {
         {breakdown.showAboveTargetCelebration &&
         breakdown.aboveTargetByCents > 0 ? (
           <div className="relative mb-4 inline-flex items-center gap-2 rounded-full border border-qp-shield-line bg-qp-panel px-3 py-1.5 md:px-[13px] md:py-1.5">
-            <span
-              className="size-1.5 rounded-full bg-moss"
-              aria-hidden
-            />
+            <span className="size-1.5 rounded-full bg-moss" aria-hidden />
             <span className="text-[11px] font-semibold text-qp-deep md:hidden">
               {CYCLE_SAVINGS_ABOVE_BADGE_MOBILE_PREFIX}{" "}
               {format(breakdown.aboveTargetByCents)}{" "}
@@ -223,14 +220,8 @@ export function CycleSavingsSection({ breakdown }: Props) {
             </div>
           </div>
           <Link
-            href={buildMoveSurplusHref(
-              breakdown,
-              roundUp?.moveCents,
-            )}
-            className={cn(
-              buttonVariants(),
-              "w-full shrink-0 md:w-auto",
-            )}
+            href={buildMoveSurplusHref(breakdown, roundUp?.moveCents)}
+            className={cn(buttonVariants(), "w-full shrink-0 md:w-auto")}
           >
             {CYCLE_SAVINGS_MOVE_CTA}
           </Link>
@@ -486,12 +477,7 @@ function MobileMetricRow({
         ) : null}
         {label}
       </span>
-      <span
-        className={cn(
-          "font-serif text-base text-ink",
-          amountClassName,
-        )}
-      >
+      <span className={cn("font-serif text-base text-ink", amountClassName)}>
         {amount}
       </span>
     </div>
@@ -576,10 +562,7 @@ function MetricCard({
         {amount}
       </p>
       <p
-        className={cn(
-          "mt-1 text-xs",
-          isTotal ? "text-qp-text" : "text-faint",
-        )}
+        className={cn("mt-1 text-xs", isTotal ? "text-qp-text" : "text-faint")}
       >
         {hint}
       </p>

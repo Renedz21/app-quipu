@@ -2,6 +2,8 @@ import { ConvexError, v } from "convex/values";
 import { components } from "./_generated/api";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { loadPolarSubscriptionForUser } from "./billing";
+import { buildBillingOverview } from "./lib/billingSync";
 import { isValidAllocations } from "./lib/budgetMath";
 import {
   buildCycleScheduleCopy,
@@ -98,6 +100,19 @@ export const getSettingsOverview = query({
 
     const totalCents = commitments.reduce((sum, c) => sum + c.amount, 0);
 
+    const premiumProductId = process.env.POLAR_PRODUCT_ID_PREMIUM ?? "";
+    const polarSnapshot = await loadPolarSubscriptionForUser(
+      ctx,
+      identity.subject,
+    );
+    const billing = buildBillingOverview(polarSnapshot, premiumProductId, {
+      freeBody: "Gratis, sin límite de registros manuales.",
+      renewalPrefix: "Próxima renovación",
+      renewalAutomatic: "Renovación automática",
+      canceledUntil: "Cancelado · activo hasta",
+    });
+    const displayPlan = planDisplay(billing.tier);
+
     return {
       account: {
         name: profile.name,
@@ -110,7 +125,14 @@ export const getSettingsOverview = query({
           label: incomeModelLabel(profile.incomeModel),
         },
         tags,
-        plan: planDisplay(profile.plan),
+        plan: displayPlan,
+      },
+      billing: {
+        renewalSummary: billing.renewalSummary,
+        subscriptionStatus: billing.subscriptionStatus,
+        cancelAtPeriodEnd: billing.cancelAtPeriodEnd,
+        checkoutAvailable: billing.checkoutAvailable,
+        premiumProductId: billing.premiumProductId,
       },
       allocations: {
         needs: profile.allocationNeeds,

@@ -108,7 +108,9 @@ export function computeCycleSavingsBreakdown(input: {
   savingsEnvelope?: SavingsEnvelopeSlice | null;
 }): CycleSavingsBreakdownNumbers {
   const surplusContributions = input.surplusContributions ?? [];
-  const savingsObjectiveCents = sumObjectiveSavingsFromEvents(input.incomeEvents);
+  const savingsObjectiveCents = sumObjectiveSavingsFromEvents(
+    input.incomeEvents,
+  );
   const savingsAdditionalCents =
     sumAdditionalSavingsFromEvents(input.incomeEvents) +
     sumSurplusContributionAmounts(surplusContributions);

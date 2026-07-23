@@ -1,12 +1,12 @@
 import type { DistributionPolicy } from "@/shared/lib/allocations";
 import {
+  type ExtraordinaryProfileRule,
+  type ExtraordinaryRules,
+  type ExtraordinaryType,
   extraordinaryProfileRuleLabel,
   mergeExtraordinaryRules,
   resolveExtraordinaryRuleKey,
   suggestedEventPolicyForType,
-  type ExtraordinaryProfileRule,
-  type ExtraordinaryRules,
-  type ExtraordinaryType,
 } from "@/shared/lib/extraordinaryIncome";
 
 export function activeExtraordinaryRuleLabel(

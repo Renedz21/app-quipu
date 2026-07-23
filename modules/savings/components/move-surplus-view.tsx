@@ -1,8 +1,8 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
@@ -12,10 +12,7 @@ import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib/utils";
-import {
-  moveSurplusToSavings,
-  useMoveSurplusToSavings,
-} from "../actions";
+import { moveSurplusToSavings, useMoveSurplusToSavings } from "../actions";
 import {
   MOVE_SURPLUS_NO_CYCLE_BODY,
   MOVE_SURPLUS_NO_SURPLUS,
@@ -88,7 +85,10 @@ export function MoveSurplusView({
         <p className="mt-3 text-sm text-mute">{MOVE_SURPLUS_NO_SURPLUS}</p>
         <Link
           href="/savings"
-          className={cn(buttonVariants({ variant: "outline" }), "mt-4 inline-flex")}
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "mt-4 inline-flex",
+          )}
         >
           {MOVE_SURPLUS_PAGE_BACK}
         </Link>
@@ -140,7 +140,9 @@ export function MoveSurplusView({
         }}
         title={MOVE_SURPLUS_PAGE_TITLE}
       >
-        <p className="mb-4 text-[13px] text-mute">{MOVE_SURPLUS_PAGE_SUBTITLE}</p>
+        <p className="mb-4 text-[13px] text-mute">
+          {MOVE_SURPLUS_PAGE_SUBTITLE}
+        </p>
         {form}
       </SavingsFormShell>
     );
@@ -152,7 +154,9 @@ export function MoveSurplusView({
       <h1 className="mt-4 font-serif text-[26px] font-medium text-ink">
         {MOVE_SURPLUS_PAGE_TITLE}
       </h1>
-      <p className="mt-2 text-[13.5px] text-mute">{MOVE_SURPLUS_PAGE_SUBTITLE}</p>
+      <p className="mt-2 text-[13.5px] text-mute">
+        {MOVE_SURPLUS_PAGE_SUBTITLE}
+      </p>
       {form}
     </div>
   );

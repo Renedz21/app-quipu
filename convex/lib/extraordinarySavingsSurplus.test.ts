@@ -94,7 +94,9 @@ describe("computeAvailableExtraordinarySavingsForMove", () => {
             distributionApplied: { savings: 200_00 },
           },
         ],
-        surplusContributions: [{ fromEnvelope: "extraordinary", amount: 50_00 }],
+        surplusContributions: [
+          { fromEnvelope: "extraordinary", amount: 50_00 },
+        ],
         savingsEnvelopeRemainingCents: 1_000_00,
       }),
     ).toBe(150_00);

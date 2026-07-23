@@ -13,9 +13,14 @@ export const metadata: Metadata = pageMetadata({
 export default async function RestablecerContrasenaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; error?: string }>;
 }) {
   await requireUnauthenticatedSession();
-  const { token } = await searchParams;
-  return <ResetPasswordView token={token ?? null} />;
+  const { token, error } = await searchParams;
+  const invalidFromCallback = error === "INVALID_TOKEN";
+  return (
+    <ResetPasswordView
+      token={invalidFromCallback ? null : (token ?? null)}
+    />
+  );
 }

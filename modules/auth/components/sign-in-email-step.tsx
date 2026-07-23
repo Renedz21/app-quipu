@@ -9,6 +9,7 @@ import {
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
+import { RecoverPasswordLink } from "./recover-password-link";
 import { SignInPasskeyButton } from "./sign-in-passkey-button";
 
 export function EmailStep({
@@ -95,6 +96,11 @@ export function EmailStep({
           )}
         </form.Subscribe>
       </form>
+      <div className="flex justify-end">
+        <form.Subscribe selector={(s: { values: { email: string } }) => s.values.email}>
+          {(email: string) => <RecoverPasswordLink email={email} />}
+        </form.Subscribe>
+      </div>
       {showPasskey && (
         <>
           <div className="flex items-center gap-3">

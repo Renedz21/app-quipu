@@ -25,18 +25,24 @@ export function ForgotPasswordView({
   initialEmail?: string;
 }) {
   const [sent, setSent] = useState(false);
+  const [requestError, setRequestError] = useState(false);
 
   const form = useForm({
     defaultValues: { email: initialEmail },
     validators: { onChange: emailOnlySchema },
     onSubmit: async ({ value }) => {
-      await authClient.$fetch("/request-password-reset", {
+      setRequestError(false);
+      const { error } = await authClient.$fetch("/request-password-reset", {
         method: "POST",
         body: {
           email: value.email,
           redirectTo: `${clientEnv.NEXT_PUBLIC_APP_URL}/restablecer-contrasena`,
         },
       });
+      if (error) {
+        setRequestError(true);
+        return;
+      }
       setSent(true);
     },
   });
@@ -69,6 +75,13 @@ export function ForgotPasswordView({
               </>
             ) : (
               <>
+                {requestError ? (
+                  <AuthBanner
+                    variant="error"
+                    title="No pudimos enviar el enlace"
+                    description="Intenta de nuevo en un momento. Si el problema continúa, el envío de correo puede no estar activo aún."
+                  />
+                ) : null}
                 <p className="text-[14.5px] text-mute">
                   Te mandamos un enlace seguro. No te pedimos datos bancarios ni
                   contraseña actual por correo.

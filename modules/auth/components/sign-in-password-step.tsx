@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -9,6 +8,7 @@ import {
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
+import { RecoverPasswordLink } from "./recover-password-link";
 import { SignInPasskeyButton } from "./sign-in-passkey-button";
 
 export function PasswordStep({
@@ -59,11 +59,16 @@ export function PasswordStep({
         />
       )}
       {error === "credentials" && (
-        <AuthBanner
-          variant="error"
-          title="No pudimos iniciar sesión"
-          description="Revisa tu correo y contraseña e intenta de nuevo."
-        />
+        <>
+          <AuthBanner
+            variant="error"
+            title="No pudimos iniciar sesión"
+            description="Revisa tu correo y contraseña e intenta de nuevo."
+          />
+          <div className="flex justify-end">
+            <RecoverPasswordLink email={email} />
+          </div>
+        </>
       )}
       {error === "passkey" && (
         <AuthBanner
@@ -123,12 +128,7 @@ export function PasswordStep({
           </form.Field>
         </FieldGroup>
         <div className="flex justify-end">
-          <Link
-            href={`/recuperar?email=${encodeURIComponent(email)}`}
-            className="text-[13px] font-medium text-qp-deep hover:underline"
-          >
-            Olvidé mi contraseña
-          </Link>
+          <RecoverPasswordLink email={email} />
         </div>
         <form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>
           {([canSubmit, isSubmitting]: [boolean, boolean]) => (

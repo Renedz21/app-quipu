@@ -1275,16 +1275,18 @@ Sin deployment Convex, E2E fallará aunque lint/typecheck pasen.
 
 **Cutover prod legacy → v2.5 (mismo deployment `patient-chihuahua-640` o similar):**
 
-Datos v2.0 **no** encajan schema v2.5 sin migración; despliegue «desde cero» = vaciar dominio app + auth tras **backup JSON**.
+Datos v2.0 **no** encajan schema v2.5 sin migración; despliegue «desde cero» = vaciar dominio app (+ auth si quieres usuarios nuevos) tras **backup**.
 
-| Paso | Comando (prod) |
+**Importante:** Convex **no** aplica el schema v2.5 si queda **un solo** documento inválido (p. ej. `expenses` sin `cycleId`, con `date`/`envelope` legacy). El error `Schema validation failed … Object is missing the required field cycleId` significa eso: **primero backup + vaciar, después `deploy --prod`**. No al revés.
+
+| Paso | Qué hacer |
 |---|---|
-| 1. Conteo | `npx convex run --prod ops/appDataSnapshot:summarizeAppData` |
-| 2. Backup | `npx convex run --prod ops/appDataSnapshot:exportAppDataSnapshot` → guardar `downloadUrl` en disco |
-| 3. Push schema v2.5 | `npx convex deploy --prod` (puede fallar si docs legacy invalidan; export antes) |
-| 4. Vacío controlado | `npx convex run --prod ops/appDataSnapshot:cutoverToFreshV25Deploy '{"confirm":"EXPORTED_BACKUP_AND_RESET_V25"}'` **solo** si ya descargaste el JSON |
+| 1. Backup (sin desplegar v2.5) | `npx convex export --prod --path ./backups/pre-v25-<fecha>.zip` y guardar el ZIP fuera del repo. Alternativa: Dashboard → export por tabla. Los comandos `ops/appDataSnapshot*` **requieren** código v2.5 ya desplegado; no sirven como primer backup si el deploy aún falla. |
+| 2. Vaciar prod (schema **actual** en prod) | Si prod ya expone `resetDb:resetAll`: `npx convex run --prod resetDb:resetAll`. Si no (legacy antiguo, p. ej. solo `expenses.registerExpense`): vaciar con **`npx convex export --prod` → editar ZIP (vaciar `documents.jsonl`) → `npx convex import --prod --replace-all -y ./backups/pre-v25-empty.zip`**, o Dashboard → Data → borrar tablas de dominio (+ Better Auth / Polar si aplica). |
+| 3. Push schema v2.5 | `npx convex deploy --prod` — debe pasar con tablas vacías o solo docs válidos. |
+| 4. (Opcional) Snapshot interno | Tras deploy OK: `npx convex run --prod ops/appDataSnapshot:summarizeAppData` y `…/appDataSnapshotActions:exportAppDataSnapshot` para backups futuros vía storage. **`cutoverToFreshV25Deploy`** = export + reset en un paso; útil en **re-corte** cuando v2.5 ya está en prod, no como sustituto del paso 1–2 inicial. |
 
-Implementación: `convex/ops/appDataSnapshot.ts` (internal). Better Auth no va en el JSON; usuarios prod se recrean al registrarse de nuevo.
+Implementación snapshot: `convex/ops/appDataSnapshot.ts` + `convex/ops/appDataSnapshotActions.ts` (internal). Better Auth no va en el JSON de dominio; usuarios prod se recrean al registrarse de nuevo si vaciaste auth.
 
 **Checklist Vercel (owner — P2-8):**
 

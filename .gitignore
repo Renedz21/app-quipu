@@ -64,5 +64,5 @@ next-env.d.ts
 /playwright/.cache/
 /playwright/.auth/
 
-# Sentry Config File
-.env.sentry-build-plugin
+# Convex prod snapshots (datos reales; no commitear)
+/backups/

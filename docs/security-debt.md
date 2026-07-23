@@ -14,7 +14,7 @@ configurar `RESEND_API_KEY` + `RESEND_FROM` en prod (owner).
 **Implementado:**
 
 - `convex/auth.ts`: `requireEmailVerification: true`, `sendVerificationEmail` y
-  `sendResetPassword` vía `convex/lib/resendEmail.ts` (Resend).
+  `sendResetPassword` vía `convex/lib/email/` (Resend SDK en `send.ts`).
 - Flujos UI: `/recuperar`, `/restablecer-contrasena`, enlace «Olvidé mi contraseña»,
   post-registro «Revisa tu correo», banners en sign-in (no verificado / reset ok).
 - `autoSignIn: false` tras sign-up con email/contraseña hasta verificar.

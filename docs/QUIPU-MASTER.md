@@ -776,7 +776,7 @@ componente `convex/betterAuth/` y no se re-exportan.
   del usuario, no la implementación.
 - **Sign-up captura email, nombre y contraseña reales** (bug P0-8: antes todos compartían
   `placeholder@quipu.pe`). **Verificación de email y recuperación** vía Resend (`RESEND_API_KEY`
-  en deployment Convex; helper `convex/lib/resendEmail.ts`): `requireEmailVerification: true`
+  en deployment Convex; módulo `convex/lib/email/` + SDK Resend): `requireEmailVerification: true`
   para email/contraseña; flujos UI `/recuperar`, `/restablecer-contrasena`, post-registro
   «Revisa tu correo». Passkey-first sigue permitido con `emailVerified: false` hasta confirmar
   correo para login con contraseña. Detalle en `docs/security-debt.md` (D1 — owner: Resend prod).

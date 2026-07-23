@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Corepack debe ir ANTES de setup-node: `cache: pnpm` necesita que pnpm
-      # ya esté en el PATH para calcular la caché del store.
-      - name: Enable Corepack
-        run: corepack enable
+      # pnpm debe instalarse ANTES de setup-node: `cache: pnpm` necesita pnpm
+      # en el PATH. action-setup lee la versión del campo `packageManager`.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v7
         with:

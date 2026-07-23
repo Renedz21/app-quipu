@@ -28,14 +28,12 @@ import {
 } from "../constants";
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
 import { useSettingsOverview } from "../queries";
+import { SettingsAccountActions } from "./settings-account-actions";
 import { SettingsCommitmentsSection } from "./settings-commitments-section";
-import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
-import { SettingsExportDataItem } from "./settings-export-data-item";
 import { SettingsExtraordinarySection } from "./settings-extraordinary-section";
 import { SettingsPlanCard } from "./settings-plan-card";
 import { SettingsProfileCard } from "./settings-profile-card";
 import { SettingsSecurityCard } from "./settings-security-card";
-import { SettingsSignOutItem } from "./settings-sign-out-item";
 import { SettingsSystemSection } from "./settings-system-section";
 
 /** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
@@ -236,11 +234,7 @@ export function SettingsView() {
         </div>
       </section>
 
-      <div className="mt-6 flex flex-col gap-2.5 md:mt-8">
-        <SettingsExportDataItem />
-        <SettingsSignOutItem />
-        <SettingsDeleteAccountItem />
-      </div>
+      <SettingsAccountActions />
     </div>
   );
 }

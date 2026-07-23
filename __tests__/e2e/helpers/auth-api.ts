@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 
 export type TestUser = {
@@ -7,10 +8,13 @@ export type TestUser = {
 };
 
 export function createTestUser(suffix: string): TestUser {
-  const stamp = `${Date.now()}-${suffix}`;
+  // Email único global por test: timestamp + índice de worker + UUID.
+  // Garantiza aislamiento de datos aunque varios shards/workers corran a la
+  // vez (evita colisiones y falsos positivos al paralelizar).
+  const unique = `${Date.now()}-${suffix}-${randomUUID().slice(0, 8)}`;
   return {
     name: "Smoke Test",
-    email: `smoke-${stamp}@quipu.test`,
+    email: `smoke-${unique}@quipu.test`,
     password: "SmokeTest123!",
   };
 }

@@ -3,6 +3,11 @@ import { useForm } from "@tanstack/react-form";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import {
+  AnalyticsEvents,
+  stampAndComputeDaysSinceLastLogin,
+  track,
+} from "@/core/analytics";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
 import { usePasskeySupport } from "../hooks/use-passkey-support";
@@ -13,6 +18,23 @@ import { EmailStep } from "./sign-in-email-step";
 import { PasswordStep } from "./sign-in-password-step";
 
 type Step = { kind: "email" } | { kind: "password"; email: string };
+
+function isEmailNotVerified(error: { code?: string; message?: string }) {
+  const message = error.message?.toLowerCase() ?? "";
+  return (
+    error.code === "EMAIL_NOT_VERIFIED" ||
+    message.includes("verify") ||
+    message.includes("verif")
+  );
+}
+
+function trackLogin(method: "password" | "passkey"): void {
+  const days_since_last_login = stampAndComputeDaysSinceLastLogin();
+  track(AnalyticsEvents.USER_LOGGED_IN, {
+    method,
+    days_since_last_login,
+  });
+}
 
 export function SignInView({
   initialEmail = "",
@@ -27,7 +49,9 @@ export function SignInView({
       ? { kind: "password", email: initialEmail }
       : { kind: "email" },
   );
-  const [error, setError] = useState<"credentials" | "passkey" | null>(null);
+  const [error, setError] = useState<
+    "credentials" | "passkey" | "unverified" | null
+  >(null);
 
   useEffect(() => {
     if (!support.conditionalUI) return;
@@ -35,6 +59,7 @@ export function SignInView({
       autoFill: true,
       fetchOptions: {
         onSuccess: () => {
+          trackLogin("passkey");
           toast.success("Bienvenido de vuelta");
           navigateAfterAuth("/dashboard");
         },
@@ -62,9 +87,10 @@ export function SignInView({
         password: value.password,
       });
       if (err) {
-        setError("credentials");
+        setError(isEmailNotVerified(err) ? "unverified" : "credentials");
         return;
       }
+      trackLogin("password");
       toast.success("Bienvenido de vuelta");
       navigateAfterAuth("/dashboard");
     },

@@ -105,6 +105,85 @@ export type MoveSurplusFormValues = z.infer<
   ReturnType<typeof createMoveSurplusFormSchema>
 >;
 
+export function createContributeToGoalSchema(availableCents: number) {
+  return z
+    .object({
+      amountInput: z.string(),
+    })
+    .superRefine((data, ctx) => {
+      const trimmed = data.amountInput.trim();
+      if (!trimmed) return;
+
+      const cents = parseOptionalTargetCents(data.amountInput);
+      if (cents === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Ingresa un monto válido.",
+          path: ["amountInput"],
+        });
+        return;
+      }
+      if (cents <= 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "El aporte debe ser mayor a cero.",
+          path: ["amountInput"],
+        });
+        return;
+      }
+      if (cents > KEYPAD_MAX_CENTS) {
+        ctx.addIssue({
+          code: "custom",
+          message: "El monto supera el máximo permitido.",
+          path: ["amountInput"],
+        });
+        return;
+      }
+      if (cents > availableCents) {
+        ctx.addIssue({
+          code: "custom",
+          message: "No tienes suficiente apartado en Ahorro.",
+          path: ["amountInput"],
+        });
+      }
+    });
+}
+
+export type ContributeToGoalFormValues = z.infer<
+  ReturnType<typeof createContributeToGoalSchema>
+>;
+
+export const contributeToGoalInputSchema = z.object({
+  goalId: z.string().min(1, "Meta no válida."),
+  amountCents: z
+    .number()
+    .int("El monto debe ser un número entero de céntimos.")
+    .positive("El monto debe ser mayor a cero.")
+    .max(KEYPAD_MAX_CENTS, "El monto supera el máximo permitido.")
+    .optional(),
+});
+
+export type ContributeToGoalInput = z.infer<typeof contributeToGoalInputSchema>;
+
+export function contributeToGoalFormToMutationArgs(
+  goalId: string,
+  values: ContributeToGoalFormValues,
+  availableCents: number,
+): ContributeToGoalInput {
+  const trimmed = values.amountInput.trim();
+  const amountCents =
+    trimmed === ""
+      ? availableCents
+      : parseOptionalTargetCents(values.amountInput);
+  if (amountCents === undefined || amountCents <= 0) {
+    throw new Error("Monto de aporte inválido.");
+  }
+  return {
+    goalId,
+    amountCents,
+  };
+}
+
 export function moveSurplusFormToMutationArgs(
   values: MoveSurplusFormValues,
 ): MoveSurplusInput {

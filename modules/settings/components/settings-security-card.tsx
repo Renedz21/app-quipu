@@ -1,17 +1,25 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LockKeyholeOpen } from "reicon-react";
+import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { fromConvexError } from "@/core/errors";
+import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
 import { cn } from "@/shared/lib/utils";
+import { useRevokeAllSessions } from "../actions";
 import {
   SETTINGS_PASSKEY_ADD,
   SETTINGS_PASSKEY_EMPTY,
   SETTINGS_PASSKEY_ERROR,
   SETTINGS_PASSKEY_PENDING,
   SETTINGS_SECURITY_LABEL,
+  SETTINGS_SESSIONS_COUNT,
   SETTINGS_SESSIONS_LABEL,
   SETTINGS_SESSIONS_REVOKE_ALL,
+  SETTINGS_SESSIONS_REVOKE_ERROR,
+  SETTINGS_SESSIONS_REVOKE_SUCCESS,
   SETTINGS_SESSIONS_STUB,
 } from "../constants";
 import {
@@ -22,6 +30,7 @@ import type { SettingsOverview } from "../types";
 
 type Props = {
   sessionsApiReady: SettingsOverview["sessionsApiReady"];
+  activeSessionCount?: SettingsOverview["activeSessionCount"];
   className?: string;
 };
 
@@ -38,13 +47,21 @@ function PasskeyRowIcon({ deviceType }: { deviceType: string }) {
   );
 }
 
-export function SettingsSecurityCard({ sessionsApiReady, className }: Props) {
+export function SettingsSecurityCard({
+  sessionsApiReady,
+  activeSessionCount,
+  className,
+}: Props) {
   const passkeysQuery = authClient.useListPasskeys();
   const passkeys = passkeysQuery.data ?? [];
   const passkeysLoading = passkeysQuery.isPending;
+  const revokeAll = useRevokeAllSessions();
+  const router = useRouter();
 
   const [addPending, setAddPending] = useState(false);
   const [addMessage, setAddMessage] = useState<string | null>(null);
+  const [revokeOpen, setRevokeOpen] = useState(false);
+  const [revokePending, setRevokePending] = useState(false);
 
   async function handleAddPasskey() {
     setAddPending(true);
@@ -56,6 +73,23 @@ export function SettingsSecurityCard({ sessionsApiReady, className }: Props) {
       return;
     }
     void passkeysQuery.refetch?.();
+  }
+
+  async function handleRevokeAllSessions() {
+    setRevokePending(true);
+    try {
+      await revokeAll({});
+      toast.success(SETTINGS_SESSIONS_REVOKE_SUCCESS);
+      setRevokeOpen(false);
+      await authClient.signOut();
+      router.push("/sign-in");
+    } catch (error) {
+      toast.error(
+        fromConvexError(error).message ?? SETTINGS_SESSIONS_REVOKE_ERROR,
+      );
+    } finally {
+      setRevokePending(false);
+    }
   }
 
   return (
@@ -125,15 +159,31 @@ export function SettingsSecurityCard({ sessionsApiReady, className }: Props) {
       <div className="flex items-center justify-between gap-3 border-t border-line-soft pt-3.5">
         <span className="text-[13px] text-ink-secondary">
           {SETTINGS_SESSIONS_LABEL}
+          {sessionsApiReady && activeSessionCount != null ? (
+            <span className="mt-0.5 block text-[11px] text-faint">
+              {SETTINGS_SESSIONS_COUNT(activeSessionCount)}
+            </span>
+          ) : null}
         </span>
         {sessionsApiReady ? (
-          <button
-            type="button"
-            disabled
-            className="text-[12.5px] font-medium text-danger-ink opacity-50"
-          >
-            {SETTINGS_SESSIONS_REVOKE_ALL}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setRevokeOpen(true)}
+              className="text-[12.5px] font-medium text-danger-ink hover:underline"
+            >
+              {SETTINGS_SESSIONS_REVOKE_ALL}
+            </button>
+            <ConfirmDestructiveDialog
+              open={revokeOpen}
+              onOpenChange={setRevokeOpen}
+              title="¿Cerrar todas las sesiones?"
+              description="Se cerrará la sesión en todos los dispositivos, incluido este navegador."
+              confirmLabel={SETTINGS_SESSIONS_REVOKE_ALL}
+              pending={revokePending}
+              onConfirm={() => void handleRevokeAllSessions()}
+            />
+          </>
         ) : (
           <span className="max-w-[11rem] text-right text-[11.5px] leading-snug text-faint">
             {SETTINGS_SESSIONS_STUB}

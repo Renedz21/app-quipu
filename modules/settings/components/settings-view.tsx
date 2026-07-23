@@ -29,6 +29,8 @@ import {
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
 import { useSettingsOverview } from "../queries";
 import { SettingsCommitmentsSection } from "./settings-commitments-section";
+import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
+import { SettingsExportDataItem } from "./settings-export-data-item";
 import { SettingsExtraordinarySection } from "./settings-extraordinary-section";
 import { SettingsPlanCard } from "./settings-plan-card";
 import { SettingsProfileCard } from "./settings-profile-card";
@@ -214,7 +216,10 @@ export function SettingsView() {
           </div>
         </div>
         <div className="flex-1">
-          <SettingsSecurityCard sessionsApiReady={overview.sessionsApiReady} />
+          <SettingsSecurityCard
+            sessionsApiReady={overview.sessionsApiReady}
+            activeSessionCount={overview.activeSessionCount}
+          />
         </div>
       </div>
 
@@ -231,8 +236,10 @@ export function SettingsView() {
         </div>
       </section>
 
-      <div className="mt-6 md:mt-8">
+      <div className="mt-6 flex flex-col gap-2.5 md:mt-8">
+        <SettingsExportDataItem />
         <SettingsSignOutItem />
+        <SettingsDeleteAccountItem />
       </div>
     </div>
   );

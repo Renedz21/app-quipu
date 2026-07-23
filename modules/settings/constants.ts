@@ -5,7 +5,12 @@ export const SETTINGS_SYSTEM_SLOT_NOTE = "system-column";
 
 export const SETTINGS_PROFILE_LABEL = "Perfil";
 export const SETTINGS_EDIT_PROFILE = "Editar";
-export const SETTINGS_EDIT_PROFILE_HINT = "Próximamente";
+export const SETTINGS_EDIT_PROFILE_HINT = "Editar nombre";
+
+export const SETTINGS_NAME_SAVE = "Guardar";
+export const SETTINGS_NAME_CANCEL = "Cancelar";
+export const SETTINGS_NAME_SAVED = "Nombre actualizado.";
+export const SETTINGS_NAME_ERROR = "No pudimos guardar el nombre.";
 
 export const SETTINGS_PLAN_LABEL = "Plan y suscripción";
 export const SETTINGS_PLAN_PLUS_NAME = "Quipu Plus";
@@ -35,9 +40,24 @@ export const SETTINGS_PASSKEY_ERROR =
   "No pudimos agregar la passkey. Intenta de nuevo.";
 export const SETTINGS_SESSIONS_LABEL = "Sesiones activas";
 export const SETTINGS_SESSIONS_REVOKE_ALL = "Cerrar todas";
-export const SETTINGS_SESSIONS_STUB = "Próximamente";
+export const SETTINGS_SESSIONS_STUB = "No disponible";
 
 export const SETTINGS_SIGN_OUT = "Cerrar sesión";
+
+export const SETTINGS_EXPORT_DATA = "Descargar mis datos";
+export const SETTINGS_EXPORT_DATA_PREPARING = "Preparando tu descarga…";
+export const SETTINGS_EXPORT_DATA_ERROR =
+  "No pudimos preparar tu descarga. Intenta de nuevo.";
+export const SETTINGS_DELETE_ACCOUNT = "Eliminar cuenta";
+export const SETTINGS_DELETE_ACCOUNT_TITLE =
+  "¿Eliminar tu cuenta para siempre?";
+export const SETTINGS_DELETE_ACCOUNT_BODY =
+  "Se borran tu perfil, tus ciclos, tus sobres y todos tus movimientos. No hay vuelta atrás.";
+export const SETTINGS_DELETE_ACCOUNT_CANCEL = "No, volver";
+export const SETTINGS_DELETE_ACCOUNT_CONFIRM = "Eliminar todo";
+export const SETTINGS_DELETE_ACCOUNT_WORKING = "Eliminando…";
+export const SETTINGS_DELETE_ACCOUNT_ERROR =
+  "No pudimos eliminar tu cuenta. Intenta de nuevo.";
 
 export const SETTINGS_SYSTEM_HEADING = "Tu sistema";
 export const SETTINGS_ACCOUNT_LABEL = "Cuenta";
@@ -62,7 +82,22 @@ export const SETTINGS_CYCLE_PROFILE = "Perfil";
 export const SETTINGS_CHANGE_CYCLE = "Cambiar ciclo";
 export const SETTINGS_CYCLE_STUB_TITLE = "Cambiar ciclo";
 export const SETTINGS_CYCLE_STUB_BODY =
-  "Pronto podrás ajustar tu ciclo desde aquí. Por ahora, tu configuración sigue la del onboarding.";
+  "Ajusta cuándo empieza tu ciclo. Los cambios aplican al próximo ciclo; el ciclo activo no se recalcula.";
+export const SETTINGS_CYCLE_WIZARD_STEP1_TITLE = "Tu ciclo hoy";
+export const SETTINGS_CYCLE_WIZARD_STEP1_BODY =
+  "El ciclo que ya está en curso sigue igual hasta que se cierre. Lo que cambies aquí se usa cuando empiece el siguiente.";
+export const SETTINGS_CYCLE_WIZARD_STEP2_TITLE = "Nuevo calendario";
+export const SETTINGS_CYCLE_WIZARD_CONFIRM = "Guardar para el próximo ciclo";
+export const SETTINGS_CYCLE_WIZARD_SAVED = "Calendario actualizado.";
+export const SETTINGS_CYCLE_WIZARD_BACK = "Atrás";
+export const SETTINGS_CYCLE_WIZARD_NEXT = "Continuar";
+
+export const SETTINGS_SESSIONS_REVOKE_CONFIRM =
+  "Se cerrará la sesión en todos los dispositivos, incluido este. Tendrás que volver a entrar.";
+export const SETTINGS_SESSIONS_REVOKE_SUCCESS = "Sesiones cerradas.";
+export const SETTINGS_SESSIONS_REVOKE_ERROR = "No pudimos cerrar las sesiones.";
+export const SETTINGS_SESSIONS_COUNT = (n: number) =>
+  n === 1 ? "1 sesión activa" : `${n} sesiones activas`;
 
 export const SETTINGS_PREFERENCES_LABEL = "Preferencias";
 export const SETTINGS_EXTRAORDINARY_LABEL = "Automatizaciones";

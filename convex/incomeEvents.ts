@@ -194,7 +194,7 @@ export const createIncomeEvent = mutation({
       // Compute the new cycle's window.
       let cycleDays: number;
       if (profile.incomeModel === "variable") {
-        cycleDays = HORIZON_DAYS;
+        cycleDays = profile.cycleDurationDays ?? HORIZON_DAYS;
       } else {
         // fixed or mixed
         const freq = profile.payFrequency;

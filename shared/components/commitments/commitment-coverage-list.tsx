@@ -22,6 +22,7 @@ type Props = {
   commitments: CommitmentCoverageItem[];
   currencyCode: string;
   showCoverageHeader?: boolean;
+  onCommitmentClick?: (id: string) => void;
 };
 
 function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
@@ -75,6 +76,7 @@ export function CommitmentCoverageList({
   commitments,
   currencyCode,
   showCoverageHeader = false,
+  onCommitmentClick,
 }: Props) {
   const covered = allCommitmentsCovered(commitments);
 
@@ -110,34 +112,45 @@ export function CommitmentCoverageList({
               index < commitments.length - 1
                 ? "border-b border-line-divider"
                 : ""
-            }`}
+            } ${onCommitmentClick ? "cursor-pointer hover:bg-surface-warm/80" : ""}`}
           >
-            <CommitmentIcon envelope={commitment.envelope} />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13.5px] font-semibold text-ink">
-                {commitment.name}
-              </div>
-              <div className="text-[11.5px] text-mute">
-                {formatDueInDays(commitment.daysUntilDue)} ·{" "}
-                {ENVELOPE_LABELS[commitment.envelope]}
-                {formatCoverageLabel(commitment)}
-              </div>
-              {commitment.coverageStatus !== "covered" ? (
-                <CommitmentProgress
-                  progressPercent={commitment.progressPercent}
-                />
-              ) : null}
-            </div>
-            <div className="shrink-0 text-right">
-              <span className="font-serif text-base text-ink">
-                {formatCents(commitment.amount, { currency: currencyCode })}
-              </span>
-              {commitment.coverageStatus === "partial" ? (
-                <div className="text-[10.5px] text-mute">
-                  {commitment.progressPercent}% cubierto
+            <button
+              type="button"
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              onClick={
+                onCommitmentClick
+                  ? () => onCommitmentClick(commitment.id)
+                  : undefined
+              }
+              disabled={!onCommitmentClick}
+            >
+              <CommitmentIcon envelope={commitment.envelope} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13.5px] font-semibold text-ink">
+                  {commitment.name}
                 </div>
-              ) : null}
-            </div>
+                <div className="text-[11.5px] text-mute">
+                  {formatDueInDays(commitment.daysUntilDue)} ·{" "}
+                  {ENVELOPE_LABELS[commitment.envelope]}
+                  {formatCoverageLabel(commitment)}
+                </div>
+                {commitment.coverageStatus !== "covered" ? (
+                  <CommitmentProgress
+                    progressPercent={commitment.progressPercent}
+                  />
+                ) : null}
+              </div>
+              <div className="shrink-0 text-right">
+                <span className="font-serif text-base text-ink">
+                  {formatCents(commitment.amount, { currency: currencyCode })}
+                </span>
+                {commitment.coverageStatus === "partial" ? (
+                  <div className="text-[10.5px] text-mute">
+                    {commitment.progressPercent}% cubierto
+                  </div>
+                ) : null}
+              </div>
+            </button>
           </li>
         ))}
       </ul>

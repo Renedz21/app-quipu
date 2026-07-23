@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { ArrowRight } from "reicon-react";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { Button } from "@/shared/components/ui/button";
 import { ENVELOPES } from "@/shared/constants/envelopes";
 import { completeOnboardingAction } from "../actions";
@@ -12,9 +13,42 @@ import { CheckMark } from "./check-mark";
 import { useOnboarding } from "./onboarding-provider";
 import { OnboardingShell } from "./onboarding-shell";
 
-type Props = { onBack: VoidFunction; onComplete: VoidFunction };
+const ONBOARDING_STARTED_KEY = "qp:onboarding:started_at";
 
-export function Step3Allocation({ onBack, onComplete }: Props) {
+function mapIncomeModelToWorkerType(
+  incomeModel: "fixed" | "variable" | "mixed" | undefined,
+): "dependent" | "independent" | "mixed" {
+  if (incomeModel === "fixed") return "dependent";
+  if (incomeModel === "variable") return "independent";
+  return "mixed";
+}
+
+function readOnboardingDurationSeconds(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = window.sessionStorage.getItem(ONBOARDING_STARTED_KEY);
+    if (!raw) return 0;
+    const startedAt = Number.parseInt(raw, 10);
+    if (!Number.isFinite(startedAt)) return 0;
+    const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+    window.sessionStorage.removeItem(ONBOARDING_STARTED_KEY);
+    return seconds;
+  } catch {
+    return 0;
+  }
+}
+
+type Props = {
+  onBack: VoidFunction;
+  onComplete: VoidFunction;
+  onStepCompleted: VoidFunction;
+};
+
+export function Step3Allocation({
+  onBack,
+  onComplete,
+  onStepCompleted,
+}: Props) {
   const { state, dispatch } = useOnboarding();
   const [isPending, startTransition] = useTransition();
   const total =
@@ -30,9 +64,20 @@ export function Step3Allocation({ onBack, onComplete }: Props) {
 
   function submit() {
     if (total !== 100) return;
+    onStepCompleted();
     startTransition(async () => {
       try {
         await completeOnboardingAction(state);
+        track(AnalyticsEvents.ONBOARDING_COMPLETED, {
+          worker_type: mapIncomeModelToWorkerType(
+            state.incomeModel ?? undefined,
+          ),
+          pay_frequency: state.payFrequency ?? undefined,
+          allocation_needs: state.allocationNeeds,
+          allocation_wants: state.allocationWants,
+          allocation_savings: state.allocationSavings,
+          onboarding_duration_seconds: readOnboardingDurationSeconds(),
+        });
         onComplete();
       } catch {
         // error handled by fromConvexError

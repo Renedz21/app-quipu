@@ -92,6 +92,10 @@ comportamientos peligrosos, recomienda acciones, construye hábitos.
   sin OAuth social, sin multi-moneda, sin multi-idioma, sin ML opaco, sin leaderboards,
   sin export a Excel/PDF, sin confeti ni infantilismo.
 
+**Excepción v2.5 (informe anual):** en `/progress/rewards` la recompensa «Informe anual» es **solo UI**
+(preview / copy gamificado); la generación y descarga PDF queda para **v2.6**. No abre export masivo
+ni contabilidad — alinea con la pregunta filtro si el usuario ya cerró ciclos.
+
 **La pregunta filtro** — antes de agregar cualquier tabla, pantalla, métrica o feature:
 
 > "¿Esto ayuda al usuario a tomar una mejor decisión con el próximo sol que entre?"
@@ -155,7 +159,7 @@ Debe sentirse cercano, maduro, claro, tranquilo y humano. La emoción objetivo e
 | Estados del Coach | tranquilo · advertencia · sugerencia · crisis |
 | Orden de implementación | Web primero → su equivalente móvil, bloque por bloque |
 | Personalización | Desbloqueable por constancia en ciclos, no por compra |
-| Plan comercial | Quipu Plus (S/ 14.90/mes). En diseño; código aún no |
+| Plan comercial | Quipu Plus (S/ 14.90/mes). **Polar (2026-07-22):** checkout redirect + portal, webhooks → `profiles.plan`, tarjeta plan y enlace sidebar en Ajustes. Valor Plus en producto (automatización gastos) sigue en roadmap, no en este cierre. |
 
 **Tres cosas que este sistema nunca es:** un juego (sin confeti/trofeos), un chat
 (coach declarativo), un extractor (sin sync bancaria; registro manual).
@@ -375,7 +379,7 @@ Toda pantalla crítica tiene 4 estados (+1 futuro):
 
 ### 3.7 Los 9 bloques (con estado de implementación)
 
-Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta en §8.2).
+Cada bloque responde **una pregunta**. Estado al 2026-07-22 (auditado en código; delta en §8.4).
 
 | # | Bloque | Pregunta | Estado |
 |---|---|---|---|
@@ -383,11 +387,11 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-20 (detalle del delta e
 | 2 | Onboarding | ¿Cómo se arma tu sistema? | ✅ Implementado (v3, 3 pasos) |
 | 3 | Dashboard | ¿Voy bien? | ✅ Implementado (2026-07-21, P1-4) |
 | 4 | Registrar gasto | ¿De qué sobre sale? | ✅ Implementado (2026-07-21, variantes A/B) |
-| 5 | Ingresos | ¿Cuánto entró y a dónde va? | ✅ Implementado (2026-07-21) |
-| 6 | Ahorros | ¿Qué estoy construyendo? | ✅ Implementado (2026-07-21, P1-9) |
+| 5 | Ingresos | ¿Cuánto entró y a dónde va? | ✅ Implementado (habitual + extraordinario P2-7, 2026-07-22) |
+| 6 | Ahorros | ¿Qué estoy construyendo? | ✅ Implementado (P1-9 + mover sobrante P2-7, 2026-07-22) |
 | 7 | Coach | ¿Qué decisión debería tomar? | ✅ Implementado (2026-07-21, P1-10) |
 | 8 | Gamificación | ¿Qué he logrado? | ✅ Implementado (2026-07-21, P1-11) |
-| 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ✅ MVP (2026-07-21, P1-12); Polar/sesiones/ciclo wizard/nombre edit diferidos |
+| 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ✅ MVP (2026-07-21, P1-12); **Polar billing (2026-07-22)** — sesiones/ciclo wizard/nombre edit diferidos |
 
 **Bloque 1 — Autenticación "¿Eres tú?"**
 Pantallas web: Landing · Login · Registro · Passkeys · Vacío · Error · Recuperación · Loading · Éxito
@@ -723,10 +727,9 @@ componente `convex/betterAuth/` y no se re-exportan.
 
 | Archivo | Funciones |
 |---|---|
-| `convex/profiles.ts` | `getMyProfile` (query), `createProfile`, `updateProfileSettings` (mutations) |
 | `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations; P2-7 extiende args extraordinarios) |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense` (mutations), `getRecentExpenses` (query) |
-| `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
+| `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
 | `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach` (mutations) — sugiere, confirma, aplica |
 | `convex/lib/rescueTransfer.ts` | Puras: `validateRescueTransferApply`, `computeRescueEnvelopePatches` (con tests) |
 | `convex/lib/crisisResolution.ts` | Puras: opciones crisis, split savings→sobres, copy canon (con tests) |
@@ -737,7 +740,8 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
 | `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail`, `getMoveSurplusContext` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations); P2-7: `getCycleSavingsBreakdown`, `moveSurplusToSavings` |
 | `convex/lib/extraordinarySavingsSurplus.ts` | Puras: pool movible desde ingresos extraordinarios (TDD; origen `extraordinary` en mover sobrante) |
-| `convex/settings.ts` | `getSettingsOverview`, `listMyPasskeys` (queries); `updateAllocations`, `updateNotificationPreferences`, `updateExtraordinaryRules` (mutations; última P2-7) |
+| `convex/settings.ts` | `getSettingsOverview`, `listMyPasskeys`, `listMySessions` (queries); `updateAllocations`, `updateNotificationPreferences`, `updateExtraordinaryRules`, `updateCycleSchedule`, `revokeAllSessions` (mutations) |
+| `convex/profiles.ts` | `getMyProfile` (query), `createProfile`, `updateProfileSettings` (nombre + reparto/calendario; mutations) |
 | `convex/progress.ts` | `getOverview`, `getRewards`, `getAppearance` (queries), `updateAppearance` (mutation) |
 | `convex/lib/gamificationMath.ts` | Puras: racha, chart, logros, umbrales recompensa (con tests) |
 | `convex/lib/evaluateClosedCycle.ts` | Persiste `cycleHistory` + actualiza `streaks` al cerrar ciclo |
@@ -752,6 +756,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **Cobertura de compromisos:** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
+- **Calendario de ciclo en Ajustes:** cambiar `payFrequency`, `paydays` o `cycleDurationDays` en `profiles` **no recalcula** el `financialCycles` activo (fechas, sobres e ingresos del ciclo en curso siguen igual). La nueva configuración aplica cuando se **abra el siguiente ciclo** (p. ej. al registrar un ingreso que cierre el ciclo actual, ver `createIncomeEvent`).
 - **Plan Free ilimitado y manual** (`FREE_PLAN_MONTHLY_LIMIT` eliminado); Premium se justifica por automatización, no por más registros.
 - **Dinero en céntimos enteros, siempre** (`shared/lib/money.ts`). **Fechas en `America/Lima`** (`shared/lib/date.ts`).
 - **Ingresos extraordinarios (P2-7):** siguen siendo `incomeEvents`; `incomeKind: "extraordinary"` exige `extraordinaryType`. Reglas en `profiles.extraordinaryRules` solo **sugieren** destino al registrar; el usuario confirma `distributionPolicy` por evento. Defaults si ausentes: gratificaciones/bono/utilidades/custom → `profile_default`; CTS → `all_to_emergency_fund` (UI traduce a política de reparto documentada en spec). **`moveSurplusToSavings`** (voluntario; orígenes `needs` | `wants` | `extraordinary` en `surplusContributions`) ≠ **`applyCoverFromCycleSavings`** (crisis P1-10). Origen `extraordinary` mueve saldo del pool de ahorro atribuible a ingresos extraordinarios (`convex/lib/extraordinarySavingsSurplus.ts`).
@@ -770,14 +775,18 @@ componente `convex/betterAuth/` y no se re-exportan.
   mintió a usuarios con security keys/PIN. Lección: los tests deben verificar el comportamiento
   del usuario, no la implementación.
 - **Sign-up captura email, nombre y contraseña reales** (bug P0-8: antes todos compartían
-  `placeholder@quipu.pe`). **Sin verificación de email ni recuperación de cuenta** — deuda
-  registrada con plan en `docs/security-debt.md` (D1, se resuelve con Resend).
+  `placeholder@quipu.pe`). **Verificación de email y recuperación** vía Resend (`RESEND_API_KEY`
+  en deployment Convex; helper `convex/lib/resendEmail.ts`): `requireEmailVerification: true`
+  para email/contraseña; flujos UI `/recuperar`, `/restablecer-contrasena`, post-registro
+  «Revisa tu correo». Passkey-first sigue permitido con `emailVerified: false` hasta confirmar
+  correo para login con contraseña. Detalle en `docs/security-debt.md` (D1 — owner: Resend prod).
 - **Postura de seguridad (auditoría 2026-07-22):** passkey `resolveUser` rechaza emails ya
   registrados (cierra account takeover anónimo); `createProfile` fija `plan: "free"` en servidor;
   `resetDb.resetAll` es `internalAction` (solo CLI/dashboard, dev); headers de seguridad en
   `next.config.ts`; rate limit explícito con regla estricta `/passkey/*`; session recording de
-  PostHog enmascara el texto del área privada (`data-ph-mask` en el shell). Deuda viva: D1–D4
-  en `docs/security-debt.md`.
+  PostHog enmascara el texto del área privada (`data-ph-mask` en el shell). **D3** eliminar cuenta
+  + export en Ajustes. Deuda owner: **D4** secretos prod; **D2** rate limit distribuido — ver
+  `docs/security-debt.md`.
 - `USER_ALREADY_EXISTS` en sign-up → redirect `/sign-in?email=X&reason=exists` con banner "Ya tienes cuenta".
 - `passkeyClient()` y `convexClient()` en `auth/auth-client.ts` son obligatorios (sin ellos Better Auth no conecta con Convex).
 
@@ -989,15 +998,28 @@ Son comandos `/` que orquestan el ciclo de vida del desarrollo. **Uso preciso po
 
 ## 8. Estado actual y roadmap
 
-> Auditoría ejecutada el **2026-07-20** contra el código real (no contra planes).
-> Esta sección se actualiza cada vez que se cierra o descubre trabajo. Es el reemplazo
-> del antiguo `pending-work.md`.
+> Última auditoría contra código: **2026-07-22** (revalidación de módulos + rutas + Convex).
+> Primera auditoría formal: 2026-07-20. Esta sección reemplaza `pending-work.md`.
 
-### 8.1 Política de branching (vigente desde 2026-07-16)
+### 8.1 Política de branching y Definition of Done v2.5 (vigente desde 2026-07-16; DoD acotado 2026-07-22)
 
-**Nada va a `main` hasta que la app esté 100% completa.** La rama de trabajo absorbe todo
-el desarrollo. Los P0 bloquean el **release del producto**, no un merge. Esta política se
-revisa solo cuando el usuario declare la app completa.
+**Branching:** el desarrollo activo vive en ramas de trabajo (p. ej. `chore/quipu-2.0`); `main` recibe
+merge cuando se cumple el **DoD v2.5** abajo, no «100% de todo el backlog histórico».
+
+**Definition of Done v2.5 (merge a `main`):**
+
+1. Todo lo listado en §8.2 como producto v2.5 **cerrado o en progreso acordado**, **excepto** ítems
+   movidos a §8.3 P3 (post-v2.5): **Quipu Plus / variante C (gastos automáticos)** e **informe PDF
+   descargable** (UI-only en v2.5 — §2.4).
+2. **P2-6** — `pnpm lint` sin errores; `pnpm typecheck` limpio.
+3. **P2-7** — ingresos extraordinarios + ahorro ciclo (E2E smoke + copy).
+4. **P2-8** — release readiness: CI (lint + typecheck); Polar prod + webhook documentados (§9.5);
+   **D4** rotación de secretos prod confirmada por el **owner** (`docs/security-debt.md`).
+5. Deuda seguridad **D1** (Resend) y gaps de diseño §8.4 pendientes **no bloquean** v2.5 si están
+   explícitos en §8.2/§8.4; **D4 sí bloquea** merge a prod hasta confirmación del owner.
+
+Los P0 bloquean el **release del producto** al usuario final, no necesariamente el merge de código si
+el DoD v2.5 ya está cubierto en la rama de trabajo.
 
 ### 8.2 Qué existe hoy (auditado)
 
@@ -1012,19 +1034,53 @@ revisa solo cuando el usuario declare la app completa.
 - **Migración de datos v2.0→v2.5 ejecutada** (widen→migrate→narrow, backfills idempotentes;
   helpers de backfill eliminados tras el narrow).
 - **Bloque 3 — Dashboard:** `modules/dashboard/`, 5 niveles §3.7, coach P1-5, cascada P1-1.
-- **Bloque 4 — Registrar gasto:** variantes A/B en `modules/expenses/`; variante C diferida.
-- **Bloque 5 — Ingresos:** `/income/register` con preview, chips, confirmación con deltas.
-- **Bloque 6 — Ahorros:** `/savings` + `/savings/fund`; hero Fondo, metas (máx 6), aporte manual.
+- **Bloque 4 — Registrar gasto:** variantes A/B vía `ExpenseRegisterProvider` en shell (sin ruta dedicada); `modules/expenses/`; variante C diferida.
+- **Bloque 5 — Ingresos:** `/income/register` habitual + extraordinario (P2-7), preview, confirmación con deltas.
+- **Bloque 6 — Ahorros:** `/savings`, `/savings/fund`, `/savings/move` + success; card ahorro del ciclo; hero Fondo, metas (máx 6), aporte manual al fondo y a metas custom (`contributeToGoal` UI); «Ajustar aporte» → `/settings/allocations`.
 - **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10).
 - **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
-- **Bloque 9 — Perfil y ajustes:** `/settings` + allocations; ver P1-12.
+- **Bloque 9 — Perfil y ajustes:** `/settings` + allocations + **wizard ciclo** (`/settings/cycle`, regla §5.3); **editar nombre** inline; **sesiones** (`sessionsApiReady`, cerrar todas vía Convex + `ConfirmDestructiveDialog`); Polar billing (2026-07-22).
 - **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard).
-- **Compromisos:** `/commitments` (lista con cobertura del ciclo, total `/ ciclo`, agregar compromiso; nav sidebar/bottom activa; enlace «Ver todo» en dashboard).
+- **Compromisos:** `/commitments` (lista con cobertura del ciclo, total `/ ciclo`, agregar compromiso; **detalle en sheet** + eliminar con diálogo destructivo reutilizable; nav sidebar/bottom activa; enlace «Ver todo» en dashboard).
 
-**No existe todavía:**
-- Variante C de gasto (automático).
-- Sistema de componentes codificado tipo Storybook (primitivos shadcn sí existen).
+**No existe todavía (bloquea DoD v2.5 — ver §8.1):**
+- Coach estado **tranquilo:** CTAs — **cerrado 2026-07-22** (§8.4).
+- Diseño: Storybook; gaps HTML §3.9 (checklist visual).
+- Operación: pipeline Vercel formal (§9.4 checklist owner); **D4** secretos prod (owner — no automatizable); **Resend prod** (configurar `RESEND_API_KEY`/`RESEND_FROM` en Convex prod — código D1 ✅ 2026-07-22).
+
+**Fase 0 SaaS (confianza — 2026-07-22, ver §8.6):** ✅ Auth D1 UI + backend; ✅ D3 eliminar cuenta + export JSON; ✅ legal; ✅ CI + Vitest; ✅ Sentry + PostHog; ✅ entitlements (`requirePremiumProfile`, paywall). **Owner:** D4, Resend prod, Vercel §9.4.
+
+**Post-v2.5 (§8.3 P3 — no bloquean merge a `main`):**
+- Variante C de gasto (automático), tabla `detectedExpenses`, **valor Plus** más allá de checkout Polar.
+- Quipu Plus como producto (automatización de gastos; hoy Polar cobra y `profiles.plan` + UI Ajustes).
+- Gamificación: **PDF** informe anual descargable (v2.5: preview UI en `/progress/rewards` — §2.4).
+
+**Mapa rápido (rutas app autenticada):**
+
+```mermaid
+flowchart LR
+  subgraph core [Núcleo]
+    D["/dashboard"]
+    M["/movements"]
+    C["/commitments"]
+  end
+  subgraph flows [Flujos]
+    I["/income/register"]
+    S["/savings"]
+    SF["/savings/fund"]
+    SM["/savings/move"]
+  end
+  subgraph account [Cuenta]
+    ST["/settings"]
+    P["/progress"]
+  end
+  D --> M
+  D --> I
+  S --> SF
+  S --> SM
+  ST --> P
+```
 
 ### 8.3 Pendientes (estados corregidos tras auditoría)
 
@@ -1057,7 +1113,7 @@ revisa solo cuando el usuario declare la app completa.
 | P1-9 | Bloque 6 — Ahorros | ✅ **Cerrado 2026-07-21.** `/savings` + `/savings/fund`; hero Fondo (Prioridad, progreso 3 meses), detalle con stats, `contributeToSubEnvelope`, `createSavingsGoal` (máx 6 metas), TDD `savingsMath`; nav Ahorros activa. Ajustar aporte y aporte a metas custom en UI diferidos. |
 | P1-10 | Bloque 7 — Coach CTAs advertencia/crisis | ✅ **Cerrado 2026-07-21.** Warning: `/income/register` + scroll sobres. Crisis: `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`; `crisisResolution` (TDD), `coverageBoost`/`postponedForCycleId`; UI `coach-crisis-actions`. Tranquilo CTAs en card del dashboard diferidos. **Sin** pantalla ni nav Coach (decisión 2026-07-21). |
 | P1-11 | Bloque 8 — Gamificación | ✅ **Cerrado 2026-07-21.** `/progress` (racha Newsreader + chart 12 ciclos + logros) y `/progress/rewards` (Tinta/Arcilla/informe + acento/tema/ícono). Motor: `evaluateClosedCycle` en cierre de ciclo (`createIncomeEvent`), `gamificationMath` (TDD), `convex/progress.ts`, `AppearanceSync`. Informe anual PDF diferido. Enlace desde `/settings` (perfil). |
-| P1-12 | Bloque 9 — Perfil y ajustes | ✅ **Cerrado 2026-07-21 (MVP).** `/settings` + `/settings/allocations` + `/settings/cycle` (stub); `modules/settings/` cuenta + sistema + compromisos; `convex/settings.ts` (`getSettingsOverview`, `listMyPasskeys`, `updateAllocations`, `updateNotificationPreferences`); nav Ajustes activa; smoke E2E. Diferido: Polar.sh, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. |
+| P1-12 | Bloque 9 — Perfil y ajustes | ✅ **Cerrado 2026-07-22 (v2.5).** `/settings` + allocations + wizard ciclo + nombre + sesiones; Polar billing 2026-07-22. |
 
 **P2 — backlog:**
 
@@ -1067,22 +1123,43 @@ revisa solo cuando el usuario declare la app completa.
 | P2-2 | `HORIZON_DAYS` (15) hardcoded vs configurable | ⬜ Decisión diferida. Recomendación: dejar hardcoded hasta tener telemetría. |
 | P2-3 | Auditoría de vistas que leen campos viejos | ✅ Cerrado (grep de `workerType`/`frequency` limpio al 2026-07-20). |
 | P2-5 | Extraer AuthHeader a shared | ✅ Cerrado sin implementar (sin duplicación real). |
-| P2-6 | Deuda de lint (13 errors + 31 warnings) | ⬜ Pendiente. Offenders: `!` non-null en `auth/auth-server.ts`, `as any` en betterAuth, parse error CSS `oklch(...)` en `globals.css`. Cierre: `pnpm lint` en 0/0 (excluyendo `convex/_generated/`). Bloqueará CI cuando se endurezca. |
-| P2-7 | Bloques 5N/6N — Ingresos extraordinarios + ahorro del ciclo | 🟡 **Parcial 2026-07-22.** Bloque 5 ✅. **Bloque 6:** card ahorro del ciclo + **`/savings/move`** (6N-B, form canon sin keypad, origen `extraordinary`) + **`/savings/move/success`** (6N-C). Pendiente: smoke gratificación E2E, pulir copy fino vs. HTML. Specs: `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`. |
+| P2-6 | Deuda de lint (Biome) | ✅ **Cerrado 2026-07-22.** `pnpm lint` sin errores; `auth/auth-server.ts` sin `!`; stub Better Auth tipado (`GenericCtx`); tokens `oklch` en `globals.css` vía parser CSS Biome + `tailwindDirectives`. Warnings preexistentes tolerados en §9.2. |
+| P2-7 | Bloques 5N/6N — Ingresos extraordinarios + ahorro del ciclo | ✅ **Cerrado 2026-07-22.** Toggle + reglas Ajustes; card ciclo + `/savings/move`; E2E smoke gratificación/sobrante extraordinario + coach tranquilo. Spec: `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`. |
+| P2-8 | Release readiness (post-MVP) | 🟡 **Parcial 2026-07-22.** CI `.github/workflows/ci.yml` (lint + typecheck + Vitest); Playwright en `main`/`master`/`chore/quipu-2.0` + secretos §9.3.2. **Pendiente owner:** Vercel §9.4, Polar prod §9.5, D4 secretos, Resend prod. |
+
+**P3 — post-v2.5 (explícitamente fuera del DoD v2.5 — §8.1):**
+
+| Item | Qué | Criterio de cierre (futuro) |
+|---|---|---|
+| P3-1 | Quipu Plus + variante C | Spec Bloque 4 §C + `detectedExpenses`; valor de producto más allá de billing Polar. |
+| P3-2 | Informe anual PDF | Generación/descarga real; v2.5 mantiene UI-only en recompensas (§2.4). |
+| P3-3 | Storybook | §3.9 — catálogo de componentes; no bloquea release. |
+
+### 8.6 Roadmap SaaS (orden de construcción — vigente 2026-07-22)
+
+> No iniciar Fase N+1 hasta cerrar la anterior. Fases 2–4 **no están en desarrollo** en el repo.
+
+| Fase | Objetivo | Estado |
+|---|---|---|
+| **0 — Confianza** | Resend auth, D3, legal, CI, Sentry/PostHog, entitlements | ✅ Código 2026-07-22; owner: D4, Resend prod, Vercel |
+| **1 — Plus v1** | Predicción, recordatorios, recurrencia, reglas auto, informe cierre, crisis avanzado | ⬜ No iniciado |
+| **2 — Email inbound** | Parsers banco + `pendingExpenses` + variante C | ⬜ No iniciado |
+| **3 — Import PDF/Excel** | Mismo embudo que Fase 2 | ⬜ No iniciado |
+| **4 — Con MRR** | Gmail, sync bancario, pareja, coach LLM | ⬜ Fuera de alcance hasta demanda |
 
 ### 8.4 Delta diseño v3.0 vs código (backlog de UI por bloque)
 
 | Bloque | Delta a cerrar |
 |---|---|
-| 1. Auth | Pantallas auxiliares (recovery, error, loading, success); panel lateral "Disponible hoy" muestra datos reales cuando exista dashboard. |
+| 1. Auth | ✅ Recuperación `/recuperar` + `/restablecer-contrasena` + alias `/reset-password` (2026-07-22). ✅ Verificación email (Resend en código, `requireEmailVerification`, `/verify-email`). Pendiente: panel lateral datos reales. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
 | 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
-| 5. Ingresos | ✅ **UI bloque 5 alineada (2026-07-21):** input monto, flujo 5N, badge dorado movimientos. Pendiente bloque 6 (P2-7). Selector fecha retroactiva fuera v2.5. |
-| 6. Ahorros | ✅ Overview + fondo + metas (bloque 6). P2-7: card ciclo 6N-A/D, `/savings/move` + success 6N-B/C, origen `extraordinary`. Pendiente: aporte a metas custom UI; "Ajustar aporte" del fondo. |
-| 7. Coach | Tranquilo CTAs ("Ver detalle", "Guardar de más") en card del **inicio**; alinear canvas sidebar (quitar Coach del mock cuando se toque `quipu-2.html`). |
-| 8. Gamificación | Informe anual descargable (PDF). |
-| 9. Perfil/Ajustes | Polar.sh billing, cerrar todas sesiones, editar nombre, wizard cambiar ciclo. **Hecho:** `/settings`, reparto editable, compromisos + toggles preferencias, enlace progreso. |
+| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. |
+| 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
+| 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
+| 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
+| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Ajustes v2.5 (2026-07-22):** editar nombre, wizard `/settings/cycle` (§5.3), sesiones (`sessionsApiReady`, revoke-all). ✅ **`ConfirmDestructiveDialog`** (revoke sesiones + delete compromiso). Compromiso: sheet detalle en `/commitments`. |
 
 ### 8.5 Regla de actualización de esta sección
 
@@ -1166,12 +1243,74 @@ cuenta limpia (borrar el user de Better Auth en Convex dashboard entre runs).
 
 Auth vía API (`sign-up/email` + `convex/token`). Cada test crea usuario único aislado.
 
+### 9.3.2 CI — GitHub Actions (lint, typecheck, E2E)
+
+| Workflow | Qué corre | Ramas |
+|---|---|---|
+| `.github/workflows/ci.yml` | `pnpm lint`, `pnpm typecheck` | `main`, `master`, `chore/quipu-2.0` |
+| `.github/workflows/playwright.yml` | `pnpm exec playwright test` (levanta `pnpm dev` en CI) | mismas ramas |
+| `.github/workflows/react-doctor.yml` | complementario | según archivo |
+
+**Secretos de repo (Playwright / E2E):** configurar en GitHub → Settings → Secrets:
+
+| Secreto | Uso |
+|---|---|
+| `BETTER_AUTH_SECRET` | Auth en dev server CI |
+| `NEXT_PUBLIC_CONVEX_URL` | Cliente Convex |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | HTTP actions / webhooks Better Auth |
+| `SITE_URL` | Base URL Better Auth (p. ej. `http://localhost:3000` en CI o URL fija) |
+| `PLAYWRIGHT_BASE_URL` | Opcional; default `http://localhost:3000` |
+
+**Convex en CI:** los smoke tests asumen un deployment Convex accesible con las mismas variables que
+local (`.env.local` vía `loadEnvLocal` en `playwright.config.ts`). Estrategia recomendada: deployment
+dev dedicado para CI **o** job futuro que ejecute `npx convex dev` / deploy preview antes de Playwright.
+Sin deployment Convex, E2E fallará aunque lint/typecheck pasen.
+
 ### 9.4 Deploy y entorno
 
-- Deploy Convex: `npx convex deploy --prod`. Front: Vercel (pendiente pipeline formal — ver Manual 6 cuando se configure).
-- Env vars validadas en `core/env.ts`. Secretos solo en servidor; `NEXT_PUBLIC_*` es hostil.
+- Deploy Convex: `npx convex deploy --prod`. Front: Vercel (checklist owner abajo; el agente no despliega sin credenciales).
+- Env vars validadas en `core/env.ts` y `core/env.client.ts`. Secretos solo en servidor; `NEXT_PUBLIC_*` es hostil.
 - `convex/_generated/` es autogenerado: **nunca editar a mano**.
 - Turbopack es default; ante un bug raro de build, descartar con `next dev --turbopack=false`.
+
+**Checklist Vercel (owner — P2-8):**
+
+1. Crear proyecto Vercel enlazado al repo; rama de producción `main`.
+2. **Install:** `corepack enable` + `pnpm install` (o dejar que Vercel detecte `pnpm` vía Corepack).
+3. **Build:** `pnpm build`; **Output:** Next.js default.
+4. **Env producción:** copiar desde `.env.local` de referencia — `BETTER_AUTH_SECRET` (prod único, ver D4), `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`, `SITE_URL`, `POLAR_*` según §9.5, passkey `PASSKEY_RP_ID` / `PASSKEY_RP_NAME` al dominio real.
+5. **Preview:** cada PR — mismas `NEXT_PUBLIC_*` apuntando al deployment Convex de preview o dev acordado; rebuild obligatorio al cambiar públicas.
+6. Post-deploy: smoke §9.3 + §9.3.1 contra la URL de Vercel; webhook Polar apuntando al **Convex prod** site URL, no al host Next.
+
+### 9.5 Facturación — Polar.sh (Quipu Plus)
+
+Variables en el **deployment de Convex** (no en el bundle Next). `convex/polar.ts` lee:
+
+| Variable | Uso |
+|---|---|
+| `POLAR_ORGANIZATION_TOKEN` | Token de organización Polar (API del componente). |
+| `POLAR_WEBHOOK_SECRET` | Verificación de firma del webhook. |
+| `POLAR_PRODUCT_ID_PREMIUM` | ID del producto Quipu Plus; clave lógica `premium` en `polar.ts`. |
+| `POLAR_SERVER` | `sandbox` o `production`. |
+
+En dashboard Polar: URL del webhook **`https://<deployment>.convex.site/webhook/polar`** (no el default `/polar/events` del README). Habilitar al menos: `product.created`, `product.updated`, `subscription.created`, `subscription.updated`.
+
+**Setup tras deploy del componente:**
+
+1. `npx convex env ls` — comprobar las cuatro variables anteriores.
+2. Registrar webhook + secret en Polar apuntando a la URL anterior.
+3. Sincronizar catálogo de productos (una vez si el producto existía antes del componente): `npx convex run billing:syncProducts` (`convex/billing.ts` → `polar.syncProducts`).
+4. Sandbox: checkout de prueba → logs webhook → `profiles.plan` = `premium` → sidebar + coach rescue (premium).
+
+`core/env.ts` (Next/build) valida `POLAR_PRODUCT_ID_PREMIUM`, `POLAR_SERVER` y opcionalmente `POLAR_ORGANIZATION_TOKEN` / `POLAR_WEBHOOK_SECRET` (el token org y el secret del webhook viven sobre todo en Convex).
+
+**Checklist release Polar producción (owner — P2-8):**
+
+1. En Convex **prod:** `POLAR_ORGANIZATION_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_PRODUCT_ID_PREMIUM`, `POLAR_SERVER=production` (`npx convex env ls` en prod).
+2. Dashboard Polar → webhook `https://<prod-deployment>.convex.site/webhook/polar` + eventos §9.5.
+3. Una vez: `npx convex run billing:syncProducts --prod` (o equivalente en deployment prod).
+4. Smoke manual: checkout Plus → webhook en logs → `profiles.plan` = `premium` → coach rescue premium (`convex/coachEngine.ts`; no usar `convex/testing.ts` en prod).
+5. **D4:** rotar `BETTER_AUTH_SECRET` prod antes o justo después del primer tráfico real — ver `docs/security-debt.md`.
 
 ---
 
@@ -1206,6 +1345,9 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-22 — DoD v2.5 + release gate.** §8.1 Definition of Done acotada (excluye Plus/variante C e PDF descargable); §8.3 P3 post-v2.5; §2.4 excepción informe UI-only; §9.3.2 CI + §9.4 checklist Vercel; §9.5 checklist Polar prod; P2-6 lint ✅; P2-8 parcial (CI, pendiente owner Vercel/D4/Polar prod).
+- **2026-07-22 — P2-7 cierre + Bloque 6/7 UI.** E2E smoke gratificación/sobrante; coach tranquilo CTAs; `contributeToGoal` dialog; «Ajustar aporte» → `/settings/allocations`.
+- **2026-07-22 — §3 / §8.4 / §9.5.** Integración Polar (Quipu Plus): plan comercial ya no «solo diseño»; Bloque 9 delta Polar parcial; operación webhook + env vars + `billing:syncProducts`.
 - **2026-07-22 — §5.4 / §10.1.** Auditoría de seguridad: 7 fixes aplicados (2 críticos: account takeover vía passkey y wipe público de BD; 1 alto: auto-premium en `createProfile`), deuda D1–D4 registrada en `docs/security-debt.md`. Corregida línea desactualizada de "contraseña aleatoria" (el sign-up actual pide contraseña real).
 - **2026-07-21 — §3.5 / §8.4 / Bloque 7.** Coach solo embebido en dashboard; sidebar app sin ítem Coach; sin ruta `/coach`. Canvas HTML sidebar pendiente alinear.
 - **2026-07-21 — P2-7 + §2.5/§3/§5.** Ingresos extraordinarios (5N/6N): spec `2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`, tokens §3.3, delta §8.4, roadmap P2-7.

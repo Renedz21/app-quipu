@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
@@ -17,6 +18,8 @@ import {
 
 type Props = {
   subEnvelopeId: Id<"subEnvelopes">;
+  subEnvelopeLabel?: string;
+  isEmergencyFund?: boolean;
   availableToContributeCents: number;
   currencyCode: string;
   className?: string;
@@ -25,6 +28,8 @@ type Props = {
 
 export function SavingsContributeButton({
   subEnvelopeId,
+  subEnvelopeLabel,
+  isEmergencyFund = false,
   availableToContributeCents,
   currencyCode,
   className,
@@ -42,6 +47,13 @@ export function SavingsContributeButton({
     setIsSubmitting(true);
     try {
       const result = await contribute({ subEnvelopeId });
+      track(AnalyticsEvents.SAVINGS_CONTRIBUTION_COMPLETED, {
+        amount: result.amount,
+        source_envelope: "needs",
+        goal_id: subEnvelopeId,
+        goal_label: subEnvelopeLabel,
+        is_emergency_fund: isEmergencyFund,
+      });
       toast.success(
         `${CONTRIBUTE_SUCCESS_PREFIX} Moviste ${formatCents(result.amount, {
           currency: currencyCode,

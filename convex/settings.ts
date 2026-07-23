@@ -4,7 +4,7 @@ import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { loadPolarSubscriptionForUser } from "./billing";
 import { buildBillingOverview } from "./lib/billingSync";
-import { isValidAllocations } from "./lib/budgetMath";
+import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 import {
   buildCycleScheduleCopy,
   formatActiveCycleRangeCopy,
@@ -21,6 +21,50 @@ type PasskeyRecord = {
   backedUp: boolean;
   createdAt: number | null;
 };
+
+type SessionSummary = {
+  id: string;
+  createdAt: number;
+  userAgent: string | null;
+};
+
+async function loadSessionsForUser(
+  ctx: QueryCtx,
+  userId: string,
+): Promise<{ sessions: SessionSummary[]; apiReady: boolean }> {
+  try {
+    const result = await ctx.runQuery(components.betterAuth.adapter.findMany, {
+      model: "session",
+      where: [{ field: "userId", operator: "eq", value: userId }],
+      paginationOpts: { numItems: 50, cursor: null },
+    });
+
+    const page = (result as { page?: unknown[] }).page ?? [];
+    const now = Date.now();
+    const sessions = page
+      .map((row) => {
+        const doc = row as {
+          _id?: string;
+          id?: string;
+          expiresAt?: number;
+          createdAt?: number;
+          userAgent?: string | null;
+        };
+        const id = doc._id ?? doc.id;
+        if (!id || (doc.expiresAt ?? 0) <= now) return null;
+        return {
+          id: String(id),
+          createdAt: doc.createdAt ?? 0,
+          userAgent: doc.userAgent ?? null,
+        };
+      })
+      .filter((row): row is SessionSummary => row !== null);
+
+    return { sessions, apiReady: true };
+  } catch {
+    return { sessions: [], apiReady: false };
+  }
+}
 
 async function loadPasskeysForUser(
   ctx: QueryCtx,
@@ -77,19 +121,21 @@ export const getSettingsOverview = query({
       .unique();
     if (!profile) return null;
 
-    const [commitments, activeCycle, security] = await Promise.all([
-      ctx.db
-        .query("fixedCommitments")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect(),
-      ctx.db
-        .query("financialCycles")
-        .withIndex("by_profile_status", (q) =>
-          q.eq("profileId", profile._id).eq("status", "active"),
-        )
-        .unique(),
-      loadPasskeysForUser(ctx, identity.subject),
-    ]);
+    const [commitments, activeCycle, security, sessionsInfo] =
+      await Promise.all([
+        ctx.db
+          .query("fixedCommitments")
+          .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+          .collect(),
+        ctx.db
+          .query("financialCycles")
+          .withIndex("by_profile_status", (q) =>
+            q.eq("profileId", profile._id).eq("status", "active"),
+          )
+          .unique(),
+        loadPasskeysForUser(ctx, identity.subject),
+        loadSessionsForUser(ctx, identity.subject),
+      ]);
 
     const cycleSchedule = buildCycleScheduleCopy(profile);
     const tags: string[] = [];
@@ -164,7 +210,13 @@ export const getSettingsOverview = query({
         currencyReadOnly: `Sol peruano · ${profile.currencySymbol}`,
         localeReadOnly: "Español",
       },
-      security,
+      security: {
+        ...security,
+        sessions: {
+          count: sessionsInfo.sessions.length,
+          apiReady: sessionsInfo.apiReady,
+        },
+      },
     };
   },
 });
@@ -175,6 +227,131 @@ export const listMyPasskeys = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
     return loadPasskeysForUser(ctx, identity.subject);
+  },
+});
+
+export const listMySessions = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    return loadSessionsForUser(ctx, identity.subject);
+  },
+});
+
+export const revokeAllSessions = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+
+    try {
+      await ctx.runMutation(components.betterAuth.adapter.deleteMany, {
+        input: {
+          model: "session",
+          where: [{ field: "userId", operator: "eq", value: identity.subject }],
+        },
+        paginationOpts: { numItems: 999999, cursor: null },
+      });
+    } catch {
+      throw new ConvexError({
+        code: "INTERNAL_ERROR",
+        message: "No pudimos cerrar las sesiones. Intenta de nuevo.",
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+const payFrequencyValidator = v.union(
+  v.literal("monthly"),
+  v.literal("biweekly"),
+  v.literal("weekly"),
+  v.literal("variable"),
+);
+
+/** Cambia calendario de ciclo en perfil; el ciclo activo no se recalcula (§5.3 maestro). */
+export const updateCycleSchedule = mutation({
+  args: {
+    payFrequency: v.optional(payFrequencyValidator),
+    paydays: v.optional(v.array(v.number())),
+    cycleDurationDays: v.optional(v.union(v.literal(15), v.literal(30))),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
+    }
+
+    const updates: {
+      payFrequency?: typeof profile.payFrequency;
+      paydays?: number[];
+      cycleDurationDays?: number;
+    } = {};
+
+    if (profile.incomeModel === "variable") {
+      if (args.payFrequency !== undefined || args.paydays !== undefined) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            "Para ingreso variable solo puedes cambiar la duración del ciclo.",
+        });
+      }
+      if (args.cycleDurationDays !== undefined) {
+        updates.cycleDurationDays = args.cycleDurationDays;
+      }
+    } else {
+      if (args.cycleDurationDays !== undefined) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "La duración en días solo aplica a ingreso variable.",
+        });
+      }
+      const payFrequency =
+        args.payFrequency ?? profile.payFrequency ?? "monthly";
+      const paydays = args.paydays ?? profile.paydays ?? [];
+      if (!isValidPaydays(payFrequency, paydays)) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            "Los días de pago no son válidos para la frecuencia seleccionada.",
+          data: { field: "paydays" },
+        });
+      }
+      if (args.payFrequency !== undefined)
+        updates.payFrequency = args.payFrequency;
+      if (args.paydays !== undefined) updates.paydays = args.paydays;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "No hay cambios para guardar.",
+      });
+    }
+
+    await ctx.db.patch(profile._id, updates);
+    return { success: true, appliesFrom: "next_cycle" as const };
   },
 });
 

@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -58,6 +59,11 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
     onSubmit: async ({ value }) => {
       try {
         await createCommitment(toCreateFixedCommitmentPayload(value));
+        track(AnalyticsEvents.FIXED_COMMITMENT_CREATED, {
+          envelope: value.envelope,
+          due_day: Number.parseInt(value.dueDayInput, 10) || 0,
+          amount: Number.parseInt(value.amountInput, 10) || 0,
+        });
         toast.success(COMMITMENT_CREATED_TOAST);
         form.reset();
         onOpenChange(false);

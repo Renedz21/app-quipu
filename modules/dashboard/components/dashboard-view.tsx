@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { useDashboardSummary } from "../queries";
 import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
@@ -32,6 +33,15 @@ type Props = {
 
 function DashboardContent({ profileName }: Props) {
   const summary = useDashboardSummary();
+
+  useEffect(() => {
+    if (!summary?.cycle) return;
+    track(AnalyticsEvents.DASHBOARD_VIEWED, {
+      cycle_id: summary.cycle.id,
+      is_new_cycle: summary.isEarlyCycle ?? false,
+      days_remaining: summary.cycle.daysRemaining,
+    });
+  }, [summary]);
 
   if (summary === undefined) {
     return (

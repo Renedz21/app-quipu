@@ -3,10 +3,12 @@ import { expect, test } from "./fixtures/smoke";
 import {
   applyCoverFromCycleSavings,
   applyRescueTransfer,
+  createExtraordinaryIncome,
   createFixedCommitment,
   dismissRescueSuggestion,
   getDashboardCoach,
   getEnvelopeBalances,
+  getMoveSurplusContext,
   postponeCommitmentForCycle,
   registerWantsExpense,
   resolveCoachInteraction,
@@ -14,6 +16,7 @@ import {
   seedCrisisFromFailedCompliance,
   seedCrisisFromUncoveredCommitment,
   seedOnboardedUser,
+  seedTranquilCoachState,
   seedWarningCoachState,
   snoozeCrisisCoach,
 } from "./helpers/convex-client";
@@ -390,5 +393,94 @@ test.describe("P0 smoke @smoke", () => {
     await expect(
       authedPage.getByText(/Quipu los ordena por vencimiento/),
     ).toBeVisible();
+  });
+
+  test("registrar gratificación extraordinaria desde UI", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+
+    await authedPage.goto("/income/register");
+
+    await authedPage.getByRole("button", { name: "Extraordinario" }).click();
+    await authedPage
+      .getByRole("button", { name: "Gratificación de julio" })
+      .click();
+    await authedPage.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Gratificación de julio" }),
+    ).toBeVisible();
+
+    await authedPage.getByRole("button", { name: "5" }).click();
+    await authedPage.getByRole("button", { name: "0" }).click();
+    await authedPage.getByRole("button", { name: "0" }).click();
+
+    await authedPage
+      .getByRole("button", { name: "Registrar gratificación" })
+      .click();
+
+    const destinationConfirm = authedPage.getByRole("button", {
+      name: "Confirmar destino",
+    });
+    if (await destinationConfirm.isVisible().catch(() => false)) {
+      await destinationConfirm.click();
+    }
+
+    await expect(authedPage.getByText("Ingreso registrado")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(authedPage.getByText("Extraordinario")).toBeVisible();
+  });
+
+  test("mover sobrante de gratificación al ahorro desde UI", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    await seedActiveCycle(convexClient, 100_000);
+    await createExtraordinaryIncome(convexClient, {
+      amount: 50_000,
+      distributionPolicy: "all_to_savings",
+    });
+
+    const context = await getMoveSurplusContext(convexClient);
+    expect(context?.sources.extraordinary.availableCents).toBeGreaterThan(0);
+
+    await authedPage.goto("/savings/move");
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Mover más al ahorro" }),
+    ).toBeVisible();
+
+    await authedPage
+      .getByRole("button", { name: /De mi gratificación/ })
+      .click();
+
+    const moveButton = authedPage.getByRole("button", {
+      name: /^Mover S\//,
+    });
+    await expect(moveButton).toBeEnabled({ timeout: 10_000 });
+    await moveButton.click();
+
+    await expect(authedPage).toHaveURL(/\/savings\/move\/success/, {
+      timeout: 15_000,
+    });
+    await expect(authedPage.getByText(/Guardaste/)).toBeVisible();
+  });
+
+  test("coach tranquilo muestra CTAs Ver detalle y Guardar de más", {
+    tag: "@smoke",
+  }, async ({ authedPage, convexClient }) => {
+    await seedOnboardedUser(convexClient);
+    await seedTranquilCoachState(convexClient);
+
+    const coach = await getDashboardCoach(convexClient);
+    expect(coach?.kind).toBe("tranquil");
+
+    await authedPage.goto("/dashboard");
+
+    await expect(authedPage.getByText("Tranquilo")).toBeVisible();
+    await authedPage.getByRole("button", { name: "Guardar de más" }).click();
+    await expect(authedPage).toHaveURL(/\/savings\/move$/);
   });
 });

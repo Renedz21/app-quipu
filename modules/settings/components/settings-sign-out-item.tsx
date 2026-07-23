@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { authClient } from "@/auth/auth-client";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { cn } from "@/shared/lib/utils";
 import { SETTINGS_SIGN_OUT } from "../constants";
 
@@ -20,6 +21,7 @@ export function SettingsSignOutItem({ className }: Props) {
         className,
       )}
       onClick={async () => {
+        track(AnalyticsEvents.USER_LOGGED_OUT, {});
         await authClient.signOut();
         router.push("/sign-in");
         router.refresh();

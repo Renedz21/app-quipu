@@ -2,8 +2,10 @@
 
 import { useQuery } from "convex/react";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { Check } from "reicon-react";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -122,6 +124,14 @@ function ProgressOverviewSkeleton() {
 
 export function ProgressView() {
   const overview = useQuery(api.progress.getOverview, {});
+  const summaryFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (summaryFiredRef.current) return;
+    if (overview === undefined) return;
+    summaryFiredRef.current = true;
+    track(AnalyticsEvents.WEEKLY_SUMMARY_VIEWED, { period: "weekly" });
+  }, [overview]);
 
   if (overview === undefined) {
     return <ProgressOverviewSkeleton />;

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { LockKeyholeOpen } from "reicon-react";
 import { authClient } from "@/auth/auth-client";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { Button } from "@/shared/components/ui/button";
 import { authPrimaryButtonClass } from "../constants";
 
@@ -22,6 +23,7 @@ export function PasskeySetup({ onDone }: PassKeyProps) {
       setMessage("No se completó. Puedes intentarlo de nuevo cuando quieras.");
       return;
     }
+    track(AnalyticsEvents.PASSKEY_CREATED, {});
     onDone();
   }
 

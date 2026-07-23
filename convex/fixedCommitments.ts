@@ -197,6 +197,30 @@ export const createCommitmentsBulk = mutation({
   },
 });
 
+export const getCommitment = query({
+  args: { commitmentId: v.id("fixedCommitments") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const commitment = await ctx.db.get(args.commitmentId);
+    if (!commitment) return null;
+
+    const profile = await ctx.db.get(commitment.profileId);
+    if (!profile || profile.userId !== identity.subject) return null;
+
+    return {
+      id: commitment._id,
+      name: commitment.name,
+      amount: commitment.amount,
+      envelope: commitment.envelope,
+      dueDay: commitment.dueDay,
+      coveredAt: commitment.coveredAt,
+      currencyCode: profile.currencyCode,
+    };
+  },
+});
+
 export const getCommitmentCoverage = query({
   args: {},
   handler: async (ctx) => {

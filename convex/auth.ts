@@ -8,6 +8,7 @@ import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
+import { sendResendEmail } from "./lib/resendEmail";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
@@ -34,11 +35,16 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           // sincroniza email u otros campos si cambian
         },
         onDelete: async (ctx, authUser) => {
-          const user = await ctx.db
+          const profile = await ctx.db
             .query("profiles")
             .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
             .unique();
-          if (user) await ctx.db.delete(user._id);
+          if (!profile) return;
+          // D3: borrado en cascada de todos los datos financieros del dominio
+          // (las tablas de Better Auth las borra el propio plugin).
+          await ctx.runMutation(internal.profiles.deleteAllDataForProfile, {
+            profileId: profile._id,
+          });
         },
       },
     },
@@ -54,8 +60,31 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
-      autoSignIn: true,
-      requireEmailVerification: false,
+      autoSignIn: false,
+      requireEmailVerification: true,
+      sendResetPassword: async ({ user, url }) => {
+        await sendResendEmail({
+          to: user.email,
+          subject: "Restablece tu contraseña en Quipu",
+          html: `<p>Hola${user.name ? ` ${user.name}` : ""},</p><p><a href="${url}">Haz clic aquí</a> para elegir una contraseña nueva. El enlace caduca en una hora.</p><p>Si no lo pediste, ignora este correo.</p>`,
+          text: `Restablece tu contraseña: ${url}`,
+        });
+      },
+    },
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        await sendResendEmail({
+          to: user.email,
+          subject: "Confirma tu correo en Quipu",
+          html: `<p>Hola${user.name ? ` ${user.name}` : ""},</p><p><a href="${url}">Confirma tu correo</a> para activar el acceso con contraseña.</p><p>Passkey sigue disponible mientras verificas.</p>`,
+          text: `Confirma tu correo: ${url}`,
+        });
+      },
+    },
+    user: {
+      // D3: habilita "Eliminar cuenta" (Ajustes). El trigger onDelete de
+      // arriba hace el borrado en cascada del dominio.
+      deleteUser: { enabled: true },
     },
     plugins: [
       convex({ authConfig }),

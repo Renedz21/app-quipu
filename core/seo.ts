@@ -109,7 +109,13 @@ export const privateAreaMetadata: Metadata = {
 };
 
 /** Rutas públicas indexables (sitemap + robots allow). */
-export const publicRoutes = ["/", "/sign-in", "/sign-up"] as const;
+export const publicRoutes = [
+  "/",
+  "/sign-in",
+  "/sign-up",
+  "/terminos",
+  "/privacidad",
+] as const;
 
 /** Prefijos que no deben indexarse ni aparecer en sitemap. */
 export const privateRoutePrefixes = [

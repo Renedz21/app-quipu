@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
@@ -44,6 +45,10 @@ export function NewGoalDialog({ open, onOpenChange }: Props) {
     onSubmit: async ({ value }) => {
       try {
         await createGoal(newGoalFormToMutationArgs(value));
+        track(AnalyticsEvents.SAVINGS_GOAL_CREATED, {
+          label: value.label,
+          has_target: value.targetInput.trim().length > 0,
+        });
         toast.success("Meta creada.");
         form.reset();
         onOpenChange(false);

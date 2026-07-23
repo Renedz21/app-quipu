@@ -6,6 +6,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
+import {
+  AnalyticsEvents,
+  mapDistributionPolicyToAllocationMode,
+  mapExtraordinaryTypeToIncomeType,
+  mapHabitualSourceToIncomeType,
+  track,
+  trackFinancialCycleTransition,
+} from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import type { DistributionPolicy } from "@/shared/lib/allocations";
@@ -66,6 +74,41 @@ type Props = {
 
 const silentSet = { dontValidate: true } as const;
 
+function extraTypeToExtraIncomeType(
+  type: ExtraordinaryType | undefined,
+): "gratification" | "cts" | "bonus" | "utilities" | "other" {
+  if (type === "gratification_july" || type === "gratification_december") {
+    return "gratification";
+  }
+  if (type === "cts") return "cts";
+  if (type === "corporate_bonus") return "bonus";
+  if (type === "profit_sharing") return "utilities";
+  return "other";
+}
+
+function incomeDestinationEnvelope(
+  incomeKind: "habitual" | "extraordinary",
+  distributionPolicy: DistributionPolicy | undefined,
+  allocations: { needs: number; wants: number; savings: number },
+): "needs" | "wants" | "savings" {
+  if (
+    incomeKind === "extraordinary" &&
+    distributionPolicy === "all_to_savings"
+  ) {
+    return "savings";
+  }
+  if (
+    allocations.needs >= allocations.wants &&
+    allocations.needs >= allocations.savings
+  ) {
+    return "needs";
+  }
+  if (allocations.savings >= allocations.wants) {
+    return "savings";
+  }
+  return "wants";
+}
+
 export function IncomeRegisterForm({
   currencyCode,
   profile,
@@ -121,6 +164,39 @@ export function IncomeRegisterForm({
                 : undefined,
             distributionPolicy: value.distributionPolicy,
           });
+          track(AnalyticsEvents.INCOME_REGISTERED, {
+            amount: value.amountCents,
+            envelope: incomeDestinationEnvelope(
+              "extraordinary",
+              value.distributionPolicy,
+              {
+                needs: profile.allocationNeeds,
+                wants: profile.allocationWants,
+                savings: profile.allocationSavings,
+              },
+            ),
+            income_kind: "extraordinary",
+            income_type: mapExtraordinaryTypeToIncomeType(
+              value.extraordinaryType,
+            ),
+            allocation_mode: mapDistributionPolicyToAllocationMode(
+              value.distributionPolicy,
+            ),
+            cycle_id: response.cycleId,
+            days_remaining_in_cycle: summary?.cycle?.daysRemaining,
+            is_first_income: response.isNewCycle,
+          });
+          track(AnalyticsEvents.EXTRA_INCOME_REGISTERED, {
+            amount: value.amountCents,
+            type: extraTypeToExtraIncomeType(value.extraordinaryType),
+            cycle_id: response.cycleId,
+            distribution_policy: mapDistributionPolicyToAllocationMode(
+              value.distributionPolicy,
+            ),
+          });
+          if (response.isNewCycle) {
+            trackFinancialCycleTransition(summary?.cycle?.id, response);
+          }
           onSuccess(response, {
             incomeKind: "extraordinary",
             distributionPolicy: value.distributionPolicy,
@@ -139,6 +215,23 @@ export function IncomeRegisterForm({
           occurredAt: value.occurredAt,
           incomeKind: "habitual",
         });
+        track(AnalyticsEvents.INCOME_REGISTERED, {
+          amount: value.amountCents,
+          envelope: incomeDestinationEnvelope("habitual", undefined, {
+            needs: profile.allocationNeeds,
+            wants: profile.allocationWants,
+            savings: profile.allocationSavings,
+          }),
+          income_kind: "habitual",
+          income_type: mapHabitualSourceToIncomeType(value.source),
+          allocation_mode: mapDistributionPolicyToAllocationMode(undefined),
+          cycle_id: response.cycleId,
+          days_remaining_in_cycle: summary?.cycle?.daysRemaining,
+          is_first_income: response.isNewCycle,
+        });
+        if (response.isNewCycle) {
+          trackFinancialCycleTransition(summary?.cycle?.id, response);
+        }
         onSuccess(response, { incomeKind: "habitual" });
       } catch (error) {
         setServerError(fromConvexError(error).message);
@@ -290,9 +383,7 @@ export function IncomeRegisterForm({
                   )}
                 >
                   <div className="space-y-5">
-                    {isExtraordinary &&
-                    showDetails &&
-                    values.extraordinaryType ? (
+                    {showDetails ? (
                       <form.Field name="amountCents">
                         {(amountField) => (
                           <form.Field name="occurredAt">
@@ -301,9 +392,7 @@ export function IncomeRegisterForm({
                                 {(labelField) => (
                                   <IncomeExtraordinaryDetailsFields
                                     currencyCode={currencyCode}
-                                    extraordinaryType={
-                                      values.extraordinaryType!
-                                    }
+                                    extraordinaryType={showDetails}
                                     amountField={amountField}
                                     occurredAtField={occurredAtField}
                                     labelField={

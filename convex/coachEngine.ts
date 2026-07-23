@@ -9,6 +9,7 @@ import {
 } from "./lib/coachState";
 import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
 import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
+import { requirePremiumProfile } from "./lib/entitlements";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import {
   computeRescueEnvelopePatches,
@@ -329,6 +330,8 @@ export const applyRescueTransfer = mutation({
     interactionId: v.id("coachInteractions"),
   },
   handler: async (ctx, { interactionId }) => {
+    await requirePremiumProfile(ctx);
+
     const { interaction } = await getOwnedPendingInteraction(
       ctx,
       interactionId,

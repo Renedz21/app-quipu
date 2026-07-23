@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { buttonVariants } from "@/shared/components/ui/button";
@@ -112,6 +113,10 @@ export function MoveSurplusView({
             moveMutation,
             moveSurplusFormToMutationArgs(values),
           );
+          track(AnalyticsEvents.ADDITIONAL_SAVINGS_ADDED, {
+            amount: result.amount,
+            source: values.fromSource,
+          });
           const params = new URLSearchParams({
             moved: String(result.amount),
             objective: String(result.savingsObjectiveCents),

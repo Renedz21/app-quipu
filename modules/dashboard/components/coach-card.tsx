@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ChatDots } from "reicon-react";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
@@ -11,6 +13,8 @@ import {
   COACH_EARLY_REGISTER_CTA,
   COACH_EARLY_VIEW_SYSTEM_CTA,
   COACH_KIND_LABELS,
+  COACH_TRANQUIL_SAVE_MORE_CTA,
+  COACH_TRANQUIL_VIEW_CTA,
   COACH_WARNING_ADJUST_CTA,
   COACH_WARNING_VIEW_CTA,
   DASHBOARD_ENVELOPES_SECTION_ID,
@@ -21,6 +25,14 @@ type Props = {
   coach: DashboardCoach;
   currencyCode: string;
   layout?: "inline" | "full";
+};
+
+const INSIGHT_TYPE_BY_KIND: Record<DashboardCoach["kind"], string> = {
+  tranquil: "tranquil",
+  warning: "warning",
+  suggestion: "suggestion",
+  crisis: "crisis",
+  contigo: "early_cycle",
 };
 
 function coachSectionClass(
@@ -81,9 +93,16 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
   const router = useRouter();
   const { open } = useExpenseRegister();
   const isContigo = coach.kind === "contigo";
+  const isTranquil = coach.kind === "tranquil";
   const isWarning = coach.kind === "warning";
   const isCrisis = coach.kind === "crisis";
   const isSuggestion = coach.kind === "suggestion";
+
+  useEffect(() => {
+    track(AnalyticsEvents.FINANCIAL_INSIGHT_VIEWED, {
+      insight_type: INSIGHT_TYPE_BY_KIND[coach.kind],
+    });
+  }, [coach.kind]);
 
   return (
     <section
@@ -134,6 +153,28 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
             className="rounded-[11px] border-line bg-canvas/70 text-ink-secondary"
           >
             {COACH_EARLY_VIEW_SYSTEM_CTA}
+          </Button>
+        </div>
+      ) : null}
+
+      {isTranquil ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={scrollToEnvelopes}
+            className="rounded-[11px] border-qp-border bg-canvas/70 text-qp-deep"
+          >
+            {COACH_TRANQUIL_VIEW_CTA}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => router.push("/savings/move")}
+            className="rounded-[11px] bg-qp text-canvas hover:bg-qp/90"
+          >
+            {COACH_TRANQUIL_SAVE_MORE_CTA}
           </Button>
         </div>
       ) : null}

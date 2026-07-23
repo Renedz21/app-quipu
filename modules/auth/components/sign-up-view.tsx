@@ -1,9 +1,11 @@
 "use client";
 import { useForm } from "@tanstack/react-form";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import { AnalyticsEvents, getAuthSignupContext, track } from "@/core/analytics";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -20,8 +22,9 @@ import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { PasskeySetup } from "./passkey-setup";
 import { SuccessStep } from "./sign-up-success-step";
+import { VerifyEmailPromptStep } from "./verify-email-prompt-step";
 
-type Step = "form" | "passkey" | "success";
+type Step = "form" | "verify-email" | "passkey" | "success";
 
 function isUserAlreadyExists(error: {
   code?: string;
@@ -37,6 +40,8 @@ function isUserAlreadyExists(error: {
 
 const bgByStep: Record<Step, string> = {
   form: "bg-[radial-gradient(110%_70%_at_50%_-10%,var(--qp-surface-warm),var(--qp-surface)_60%)]",
+  "verify-email":
+    "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-selected),var(--qp-surface)_62%)]",
   passkey:
     "bg-[radial-gradient(110%_70%_at_50%_-5%,var(--qp-selected),var(--qp-surface)_62%)]",
   success:
@@ -45,6 +50,7 @@ const bgByStep: Record<Step, string> = {
 
 const stepLabel: Record<Step, string> = {
   form: "Paso 1 de 3: crea tu cuenta",
+  "verify-email": "Confirma tu correo",
   passkey: "Paso 2 de 3: configura tu passkey",
   success: "Cuenta lista",
 };
@@ -53,6 +59,8 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("form");
   const [serverError, setServerError] = useState(false);
+
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const form = useForm({
     defaultValues: { name: "", email: initialEmail, password: "" },
@@ -74,8 +82,13 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
         setServerError(true);
         return;
       }
-      toast.success("Cuenta creada");
-      setStep("passkey");
+      track(AnalyticsEvents.USER_SIGNED_UP, {
+        provider: "email",
+        ...getAuthSignupContext(),
+      });
+      toast.success("Revisa tu correo para confirmar la cuenta");
+      setRegisteredEmail(value.email);
+      setStep("verify-email");
     },
   });
 
@@ -224,9 +237,21 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
           </form>
 
           <p className="mt-3.5 text-center text-[11.5px] text-faint leading-normal">
-            Al crear tu cuenta aceptas los Términos y la Política de privacidad.
+            Al crear tu cuenta aceptas los{" "}
+            <Link href="/terminos" className="underline underline-offset-2">
+              Términos
+            </Link>{" "}
+            y la{" "}
+            <Link href="/privacidad" className="underline underline-offset-2">
+              Política de privacidad
+            </Link>
+            .
           </p>
         </div>
+      )}
+
+      {step === "verify-email" && (
+        <VerifyEmailPromptStep email={registeredEmail} />
       )}
 
       {step === "passkey" && <PasskeySetup onDone={() => setStep("success")} />}

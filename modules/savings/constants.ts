@@ -48,7 +48,8 @@ export const EMERGENCY_FUND_STAT_CYCLES_SUFFIX = "ciclos";
 
 export const EMERGENCY_FUND_CONTRIBUTE_CTA = "Aportar ahora";
 export const EMERGENCY_FUND_ADJUST_CTA = "Ajustar aporte";
-export const EMERGENCY_FUND_ADJUST_HINT = "Próximamente";
+export const EMERGENCY_FUND_ADJUST_HINT =
+  "Edita tu reparto 50/30/20 en Ajustes para cambiar el aporte automático.";
 
 export const GOALS_SECTION_LABEL = "Otras metas";
 export const GOALS_NEW_CTA = "+ Nueva meta";
@@ -73,6 +74,15 @@ export const SAVINGS_ERROR_RETRY = "Reintentar";
 export const CONTRIBUTE_SUCCESS_PREFIX = "Aporte registrado.";
 export const CONTRIBUTE_NO_FUNDS =
   "No tienes saldo apartado en Ahorro para aportar en este ciclo.";
+
+export const GOAL_CONTRIBUTE_CTA = "Aportar";
+export const GOAL_CONTRIBUTE_DIALOG_TITLE = "Aportar a la meta";
+export const GOAL_CONTRIBUTE_AMOUNT_LABEL = "Monto a aportar";
+export const GOAL_CONTRIBUTE_AVAILABLE_PREFIX = "Disponible en Ahorro:";
+export const GOAL_CONTRIBUTE_USE_ALL_CTA = "Usar todo";
+export const GOAL_CONTRIBUTE_SUBMIT = "Confirmar aporte";
+export const GOAL_CONTRIBUTE_CANCEL = "Volver";
+export const GOAL_CONTRIBUTE_SUCCESS_PREFIX = "Aporte registrado.";
 
 export const GOAL_PROGRESS_OF = "de";
 export const GOALS_EMPTY_TITLE = "Tus metas vivirán aquí";

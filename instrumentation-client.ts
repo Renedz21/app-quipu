@@ -1,17 +1,16 @@
-import posthog from "posthog-js";
-import { clientEnv } from "@/core/env";
+/**
+ * Bootstrap del SDK de PostHog para Next.js 16 App Router.
+ *
+ * Este archivo se ejecuta una sola vez en el cliente al cargar el bundle.
+ * La configuración real vive en `core/analytics/client.ts`; este wrapper
+ * existe solo porque Next.js lo requiere en la ruta convencional
+ * `instrumentation-client.ts` (ver docs/nextjs_knowledge.md §"instrumentation").
+ *
+ * Si en el futuro migramos a `instrumentation.ts` server-side, mantenemos
+ * este archivo para el cliente y agregamos un `instrumentation.ts` separado
+ * para el servidor.
+ */
 
-posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, {
-  api_host: clientEnv.NEXT_PUBLIC_POSTHOG_HOST,
-  defaults: "2026-01-30",
-  capture_exceptions: true,
-  capture_pageview: "history_change",
-  capture_pageleave: true,
-  session_recording: {
-    maskAllInputs: true,
-    maskTextSelector: "[data-ph-mask]",
-  },
-  enable_recording_console_log: true,
-  capture_performance: true,
-  debug: process.env.NODE_ENV === "development"
-});
+import { initPostHog } from "@/core/analytics";
+
+initPostHog();

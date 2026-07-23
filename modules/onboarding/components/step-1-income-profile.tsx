@@ -10,9 +10,12 @@ import { CheckMark } from "./check-mark";
 import { useOnboarding } from "./onboarding-provider";
 import { OnboardingShell } from "./onboarding-shell";
 
-type Props = { onNext: VoidFunction };
+type Props = {
+  onNext: VoidFunction;
+  onStepCompleted: VoidFunction;
+};
 
-export function Step1IncomeProfile({ onNext }: Props) {
+export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
   const { state, dispatch } = useOnboarding();
 
   function select(value: IncomeModel) {
@@ -27,6 +30,11 @@ export function Step1IncomeProfile({ onNext }: Props) {
     });
   }
 
+  function handleNext() {
+    onStepCompleted();
+    onNext();
+  }
+
   return (
     <OnboardingShell
       currentStep={1}
@@ -34,7 +42,7 @@ export function Step1IncomeProfile({ onNext }: Props) {
       subtitle="Con esto Quipu arma tu ciclo. Podrás cambiarlo después."
       hint="Puedes cambiarlo cuando quieras"
       cta={
-        <Button onClick={onNext} disabled={!state.incomeModel} size="lg">
+        <Button onClick={handleNext} disabled={!state.incomeModel} size="lg">
           Continuar
           <ArrowRight size={24} />
         </Button>

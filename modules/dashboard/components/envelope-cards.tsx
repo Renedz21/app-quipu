@@ -1,6 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import type { ExpenseEnvelopeType } from "@/modules/expenses/lib/envelopeSuggestion";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
@@ -46,6 +47,7 @@ export function EnvelopeCards({
   const { open } = useExpenseRegister();
 
   function handleEnvelopeClick(type: "needs" | "wants" | "savings") {
+    track(AnalyticsEvents.ENVELOPE_OPENED, { envelope_type: type });
     if (type === "savings") return;
     open({
       variant: "envelope",

@@ -1,5 +1,6 @@
+import type { GenericCtx } from "@convex-dev/better-auth";
+import type { DataModel } from "../_generated/dataModel";
 import { createAuth } from "../auth";
 
-// Export a static instance for Better Auth schema generation
-// biome-ignore lint/suspicious/noExplicitAny: schema CLI stub; full ctx only at runtime
-export const auth = createAuth({} as any);
+/** Static instance for Better Auth schema CLI; runtime uses a real Convex ctx. */
+export const auth = createAuth({} as GenericCtx<DataModel>);

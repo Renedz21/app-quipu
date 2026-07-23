@@ -15,6 +15,8 @@ export const COACH_KIND_LABELS = {
 
 export const COACH_WARNING_ADJUST_CTA = "Ajustar ciclo";
 export const COACH_WARNING_VIEW_CTA = "Ver en qué";
+export const COACH_TRANQUIL_VIEW_CTA = "Ver detalle";
+export const COACH_TRANQUIL_SAVE_MORE_CTA = "Guardar de más";
 export const DASHBOARD_ENVELOPES_SECTION_ID = "dashboard-envelopes";
 
 export const COMMITMENTS_COVERED_HEADER = "Todo está cubierto";

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -20,7 +21,7 @@ export function PasswordStep({
 }: {
   form: any;
   email: string;
-  error: "credentials" | "passkey" | null;
+  error: "credentials" | "passkey" | "unverified" | null;
   reason?: string;
   onChangeEmail: VoidFunction;
   showPasskey: boolean;
@@ -34,6 +35,27 @@ export function PasswordStep({
           variant="info"
           title="Ya tienes cuenta"
           description="Entra con tu passkey o tu contraseña."
+        />
+      )}
+      {reason === "verify" && (
+        <AuthBanner
+          variant="info"
+          title="Confirma tu correo"
+          description="Abre el enlace que te enviamos y luego entra con tu contraseña."
+        />
+      )}
+      {reason === "password-reset" && (
+        <AuthBanner
+          variant="info"
+          title="Contraseña actualizada"
+          description="Ya puedes entrar con tu contraseña nueva."
+        />
+      )}
+      {error === "unverified" && (
+        <AuthBanner
+          variant="info"
+          title="Falta confirmar tu correo"
+          description="Te reenviamos un enlace. Revisa tu bandeja (y spam) y vuelve a intentar."
         />
       )}
       {error === "credentials" && (
@@ -95,11 +117,25 @@ export function PasswordStep({
                   {field.state.meta.isTouched && !field.state.meta.isValid && (
                     <FieldError errors={field.state.meta.errors} />
                   )}
+                  <Link
+                    href="/forgot-password"
+                    className="mt-2 inline-block text-[12.5px] font-medium text-qp-deep hover:underline"
+                  >
+                    Olvidé mi contraseña
+                  </Link>
                 </Field>
               );
             }}
           </form.Field>
         </FieldGroup>
+        <div className="flex justify-end">
+          <Link
+            href={`/recuperar?email=${encodeURIComponent(email)}`}
+            className="text-[13px] font-medium text-qp-deep hover:underline"
+          >
+            Olvidé mi contraseña
+          </Link>
+        </div>
         <form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>
           {([canSubmit, isSubmitting]: [boolean, boolean]) => (
             <Button

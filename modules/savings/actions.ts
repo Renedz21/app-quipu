@@ -4,10 +4,19 @@ import { useMutation } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { type MoveSurplusInput, moveSurplusInputSchema } from "./schemas";
+import {
+  type ContributeToGoalInput,
+  contributeToGoalInputSchema,
+  type MoveSurplusInput,
+  moveSurplusInputSchema,
+} from "./schemas";
 
 export function useMoveSurplusToSavings() {
   return useMutation(api.savings.moveSurplusToSavings);
+}
+
+export function useContributeToGoal() {
+  return useMutation(api.savings.contributeToGoal);
 }
 
 type MoveSurplusMutationArgs = FunctionArgs<
@@ -32,4 +41,25 @@ export async function moveSurplusToSavings(
   raw: MoveSurplusInput,
 ) {
   return mutate(parseMoveSurplusInput(raw));
+}
+
+type ContributeToGoalMutationArgs = FunctionArgs<
+  typeof api.savings.contributeToGoal
+>;
+
+export function parseContributeToGoalInput(
+  raw: ContributeToGoalInput,
+): ContributeToGoalMutationArgs {
+  const parsed = contributeToGoalInputSchema.parse(raw);
+  return {
+    goalId: parsed.goalId as Id<"subEnvelopes">,
+    ...(parsed.amountCents !== undefined ? { amount: parsed.amountCents } : {}),
+  };
+}
+
+export async function contributeToGoal(
+  mutate: ReturnType<typeof useContributeToGoal>,
+  raw: ContributeToGoalInput,
+) {
+  return mutate(parseContributeToGoalInput(raw));
 }

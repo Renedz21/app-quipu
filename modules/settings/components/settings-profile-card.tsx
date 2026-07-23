@@ -1,13 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
+import { fromConvexError } from "@/core/errors";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/lib/utils";
+import { useUpdateDisplayName } from "../actions";
 import {
   SETTINGS_EDIT_PROFILE,
-  SETTINGS_EDIT_PROFILE_HINT,
+  SETTINGS_NAME_CANCEL,
+  SETTINGS_NAME_ERROR,
+  SETTINGS_NAME_SAVE,
+  SETTINGS_NAME_SAVED,
   SETTINGS_PROFILE_LABEL,
   SETTINGS_PROGRESS_LINK,
 } from "../constants";
+import { displayNameSchema } from "../schemas";
 import type { SettingsProfileOverview } from "../types";
 
 type Props = {
@@ -16,7 +27,35 @@ type Props = {
 };
 
 export function SettingsProfileCard({ profile, className }: Props) {
+  const updateName = useUpdateDisplayName();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(profile.name);
+  const [pending, setPending] = useState(false);
+
   const subtitleParts = [profile.email, profile.country].filter(Boolean);
+
+  async function saveName() {
+    const parsed = displayNameSchema.safeParse(draft);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? SETTINGS_NAME_ERROR);
+      return;
+    }
+    setPending(true);
+    try {
+      await updateName({ name: parsed.data });
+      toast.success(SETTINGS_NAME_SAVED);
+      setEditing(false);
+    } catch (error) {
+      toast.error(fromConvexError(error).message);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function cancelEdit() {
+    setDraft(profile.name);
+    setEditing(false);
+  }
 
   return (
     <section
@@ -33,29 +72,67 @@ export function SettingsProfileCard({ profile, className }: Props) {
           className="flex size-[54px] shrink-0 items-center justify-center rounded-full bg-qp-tint font-serif text-2xl text-qp-deep"
           aria-hidden
         >
-          {getInitial(profile.name)}
+          {getInitial(editing ? draft : profile.name)}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[17px] font-semibold text-ink">
-            {profile.name}
-          </div>
-          {subtitleParts.length > 0 ? (
-            <div className="truncate text-[13px] text-mute-subtle">
-              {subtitleParts.join(" · ")}
-            </div>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          disabled
-          title={SETTINGS_EDIT_PROFILE_HINT}
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "hidden shrink-0 border-line text-ink-secondary md:inline-flex",
+          {editing ? (
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="h-10 text-[15px]"
+              autoFocus
+              maxLength={80}
+              aria-label="Nombre"
+            />
+          ) : (
+            <>
+              <div className="truncate text-[17px] font-semibold text-ink">
+                {profile.name}
+              </div>
+              {subtitleParts.length > 0 ? (
+                <div className="truncate text-[13px] text-mute-subtle">
+                  {subtitleParts.join(" · ")}
+                </div>
+              ) : null}
+            </>
           )}
-        >
-          {SETTINGS_EDIT_PROFILE}
-        </button>
+        </div>
+        {editing ? (
+          <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="border-line"
+              disabled={pending}
+              onClick={cancelEdit}
+            >
+              {SETTINGS_NAME_CANCEL}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={pending}
+              onClick={() => void saveName()}
+            >
+              {SETTINGS_NAME_SAVE}
+            </Button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(profile.name);
+              setEditing(true);
+            }}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "shrink-0 border-line text-ink-secondary md:inline-flex",
+            )}
+          >
+            {SETTINGS_EDIT_PROFILE}
+          </button>
+        )}
       </div>
       <div className="flex flex-wrap gap-2.5">
         {profile.tags.map((tag) => (

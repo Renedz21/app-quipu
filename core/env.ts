@@ -25,6 +25,10 @@ const serverSchema = z.object({
   POLAR_ORGANIZATION_TOKEN: z.string().optional(),
   POLAR_PRODUCT_ID_PREMIUM: z.string(),
   POLAR_SERVER: z.string(),
+
+  /** Convex / Better Auth (Resend). Opcional en dev local. */
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM: z.string().optional(),
 });
 
 export function parseServerEnv() {

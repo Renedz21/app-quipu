@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowRight } from "reicon-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { COACH_CRISIS_LATER_CTA } from "@/modules/coach/constants";
 import type { DashboardCoach } from "@/modules/dashboard/types";
 import { Button } from "@/shared/components/ui/button";
@@ -28,12 +29,20 @@ export function CoachCrisisActions({ options }: Props) {
     try {
       if (option.id === "cover_from_savings") {
         await applyCover({});
+        track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
+          action: "completed",
+          option_id: option.id,
+        });
         return;
       }
 
       if (option.commitmentId) {
         await postponeCommitment({
           commitmentId: option.commitmentId as Id<"fixedCommitments">,
+        });
+        track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
+          action: "postponed",
+          option_id: option.id,
         });
       }
     } finally {
@@ -45,6 +54,10 @@ export function CoachCrisisActions({ options }: Props) {
     setIsSubmitting(true);
     try {
       await snoozeCrisis({});
+      track(AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED, {
+        action: "dismissed",
+        option_id: "snooze",
+      });
     } finally {
       setIsSubmitting(false);
     }

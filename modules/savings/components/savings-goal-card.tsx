@@ -1,15 +1,25 @@
 "use client";
 
+import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
-import { GOAL_PROGRESS_OF } from "../constants";
+import { GOAL_CONTRIBUTE_CTA, GOAL_PROGRESS_OF } from "../constants";
 import type { SavingsGoal } from "../types";
 
 type Props = {
   goal: SavingsGoal;
   currencyCode: string;
+  availableToContributeCents: number;
+  hasActiveCycle: boolean;
+  onContribute: () => void;
 };
 
-export function SavingsGoalCard({ goal, currencyCode }: Props) {
+export function SavingsGoalCard({
+  goal,
+  currencyCode,
+  availableToContributeCents,
+  hasActiveCycle,
+  onContribute,
+}: Props) {
   const hasTarget =
     goal.targetAmount !== undefined && goal.targetAmount !== null;
   const currentLabel = formatCents(goal.currentAmount, {
@@ -48,6 +58,18 @@ export function SavingsGoalCard({ goal, currencyCode }: Props) {
           }}
         />
       </div>
+      {hasActiveCycle ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full rounded-[11px]"
+          disabled={availableToContributeCents <= 0}
+          onClick={onContribute}
+        >
+          {GOAL_CONTRIBUTE_CTA}
+        </Button>
+      ) : null}
     </article>
   );
 }

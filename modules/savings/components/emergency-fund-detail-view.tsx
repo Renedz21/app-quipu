@@ -1,12 +1,14 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
+import { cn } from "@/shared/lib/utils";
 import {
   EMERGENCY_FUND_ADJUST_CTA,
   EMERGENCY_FUND_ADJUST_HINT,
@@ -126,15 +128,13 @@ export function EmergencyFundDetailView() {
           availableToContributeCents={emergencyFund.availableToContributeCents}
           currencyCode={profile.currencyCode}
         />
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          disabled
+        <Link
+          href="/settings/allocations"
+          className={cn(buttonVariants({ variant: "outline" }), "w-full")}
           title={EMERGENCY_FUND_ADJUST_HINT}
         >
           {EMERGENCY_FUND_ADJUST_CTA}
-        </Button>
+        </Link>
       </div>
     </div>
   );

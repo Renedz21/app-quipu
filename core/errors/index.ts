@@ -36,6 +36,8 @@ export type ErrorCode =
   | "INSUFFICIENT_FUNDS"
   | "INSUFFICIENT_ENVELOPE_BALANCE"
   | "OVER_BUDGET_LIMIT"
+  // Plan / facturación
+  | "PLAN_REQUIRED"
   // Sistema
   | "INTERNAL_ERROR"
   | "EXTERNAL_SERVICE_ERROR"
@@ -170,6 +172,14 @@ export class OverBudgetLimitError extends AppError {
       `La operación excede el límite del sobre ${envelope} (${limit})`,
       { meta: { envelope, limit } },
     );
+  }
+}
+
+// ─── Plan / facturación ────────────────────────────────────────────────────
+
+export class PlanRequiredError extends AppError {
+  constructor(message = "Esta función es parte de Quipu Plus.") {
+    super("PLAN_REQUIRED", message);
   }
 }
 

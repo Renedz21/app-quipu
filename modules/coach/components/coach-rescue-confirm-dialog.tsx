@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -48,6 +49,11 @@ export function CoachRescueConfirmDialog({
     setIsSubmitting(true);
     try {
       await applyRescue({ interactionId });
+      track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
+        recommendation_type: "rescue_transfer",
+        interaction: "selected",
+        transfer_amount: suggestion.transfer,
+      });
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);
@@ -58,6 +64,11 @@ export function CoachRescueConfirmDialog({
     setIsSubmitting(true);
     try {
       await dismissRescue({ interactionId });
+      track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
+        recommendation_type: "rescue_transfer",
+        interaction: "dismissed",
+        transfer_amount: suggestion.transfer,
+      });
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);

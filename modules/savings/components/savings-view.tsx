@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
@@ -28,6 +29,7 @@ import {
 } from "../constants";
 import { buildCycleContributionSubtitle } from "../lib/savingsCopy";
 import { useCycleSavingsBreakdown } from "../queries";
+import { ContributeGoalDialog } from "./contribute-goal-dialog";
 import {
   CycleSavingsSection,
   CycleSavingsSectionSkeleton,
@@ -40,6 +42,10 @@ export function SavingsView() {
   const overview = useQuery(api.savings.getOverview, {});
   const cycleBreakdown = useCycleSavingsBreakdown();
   const [newGoalOpen, setNewGoalOpen] = useState(false);
+  const [contributeGoal, setContributeGoal] = useState<{
+    id: Id<"subEnvelopes">;
+    label: string;
+  } | null>(null);
 
   if (overview === undefined) {
     return <SavingsViewSkeleton />;
@@ -94,6 +100,9 @@ export function SavingsView() {
   const showGoalsEmptyState =
     overview.goals.length === 0 &&
     (isPreTraction || overview.emergencyFund?.currentAmount === 0);
+
+  const availableToContributeCents =
+    overview.emergencyFund?.availableToContributeCents ?? 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
@@ -166,6 +175,11 @@ export function SavingsView() {
                 key={goal.id}
                 goal={goal}
                 currencyCode={overview.profile.currencyCode}
+                hasActiveCycle={overview.hasActiveCycle}
+                availableToContributeCents={availableToContributeCents}
+                onContribute={() =>
+                  setContributeGoal({ id: goal.id, label: goal.label })
+                }
               />
             ))}
           </div>
@@ -213,6 +227,18 @@ export function SavingsView() {
       </section>
 
       <NewGoalDialog open={newGoalOpen} onOpenChange={setNewGoalOpen} />
+      {contributeGoal ? (
+        <ContributeGoalDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setContributeGoal(null);
+          }}
+          goalId={contributeGoal.id}
+          goalLabel={contributeGoal.label}
+          availableCents={availableToContributeCents}
+          currencyCode={overview.profile.currencyCode}
+        />
+      ) : null}
     </div>
   );
 }

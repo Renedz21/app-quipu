@@ -1,6 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { internalQuery, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
 /**
  * Obtiene el perfil del usuario autenticado actual.
@@ -182,6 +187,7 @@ export const createProfile = mutation({
  */
 export const updateProfileSettings = mutation({
   args: {
+    name: v.optional(v.string()),
     allocationNeeds: v.optional(v.number()),
     allocationWants: v.optional(v.number()),
     allocationSavings: v.optional(v.number()),
@@ -215,6 +221,17 @@ export const updateProfileSettings = mutation({
       });
     }
 
+    if (args.name !== undefined) {
+      const trimmed = args.name.trim();
+      if (trimmed.length < 1 || trimmed.length > 80) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "El nombre debe tener entre 1 y 80 caracteres.",
+          data: { field: "name" },
+        });
+      }
+    }
+
     const needs = args.allocationNeeds ?? profile.allocationNeeds;
     const wants = args.allocationWants ?? profile.allocationWants;
     const savings = args.allocationSavings ?? profile.allocationSavings;
@@ -246,8 +263,10 @@ export const updateProfileSettings = mutation({
         | "allocationSavings"
         | "payFrequency"
         | "paydays"
+        | "name"
       >
     > = {};
+    if (args.name !== undefined) updates.name = args.name.trim();
     if (args.allocationNeeds !== undefined)
       updates.allocationNeeds = args.allocationNeeds;
     if (args.allocationWants !== undefined)
@@ -263,5 +282,200 @@ export const updateProfileSettings = mutation({
     }
 
     return { success: true };
+  },
+});
+
+/**
+ * D3 — Exportación de datos personales (Ley 29733, derecho de portabilidad).
+ * Reúne todos los hechos del dominio del usuario autenticado en un solo
+ * documento JSON descargable desde Ajustes.
+ */
+export const exportMyData = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión.",
+      });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
+    }
+    const profileId = profile._id;
+
+    const financialCycles = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
+      .collect();
+
+    // surplusContributions solo tiene índice por ciclo.
+    const surplusContributions = (
+      await Promise.all(
+        financialCycles.map((cycle) =>
+          ctx.db
+            .query("surplusContributions")
+            .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+            .collect(),
+        ),
+      )
+    ).flat();
+
+    const [
+      envelopes,
+      subEnvelopes,
+      fixedCommitments,
+      expenses,
+      incomeEvents,
+      coachInteractions,
+      streaks,
+      cycleHistory,
+    ] = await Promise.all([
+      ctx.db
+        .query("envelopes")
+        .withIndex("by_profile_type", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("subEnvelopes")
+        .withIndex("by_profile", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("expenses")
+        .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("incomeEvents")
+        .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("coachInteractions")
+        .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("streaks")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("cycleHistory")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+    ]);
+
+    return {
+      exportedAt: Date.now(),
+      profile,
+      financialCycles,
+      envelopes,
+      subEnvelopes,
+      fixedCommitments,
+      expenses,
+      incomeEvents,
+      surplusContributions,
+      coachInteractions,
+      streaks,
+      cycleHistory,
+    };
+  },
+});
+
+/**
+ * D3 — Borrado en cascada de todos los datos financieros del perfil.
+ * Lo llama el trigger `onDelete` de Better Auth (convex/auth.ts) cuando el
+ * usuario elimina su cuenta. Las tablas de Better Auth (user, session,
+ * account, passkey) las borra el propio plugin.
+ */
+export const deleteAllDataForProfile = internalMutation({
+  args: { profileId: v.id("profiles") },
+  returns: v.null(),
+  handler: async (ctx, { profileId }) => {
+    const cycles = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
+      .collect();
+
+    // surplusContributions solo tiene índice por ciclo.
+    for (const cycle of cycles) {
+      const contributions = await ctx.db
+        .query("surplusContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+        .collect();
+      for (const contribution of contributions) {
+        await ctx.db.delete(contribution._id);
+      }
+      await ctx.db.delete(cycle._id);
+    }
+
+    const deleteByProfile = async (
+      docs: ReadonlyArray<{ _id: Parameters<typeof ctx.db.delete>[0] }>,
+    ) => {
+      for (const doc of docs) {
+        await ctx.db.delete(doc._id);
+      }
+    };
+
+    await deleteByProfile(
+      await ctx.db
+        .query("envelopes")
+        .withIndex("by_profile_type", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("subEnvelopes")
+        .withIndex("by_profile", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("expenses")
+        .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("incomeEvents")
+        .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("coachInteractions")
+        .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("streaks")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteByProfile(
+      await ctx.db
+        .query("cycleHistory")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+
+    await ctx.db.delete(profileId);
+    return null;
   },
 });

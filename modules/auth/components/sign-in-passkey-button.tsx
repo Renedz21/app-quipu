@@ -3,6 +3,11 @@ import { useState } from "react";
 import { LockKeyholeOpen } from "reicon-react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
+import {
+  AnalyticsEvents,
+  stampAndComputeDaysSinceLastLogin,
+  track,
+} from "@/core/analytics";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { authSecondaryButtonClass } from "../constants";
@@ -16,6 +21,10 @@ export function SignInPasskeyButton() {
     const { error } = await authClient.signIn.passkey();
     setPending(false);
     if (error) return;
+    track(AnalyticsEvents.USER_LOGGED_IN, {
+      method: "passkey",
+      days_since_last_login: stampAndComputeDaysSinceLastLogin(),
+    });
     toast.success("Bienvenido de vuelta");
     navigateAfterAuth("/dashboard");
   }

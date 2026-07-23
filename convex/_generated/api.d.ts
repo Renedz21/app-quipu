@@ -23,6 +23,7 @@ import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
 import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
+import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_evaluateClosedCycle from "../lib/evaluateClosedCycle.js";
 import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
 import type * as lib_extraordinaryIncome from "../lib/extraordinaryIncome.js";
@@ -30,6 +31,7 @@ import type * as lib_extraordinarySavingsSurplus from "../lib/extraordinarySavin
 import type * as lib_gamificationMath from "../lib/gamificationMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
+import type * as lib_resendEmail from "../lib/resendEmail.js";
 import type * as lib_resetAppTables from "../lib/resetAppTables.js";
 import type * as lib_savingsMath from "../lib/savingsMath.js";
 import type * as lib_settingsCopy from "../lib/settingsCopy.js";
@@ -65,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "lib/crisisResolution": typeof lib_crisisResolution;
   "lib/cycleSavingsBreakdown": typeof lib_cycleSavingsBreakdown;
   "lib/dashboardMath": typeof lib_dashboardMath;
+  "lib/entitlements": typeof lib_entitlements;
   "lib/evaluateClosedCycle": typeof lib_evaluateClosedCycle;
   "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
   "lib/extraordinaryIncome": typeof lib_extraordinaryIncome;
@@ -72,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   "lib/gamificationMath": typeof lib_gamificationMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
   "lib/rescueTransfer": typeof lib_rescueTransfer;
+  "lib/resendEmail": typeof lib_resendEmail;
   "lib/resetAppTables": typeof lib_resetAppTables;
   "lib/savingsMath": typeof lib_savingsMath;
   "lib/settingsCopy": typeof lib_settingsCopy;

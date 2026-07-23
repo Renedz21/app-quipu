@@ -3,6 +3,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "reicon-react";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError } from "@/shared/components/ui/field";
@@ -89,6 +90,11 @@ export function ExpenseRegisterForm({
           amount: value.amountCents,
           description: value.description.trim(),
           envelopeType,
+        });
+        track(AnalyticsEvents.EXPENSE_REGISTERED, {
+          amount: response.amount,
+          envelope: response.envelopeType,
+          entry_variant: variant,
         });
         onSuccess({
           expenseId: response.expenseId,

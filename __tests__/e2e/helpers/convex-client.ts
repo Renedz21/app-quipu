@@ -173,3 +173,41 @@ export async function seedCrisisFromFailedCompliance(client: ConvexHttpClient) {
     envelopeType: "needs",
   });
 }
+
+export async function seedTranquilCoachState(client: ConvexHttpClient) {
+  await seedActiveCycle(client, 100_000);
+  await registerWantsExpense(client, 5_000, "Smoke tranquil expense");
+}
+
+export async function createExtraordinaryIncome(
+  client: ConvexHttpClient,
+  params: {
+    amount: number;
+    extraordinaryType?:
+      | "gratification_july"
+      | "gratification_december"
+      | "cts"
+      | "corporate_bonus"
+      | "profit_sharing"
+      | "custom";
+    distributionPolicy?: "profile_default" | "all_to_savings";
+    extraordinaryLabel?: string;
+  },
+) {
+  return client.mutation(api.incomeEvents.createIncomeEvent, {
+    amount: params.amount,
+    source: "payroll",
+    description: "",
+    occurredAt: Date.now(),
+    incomeKind: "extraordinary",
+    extraordinaryType: params.extraordinaryType ?? "gratification_july",
+    distributionPolicy: params.distributionPolicy ?? "all_to_savings",
+    ...(params.extraordinaryLabel
+      ? { extraordinaryLabel: params.extraordinaryLabel }
+      : {}),
+  });
+}
+
+export async function getMoveSurplusContext(client: ConvexHttpClient) {
+  return client.query(api.savings.getMoveSurplusContext, {});
+}

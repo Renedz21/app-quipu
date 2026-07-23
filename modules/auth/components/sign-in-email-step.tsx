@@ -19,7 +19,7 @@ export function EmailStep({
 }: {
   form: any;
   reason?: string;
-  error: "credentials" | "passkey" | null;
+  error: "credentials" | "passkey" | "unverified" | null;
   showPasskey: boolean;
 }) {
   return (

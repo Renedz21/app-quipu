@@ -5,17 +5,26 @@ import { Step2Fixed } from "./step-2-fixed";
 import { Step2Mixed } from "./step-2-mixed";
 import { Step2Variable } from "./step-2-variable";
 
-type Props = { onBack: VoidFunction; onNext: VoidFunction };
+type Props = {
+  onBack: VoidFunction;
+  onNext: VoidFunction;
+  onStepCompleted: VoidFunction;
+};
 
-export function Step2SystemConfig({ onBack, onNext }: Props) {
+export function Step2SystemConfig({ onBack, onNext, onStepCompleted }: Props) {
   const { state } = useOnboarding();
+
+  function handleNext() {
+    onStepCompleted();
+    onNext();
+  }
 
   switch (state.incomeModel) {
     case "variable":
-      return <Step2Variable onBack={onBack} onNext={onNext} />;
+      return <Step2Variable onBack={onBack} onNext={handleNext} />;
     case "mixed":
-      return <Step2Mixed onBack={onBack} onNext={onNext} />;
+      return <Step2Mixed onBack={onBack} onNext={handleNext} />;
     default:
-      return <Step2Fixed onBack={onBack} onNext={onNext} />;
+      return <Step2Fixed onBack={onBack} onNext={handleNext} />;
   }
 }

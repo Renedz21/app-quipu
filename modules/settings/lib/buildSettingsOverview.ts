@@ -54,8 +54,8 @@ export function mapConvexSettingsOverview(
       label: pk.name ?? "Passkey",
       usageSummary: pk.deviceType,
     })),
-    sessionsApiReady: false,
-    activeSessionCount: null,
+    sessionsApiReady: data.security.sessions?.apiReady ?? false,
+    activeSessionCount: data.security.sessions?.count ?? null,
   };
 }
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
@@ -69,6 +70,15 @@ export function SettingsAllocationsEditor({
     startTransition(async () => {
       try {
         await updateAllocations(payload);
+        track(AnalyticsEvents.ALLOCATION_MODIFIED, {
+          previous_needs: initialAllocation.allocationNeeds,
+          previous_wants: initialAllocation.allocationWants,
+          previous_savings: initialAllocation.allocationSavings,
+          new_needs: payload.allocationNeeds,
+          new_wants: payload.allocationWants,
+          new_savings: payload.allocationSavings,
+          trigger: "settings",
+        });
         toast.success(SETTINGS_ALLOCATIONS_SAVED);
         router.push("/settings");
         router.refresh();

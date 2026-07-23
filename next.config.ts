@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const posthogHost =
@@ -6,6 +7,8 @@ const posthogHost =
 // CSP: PostHog carga su recorder desde api_host; Convex usa https + wss.
 // 'unsafe-inline' en script-src es el compromiso estándar sin middleware de
 // nonces; 'unsafe-eval' solo en dev (React refresh).
+// img-src incluye el host de PostHog para que session replay pueda capturar
+// imágenes servidas desde el recorder (sin esto el replay sale en blanco).
 const scriptSrc = [
   "'self'",
   "'unsafe-inline'",
@@ -19,13 +22,16 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src ${scriptSrc}`,
   `connect-src 'self' ${posthogHost} https://*.convex.cloud wss://*.convex.cloud https://*.convex.site`,
-  "img-src 'self' data:",
+  `img-src 'self' data: blob: ${posthogHost}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  // Media-src para session replay si se capturan streams de audio/video
+  // (no usados hoy, pero habilita el recorder por si se agregan).
+  "media-src 'self' blob:",
 ].join("; ");
 
 const securityHeaders = [
@@ -54,4 +60,40 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  org: "edzonperez",
+
+  project: "quipu-app",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  // tunnelRoute: "/monitoring",
+
+  webpack: {
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+
+    // Tree-shaking options for reducing bundle size
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+  },
+});

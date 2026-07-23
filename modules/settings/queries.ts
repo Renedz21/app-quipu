@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvex, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 
@@ -25,4 +25,13 @@ export function useSettingsDashboardSummary() {
 
 export function useSettingsCommitments() {
   return useQuery(settingsQueries.listMyCommitments, {});
+}
+
+/**
+ * D3 — exportación bajo demanda (no suscripción): devuelve una función que
+ * dispara la query una sola vez al hacer click en "Descargar mis datos".
+ */
+export function useExportMyData() {
+  const convex = useConvex();
+  return () => convex.query(api.profiles.exportMyData, {});
 }

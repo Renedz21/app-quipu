@@ -225,13 +225,15 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] rounded-t-[24px] border-line bg-card px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-3"
+          className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-0 pt-3"
         >
-          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
-          <SheetTitle className="mb-4 text-[15px] font-semibold text-ink">
+          <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line" />
+          <SheetTitle className="mb-4 shrink-0 pr-8 text-[15px] font-semibold text-ink">
             {ADD_COMMITMENT_TITLE}
           </SheetTitle>
-          {formBody}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(env(safe-area-inset-bottom),20px)]">
+            {formBody}
+          </div>
         </SheetContent>
       </Sheet>
     );

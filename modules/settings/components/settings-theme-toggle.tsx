@@ -2,7 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -11,16 +11,22 @@ import {
   SETTINGS_THEME_LIGHT,
 } from "../constants";
 
+/** Client-only gate without useEffect/setState (avoids mount flash). */
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
 export function SettingsThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const updateAppearance = useMutation(api.progress.updateAppearance);
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const isDark = mounted && resolvedTheme === "dark";
+  // SSR / first paint: defaultTheme is light, so treat as light until client.
+  const isDark = isClient && resolvedTheme === "dark";
 
   async function applyTheme(next: "light" | "dark") {
     setTheme(next);
@@ -42,7 +48,7 @@ export function SettingsThemeToggle() {
           type="button"
           aria-pressed={!isDark}
           aria-label={SETTINGS_THEME_LIGHT}
-          disabled={!mounted}
+          disabled={!isClient}
           onClick={() => void applyTheme("light")}
           className={cn(
             "h-[30px] w-11 rounded-lg border transition-colors",
@@ -54,7 +60,7 @@ export function SettingsThemeToggle() {
           type="button"
           aria-pressed={isDark}
           aria-label={SETTINGS_THEME_DARK}
-          disabled={!mounted}
+          disabled={!isClient}
           onClick={() => void applyTheme("dark")}
           className={cn(
             "h-[30px] w-11 rounded-lg border transition-colors",

@@ -5,6 +5,7 @@ import { getToken } from "@/auth/auth-server";
 import { rootMetadata, siteConfig } from "@/core/seo";
 import { AppearanceSync } from "@/modules/progress/components/appearance-sync";
 import { ConvexClientProvider } from "@/shared/components/providers/convex-provider";
+import { ThemeProvider } from "@/shared/components/providers/theme-provider";
 import { SiteJsonLd } from "@/shared/components/seo/site-json-ld";
 import { AppToaster } from "@/shared/components/ui/toaster";
 import { cn } from "@/shared/lib/utils";
@@ -49,6 +50,7 @@ export default async function RootLayout({
   return (
     <html
       lang={siteConfig.language}
+      suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",
@@ -58,13 +60,20 @@ export default async function RootLayout({
         "font-sans",
       )}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <SiteJsonLd />
-        <ConvexClientProvider initialToken={initialToken}>
-          <AppearanceSync />
-          {children}
-          <AppToaster />
-        </ConvexClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ConvexClientProvider initialToken={initialToken}>
+            <AppearanceSync />
+            {children}
+            <AppToaster />
+          </ConvexClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

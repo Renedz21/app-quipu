@@ -20,7 +20,7 @@ import {
   SETTINGS_ALLOCATIONS_PAGE_TITLE,
   SETTINGS_ALLOCATIONS_SAVE,
   SETTINGS_ALLOCATIONS_SAVED,
-  SETTINGS_BACK_LINK,
+  SETTINGS_SYSTEM_HEADING,
 } from "../constants";
 import { useSettingsDashboardSummary } from "../queries";
 
@@ -80,7 +80,7 @@ export function SettingsAllocationsEditor({
           trigger: "settings",
         });
         toast.success(SETTINGS_ALLOCATIONS_SAVED);
-        router.push("/settings");
+        router.push("/settings/system");
         router.refresh();
       } catch (error) {
         toast.error(fromConvexError(error).message);
@@ -91,10 +91,10 @@ export function SettingsAllocationsEditor({
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-lg flex-col px-5 py-4 md:py-8">
       <BackLink
-        href="/settings"
+        href="/settings/system"
         className="text-[12.5px] text-mute hover:text-ink"
       >
-        {SETTINGS_BACK_LINK}
+        {SETTINGS_SYSTEM_HEADING}
       </BackLink>
       <h1 className="mt-3 font-serif text-[23px] font-medium text-ink">
         {SETTINGS_ALLOCATIONS_PAGE_TITLE}

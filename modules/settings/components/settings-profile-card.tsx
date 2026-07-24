@@ -24,9 +24,10 @@ import type { SettingsProfileOverview } from "../types";
 type Props = {
   profile: SettingsProfileOverview;
   className?: string;
+  id?: string;
 };
 
-export function SettingsProfileCard({ profile, className }: Props) {
+export function SettingsProfileCard({ profile, className, id }: Props) {
   const updateName = useUpdateDisplayName();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(profile.name);
@@ -59,8 +60,9 @@ export function SettingsProfileCard({ profile, className }: Props) {
 
   return (
     <section
+      id={id}
       className={cn(
-        "rounded-2xl border border-line bg-card px-5 py-5 md:px-6 md:py-[22px]",
+        "scroll-mt-6 rounded-2xl border border-line bg-card px-5 py-5 md:px-6 md:py-[22px]",
         className,
       )}
     >

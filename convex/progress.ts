@@ -116,8 +116,8 @@ async function getAuthenticatedProgressBundle(ctx: QueryCtx) {
     achievementsTotal: achievements.length,
     appearance: {
       theme: profile.appearanceTheme ?? "light",
-      accent: profile.accentPreset ?? "moss",
-      appIcon: profile.appIconVariant ?? "light",
+      accent: "moss" as const,
+      appIcon: "light" as const,
     },
   };
 }
@@ -165,7 +165,8 @@ export const getRewards = query({
           description: "Paleta alterna · desbloqueado con 6 ciclos",
           unlocked: isRewardUnlocked("clayAccent", currentStreak),
           requiredStreak: REWARD_THRESHOLDS.clayAccent,
-          active: appearance.accent === "clay",
+          // Accent picker retired; reward stays informational.
+          active: false,
         },
         {
           id: "annual_report" as const,
@@ -233,45 +234,18 @@ export const updateAppearance = mutation({
       });
     }
 
-    const streak = await ctx.db
-      .query("streaks")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .unique();
-    const currentStreak = streak?.currentStreak ?? 0;
-
-    if (
-      args.appearanceTheme === "tinta" &&
-      !canUseTheme("tinta", currentStreak)
-    ) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "Tema Tinta se desbloquea con 3 ciclos en orden.",
-      });
-    }
-    if (
-      args.accentPreset === "clay" &&
-      !canUseAccentPreset("clay", currentStreak)
-    ) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "Acento Arcilla se desbloquea con 6 ciclos en orden.",
-      });
-    }
-
+    // Dark mode is available from Preferencias without a streak gate.
+    // Accent and app icon are no longer user-selectable; keep moss + ignore icons.
     const updates: {
       appearanceTheme?: "light" | "tinta";
-      accentPreset?: "moss" | "steel" | "clay";
-      appIconVariant?: "light" | "dark";
+      accentPreset?: "moss";
     } = {};
 
     if (args.appearanceTheme !== undefined) {
       updates.appearanceTheme = args.appearanceTheme;
     }
     if (args.accentPreset !== undefined) {
-      updates.accentPreset = args.accentPreset;
-    }
-    if (args.appIconVariant !== undefined) {
-      updates.appIconVariant = args.appIconVariant;
+      updates.accentPreset = "moss";
     }
 
     if (Object.keys(updates).length > 0) {
@@ -281,8 +255,8 @@ export const updateAppearance = mutation({
     return {
       appearance: {
         theme: updates.appearanceTheme ?? profile.appearanceTheme ?? "light",
-        accent: updates.accentPreset ?? profile.accentPreset ?? "moss",
-        appIcon: updates.appIconVariant ?? profile.appIconVariant ?? "light",
+        accent: "moss" as const,
+        appIcon: "light" as const,
       },
     };
   },
@@ -302,8 +276,8 @@ export const getAppearance = query({
 
     return {
       theme: profile.appearanceTheme ?? "light",
-      accent: profile.accentPreset ?? "moss",
-      appIcon: profile.appIconVariant ?? "light",
+      accent: "moss" as const,
+      appIcon: "light" as const,
     };
   },
 });

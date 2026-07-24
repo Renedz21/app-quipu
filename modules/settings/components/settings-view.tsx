@@ -1,10 +1,13 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authClient } from "@/auth/auth-client";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
+import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
@@ -24,17 +27,17 @@ import {
   SETTINGS_PLAN_PLUS_PRICE,
   SETTINGS_PROFILE_LABEL,
   SETTINGS_SECURITY_LABEL,
-  SETTINGS_SYSTEM_HEADING,
+  SETTINGS_SIGN_OUT,
+  SETTINGS_SYSTEM_GO_LINK,
+  SETTINGS_SYSTEM_LABEL,
 } from "../constants";
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
-import { useSettingsOverview } from "../queries";
+import { useSettingsCommitments, useSettingsOverview } from "../queries";
 import { SettingsAccountActions } from "./settings-account-actions";
-import { SettingsCommitmentsSection } from "./settings-commitments-section";
-import { SettingsExtraordinarySection } from "./settings-extraordinary-section";
 import { SettingsPlanCard } from "./settings-plan-card";
 import { SettingsProfileCard } from "./settings-profile-card";
 import { SettingsSecurityCard } from "./settings-security-card";
-import { SettingsSystemSection } from "./settings-system-section";
+import { SettingsSystemHubList } from "./settings-system-hub-list";
 
 /** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
  *  a la derecha. */
@@ -74,7 +77,7 @@ function MobileAccountSummary({
       : PLAN_LABELS.free;
 
   return (
-    <div className="mb-3 flex items-center gap-3 md:hidden">
+    <div className="mb-3 flex items-center gap-3">
       <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-qp-tint font-serif text-[21px] text-qp-deep">
         {getInitial(name)}
       </span>
@@ -94,14 +97,20 @@ function MobileAccountList({
   isPremium: boolean;
 }) {
   return (
-    <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5 md:hidden">
-      <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
+    <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5">
+      <Link
+        href="/settings/account#perfil"
+        className="flex items-center gap-2 border-b border-line-soft py-2.5"
+      >
         <span className="flex-1 text-[13.5px] text-ink">
           {SETTINGS_PROFILE_LABEL}
         </span>
         <ListRowChevron />
-      </div>
-      <div className="flex items-center gap-2 border-b border-line-soft py-2.5">
+      </Link>
+      <Link
+        href="/settings/account#plan"
+        className="flex items-center gap-2 border-b border-line-soft py-2.5"
+      >
         <span className="flex-1 text-[13.5px] text-ink">
           {SETTINGS_PLAN_LABEL}
         </span>
@@ -111,8 +120,11 @@ function MobileAccountList({
           </span>
         ) : null}
         <ListRowChevron />
-      </div>
-      <div className="flex items-center gap-2 py-2.5">
+      </Link>
+      <Link
+        href="/settings/account#seguridad"
+        className="flex items-center gap-2 py-2.5"
+      >
         <span className="flex-1 text-[13.5px] text-ink">
           {SETTINGS_SECURITY_LABEL}
         </span>
@@ -120,13 +132,38 @@ function MobileAccountList({
           <span className="text-[11px] text-faint">{passkeyCount}</span>
         ) : null}
         <ListRowChevron />
-      </div>
+      </Link>
+    </div>
+  );
+}
+
+function MobileHubSignOut() {
+  const router = useRouter();
+
+  return (
+    <div className="rounded-[14px] border border-line bg-card px-4">
+      <button
+        type="button"
+        className="flex w-full items-center py-2.5 text-left text-[13.5px] text-danger-ink"
+        onClick={() => {
+          void (async () => {
+            track(AnalyticsEvents.USER_LOGGED_OUT, {});
+            await authClient.signOut();
+            router.push("/sign-in");
+            router.refresh();
+          })();
+        }}
+      >
+        {SETTINGS_SIGN_OUT}
+      </button>
     </div>
   );
 }
 
 export function SettingsView() {
   const settingsData = useSettingsOverview();
+  const profile = useMyProfile();
+  const commitments = useSettingsCommitments();
   const searchParams = useSearchParams();
   const checkoutSuccess = searchParams.get("checkout") === "success";
   const [showCheckoutBanner] = useState(checkoutSuccess);
@@ -172,69 +209,90 @@ export function SettingsView() {
   }
 
   const overview = mapConvexSettingsOverview(settingsData);
+  const commitmentCount = commitments?.length ?? 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <header className="mb-5 md:mb-6">
-        <h1 className="font-serif text-[23px] font-medium text-ink md:text-[27px]">
-          {SETTINGS_PAGE_TITLE}
-        </h1>
-        <p className="mt-1 text-[12.5px] text-mute-subtle md:text-[13.5px]">
-          {SETTINGS_PAGE_SUBTITLE}
+      {/* Mobile hub — canon: lista tranquila cuenta + sistema */}
+      <div className="md:hidden">
+        <MobileAccountSummary
+          name={overview.profile.name}
+          plan={overview.profile.plan}
+        />
+
+        <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">
+          {SETTINGS_MOBILE_ACCOUNT_LABEL}
         </p>
-      </header>
+        <MobileAccountList
+          passkeyCount={passkeyCount}
+          isPremium={overview.profile.plan === "premium"}
+        />
 
-      <MobileAccountSummary
-        name={overview.profile.name}
-        plan={overview.profile.plan}
-      />
-
-      <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint md:hidden">
-        {SETTINGS_MOBILE_ACCOUNT_LABEL}
-      </p>
-
-      <MobileAccountList
-        passkeyCount={passkeyCount}
-        isPremium={overview.profile.plan === "premium"}
-      />
-
-      <div className="flex flex-col gap-3.5 md:flex-row md:gap-3.5">
-        <div className="flex flex-1 flex-col gap-3.5">
-          <SettingsProfileCard profile={overview.profile} />
-          <div>
-            <SettingsPlanCard subscription={overview.subscription} />
-            {showCheckoutBanner ? (
-              <p
-                className="mt-2 text-[12.5px] leading-snug text-mute-subtle"
-                role="status"
-              >
-                {SETTINGS_CHECKOUT_SUCCESS}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex-1">
-          <SettingsSecurityCard
-            sessionsApiReady={overview.sessionsApiReady}
-            activeSessionCount={overview.activeSessionCount}
+        <p className="mb-2 mt-1 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">
+          {SETTINGS_SYSTEM_LABEL}
+        </p>
+        {profile ? (
+          <SettingsSystemHubList
+            needs={profile.allocationNeeds}
+            wants={profile.allocationWants}
+            savings={profile.allocationSavings}
+            cycleDays={profile.cycleDurationDays ?? 30}
+            commitmentCount={commitmentCount}
           />
+        ) : (
+          <Skeleton className="h-[200px] rounded-[14px]" />
+        )}
+
+        <div className="mt-2.5">
+          <MobileHubSignOut />
         </div>
       </div>
 
-      <section className="mt-6">
-        <h2 className="mb-[22px] hidden font-serif text-2xl font-medium text-ink md:block">
-          {SETTINGS_SYSTEM_HEADING}
-        </h2>
-        <div className="flex flex-col gap-3.5 md:flex-row md:items-stretch">
-          <div className="flex min-w-0 flex-col gap-3.5 md:flex-[1.1]">
-            <SettingsSystemSection />
-            <SettingsExtraordinarySection />
+      {/* Desktop — solo cuenta; sistema vive en /settings/system */}
+      <div className="hidden md:block">
+        <header className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-[27px] font-medium text-ink">
+              {SETTINGS_PAGE_TITLE}
+            </h1>
+            <p className="mt-1 text-[13.5px] text-mute-subtle">
+              {SETTINGS_PAGE_SUBTITLE}
+            </p>
           </div>
-          <SettingsCommitmentsSection className="flex min-w-0 flex-col md:flex-1" />
-        </div>
-      </section>
+          <Link
+            href="/settings/system"
+            className="shrink-0 text-[13px] font-semibold text-qp-deep underline-offset-4 hover:underline"
+          >
+            {SETTINGS_SYSTEM_GO_LINK}
+          </Link>
+        </header>
 
-      <SettingsAccountActions />
+        <div className="flex flex-col gap-3.5 md:flex-row md:gap-3.5">
+          <div className="flex flex-1 flex-col gap-3.5">
+            <SettingsProfileCard id="perfil" profile={overview.profile} />
+            <div id="plan" className="scroll-mt-6">
+              <SettingsPlanCard subscription={overview.subscription} />
+              {showCheckoutBanner ? (
+                <p
+                  className="mt-2 text-[12.5px] leading-snug text-mute-subtle"
+                  role="status"
+                >
+                  {SETTINGS_CHECKOUT_SUCCESS}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex-1">
+            <SettingsSecurityCard
+              id="seguridad"
+              sessionsApiReady={overview.sessionsApiReady}
+              activeSessionCount={overview.activeSessionCount}
+            />
+          </div>
+        </div>
+
+        <SettingsAccountActions />
+      </div>
     </div>
   );
 }

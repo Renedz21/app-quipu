@@ -16,10 +16,8 @@ export const PROGRESS_REWARDS_LINK = "Recompensas";
 export const REWARDS_PAGE_TITLE = "Recompensas";
 export const REWARDS_PAGE_SUBTITLE =
   "Detalles para tu Quipu. Nada de trofeos dorados.";
-export const REWARDS_PERSONALIZATION_LABEL = "Personalización";
-export const REWARDS_ACCENT_LABEL = "Acento";
-export const REWARDS_THEME_LABEL = "Tema";
-export const REWARDS_ICON_LABEL = "Ícono";
+export const REWARDS_THEME_HINT =
+  "El tema claro u oscuro también está en Ajustes → Tu sistema → Preferencias.";
 export const REWARDS_ACTIVATE = "Activar";
 export const REWARDS_ACTIVE = "Activo";
 export const REWARDS_CYCLES_MORE = (n: number) =>

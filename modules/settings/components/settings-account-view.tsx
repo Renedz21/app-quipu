@@ -16,7 +16,6 @@ import {
   SETTINGS_ERROR_TITLE,
   SETTINGS_MOBILE_ACCOUNT_LABEL,
   SETTINGS_PAGE_SUBTITLE,
-  SETTINGS_PAGE_TITLE,
 } from "../constants";
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
 import { useSettingsOverview } from "../queries";
@@ -100,11 +99,8 @@ export function SettingsAccountView() {
       </BackLink>
 
       <header className="mb-5 md:mb-6">
-        <p className="mb-1 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint md:hidden">
-          {SETTINGS_MOBILE_ACCOUNT_LABEL}
-        </p>
         <h1 className="font-serif text-[23px] font-medium text-ink md:text-[27px]">
-          {SETTINGS_PAGE_TITLE}
+          {SETTINGS_MOBILE_ACCOUNT_LABEL}
         </h1>
         <p className="mt-1 text-[12.5px] text-mute-subtle md:text-[13.5px]">
           {SETTINGS_PAGE_SUBTITLE}

@@ -50,4 +50,41 @@ export const finalPayloadSchema = z
       message: "El reparto debe sumar exactamente 100%.",
       path: ["allocations"],
     },
-  );
+  )
+  .superRefine((data, ctx) => {
+    if (data.incomeModel === "variable") {
+      if (data.cycleDurationDays == null) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["cycleDurationDays"],
+          message: "Para ingresos variables, elige un ciclo de 15 o 30 días.",
+        });
+      }
+      if (data.payFrequency !== undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["payFrequency"],
+          message: "Para ingresos variables, payFrequency no aplica.",
+        });
+      }
+      return;
+    }
+
+    // fixed | mixed: frecuencia y días son obligatorios (alineado con createProfile).
+    if (!data.payFrequency) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["payFrequency"],
+        message:
+          "Para ingresos fijos o mixtos, payFrequency y paydays son obligatorios.",
+      });
+    }
+    if (!data.paydays || data.paydays.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["paydays"],
+        message:
+          "Para ingresos fijos o mixtos, payFrequency y paydays son obligatorios.",
+      });
+    }
+  });

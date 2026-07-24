@@ -23,9 +23,12 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
       type: "UPDATE",
       payload: {
         incomeModel: value,
-        payFrequency: value === "mixed" ? "monthly" : undefined,
+        // Limpiar campos del modelo anterior al cambiar perfil.
+        payFrequency: value === "mixed" ? "monthly" : null,
         paydays: value === "mixed" ? [1] : [],
         cycleDurationDays: value === "variable" ? 30 : undefined,
+        mixedFixedAmount: undefined,
+        variableIncomeSources: [],
       },
     });
   }

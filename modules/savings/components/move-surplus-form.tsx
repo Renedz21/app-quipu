@@ -144,7 +144,7 @@ export function MoveSurplusForm({
 
   return (
     <form
-      className="mt-6 space-y-6"
+      className="space-y-6 md:mt-6"
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();

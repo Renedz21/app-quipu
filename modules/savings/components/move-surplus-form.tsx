@@ -48,6 +48,7 @@ type Props = {
   destinations: MoveSurplusDestination[];
   initialFrom?: SurplusFromEnvelope;
   initialAmountCents?: number;
+  initialDestinationId?: Id<"subEnvelopes">;
   isSubmitting: boolean;
   onCancel: () => void;
   onSubmit: (values: MoveSurplusFormValues) => void | Promise<void>;
@@ -86,12 +87,19 @@ export function MoveSurplusForm({
   destinations,
   initialFrom,
   initialAmountCents,
+  initialDestinationId,
   isSubmitting,
   onCancel,
   onSubmit,
 }: Props) {
   const defaultSource = pickDefaultSource(sources, initialFrom);
+  const preferredDestination =
+    initialDestinationId &&
+    destinations.some((destination) => destination.id === initialDestinationId)
+      ? initialDestinationId
+      : undefined;
   const defaultDestination =
+    preferredDestination ??
     destinations.find((d) => d.isSystemDefault)?.id ??
     destinations[0]?.id ??
     "";

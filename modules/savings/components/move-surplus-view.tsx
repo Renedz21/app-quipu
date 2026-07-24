@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
@@ -31,6 +32,7 @@ import { SavingsFormShell } from "./savings-form-shell";
 type Props = {
   initialFromEnvelope?: SurplusFromEnvelope;
   initialAmountCents?: number;
+  initialDestinationId?: Id<"subEnvelopes">;
 };
 
 function totalSurplusAvailable(context: {
@@ -50,6 +52,7 @@ function totalSurplusAvailable(context: {
 export function MoveSurplusView({
   initialFromEnvelope,
   initialAmountCents,
+  initialDestinationId,
 }: Props) {
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -104,6 +107,7 @@ export function MoveSurplusView({
       destinations={context.destinations}
       initialFrom={initialFromEnvelope}
       initialAmountCents={initialAmountCents}
+      initialDestinationId={initialDestinationId}
       isSubmitting={isSubmitting}
       onCancel={() => router.push("/savings")}
       onSubmit={async (values) => {

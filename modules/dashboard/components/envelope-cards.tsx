@@ -64,17 +64,29 @@ export function EnvelopeCards({
       <div className="grid gap-3 md:grid-cols-3">
         {envelopes.map((envelope) => {
           const styles = ENVELOPE_STYLES[envelope.type];
-          const percent = clampPercent(envelope.percentRemaining);
+          // Ahorro no se "gasta": el home muestra lo apartado del ciclo
+          // (allocated), no el remanente del sobre tras mover al Fondo/metas.
+          const isSavings = envelope.type === "savings";
+          const displayAmount = isSavings
+            ? envelope.allocatedAmount
+            : isEarlyCycle
+              ? envelope.allocatedAmount
+              : Math.max(0, envelope.remainingAmount);
+          const percent = isSavings
+            ? envelope.allocatedAmount > 0
+              ? 100
+              : 0
+            : clampPercent(envelope.percentRemaining);
 
           return (
             <article
               key={envelope.type}
               className={`rounded-[14px] border border-line bg-card p-4 md:p-5 ${
-                envelope.type !== "savings"
+                !isSavings
                   ? "cursor-pointer transition-colors hover:bg-surface-warm"
                   : ""
               }`}
-              {...(envelope.type !== "savings"
+              {...(!isSavings
                 ? {
                     role: "button" as const,
                     tabIndex: 0,
@@ -96,32 +108,27 @@ export function EnvelopeCards({
                 <h3 className="text-sm font-semibold text-ink">
                   {ENVELOPE_LABELS[envelope.type]}
                 </h3>
-                {envelope.type === "savings" && percent >= 100 ? (
+                {isSavings && percent >= 100 ? (
                   <span className="ml-auto rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
                     100%
                   </span>
                 ) : null}
               </div>
               <p className="font-serif text-2xl text-ink">
-                {formatCents(
-                  isEarlyCycle
-                    ? envelope.allocatedAmount
-                    : Math.max(0, envelope.remainingAmount),
-                  {
-                    currency: currencyCode,
-                  },
-                )}
+                {formatCents(displayAmount, {
+                  currency: currencyCode,
+                })}
               </p>
               <p className="mt-1 text-xs text-mute">
                 {isEarlyCycle ? (
-                  envelope.type === "savings" ? (
+                  isSavings ? (
                     ENVELOPE_EARLY_SAVINGS_SUBCOPY
                   ) : (
                     ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY
                   )
                 ) : (
                   <>
-                    {envelope.type === "savings" ? "apartado" : "disponible"} de{" "}
+                    {isSavings ? "apartado" : "disponible"} de{" "}
                     {formatCents(envelope.allocatedAmount, {
                       currency: currencyCode,
                     })}

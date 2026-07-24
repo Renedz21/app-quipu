@@ -310,6 +310,7 @@ const cycleSavingsBreakdownValidator = v.object({
   savingsAdditionalCents: v.number(),
   savingsTotalCents: v.number(),
   savingsSetAsideCents: v.number(),
+  savingsRemainingCents: v.number(),
   objectiveProgressPercent: v.number(),
   objectiveBarPercent: v.number(),
   additionalBarPercent: v.number(),
@@ -423,6 +424,7 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
     aboveTargetByCents: numbers.savingsAdditionalCents,
     underTargetByCents,
     ...numbers,
+    savingsRemainingCents: Math.max(0, savingsEnvelope?.remainingAmount ?? 0),
   };
 }
 

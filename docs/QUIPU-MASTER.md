@@ -446,16 +446,19 @@ recalcula; sin edición retroactiva en este flujo. Móvil: full-screen, no sheet
 Spec: `docs/superpowers/specs/2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`.
 
 **Bloque 6 — Ahorros "¿Qué estoy construyendo?"**
+**Un solo módulo** (`/savings`): stock (Fondo + metas) ≠ flujo del ciclo.
 **El Fondo de Emergencia siempre hero** (fila entera, gradient `--qp20`→`--qp21`, badge "Prioridad",
 cifra Newsreader 52, progress con 3 marks de meses, "1.2 de 3 meses cubiertos · vas seguro",
-aporte automático por ciclo). **Debajo del hero:** card **Tu ahorro este ciclo** (objetivo / adicional /
-total, barra sólida+rayada; P2-7) y CTA mover sobrante voluntario (≠ rescate crisis P1-10).
-Detalle del fondo: 3 sub-cards (aporte / completa en ~N meses / racha) + "Aportar ahora" + "Ajustar aporte".
-Otras metas: grid 3-col, máx 6 visibles, "+ Nueva meta", sin fecha objetivo obligatoria.
-El progreso se actualiza con aporte explícito, no al registrar gasto. **El aporte al fondo es automático desde el sobre Ahorro.**
+aporte automático por ciclo). **Otras metas** debajo del hero (grid 3-col, máx 6, "+ Nueva meta").
+**Tu ahorro este ciclo** (6N, P2-7) va **después** de metas, card neutra (no segundo shield verde):
+objetivo / adicional / total, barra sólida+rayada, CTA mover sobrante. El Fondo no se usa para
+aportar a metas; el aporte a metas sale del sobre Ahorro libre del ciclo o de `/savings/move`.
+Detalle del fondo (`/savings/fund`): gradiente página `--qp10`→canvas, 3 sub-cards + "Aportar ahora"
++ "Ajustar aporte". En dashboard, el sobre Ahorro muestra `allocatedAmount` (apartado del ciclo),
+no el remanente tras mover al Fondo.
 **Mover sobrante (6N-B/C):** `/savings/move` — TanStack Form + Zod (`move-surplus-form.tsx`): chips Desde
 (Necesidades / Gustos / gratificación vía origen `extraordinary`), fila de monto + slider + pills, destino
-en cards, banner verde “solo este ciclo”; móvil = bottom sheet (`SavingsFormShell`). Sin keypad de gastos.
+en cards (Fondo recomendado u otra meta), banner verde “solo este ciclo”; móvil = bottom sheet (`SavingsFormShell`).
 Tras mutación → `/savings/move/success` (6N-C) con snapshot en query params + breakdown del ciclo.
 Sin metas compartidas, inversiones, cripto ni plazos.
 Spec: misma ruta que Bloque 5 arriba.
@@ -1360,6 +1363,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.
 - **2026-07-22 — DoD v2.5 + release gate.** §8.1 Definition of Done acotada (excluye Plus/variante C e PDF descargable); §8.3 P3 post-v2.5; §2.4 excepción informe UI-only; §9.3.2 CI + §9.4 checklist Vercel; §9.5 checklist Polar prod; P2-6 lint ✅; P2-8 parcial (CI, pendiente owner Vercel/D4/Polar prod).
 - **2026-07-22 — P2-7 cierre + Bloque 6/7 UI.** E2E smoke gratificación/sobrante; coach tranquilo CTAs; `contributeToGoal` dialog; «Ajustar aporte» → `/settings/allocations`.
 - **2026-07-22 — §3 / §8.4 / §9.5.** Integración Polar (Quipu Plus): plan comercial ya no «solo diseño»; Bloque 9 delta Polar parcial; operación webhook + env vars + `billing:syncProducts`.

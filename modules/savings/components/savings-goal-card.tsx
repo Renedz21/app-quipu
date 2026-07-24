@@ -1,8 +1,14 @@
 "use client";
 
-import { Button } from "@/shared/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
-import { GOAL_CONTRIBUTE_CTA, GOAL_PROGRESS_OF } from "../constants";
+import { cn } from "@/shared/lib/utils";
+import {
+  GOAL_CONTRIBUTE_CTA,
+  GOAL_CONTRIBUTE_DISABLED_HINT,
+  GOAL_PROGRESS_OF,
+} from "../constants";
 import type { SavingsGoal } from "../types";
 
 type Props = {
@@ -10,6 +16,7 @@ type Props = {
   currencyCode: string;
   availableToContributeCents: number;
   hasActiveCycle: boolean;
+  hasSurplusToMove?: boolean;
   onContribute: () => void;
 };
 
@@ -18,6 +25,7 @@ export function SavingsGoalCard({
   currencyCode,
   availableToContributeCents,
   hasActiveCycle,
+  hasSurplusToMove = false,
   onContribute,
 }: Props) {
   const hasTarget =
@@ -28,6 +36,7 @@ export function SavingsGoalCard({
   const targetLabel = hasTarget
     ? formatCents(goal.targetAmount ?? 0, { currency: currencyCode })
     : null;
+  const canContribute = availableToContributeCents > 0;
 
   return (
     <article className="rounded-[13px] border border-line bg-card p-3 md:p-[17px]">
@@ -58,17 +67,34 @@ export function SavingsGoalCard({
           }}
         />
       </div>
-      {hasActiveCycle ? (
+      {/* Canon overview: metas sin CTA permanente. Aportar solo si hay saldo
+          libre en el sobre del ciclo; si no, empujar a «Mover al ahorro». */}
+      {hasActiveCycle && canContribute ? (
         <Button
           type="button"
           variant="outline"
           size="sm"
           className="mt-3 w-full rounded-[11px]"
-          disabled={availableToContributeCents <= 0}
           onClick={onContribute}
         >
           {GOAL_CONTRIBUTE_CTA}
         </Button>
+      ) : null}
+      {hasActiveCycle && !canContribute && hasSurplusToMove ? (
+        <div className="mt-3">
+          <Link
+            href={`/savings/move?to=${goal.id}`}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "w-full rounded-[11px]",
+            )}
+          >
+            {GOAL_CONTRIBUTE_CTA}
+          </Link>
+          <p className="mt-1.5 text-[11px] leading-snug text-faint">
+            {GOAL_CONTRIBUTE_DISABLED_HINT}
+          </p>
+        </div>
       ) : null}
     </article>
   );

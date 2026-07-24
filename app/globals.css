@@ -90,6 +90,7 @@
   --color-qp-shield-from: var(--qp-shield-from);
   --color-qp-shield-to: var(--qp-shield-to);
   --color-qp-shield-line: var(--qp-shield-line);
+  --color-qp10: var(--qp10);
   --color-qp-subtle-border: var(--qp-subtle-border);
   --color-qp-divider: var(--qp-divider);
   --color-qp-track: var(--qp-track);
@@ -213,9 +214,11 @@
   --qp-coach-to: oklch(0.986 0.0034 145.55);
   --qp-success: oklch(0.9635 0.0099 155.1);
   --qp-panel: oklch(0.9615 0.0083 157.09);
-  --qp-shield-from: oklch(0.9515 0.01 155.09);
-  --qp-shield-to: oklch(0.9223 0.0167 162.73);
-  --qp-shield-line: oklch(0.8921 0.021 161.43);
+  /* Canon §3.3 qp20→qp21→qp22: musgo suave que se aclara, no se satura */
+  --qp-shield-from: #eaf2ed;
+  --qp-shield-to: #f7faf8;
+  --qp-shield-line: #cbddd3;
+  --qp10: #f3f8f5;
   --qp-subtle-border: oklch(0.8914 0.0219 163);
   --qp-divider: oklch(0.9177 0.015 158.23);
   --qp-track: oklch(0.9286 0.0125 156.99);
@@ -261,6 +264,10 @@
   --qp07: var(--qp-coach-from);
   --qp08: var(--qp-coach-to);
   --qp09: var(--qp-success);
+  --qp20: var(--qp-shield-from);
+  --qp21: var(--qp-shield-to);
+  --qp22: var(--qp-shield-line);
+  --qp23: #dceae2;
   --qp15: var(--qp-subtle-border);
   --qp16: var(--qp-divider);
   --qp17: var(--qp-track);

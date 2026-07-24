@@ -73,7 +73,7 @@ export const SAVINGS_ERROR_RETRY = "Reintentar";
 
 export const CONTRIBUTE_SUCCESS_PREFIX = "Aporte registrado.";
 export const CONTRIBUTE_NO_FUNDS =
-  "No tienes saldo apartado en Ahorro para aportar en este ciclo.";
+  "No tienes saldo libre en el sobre Ahorro de este ciclo. El Fondo no se toca para aportar a metas.";
 
 export const GOAL_CONTRIBUTE_CTA = "Aportar";
 export const GOAL_CONTRIBUTE_DIALOG_TITLE = "Aportar a la meta";
@@ -83,6 +83,10 @@ export const GOAL_CONTRIBUTE_USE_ALL_CTA = "Usar todo";
 export const GOAL_CONTRIBUTE_SUBMIT = "Confirmar aporte";
 export const GOAL_CONTRIBUTE_CANCEL = "Volver";
 export const GOAL_CONTRIBUTE_SUCCESS_PREFIX = "Aporte registrado.";
+export const GOAL_CONTRIBUTE_DISABLED_HINT =
+  "Se aporta desde el sobre Ahorro del ciclo, no desde el Fondo.";
+export const GOAL_CONTRIBUTE_MOVE_HINT =
+  "Mueve sobrante al ahorro para aportar.";
 
 export const GOAL_PROGRESS_OF = "de";
 export const GOALS_EMPTY_TITLE = "Tus metas vivirán aquí";
@@ -96,8 +100,14 @@ export const CYCLE_SAVINGS_OBJECTIVE_LABEL = "Ahorro objetivo";
 export const CYCLE_SAVINGS_OBJECTIVE_HINT = "Tu 20% de siempre";
 export const CYCLE_SAVINGS_ADDITIONAL_LABEL = "Ahorro adicional";
 export const CYCLE_SAVINGS_ADDITIONAL_HINT = "Lo que decidiste sumar";
-export const CYCLE_SAVINGS_TOTAL_LABEL = "Ahorro total";
+export const CYCLE_SAVINGS_TOTAL_LABEL = "Ahorro del ciclo";
 export const CYCLE_SAVINGS_TOTAL_HINT = "Objetivo + adicional";
+export const CYCLE_SAVINGS_BADGE_LABEL = "Este ciclo";
+export const CYCLE_SAVINGS_PARKED_COPY =
+  "Ese monto ya está en tu Fondo o metas. No es un segundo total.";
+export const CYCLE_SAVINGS_AVAILABLE_COPY_PREFIX = "Quedan";
+export const CYCLE_SAVINGS_AVAILABLE_COPY_SUFFIX =
+  "libres en el sobre para aportar al Fondo o a una meta.";
 
 export const CYCLE_SAVINGS_LEGEND_OBJECTIVE = "Objetivo — lo planeado";
 export const CYCLE_SAVINGS_LEGEND_ADDITIONAL = "Adicional — lo que sumaste";

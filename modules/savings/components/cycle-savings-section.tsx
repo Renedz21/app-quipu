@@ -13,6 +13,9 @@ import {
   CYCLE_SAVINGS_ABOVE_BADGE_SUFFIX,
   CYCLE_SAVINGS_ADDITIONAL_HINT,
   CYCLE_SAVINGS_ADDITIONAL_LABEL,
+  CYCLE_SAVINGS_AVAILABLE_COPY_PREFIX,
+  CYCLE_SAVINGS_AVAILABLE_COPY_SUFFIX,
+  CYCLE_SAVINGS_BADGE_LABEL,
   CYCLE_SAVINGS_BELOW_ACK_CTA,
   CYCLE_SAVINGS_BELOW_BODY_MIDDLE,
   CYCLE_SAVINGS_BELOW_BODY_PREFIX,
@@ -33,6 +36,7 @@ import {
   CYCLE_SAVINGS_MOVE_MORE_TITLE,
   CYCLE_SAVINGS_MOVE_SURPLUS_COPY,
   CYCLE_SAVINGS_OBJECTIVE_LABEL,
+  CYCLE_SAVINGS_PARKED_COPY,
   CYCLE_SAVINGS_ROUND_UP_TITLE_PREFIX,
   CYCLE_SAVINGS_SAVED_THIS_CYCLE_SUFFIX,
   CYCLE_SAVINGS_SECTION_ID,
@@ -88,12 +92,9 @@ export function CycleSavingsSection({ breakdown }: Props) {
     >
       <SectionHeader breakdown={breakdown} format={format} />
 
-      <article className="relative overflow-hidden rounded-[20px] border border-qp-shield-line bg-gradient-to-br from-qp-shield-from to-qp-shield-to p-5 md:p-7">
-        <div
-          className="pointer-events-none absolute -top-10 -right-8 size-56 rounded-full bg-[radial-gradient(circle,var(--qp-track),transparent_70%)]"
-          aria-hidden
-        />
-
+      {/* Canon overview: solo el Fondo lleva el shield verde. El ciclo es
+          flujo (cuánto entró), no un segundo hero del mismo color. */}
+      <article className="relative overflow-hidden rounded-[20px] border border-line bg-card p-5 md:p-7">
         {breakdown.showAboveTargetCelebration &&
         breakdown.aboveTargetByCents > 0 ? (
           <div className="relative mb-4 inline-flex items-center gap-2 rounded-full border border-qp-shield-line bg-qp-panel px-3 py-1.5 md:px-[13px] md:py-1.5">
@@ -112,11 +113,11 @@ export function CycleSavingsSection({ breakdown }: Props) {
         ) : null}
 
         <div className="relative flex flex-col gap-1 md:flex-row md:flex-wrap md:items-end md:gap-4">
-          <p className="font-serif text-[34px] leading-none text-ink md:text-[52px]">
+          <p className="font-serif text-[34px] leading-none text-ink md:text-[40px]">
             {format(breakdown.savingsTotalCents)}
           </p>
           {breakdown.savingsObjectiveCents > 0 ? (
-            <p className="text-sm text-qp-text md:pb-2">
+            <p className="text-sm text-mute md:pb-1.5">
               <span className="md:hidden">
                 {CYCLE_SAVINGS_META_WAS_PREFIX}{" "}
                 {format(breakdown.savingsObjectiveCents)}
@@ -129,15 +130,31 @@ export function CycleSavingsSection({ breakdown }: Props) {
           ) : null}
         </div>
 
+        {breakdown.savingsTotalCents > 0 &&
+        breakdown.savingsRemainingCents <= 0 &&
+        breakdown.savingsSetAsideCents > 0 ? (
+          <p className="relative mt-3 text-[12.5px] text-qp-deep md:text-[13.5px]">
+            {CYCLE_SAVINGS_PARKED_COPY}
+          </p>
+        ) : breakdown.savingsRemainingCents > 0 ? (
+          <p className="relative mt-3 text-[12.5px] text-mute md:text-[13.5px]">
+            {CYCLE_SAVINGS_AVAILABLE_COPY_PREFIX}{" "}
+            <span className="font-semibold text-ink">
+              {format(breakdown.savingsRemainingCents)}
+            </span>{" "}
+            {CYCLE_SAVINGS_AVAILABLE_COPY_SUFFIX}
+          </p>
+        ) : null}
+
         {breakdown.savingsTotalCents > 0 ? (
           <>
-            <div className="relative mt-5 flex h-3 overflow-hidden rounded-lg bg-qp-track md:h-4">
+            <div className="relative mt-5 flex h-3 overflow-hidden rounded-lg bg-qp-track md:h-3.5">
               <div
-                className="h-full bg-moss-soft"
+                className="h-full bg-moss"
                 style={{ width: `${breakdown.objectiveBarPercent}%` }}
               />
               <div
-                className="h-full bg-[repeating-linear-gradient(45deg,var(--moss-soft,#7fb39f),var(--moss-soft,#7fb39f)_5px,#9cc6b6_5px,#9cc6b6_10px)]"
+                className="h-full bg-[repeating-linear-gradient(45deg,#7fb39f,#7fb39f_5px,#9cc6b6_5px,#9cc6b6_10px)]"
                 style={{ width: `${breakdown.additionalBarPercent}%` }}
               />
             </div>
@@ -303,7 +320,7 @@ function SectionHeader({
       <div>
         <h2
           id="cycle-savings-heading"
-          className="font-serif text-[22px] font-medium text-ink md:text-[27px]"
+          className="font-serif text-[20px] font-medium text-ink md:text-[22px]"
         >
           {CYCLE_SAVINGS_SECTION_TITLE}
         </h2>
@@ -312,7 +329,7 @@ function SectionHeader({
         </p>
       </div>
       <span className="hidden rounded-lg border border-line bg-card px-3 py-2 font-mono text-[11px] text-mute md:inline">
-        {CYCLE_SAVINGS_TOTAL_LABEL} · {format(breakdown.savingsTotalCents)}
+        {CYCLE_SAVINGS_BADGE_LABEL} · {format(breakdown.savingsTotalCents)}
       </span>
     </div>
   );
@@ -454,7 +471,7 @@ function MobileMetricRow({
       className={cn(
         "flex items-center justify-between rounded-xl px-[15px] py-3",
         isTotal
-          ? "border-[1.5px] border-qp-shield-line bg-qp-success"
+          ? "border-[1.5px] border-qp-shield-line bg-qp-selected"
           : "border border-line bg-card",
       )}
     >
@@ -469,8 +486,8 @@ function MobileMetricRow({
             className={cn(
               "size-2.5 rounded-sm",
               variant === "objective"
-                ? "bg-moss-soft"
-                : "bg-[repeating-linear-gradient(45deg,var(--moss-soft,#7fb39f),var(--moss-soft,#7fb39f)_3px,#9cc6b6_3px,#9cc6b6_6px)]",
+                ? "bg-moss"
+                : "bg-[repeating-linear-gradient(45deg,#7fb39f,#7fb39f_3px,#9cc6b6_3px,#9cc6b6_6px)]",
             )}
             aria-hidden
           />
@@ -499,8 +516,8 @@ function LegendSwatch({
         className={cn(
           "size-2.5 rounded-sm md:size-[11px]",
           variant === "objective"
-            ? "bg-moss-soft"
-            : "bg-[repeating-linear-gradient(45deg,var(--moss-soft,#7fb39f),var(--moss-soft,#7fb39f)_3px,#9cc6b6_3px,#9cc6b6_6px)]",
+            ? "bg-moss"
+            : "bg-[repeating-linear-gradient(45deg,#7fb39f,#7fb39f_3px,#9cc6b6_3px,#9cc6b6_6px)]",
         )}
         aria-hidden
       />
@@ -530,7 +547,7 @@ function MetricCard({
       className={cn(
         "rounded-[14px] border p-4 md:p-[17px]",
         isTotal
-          ? "border-[1.5px] border-qp-shield-line bg-qp-success"
+          ? "border-[1.5px] border-qp-shield-line bg-qp-selected"
           : "border-line bg-card",
       )}
     >
@@ -545,8 +562,8 @@ function MetricCard({
             className={cn(
               "size-2.5 rounded-sm",
               variant === "objective"
-                ? "bg-moss-soft"
-                : "bg-[repeating-linear-gradient(45deg,var(--moss-soft,#7fb39f),var(--moss-soft,#7fb39f)_3px,#9cc6b6_3px,#9cc6b6_6px)]",
+                ? "bg-moss"
+                : "bg-[repeating-linear-gradient(45deg,#7fb39f,#7fb39f_3px,#9cc6b6_3px,#9cc6b6_6px)]",
             )}
             aria-hidden
           />

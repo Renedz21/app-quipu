@@ -103,6 +103,21 @@ export function SavingsView() {
 
   const availableToContributeCents =
     overview.emergencyFund?.availableToContributeCents ?? 0;
+  const hasSurplusToMove = Boolean(
+    cycleBreakdown &&
+      (cycleBreakdown.wantsSurplusCents > 0 ||
+        cycleBreakdown.needsSurplusCents > 0 ||
+        (cycleBreakdown.extraordinarySurplusCents ?? 0) > 0),
+  );
+  // Canon: el Fondo es el único hero verde. El ciclo solo aparece si hay
+  // historia que contar (monto > 0) o un empujón útil (bajo meta / sobrante).
+  const showCycleSection = Boolean(
+    overview.hasActiveCycle &&
+      cycleBreakdown &&
+      (cycleBreakdown.savingsTotalCents > 0 ||
+        cycleBreakdown.showUnderTargetMessage ||
+        hasSurplusToMove),
+  );
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
@@ -132,14 +147,6 @@ export function SavingsView() {
           currencyCode={overview.profile.currencyCode}
           hasActiveCycle={overview.hasActiveCycle}
         />
-      ) : null}
-
-      {overview.hasActiveCycle ? (
-        cycleBreakdown === undefined ? (
-          <CycleSavingsSectionSkeleton />
-        ) : cycleBreakdown ? (
-          <CycleSavingsSection breakdown={cycleBreakdown} />
-        ) : null
       ) : null}
 
       <section className="mt-6">
@@ -177,6 +184,7 @@ export function SavingsView() {
                 currencyCode={overview.profile.currencyCode}
                 hasActiveCycle={overview.hasActiveCycle}
                 availableToContributeCents={availableToContributeCents}
+                hasSurplusToMove={hasSurplusToMove}
                 onContribute={() =>
                   setContributeGoal({ id: goal.id, label: goal.label })
                 }
@@ -225,6 +233,15 @@ export function SavingsView() {
           </div>
         )}
       </section>
+
+      {/* 6N debajo de metas: no compite con el hero Fondo (canon overview). */}
+      {overview.hasActiveCycle ? (
+        cycleBreakdown === undefined ? (
+          <CycleSavingsSectionSkeleton />
+        ) : showCycleSection && cycleBreakdown ? (
+          <CycleSavingsSection breakdown={cycleBreakdown} />
+        ) : null
+      ) : null}
 
       <NewGoalDialog open={newGoalOpen} onOpenChange={setNewGoalOpen} />
       {contributeGoal ? (

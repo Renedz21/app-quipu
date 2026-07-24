@@ -1,0 +1,105 @@
+"use client";
+
+import Link from "next/link";
+import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
+import { cn } from "@/shared/lib/utils";
+import {
+  SETTINGS_COMMITMENTS_LABEL,
+  SETTINGS_CYCLE_LABEL,
+  SETTINGS_EXTRAORDINARY_LABEL,
+  SETTINGS_PERCENTAGES_LABEL,
+  SETTINGS_PREFERENCES_LABEL,
+} from "../constants";
+
+function envelopeDotClass(type: "needs" | "wants" | "savings") {
+  switch (type) {
+    case "needs":
+      return "bg-needs";
+    case "wants":
+      return "bg-clay";
+    case "savings":
+      return "bg-moss";
+  }
+}
+
+type Props = {
+  needs: number;
+  wants: number;
+  savings: number;
+  cycleDays: number;
+  commitmentCount: number;
+};
+
+export function SettingsSystemHubList({
+  needs,
+  wants,
+  savings,
+  cycleDays,
+  commitmentCount,
+}: Props) {
+  return (
+    <div className="rounded-[14px] border border-line bg-card px-4 py-0.5">
+      <Link
+        href="/settings/allocations"
+        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+      >
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_PERCENTAGES_LABEL}
+        </span>
+        <span className="flex gap-0.5" aria-hidden>
+          <span
+            className={cn("size-1.5 rounded-full", envelopeDotClass("needs"))}
+          />
+          <span
+            className={cn("size-1.5 rounded-full", envelopeDotClass("wants"))}
+          />
+          <span
+            className={cn("size-1.5 rounded-full", envelopeDotClass("savings"))}
+          />
+        </span>
+        <span className="text-[11.5px] text-faint">
+          {needs}/{wants}/{savings}
+        </span>
+        <ListRowChevron />
+      </Link>
+      <Link
+        href="/settings/system#compromisos"
+        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+      >
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_COMMITMENTS_LABEL}
+        </span>
+        <span className="text-[11.5px] text-faint">{commitmentCount}</span>
+        <ListRowChevron />
+      </Link>
+      <Link
+        href="/settings/cycle"
+        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+      >
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_CYCLE_LABEL}
+        </span>
+        <span className="text-[11.5px] text-faint">{cycleDays} días</span>
+        <ListRowChevron />
+      </Link>
+      <Link
+        href="/settings/system#preferencias"
+        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+      >
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_PREFERENCES_LABEL}
+        </span>
+        <ListRowChevron />
+      </Link>
+      <Link
+        href="/settings/system#automatizaciones"
+        className="flex items-center gap-2 py-2.5"
+      >
+        <span className="flex-1 text-[13.5px] text-ink">
+          {SETTINGS_EXTRAORDINARY_LABEL}
+        </span>
+        <ListRowChevron />
+      </Link>
+    </div>
+  );
+}

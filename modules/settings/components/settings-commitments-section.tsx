@@ -19,8 +19,10 @@ function envelopeDot(envelope: "needs" | "wants") {
 
 export function SettingsCommitmentsSection({
   className,
+  id = "compromisos",
 }: {
   className?: string;
+  id?: string;
 }) {
   const commitments = useSettingsCommitments();
   const [addOpen, setAddOpen] = useState(false);
@@ -28,8 +30,9 @@ export function SettingsCommitmentsSection({
   if (commitments === undefined) {
     return (
       <div
+        id={id}
         className={cn(
-          "h-64 animate-pulse rounded-2xl border border-line bg-card",
+          "h-64 animate-pulse scroll-mt-6 rounded-2xl border border-line bg-card",
           className,
         )}
       />
@@ -40,9 +43,9 @@ export function SettingsCommitmentsSection({
 
   return (
     <section
-      id="settings-commitments"
+      id={id}
       className={cn(
-        "flex flex-col rounded-2xl border border-line bg-card px-5 py-5 md:px-[22px] md:py-5",
+        "flex scroll-mt-6 flex-col rounded-2xl border border-line bg-card px-4 py-4 md:px-[22px] md:py-5",
         className,
       )}
     >

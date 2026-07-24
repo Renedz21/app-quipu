@@ -363,6 +363,12 @@ test.describe("P0 smoke @smoke", () => {
     await expect(
       authedPage.getByRole("heading", { name: "Ajustes" }),
     ).toBeVisible();
+
+    await authedPage.goto("/settings/system");
+
+    await expect(
+      authedPage.getByRole("heading", { name: "Tu sistema" }),
+    ).toBeVisible();
   });
 
   test("pantalla Movimientos carga tras onboarding", {

@@ -482,17 +482,20 @@ no personaliza más allá del nombre. Sin chat, voz, historial ni ML visible.
 "Tu progreso": racha (cifra Newsreader 50 + "ciclos cerrados en orden" + bar chart de 12 ciclos) +
 logros (grid, estados done/discoverable/locked; se ganan por hechos objetivos del sistema, no por
 check-ins). "Recompensas": desbloqueables por racha — **Tema Tinta** (3 ciclos), **Acento Arcilla**
-(6), **Informe anual encuadernado** (12) — + personalización activa (acento, tema, ícono).
+(6, UI sin selector activo), **Informe anual encuadernado** (12). Sin picker de acento ni ícono de
+app; el tema claro/oscuro se controla en Ajustes → sistema → Preferencias (`next-themes`).
 **La unidad de progreso es el ciclo**, no el día ni el punto. Sin puntos, monedas, leaderboard,
 XP, niveles ni badges de monto.
 
 **Bloque 9 — Perfil y ajustes "¿Cómo funciona mi sistema?"**
-Cuenta y sistema juntos (misma pantalla, dos columnas web / secciones móvil):
+Cuenta y sistema en **rutas separadas** (canon web `/settings` + `/settings/system`; móvil hub en
+`/settings` con listas Cuenta/Sistema):
 Cuenta = perfil (avatar, nombre, tags) + **plan y suscripción siempre visibles** (Quipu Plus
 S/ 14.90/mes, estado, renovación) + seguridad (passkeys por dispositivo, "+ Agregar passkey",
 sesiones activas, "Cerrar todas"). Sistema = porcentajes (preview + "Ajustar reparto") + ciclo
 (tipo/inicio/perfil + "Cambiar ciclo") + compromisos fijos (lista + total por ciclo + "+ Agregar")
-+ preferencias (moneda PEN read-only, idioma ES read-only, toggles de resumen diario y alertas).
++ preferencias (moneda PEN / idioma ES read-only, **tema claro/oscuro**, toggles de resumen diario
+y alertas) + **automatizaciones** (reglas de ingresos extraordinarios).
 "Cerrar sesión" es un item de lista (acción deliberada). **No hay "Eliminar cuenta" en v2.5.**
 
 ### 3.8 Microcopy
@@ -1043,7 +1046,7 @@ el DoD v2.5 ya está cubierto en la rama de trabajo.
 - **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10).
 - **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
-- **Bloque 9 — Perfil y ajustes:** `/settings` + allocations + **wizard ciclo** (`/settings/cycle`, regla §5.3); **editar nombre** inline; **sesiones** (`sessionsApiReady`, cerrar todas vía Convex + `ConfirmDestructiveDialog`); Polar billing (2026-07-22).
+- **Bloque 9 — Perfil y ajustes:** `/settings` (cuenta) + `/settings/system` (sistema + automatizaciones) + allocations + **wizard ciclo** (`/settings/cycle`, regla §5.3); **tema oscuro** (`next-themes` en Preferencias); **editar nombre** inline; **sesiones** (`sessionsApiReady`, cerrar todas vía Convex + `ConfirmDestructiveDialog`); Polar billing (2026-07-22). Sin selector de acento ni ícono.
 - **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard).
 - **Compromisos:** `/commitments` (lista con cobertura del ciclo, total `/ ciclo`, agregar compromiso; **detalle en sheet** + eliminar con diálogo destructivo reutilizable; nav sidebar/bottom activa; enlace «Ver todo» en dashboard).
 
@@ -1076,12 +1079,14 @@ flowchart LR
   end
   subgraph account [Cuenta]
     ST["/settings"]
+    SYS["/settings/system"]
     P["/progress"]
   end
   D --> M
   D --> I
   S --> SF
   S --> SM
+  ST --> SYS
   ST --> P
 ```
 
@@ -1115,8 +1120,8 @@ flowchart LR
 | P1-8 | Bloque 5 — Ingresos | ✅ **Cerrado 2026-07-21.** `/income/register` full-screen; preview 3 sobres + disponible hoy; chips origen → `createIncomeEvent`; confirmación con deltas; CTAs empty/header/FAB; TDD `impactPreview`; smoke E2E ingreso. |
 | P1-9 | Bloque 6 — Ahorros | ✅ **Cerrado 2026-07-21.** `/savings` + `/savings/fund`; hero Fondo (Prioridad, progreso 3 meses), detalle con stats, `contributeToSubEnvelope`, `createSavingsGoal` (máx 6 metas), TDD `savingsMath`; nav Ahorros activa. Ajustar aporte y aporte a metas custom en UI diferidos. |
 | P1-10 | Bloque 7 — Coach CTAs advertencia/crisis | ✅ **Cerrado 2026-07-21.** Warning: `/income/register` + scroll sobres. Crisis: `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`; `crisisResolution` (TDD), `coverageBoost`/`postponedForCycleId`; UI `coach-crisis-actions`. Tranquilo CTAs en card del dashboard diferidos. **Sin** pantalla ni nav Coach (decisión 2026-07-21). |
-| P1-11 | Bloque 8 — Gamificación | ✅ **Cerrado 2026-07-21.** `/progress` (racha Newsreader + chart 12 ciclos + logros) y `/progress/rewards` (Tinta/Arcilla/informe + acento/tema/ícono). Motor: `evaluateClosedCycle` en cierre de ciclo (`createIncomeEvent`), `gamificationMath` (TDD), `convex/progress.ts`, `AppearanceSync`. Informe anual PDF diferido. Enlace desde `/settings` (perfil). |
-| P1-12 | Bloque 9 — Perfil y ajustes | ✅ **Cerrado 2026-07-22 (v2.5).** `/settings` + allocations + wizard ciclo + nombre + sesiones; Polar billing 2026-07-22. |
+| P1-11 | Bloque 8 — Gamificación | ✅ **Cerrado 2026-07-21; UI cleanup 2026-07-24.** `/progress` + `/progress/rewards` (Tinta/Arcilla/informe). Sin picker de acento ni ícono; tema en Ajustes. Motor: `evaluateClosedCycle`, `gamificationMath`, `AppearanceSync` + `next-themes`. |
+| P1-12 | Bloque 9 — Perfil y ajustes | ✅ **Cerrado 2026-07-22; split 2026-07-24.** `/settings` (cuenta) + `/settings/system` (sistema + automatizaciones) + allocations + wizard ciclo + nombre + sesiones + dark mode; Polar billing. |
 
 **P2 — backlog:**
 
@@ -1162,7 +1167,7 @@ flowchart LR
 | 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
 | 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
 | 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
-| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Ajustes v2.5 (2026-07-22):** editar nombre, wizard `/settings/cycle` (§5.3), sesiones (`sessionsApiReady`, revoke-all). ✅ **`ConfirmDestructiveDialog`** (revoke sesiones + delete compromiso). Compromiso: sheet detalle en `/commitments`. |
+| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Split cuenta/sistema (2026-07-24):** `/settings` + `/settings/system` + dark mode Preferencias. ✅ **Ajustes v2.5:** editar nombre, wizard `/settings/cycle`, sesiones, `ConfirmDestructiveDialog`. Compromiso: sheet en `/commitments`. |
 
 ### 8.5 Regla de actualización de esta sección
 
@@ -1363,6 +1368,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.
 - **2026-07-22 — DoD v2.5 + release gate.** §8.1 Definition of Done acotada (excluye Plus/variante C e PDF descargable); §8.3 P3 post-v2.5; §2.4 excepción informe UI-only; §9.3.2 CI + §9.4 checklist Vercel; §9.5 checklist Polar prod; P2-6 lint ✅; P2-8 parcial (CI, pendiente owner Vercel/D4/Polar prod).
 - **2026-07-22 — P2-7 cierre + Bloque 6/7 UI.** E2E smoke gratificación/sobrante; coach tranquilo CTAs; `contributeToGoal` dialog; «Ajustar aporte» → `/settings/allocations`.

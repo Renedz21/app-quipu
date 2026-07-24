@@ -2,6 +2,13 @@ export const SETTINGS_PAGE_TITLE = "Ajustes";
 export const SETTINGS_PAGE_SUBTITLE = "Tu cuenta primero; tu sistema, al lado.";
 export const SETTINGS_MOBILE_ACCOUNT_LABEL = "Cuenta";
 export const SETTINGS_SYSTEM_SLOT_NOTE = "system-column";
+export const SETTINGS_SYSTEM_GO_LINK = "Tu sistema →";
+export const SETTINGS_SYSTEM_PAGE_SUBTITLE =
+  "Porcentajes, ciclo, compromisos y preferencias.";
+export const SETTINGS_SYSTEM_SHORT = "Sistema";
+export const SETTINGS_THEME_LABEL = "Tema";
+export const SETTINGS_THEME_LIGHT = "Claro";
+export const SETTINGS_THEME_DARK = "Oscuro";
 
 export const SETTINGS_PROFILE_LABEL = "Perfil";
 export const SETTINGS_EDIT_PROFILE = "Editar";
@@ -103,9 +110,9 @@ export const SETTINGS_PREFERENCES_LABEL = "Preferencias";
 export const SETTINGS_EXTRAORDINARY_LABEL = "Automatizaciones";
 export const SETTINGS_EXTRAORDINARY_TAGLINE = "Decide una vez, repite siempre";
 export const SETTINGS_EXTRAORDINARY_DESCRIPTION =
-  "Qué hace Quipu cuando llega cada ingreso extraordinario. Siempre puedes cambiarlo en el momento.";
+  "Qué hace Quipu con cada ingreso extraordinario.";
 export const SETTINGS_EXTRAORDINARY_FOOTER =
-  "Una regla es una sugerencia, no una jaula: cuando registres el ingreso podrás aceptarla o cambiar el destino ahí mismo.";
+  "Sugerencia, no regla: al registrar el ingreso puedes cambiar el destino.";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT = "Julio y diciembre";
 export const SETTINGS_EXTRAORDINARY_CTS = "CTS";

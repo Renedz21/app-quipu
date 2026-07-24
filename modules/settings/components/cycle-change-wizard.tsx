@@ -12,7 +12,6 @@ import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { useUpdateCycleSchedule } from "../actions";
 import {
-  SETTINGS_BACK_LINK,
   SETTINGS_CYCLE_WIZARD_BACK,
   SETTINGS_CYCLE_WIZARD_CONFIRM,
   SETTINGS_CYCLE_WIZARD_NEXT,
@@ -20,6 +19,7 @@ import {
   SETTINGS_CYCLE_WIZARD_STEP1_BODY,
   SETTINGS_CYCLE_WIZARD_STEP1_TITLE,
   SETTINGS_CYCLE_WIZARD_STEP2_TITLE,
+  SETTINGS_SYSTEM_HEADING,
 } from "../constants";
 import {
   formatCycleStart,
@@ -91,7 +91,7 @@ export function CycleChangeWizard() {
         await updateCycle({ payFrequency, paydays });
       }
       toast.success(SETTINGS_CYCLE_WIZARD_SAVED);
-      router.push("/settings");
+      router.push("/settings/system");
     } catch (error) {
       toast.error(fromConvexError(error).message);
     } finally {
@@ -102,10 +102,10 @@ export function CycleChangeWizard() {
   return (
     <div className="mx-auto w-full max-w-lg px-5 py-6">
       <BackLink
-        href="/settings"
+        href="/settings/system"
         className="text-[12.5px] text-mute hover:text-ink"
       >
-        {SETTINGS_BACK_LINK}
+        {SETTINGS_SYSTEM_HEADING}
       </BackLink>
 
       {step === 1 ? (

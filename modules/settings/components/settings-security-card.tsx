@@ -32,6 +32,7 @@ type Props = {
   sessionsApiReady: SettingsOverview["sessionsApiReady"];
   activeSessionCount?: SettingsOverview["activeSessionCount"];
   className?: string;
+  id?: string;
 };
 
 function PasskeyRowIcon({ deviceType }: { deviceType: string }) {
@@ -51,6 +52,7 @@ export function SettingsSecurityCard({
   sessionsApiReady,
   activeSessionCount,
   className,
+  id,
 }: Props) {
   const passkeysQuery = authClient.useListPasskeys();
   const passkeys = passkeysQuery.data ?? [];
@@ -94,8 +96,9 @@ export function SettingsSecurityCard({
 
   return (
     <section
+      id={id}
       className={cn(
-        "rounded-2xl border border-line bg-card px-5 py-5 md:self-start md:px-6 md:py-[22px]",
+        "scroll-mt-6 rounded-2xl border border-line bg-card px-5 py-5 md:self-start md:px-6 md:py-[22px]",
         className,
       )}
     >

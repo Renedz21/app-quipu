@@ -143,21 +143,13 @@ export function SettingsExtraordinarySection({
         className,
       )}
     >
-      <div className="mb-4 flex items-center gap-2.5">
-        <span className="flex size-[30px] items-center justify-center rounded-[9px] bg-extraordinary-a">
-          <span
-            className="size-3 rotate-45 rounded-[3px] border-2 border-canvas"
-            aria-hidden
-          />
-        </span>
-        <div>
-          <p className="font-serif text-[22px] font-medium text-ink md:text-[25px]">
-            {SETTINGS_EXTRAORDINARY_LABEL}
-          </p>
-          <p className="text-[13.5px] text-mute">
-            {SETTINGS_EXTRAORDINARY_DESCRIPTION}
-          </p>
-        </div>
+      <div className="mb-3.5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+          {SETTINGS_EXTRAORDINARY_LABEL}
+        </p>
+        <p className="mt-1 text-[13px] text-mute">
+          {SETTINGS_EXTRAORDINARY_DESCRIPTION}
+        </p>
       </div>
 
       <ul className="flex flex-col gap-2.5">
@@ -210,11 +202,7 @@ export function SettingsExtraordinarySection({
         })}
       </ul>
 
-      <p className="mt-4 flex items-start gap-2.5 rounded-[12px] border border-extraordinary-border bg-[#FBF6EA] px-[15px] py-3 text-[13px] leading-snug text-[#7E611F]">
-        <span
-          className="mt-1 size-2 shrink-0 rotate-45 rounded-sm bg-extraordinary-a"
-          aria-hidden
-        />
+      <p className="mt-3 text-[12.5px] leading-snug text-mute">
         {SETTINGS_EXTRAORDINARY_FOOTER}
       </p>
     </section>

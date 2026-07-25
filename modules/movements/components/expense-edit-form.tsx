@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { ExpenseKeypad } from "@/modules/expenses/components/expense-keypad";
@@ -11,7 +11,7 @@ import {
 } from "@/modules/expenses/constants";
 import type { ExpenseEnvelopeType } from "@/modules/expenses/lib/envelopeSuggestion";
 import { formatKeypadDisplay } from "@/modules/expenses/lib/keypad";
-import { createExpenseRegisterSchema } from "@/modules/expenses/schemas";
+import { expenseRegisterSchema } from "@/modules/expenses/schemas";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
@@ -47,7 +47,6 @@ export function ExpenseEditForm({
   onCancel,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const formSchema = useMemo(() => createExpenseRegisterSchema(), []);
   const currencySymbol = DEFAULT_CURRENCY.symbol;
 
   const form = useForm({
@@ -57,8 +56,8 @@ export function ExpenseEditForm({
       description: initialDescription,
     },
     validators: {
-      onChange: formSchema,
-      onSubmit: formSchema,
+      onChange: expenseRegisterSchema,
+      onSubmit: expenseRegisterSchema,
     },
     onSubmit: async ({ value }) => {
       setServerError(null);

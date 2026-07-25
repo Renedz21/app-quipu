@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { IncomeAmountField } from "@/modules/income/components/income-amount-field";
@@ -53,11 +53,7 @@ export function IncomeEditForm({
   onCancel,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
-
-  const initialConcept = useMemo(
-    () => extractConcept(initialDescription, initialSource),
-    [initialDescription, initialSource],
-  );
+  const initialConcept = extractConcept(initialDescription, initialSource);
 
   const form = useForm({
     defaultValues: {

@@ -95,10 +95,10 @@ export function MovementDetailSheet({
       } else {
         await deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> });
       }
+      setIsDeleting(false);
       onOpenChange(false);
     } catch (error) {
       setDeleteError(fromConvexError(error).message);
-    } finally {
       setIsDeleting(false);
     }
   }

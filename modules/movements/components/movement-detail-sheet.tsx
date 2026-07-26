@@ -9,8 +9,14 @@ import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import type { IncomeSource } from "@/modules/income/types";
 import { Button } from "@/shared/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { formatLimaDateTime } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import { ExpenseEditForm } from "./expense-edit-form";
@@ -83,6 +89,7 @@ export function MovementDetailSheet({
   movement,
   currencyCode = DEFAULT_CURRENCY.code,
 }: Props) {
+  const isMobile = useIsMobile();
   const [state, setState] = useState<SheetState>("detail");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -319,21 +326,39 @@ export function MovementDetailSheet({
     );
   }
 
+  const title = SHEET_TITLES[state];
+  const body = renderContent();
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent
+          side="bottom"
+          showCloseButton
+          className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-0 pt-3"
+        >
+          <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line" />
+          <SheetTitle className="mb-4 shrink-0 pr-8 text-[15px] font-semibold text-ink">
+            {title}
+          </SheetTitle>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(env(safe-area-inset-bottom),20px)]">
+            {body}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="bottom"
-        showCloseButton
-        className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-0 pt-3"
-      >
-        <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line" />
-        <SheetTitle className="mb-4 shrink-0 pr-8 text-[15px] font-semibold text-ink">
-          {SHEET_TITLES[state]}
-        </SheetTitle>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(env(safe-area-inset-bottom),20px)]">
-          {renderContent()}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-[400px] gap-0 rounded-[22px] border-line bg-card p-0">
+        <DialogTitle className="px-5 pt-5 pr-12 text-[15px] font-semibold text-ink">
+          {title}
+        </DialogTitle>
+        <div className="max-h-[min(85vh,720px)] overflow-y-auto px-5 pb-5 pt-4">
+          {body}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

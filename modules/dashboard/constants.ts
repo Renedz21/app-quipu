@@ -64,3 +64,6 @@ export const MOVEMENTS_EMPTY_BODY =
   "Tu primer movimiento aparecerá aquí. Registrar un gasto toma menos de diez segundos.";
 
 export const REGISTER_CTA = "Registrar";
+
+/** Mobile-only CTA in the dashboard header to access the income register (full-screen immersive). */
+export const INCOME_MOBILE_CTA = "+ Ingreso";

@@ -96,7 +96,7 @@ export function IncomeExtraordinaryTypeGrid({
               className={cn(
                 "relative rounded-[14px] px-[18px] py-[17px] text-left transition-colors",
                 card.dashed
-                  ? "border border-dashed border-[#D8CFB8] bg-[#FCFAF4]"
+                  ? "border border-dashed border-extraordinary-dashed-border bg-extraordinary-dashed-bg"
                   : "border border-line bg-card",
                 selected &&
                   "border-[1.5px] border-extraordinary-a bg-extraordinary-surface/50",
@@ -110,7 +110,7 @@ export function IncomeExtraordinaryTypeGrid({
                   <Check size={10} color="#fff" strokeWidth={3} />
                 </span>
               ) : null}
-              <span className="mb-3 flex size-[34px] items-center justify-center rounded-[10px] bg-[#F4EFE5]">
+              <span className="mb-3 flex size-[34px] items-center justify-center rounded-[10px] bg-extraordinary-icon-bg">
                 <TypeCardIcon type={card.type} />
               </span>
               <div className="font-semibold text-[15px] text-ink">

@@ -38,9 +38,9 @@ import { policyForExtraordinaryType } from "../lib/extraordinaryPolicy";
 import {
   computeImpactPreview,
   resolveCycleDaysForPreview,
+  suggestHeldCentsForPreview,
 } from "../lib/impactPreview";
 import { buildIncomeDescription } from "../lib/incomeForm";
-import { suggestHeldCentsForPreview } from "../lib/impactPreview";
 import {
   createIncomeRegisterSchema,
   type IncomeRegisterFormValues,
@@ -275,7 +275,7 @@ export function IncomeRegisterForm({
       </div>
 
       <form
-        className="mx-auto w-full max-w-6xl px-4 pt-[calc(68px+env(safe-area-inset-top))] pb-6 md:px-8 md:py-8 md:pt-8"
+        className="mx-auto w-full max-w-6xl px-4 pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(88px+env(safe-area-inset-bottom))] md:px-8 md:py-8 md:pb-8 md:pt-8"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -298,53 +298,53 @@ export function IncomeRegisterForm({
                 : INCOME_EXTRAORDINARY_DETAILS_SUBTITLE
               : INCOME_PAGE_SUBTITLE;
 
-          // P3-4: suggestion from uncovered commitment remainders.
-          const uncoveredSum =
-            summary?.commitments?.reduce((sum, c) => {
-              const isUncovered =
-                c.cascadeStatus === "partial" ||
-                c.cascadeStatus === "not-started" ||
-                c.cascadeStatus === "overdue";
-              return sum + (isUncovered ? c.remaining : 0);
-            }, 0) ?? 0;
-          const suggestedHeldCents =
-            values.amountCents > 0 && uncoveredSum > 0
-              ? suggestHeldCentsForPreview(values.amountCents, uncoveredSum)
-              : undefined;
+            // P3-4: suggestion from uncovered commitment remainders.
+            const uncoveredSum =
+              summary?.commitments?.reduce((sum, c) => {
+                const isUncovered =
+                  c.cascadeStatus === "partial" ||
+                  c.cascadeStatus === "not-started" ||
+                  c.cascadeStatus === "overdue";
+                return sum + (isUncovered ? c.remaining : 0);
+              }, 0) ?? 0;
+            const suggestedHeldCents =
+              values.amountCents > 0 && uncoveredSum > 0
+                ? suggestHeldCentsForPreview(values.amountCents, uncoveredSum)
+                : undefined;
 
-          const previewInput =
-            values.amountCents > 0
-              ? computeImpactPreview({
-                  amountCents: values.amountCents,
-                  weights: {
-                    allocationNeeds: profile.allocationNeeds,
-                    allocationWants: profile.allocationWants,
-                    allocationSavings: profile.allocationSavings,
-                  },
-                  currentEnvelopes: {
-                    needs:
-                      summary?.envelopes?.find((e) => e.type === "needs")
-                        ?.remainingAmount ?? 0,
-                    wants:
-                      summary?.envelopes?.find((e) => e.type === "wants")
-                        ?.remainingAmount ?? 0,
-                    savings:
-                      summary?.envelopes?.find((e) => e.type === "savings")
-                        ?.remainingAmount ?? 0,
-                  },
-                  daysRemaining:
-                    summary?.cycle?.daysRemaining ??
-                    resolveCycleDaysForPreview({
-                      incomeModel: profile.incomeModel,
-                      payFrequency: profile.payFrequency,
-                      cycleDurationDays: profile.cycleDurationDays,
-                    }),
-                  distributionPolicy: isExtraordinary
-                    ? values.distributionPolicy
-                    : undefined,
-                  heldCents: values.heldCents ?? 0,
-                })
-              : null;
+            const previewInput =
+              values.amountCents > 0
+                ? computeImpactPreview({
+                    amountCents: values.amountCents,
+                    weights: {
+                      allocationNeeds: profile.allocationNeeds,
+                      allocationWants: profile.allocationWants,
+                      allocationSavings: profile.allocationSavings,
+                    },
+                    currentEnvelopes: {
+                      needs:
+                        summary?.envelopes?.find((e) => e.type === "needs")
+                          ?.remainingAmount ?? 0,
+                      wants:
+                        summary?.envelopes?.find((e) => e.type === "wants")
+                          ?.remainingAmount ?? 0,
+                      savings:
+                        summary?.envelopes?.find((e) => e.type === "savings")
+                          ?.remainingAmount ?? 0,
+                    },
+                    daysRemaining:
+                      summary?.cycle?.daysRemaining ??
+                      resolveCycleDaysForPreview({
+                        incomeModel: profile.incomeModel,
+                        payFrequency: profile.payFrequency,
+                        cycleDurationDays: profile.cycleDurationDays,
+                      }),
+                    distributionPolicy: isExtraordinary
+                      ? values.distributionPolicy
+                      : undefined,
+                    heldCents: values.heldCents ?? 0,
+                  })
+                : null;
 
             const submitLabel =
               isExtraordinary && values.extraordinaryType
@@ -433,71 +433,73 @@ export function IncomeRegisterForm({
                     )}
                   >
                     <div className="space-y-5">
-                    {showDetails ? (
-                      <form.Field name="amountCents">
-                        {(amountField) => (
-                          <form.Field name="occurredAt">
-                            {(occurredAtField) => (
-                              <form.Field name="extraordinaryLabel">
-                                {(labelField) => (
-                                  <form.Field name="heldCents">
-                                    {(heldField) => (
-                                      <IncomeExtraordinaryDetailsFields
-                                        currencyCode={currencyCode}
-                                        extraordinaryType={showDetails}
-                                        amountField={amountField}
-                                        occurredAtField={occurredAtField}
-                                        labelField={
-                                          labelField as IncomeFormField<"extraordinaryLabel">
-                                        }
-                                        heldField={
-                                          heldField as IncomeFormField<"heldCents">
-                                        }
-                                        suggestedHeldCents={suggestedHeldCents}
-                                      />
-                                    )}
-                                  </form.Field>
-                                )}
-                              </form.Field>
-                            )}
-                          </form.Field>
-                        )}
-                      </form.Field>
-                    ) : !isExtraordinary ? (
-                      <form.Field name="amountCents">
-                        {(amountField) => (
-                          <form.Field name="occurredAt">
-                            {(occurredAtField) => (
-                              <form.Field name="source">
-                                {(sourceField) => (
-                                  <form.Field name="concept">
-                                    {(conceptField) => (
-                                      <form.Field name="heldCents">
-                                        {(heldField) => (
-                                          <IncomeRegisterHabitualFields
-                                            currencyCode={currencyCode}
-                                            amountField={amountField}
-                                            occurredAtField={occurredAtField}
-                                            sourceField={sourceField}
-                                            conceptField={conceptField}
-                                            heldField={
-                                              heldField as IncomeFormField<"heldCents">
-                                            }
-                                            suggestedHeldCents={
-                                              suggestedHeldCents
-                                            }
-                                          />
-                                        )}
-                                      </form.Field>
-                                    )}
-                                  </form.Field>
-                                )}
-                              </form.Field>
-                            )}
-                          </form.Field>
-                        )}
-                      </form.Field>
-                    ) : null}
+                      {showDetails ? (
+                        <form.Field name="amountCents">
+                          {(amountField) => (
+                            <form.Field name="occurredAt">
+                              {(occurredAtField) => (
+                                <form.Field name="extraordinaryLabel">
+                                  {(labelField) => (
+                                    <form.Field name="heldCents">
+                                      {(heldField) => (
+                                        <IncomeExtraordinaryDetailsFields
+                                          currencyCode={currencyCode}
+                                          extraordinaryType={showDetails}
+                                          amountField={amountField}
+                                          occurredAtField={occurredAtField}
+                                          labelField={
+                                            labelField as IncomeFormField<"extraordinaryLabel">
+                                          }
+                                          heldField={
+                                            heldField as IncomeFormField<"heldCents">
+                                          }
+                                          suggestedHeldCents={
+                                            suggestedHeldCents
+                                          }
+                                        />
+                                      )}
+                                    </form.Field>
+                                  )}
+                                </form.Field>
+                              )}
+                            </form.Field>
+                          )}
+                        </form.Field>
+                      ) : !isExtraordinary ? (
+                        <form.Field name="amountCents">
+                          {(amountField) => (
+                            <form.Field name="occurredAt">
+                              {(occurredAtField) => (
+                                <form.Field name="source">
+                                  {(sourceField) => (
+                                    <form.Field name="concept">
+                                      {(conceptField) => (
+                                        <form.Field name="heldCents">
+                                          {(heldField) => (
+                                            <IncomeRegisterHabitualFields
+                                              currencyCode={currencyCode}
+                                              amountField={amountField}
+                                              occurredAtField={occurredAtField}
+                                              sourceField={sourceField}
+                                              conceptField={conceptField}
+                                              heldField={
+                                                heldField as IncomeFormField<"heldCents">
+                                              }
+                                              suggestedHeldCents={
+                                                suggestedHeldCents
+                                              }
+                                            />
+                                          )}
+                                        </form.Field>
+                                      )}
+                                    </form.Field>
+                                  )}
+                                </form.Field>
+                              )}
+                            </form.Field>
+                          )}
+                        </form.Field>
+                      ) : null}
                     </div>
 
                     <div className="flex flex-col gap-3.5">

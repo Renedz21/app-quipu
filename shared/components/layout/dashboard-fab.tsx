@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Add } from "reicon-react";
-import { HERO_EMPTY_CTA, REGISTER_CTA } from "@/modules/dashboard/constants";
+import { HERO_EMPTY_CTA } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import { Button } from "@/shared/components/ui/button";
@@ -16,7 +16,10 @@ export function DashboardFab() {
   return (
     <Button
       type="button"
-      aria-label={hasActiveCycle ? REGISTER_CTA : HERO_EMPTY_CTA}
+      // With an active cycle the FAB opens the expense sheet exclusively,
+      // so label it "Registrar gasto" to avoid semantic collision with the
+      // «+ Ingreso» CTA now shown in the dashboard header.
+      aria-label={hasActiveCycle ? "Registrar gasto" : HERO_EMPTY_CTA}
       onClick={() => {
         if (hasActiveCycle) {
           open({ variant: "fab" });

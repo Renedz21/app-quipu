@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { HERO_EMPTY_CTA } from "@/modules/dashboard/constants";
+import {
+  HERO_EMPTY_CTA,
+  INCOME_MOBILE_CTA,
+} from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
@@ -12,7 +15,22 @@ export function DashboardHeaderActions() {
   const hasActiveCycle = Boolean(summary?.cycle);
 
   if (hasActiveCycle) {
-    return <DashboardRegisterButton />;
+    return (
+      <div className="flex items-center gap-2">
+        {/* «Ingreso» CTA — mobile only, leads to full-screen income register */}
+        <Link
+          href="/income/register"
+          className={cn(
+            buttonVariants({ variant: "secondary", size: "sm" }),
+            "border-line bg-card text-mute hover:bg-surface-soft md:hidden",
+          )}
+        >
+          {INCOME_MOBILE_CTA}
+        </Link>
+        {/* Expense register (opens bottom sheet) — visible on all sizes */}
+        <DashboardRegisterButton />
+      </div>
+    );
   }
 
   return (

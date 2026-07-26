@@ -366,6 +366,7 @@ export const getCommitment = query({
       envelope: commitment.envelope,
       dueDay: commitment.dueDay,
       nextDueAt,
+      createdAt: commitment._creationTime,
       daysUntilDue: daysUntilNextDue(nextDueAt, now),
       coveredAt: commitment.coveredAt,
       coverageStatus,

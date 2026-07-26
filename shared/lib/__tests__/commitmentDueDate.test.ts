@@ -6,7 +6,7 @@ import {
   daysUntilNextDue,
   isPastNextDue,
   resolveCommitmentNextDueAt,
-} from "./commitmentDueDate";
+} from "@/shared/lib/commitmentDueDate";
 
 // 2026-01-20 12:00 Lima
 const JAN_20_NOON = new Date("2026-01-20T17:00:00.000Z").getTime();

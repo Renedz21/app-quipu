@@ -25,6 +25,10 @@ import {
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import {
+  daysUntilNextDue,
+  resolveCommitmentNextDueAt,
+} from "@/shared/lib/commitmentDueDate";
+import {
   formatCoverageStatusLabel,
   formatPaymentStatusLabel,
 } from "@/shared/lib/commitmentStatusDisplay";
@@ -86,6 +90,22 @@ export function CommitmentDetailSheet({
 
   const title = detail?.name ?? "Compromiso";
 
+  const resolvedDue =
+    detail != null
+      ? (() => {
+          const nextDueAt = resolveCommitmentNextDueAt({
+            dueDay: detail.dueDay,
+            nextDueAt: detail.nextDueAt,
+            createdAt: detail.createdAt ?? Date.now(),
+          });
+          return {
+            nextDueAt,
+            daysUntilDue:
+              detail.daysUntilDue ?? daysUntilNextDue(nextDueAt, Date.now()),
+          };
+        })()
+      : null;
+
   const body = (
     <>
       {detail === undefined ? (
@@ -111,10 +131,10 @@ export function CommitmentDetailSheet({
           <div className="flex justify-between gap-4">
             <dt className="text-mute">{COMMITMENT_NEXT_DUE_LABEL}</dt>
             <dd className="text-right font-medium text-ink">
-              <div>{formatLimaDate(detail.nextDueAt)}</div>
+              <div>{formatLimaDate(resolvedDue!.nextDueAt)}</div>
               {detail.paymentStatus !== "paid" ? (
                 <div className="text-xs font-normal text-mute">
-                  {formatDueInDays(detail.daysUntilDue)}
+                  {formatDueInDays(resolvedDue!.daysUntilDue)}
                 </div>
               ) : null}
             </dd>
@@ -140,7 +160,7 @@ export function CommitmentDetailSheet({
               {formatPaymentStatusLabel(
                 detail.paymentStatus,
                 detail.paidAtForCycle,
-                detail.daysUntilDue,
+                resolvedDue!.daysUntilDue,
               )}
             </dd>
           </div>

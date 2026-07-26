@@ -166,6 +166,9 @@ export const appTables = {
     coveredBy: v.optional(v.array(v.id("incomeEvents"))),
     // P1-10: pospuesto solo para el ciclo activo (coach crisis).
     postponedForCycleId: v.optional(v.id("financialCycles")),
+    // Seguimiento de pago confirmado por el usuario (por ciclo). No mueve sobres.
+    paidAt: v.optional(v.number()),
+    paidForCycleId: v.optional(v.id("financialCycles")),
   })
     .index("by_profileId", ["profileId"])
     .index("by_profile_dueDay", ["profileId", "dueDay"]),

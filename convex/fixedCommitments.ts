@@ -7,6 +7,10 @@ import {
   daysUntilDueDay,
   mapCoverageStatusToDashboard,
 } from "./lib/commitmentCoverage";
+import {
+  isCommitmentPaidForCycle,
+  resolveCommitmentPaymentStatus,
+} from "./lib/commitmentPayment";
 
 export const listMyCommitments = query({
   args: {},
@@ -119,6 +123,73 @@ export const deleteFixedCommitment = mutation({
   },
 });
 
+export const markCommitmentAsPaid = mutation({
+  args: { commitmentId: v.id("fixedCommitments") },
+  returns: v.object({ success: v.literal(true), paidAt: v.number() }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+
+    const commitment = await ctx.db.get(args.commitmentId);
+    if (!commitment) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Compromiso no encontrado.",
+      });
+    }
+
+    const profile = await ctx.db.get(commitment.profileId);
+    if (!profile || profile.userId !== identity.subject) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "No tienes permisos para actualizar este registro.",
+      });
+    }
+
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique();
+    if (!activeCycle) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "Necesitas un ciclo activo para marcar un compromiso como pagado.",
+      });
+    }
+
+    if (
+      isCommitmentPaidForCycle(
+        {
+          paidAt: commitment.paidAt,
+          paidForCycleId: commitment.paidForCycleId,
+        },
+        activeCycle._id,
+      )
+    ) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Este compromiso ya está marcado como pagado en este ciclo.",
+      });
+    }
+
+    const paidAt = Date.now();
+    await ctx.db.patch(args.commitmentId, {
+      paidAt,
+      paidForCycleId: activeCycle._id,
+    });
+
+    return { success: true as const, paidAt };
+  },
+});
+
 /**
  * Crea N compromisos fijos en una sola mutation atómica.
  * Usado por el onboarding v2.5 (paso 6) para evitar N round-trips.
@@ -209,6 +280,54 @@ export const getCommitment = query({
     const profile = await ctx.db.get(commitment.profileId);
     if (!profile || profile.userId !== identity.subject) return null;
 
+    const now = Date.now();
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique();
+
+    let coverageStatus: "covered" | "partial" | "uncovered" = "uncovered";
+    if (activeCycle) {
+      const incomeEvents = await ctx.db
+        .query("incomeEvents")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect();
+      const coverageById = computeAllCommitmentCoverage({
+        commitments: [
+          {
+            id: commitment._id,
+            amount: commitment.amount,
+            envelope: commitment.envelope,
+            dueDay: commitment.dueDay,
+          },
+        ],
+        cycle: {
+          startDate: activeCycle.startDate,
+          endDate: activeCycle.endDate,
+        },
+        incomeEvents: incomeEvents.map((event) => ({
+          id: event._id,
+          occurredAt: event.occurredAt,
+          distributionApplied: event.distributionApplied,
+          heldCents: event.heldCents,
+        })),
+        now,
+      });
+      const cascadeStatus =
+        coverageById.get(commitment._id)?.status ?? "not-started";
+      coverageStatus = mapCoverageStatusToDashboard(cascadeStatus);
+    }
+
+    const paymentStatus = resolveCommitmentPaymentStatus({
+      paidAt: commitment.paidAt,
+      paidForCycleId: commitment.paidForCycleId,
+      activeCycleId: activeCycle?._id ?? null,
+      dueDay: commitment.dueDay,
+      now,
+    });
+
     return {
       id: commitment._id,
       name: commitment.name,
@@ -216,6 +335,10 @@ export const getCommitment = query({
       envelope: commitment.envelope,
       dueDay: commitment.dueDay,
       coveredAt: commitment.coveredAt,
+      coverageStatus,
+      paymentStatus,
+      paidAtForCycle: paymentStatus === "paid" ? commitment.paidAt : undefined,
+      hasActiveCycle: activeCycle != null,
       currencyCode: profile.currencyCode,
     };
   },
@@ -268,6 +391,14 @@ export const getCommitmentCoverage = query({
           cascadeStatus: "not-started" as const,
           fundingEvents: [],
           coveredAt: commitment.coveredAt,
+          paymentStatus: resolveCommitmentPaymentStatus({
+            paidAt: commitment.paidAt,
+            paidForCycleId: commitment.paidForCycleId,
+            activeCycleId: null,
+            dueDay: commitment.dueDay,
+            now,
+          }),
+          paidAtForCycle: undefined,
         })),
       };
     }
@@ -312,6 +443,13 @@ export const getCommitmentCoverage = query({
           const covered = coverage?.covered ?? 0;
           const remaining = coverage?.remaining ?? commitment.amount;
           const cascadeStatus = coverage?.status ?? "not-started";
+          const paymentStatus = resolveCommitmentPaymentStatus({
+            paidAt: commitment.paidAt,
+            paidForCycleId: commitment.paidForCycleId,
+            activeCycleId: activeCycle._id,
+            dueDay: commitment.dueDay,
+            now,
+          });
 
           return {
             id: commitment._id,
@@ -330,6 +468,9 @@ export const getCommitmentCoverage = query({
             cascadeStatus,
             fundingEvents: coverage?.fundingEvents ?? [],
             coveredAt: commitment.coveredAt,
+            paymentStatus,
+            paidAtForCycle:
+              paymentStatus === "paid" ? commitment.paidAt : undefined,
           };
         })
         .sort((a, b) => a.daysUntilDue - b.daysUntilDue),

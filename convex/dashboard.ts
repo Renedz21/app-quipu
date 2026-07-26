@@ -7,6 +7,7 @@ import {
   computeUncoveredCommitmentRemainingCents,
   mapCoverageStatusToDashboard,
 } from "./lib/commitmentCoverage";
+import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
   buildEarlyCycleHeroBody,
@@ -78,6 +79,14 @@ export const getSummary = query({
           progressPercent: 0,
           coverageStatus: "uncovered" as const,
           cascadeStatus: "not-started" as const,
+          paymentStatus: resolveCommitmentPaymentStatus({
+            paidAt: commitment.paidAt,
+            paidForCycleId: commitment.paidForCycleId,
+            activeCycleId: null,
+            dueDay: commitment.dueDay,
+            now,
+          }),
+          paidAtForCycle: undefined,
         })),
       );
 
@@ -238,6 +247,13 @@ export const getSummary = query({
         const covered = coverage?.covered ?? 0;
         const remaining = coverage?.remaining ?? commitment.amount;
         const cascadeStatus = coverage?.status ?? "not-started";
+        const paymentStatus = resolveCommitmentPaymentStatus({
+          paidAt: commitment.paidAt,
+          paidForCycleId: commitment.paidForCycleId,
+          activeCycleId: activeCycle._id,
+          dueDay: commitment.dueDay,
+          now,
+        });
 
         return {
           id: commitment._id,
@@ -254,6 +270,9 @@ export const getSummary = query({
           ),
           coverageStatus: mapCoverageStatusToDashboard(cascadeStatus),
           cascadeStatus,
+          paymentStatus,
+          paidAtForCycle:
+            paymentStatus === "paid" ? commitment.paidAt : undefined,
         };
       }),
     );

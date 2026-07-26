@@ -5,6 +5,7 @@ import {
   ENVELOPE_LABELS,
   formatDueInDays,
 } from "@/shared/constants/commitments";
+import { formatCommitmentStatusLines } from "@/shared/lib/commitmentStatusDisplay";
 import { formatCents } from "@/shared/lib/money";
 
 export type CommitmentCoverageItem = {
@@ -15,6 +16,8 @@ export type CommitmentCoverageItem = {
   daysUntilDue: number;
   coverageStatus: "covered" | "partial" | "uncovered";
   cascadeStatus?: "covered" | "partial" | "not-started" | "overdue";
+  paymentStatus?: "paid" | "pending" | "overdue";
+  paidAtForCycle?: number;
   progressPercent: number;
 };
 
@@ -46,11 +49,44 @@ function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
   );
 }
 
-function formatCoverageLabel(commitment: CommitmentCoverageItem): string {
+function formatCoverageHint(commitment: CommitmentCoverageItem): string {
   if (commitment.coverageStatus === "covered") return "";
   if (commitment.cascadeStatus === "overdue") return " · vencido";
   if (commitment.coverageStatus === "partial") return " · parcial";
   return " · sin cubrir";
+}
+
+function CommitmentStatusLines({
+  commitment,
+}: {
+  commitment: CommitmentCoverageItem;
+}) {
+  if (!commitment.paymentStatus) return null;
+
+  const lines = formatCommitmentStatusLines({
+    coverageStatus: commitment.coverageStatus,
+    paymentStatus: commitment.paymentStatus,
+    paidAtForCycle: commitment.paidAtForCycle,
+  });
+
+  return (
+    <div className="mt-0.5 space-y-0.5">
+      {lines.map((line) => (
+        <div
+          key={line}
+          className={`text-[11px] leading-snug ${
+            line === "Vencido"
+              ? "font-medium text-danger-ink"
+              : line.startsWith("Pagado")
+                ? "text-qp-deep"
+                : "text-mute"
+          }`}
+        >
+          {line}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function CommitmentProgress({ progressPercent }: { progressPercent: number }) {
@@ -132,8 +168,9 @@ export function CommitmentCoverageList({
                 <div className="text-[11.5px] text-mute">
                   {formatDueInDays(commitment.daysUntilDue)} ·{" "}
                   {ENVELOPE_LABELS[commitment.envelope]}
-                  {formatCoverageLabel(commitment)}
+                  {formatCoverageHint(commitment)}
                 </div>
+                <CommitmentStatusLines commitment={commitment} />
                 {commitment.coverageStatus !== "covered" ? (
                   <CommitmentProgress
                     progressPercent={commitment.progressPercent}

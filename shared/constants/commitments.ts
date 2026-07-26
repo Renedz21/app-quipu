@@ -10,6 +10,10 @@ export const COMMITMENT_AMOUNT_LABEL = "Monto (S/)";
 export const COMMITMENT_DUE_LABEL = "Día del mes";
 export const COMMITMENT_ENVELOPE_LABEL = "Sobre";
 export const COMMITMENT_CREATED_TOAST = "Compromiso agregado.";
+export const COMMITMENT_MARK_PAID = "Marcar como pagado";
+export const COMMITMENT_MARK_PAID_SUCCESS = "Compromiso marcado como pagado.";
+export const COMMITMENT_COVERAGE_LABEL = "Cobertura";
+export const COMMITMENT_PAYMENT_LABEL = "Pago";
 
 export function formatDueInDays(daysUntilDue: number): string {
   if (daysUntilDue === 0) return "hoy";

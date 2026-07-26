@@ -7,15 +7,25 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
 import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
+import {
+  COMMITMENT_COVERAGE_LABEL,
+  COMMITMENT_MARK_PAID,
+  COMMITMENT_MARK_PAID_SUCCESS,
+  COMMITMENT_PAYMENT_LABEL,
+} from "@/shared/constants/commitments";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
+import {
+  formatCoverageStatusLabel,
+  formatPaymentStatusLabel,
+} from "@/shared/lib/commitmentStatusDisplay";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
@@ -38,8 +48,23 @@ export function CommitmentDetailSheet({
   const deleteCommitment = useMutation(
     api.fixedCommitments.deleteFixedCommitment,
   );
+  const markAsPaid = useMutation(api.fixedCommitments.markCommitmentAsPaid);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false);
+
+  async function handleMarkAsPaid() {
+    if (!commitmentId) return;
+    setIsMarkingPaid(true);
+    try {
+      await markAsPaid({ commitmentId });
+      toast.success(COMMITMENT_MARK_PAID_SUCCESS);
+    } catch (error) {
+      toast.error(fromConvexError(error).message);
+    } finally {
+      setIsMarkingPaid(false);
+    }
+  }
 
   async function handleDelete() {
     if (!commitmentId) return;
@@ -84,25 +109,55 @@ export function CommitmentDetailSheet({
             <dt className="text-mute">Vencimiento</dt>
             <dd className="font-medium text-ink">Día {detail.dueDay}</dd>
           </div>
-          {detail.coveredAt ? (
-            <div className="flex justify-between gap-4">
-              <dt className="text-mute">Cubierto</dt>
-              <dd className="text-qp-deep">Sí</dd>
-            </div>
-          ) : null}
+          <div className="flex justify-between gap-4">
+            <dt className="text-mute">{COMMITMENT_COVERAGE_LABEL}</dt>
+            <dd className="font-medium text-ink">
+              {formatCoverageStatusLabel(detail.coverageStatus)}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-mute">{COMMITMENT_PAYMENT_LABEL}</dt>
+            <dd
+              className={cn(
+                "font-medium",
+                detail.paymentStatus === "paid"
+                  ? "text-qp-deep"
+                  : detail.paymentStatus === "overdue"
+                    ? "text-danger-ink"
+                    : "text-ink",
+              )}
+            >
+              {formatPaymentStatusLabel(
+                detail.paymentStatus,
+                detail.paidAtForCycle,
+              )}
+            </dd>
+          </div>
         </dl>
       )}
       {detail ? (
-        <button
-          type="button"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "mt-6 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
-          )}
-          onClick={() => setConfirmOpen(true)}
-        >
-          Eliminar compromiso
-        </button>
+        <div className="mt-6 space-y-2.5">
+          {detail.hasActiveCycle && detail.paymentStatus !== "paid" ? (
+            <Button
+              type="button"
+              disabled={isMarkingPaid}
+              onClick={() => void handleMarkAsPaid()}
+              className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
+            >
+              {isMarkingPaid ? "Guardando…" : COMMITMENT_MARK_PAID}
+            </Button>
+          ) : null}
+          <button
+            type="button"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-12 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
+            )}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Eliminar compromiso
+          </button>
+        </div>
       ) : null}
     </>
   );

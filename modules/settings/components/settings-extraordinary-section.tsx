@@ -75,7 +75,7 @@ const ROWS: ReadonlyArray<{
 
 function RowIcon({ kind }: { kind: (typeof ROWS)[number]["icon"] }) {
   return (
-    <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-[#F4EFE5]">
+    <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-extraordinary-icon-bg">
       {kind === "grati" ? (
         <span
           className="size-3 rotate-45 rounded-[3px] bg-extraordinary-a"

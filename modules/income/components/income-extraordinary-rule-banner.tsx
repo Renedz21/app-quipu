@@ -62,7 +62,7 @@ export function IncomeExtraordinaryRuleBanner({
   const rule = merged[key];
 
   return (
-    <div className="flex items-start gap-3 rounded-[14px] border border-extraordinary-border bg-[linear-gradient(160deg,#FBF3E1,#FCFAF4_75%)] px-[17px] py-[15px]">
+    <div className="flex items-start gap-3 rounded-[14px] border border-extraordinary-border bg-[linear-gradient(160deg,var(--extraordinary-banner-from),var(--extraordinary-banner-to)_75%)] px-[17px] py-[15px]">
       <span className="mt-0.5 flex size-[26px] shrink-0 items-center justify-center rounded-lg bg-extraordinary-a">
         <span
           className="size-[11px] rotate-45 rounded-sm border-2 border-canvas"
@@ -70,11 +70,11 @@ export function IncomeExtraordinaryRuleBanner({
         />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13.5px] font-semibold text-[#7E611F]">
+        <p className="text-[13.5px] font-semibold text-extraordinary-rule-title">
           {INCOME_EXTRAORDINARY_RULE_PREFIX} ·{" "}
           {ruleGroupLabel(extraordinaryType)}
         </p>
-        <p className="mt-0.5 text-[12.5px] leading-snug text-[#8A7742]">
+        <p className="mt-0.5 text-[12.5px] leading-snug text-extraordinary-rule-body">
           {ruleBodyCopy(
             rule,
             allocationNeeds,

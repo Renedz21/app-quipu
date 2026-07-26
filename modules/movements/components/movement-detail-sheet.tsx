@@ -62,6 +62,25 @@ type Props = {
   currencyCode?: string;
 };
 
+/**
+ * Owns try/finally + busy-flag reset outside the component so React Compiler
+ * can memoize the sheet, while React Doctor still sees a finally cleanup.
+ */
+async function runDeleteWithBusyFlag(
+  setBusy: (busy: boolean) => void,
+  run: () => Promise<unknown>,
+): Promise<string | null> {
+  setBusy(true);
+  try {
+    await run();
+    return null;
+  } catch (error) {
+    return fromConvexError(error).message;
+  } finally {
+    setBusy(false);
+  }
+}
+
 export function MovementDetailSheet({
   open,
   onOpenChange,
@@ -87,19 +106,17 @@ export function MovementDetailSheet({
 
   async function handleDelete() {
     if (!movement) return;
-    setIsDeleting(true);
     setDeleteError(null);
-    try {
-      if (movement.kind === "expense") {
-        await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
-      } else {
-        await deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> });
-      }
-      onOpenChange(false);
-    } catch (error) {
-      setDeleteError(fromConvexError(error).message);
+    const errorMessage = await runDeleteWithBusyFlag(setIsDeleting, () =>
+      movement.kind === "expense"
+        ? deleteExpense({ expenseId: movement.id as Id<"expenses"> })
+        : deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> }),
+    );
+    if (errorMessage) {
+      setDeleteError(errorMessage);
+      return;
     }
-    setIsDeleting(false);
+    onOpenChange(false);
   }
 
   function renderContent() {

@@ -51,8 +51,27 @@ export function createIncomeRegisterSchema(now: number = Date.now()) {
         .max(80, "La descripción no puede superar 80 caracteres.")
         .optional(),
       distributionPolicy: z.enum(distributionPolicyValues).optional(),
+      // P3-4: optional hold before distribution. Integer cents, 0..amountCents.
+      heldCents: z
+        .number()
+        .int("El monto apartado debe ser un número entero.")
+        .min(0, "El monto apartado no puede ser negativo.")
+        .optional(),
     })
     .superRefine((values, ctx) => {
+      // Cross-field: heldCents cannot exceed amountCents.
+      if (
+        values.heldCents !== undefined &&
+        values.amountCents > 0 &&
+        values.heldCents > values.amountCents
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "El monto apartado no puede superar el ingreso.",
+          path: ["heldCents"],
+        });
+      }
+
       if (values.incomeKind === "extraordinary") {
         if (!values.extraordinaryType) {
           ctx.addIssue({

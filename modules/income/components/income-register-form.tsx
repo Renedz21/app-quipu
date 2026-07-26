@@ -38,6 +38,7 @@ import { policyForExtraordinaryType } from "../lib/extraordinaryPolicy";
 import {
   computeImpactPreview,
   resolveCycleDaysForPreview,
+  suggestHeldCentsForPreview,
 } from "../lib/impactPreview";
 import { buildIncomeDescription } from "../lib/incomeForm";
 import {
@@ -135,6 +136,7 @@ export function IncomeRegisterForm({
       extraordinaryType: undefined as ExtraordinaryType | undefined,
       extraordinaryLabel: "",
       distributionPolicy: undefined as DistributionPolicy | undefined,
+      heldCents: 0,
     } satisfies IncomeRegisterFormValues,
     validators: {
       onSubmit: ({ value }) => {
@@ -164,6 +166,9 @@ export function IncomeRegisterForm({
                 ? value.extraordinaryLabel.trim()
                 : undefined,
             distributionPolicy: value.distributionPolicy,
+            ...(value.heldCents && value.heldCents > 0
+              ? { heldCents: value.heldCents }
+              : {}),
           });
           track(AnalyticsEvents.INCOME_REGISTERED, {
             amount: value.amountCents,
@@ -215,6 +220,9 @@ export function IncomeRegisterForm({
           description,
           occurredAt: value.occurredAt,
           incomeKind: "habitual",
+          ...(value.heldCents && value.heldCents > 0
+            ? { heldCents: value.heldCents }
+            : {}),
         });
         track(AnalyticsEvents.INCOME_REGISTERED, {
           amount: value.amountCents,
@@ -246,6 +254,7 @@ export function IncomeRegisterForm({
     form.setFieldValue("extraordinaryType", undefined, silentSet);
     form.setFieldValue("extraordinaryLabel", "", silentSet);
     form.setFieldValue("distributionPolicy", undefined, silentSet);
+    form.setFieldValue("heldCents", 0, silentSet);
   };
 
   return (
@@ -266,7 +275,7 @@ export function IncomeRegisterForm({
       </div>
 
       <form
-        className="mx-auto w-full max-w-6xl px-4 pt-[calc(68px+env(safe-area-inset-top))] pb-6 md:px-8 md:py-8 md:pt-8"
+        className="mx-auto w-full max-w-6xl px-4 pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(88px+env(safe-area-inset-bottom))] md:px-8 md:py-8 md:pb-8 md:pt-8"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -288,6 +297,20 @@ export function IncomeRegisterForm({
                 ? INCOME_PAGE_SUBTITLE_KIND
                 : INCOME_EXTRAORDINARY_DETAILS_SUBTITLE
               : INCOME_PAGE_SUBTITLE;
+
+            // P3-4: suggestion from uncovered commitment remainders.
+            const uncoveredSum =
+              summary?.commitments?.reduce((sum, c) => {
+                const isUncovered =
+                  c.cascadeStatus === "partial" ||
+                  c.cascadeStatus === "not-started" ||
+                  c.cascadeStatus === "overdue";
+                return sum + (isUncovered ? c.remaining : 0);
+              }, 0) ?? 0;
+            const suggestedHeldCents =
+              values.amountCents > 0 && uncoveredSum > 0
+                ? suggestHeldCentsForPreview(values.amountCents, uncoveredSum)
+                : undefined;
 
             const previewInput =
               values.amountCents > 0
@@ -319,6 +342,7 @@ export function IncomeRegisterForm({
                     distributionPolicy: isExtraordinary
                       ? values.distributionPolicy
                       : undefined,
+                    heldCents: values.heldCents ?? 0,
                   })
                 : null;
 
@@ -416,15 +440,25 @@ export function IncomeRegisterForm({
                               {(occurredAtField) => (
                                 <form.Field name="extraordinaryLabel">
                                   {(labelField) => (
-                                    <IncomeExtraordinaryDetailsFields
-                                      currencyCode={currencyCode}
-                                      extraordinaryType={showDetails}
-                                      amountField={amountField}
-                                      occurredAtField={occurredAtField}
-                                      labelField={
-                                        labelField as IncomeFormField<"extraordinaryLabel">
-                                      }
-                                    />
+                                    <form.Field name="heldCents">
+                                      {(heldField) => (
+                                        <IncomeExtraordinaryDetailsFields
+                                          currencyCode={currencyCode}
+                                          extraordinaryType={showDetails}
+                                          amountField={amountField}
+                                          occurredAtField={occurredAtField}
+                                          labelField={
+                                            labelField as IncomeFormField<"extraordinaryLabel">
+                                          }
+                                          heldField={
+                                            heldField as IncomeFormField<"heldCents">
+                                          }
+                                          suggestedHeldCents={
+                                            suggestedHeldCents
+                                          }
+                                        />
+                                      )}
+                                    </form.Field>
                                   )}
                                 </form.Field>
                               )}
@@ -440,13 +474,23 @@ export function IncomeRegisterForm({
                                   {(sourceField) => (
                                     <form.Field name="concept">
                                       {(conceptField) => (
-                                        <IncomeRegisterHabitualFields
-                                          currencyCode={currencyCode}
-                                          amountField={amountField}
-                                          occurredAtField={occurredAtField}
-                                          sourceField={sourceField}
-                                          conceptField={conceptField}
-                                        />
+                                        <form.Field name="heldCents">
+                                          {(heldField) => (
+                                            <IncomeRegisterHabitualFields
+                                              currencyCode={currencyCode}
+                                              amountField={amountField}
+                                              occurredAtField={occurredAtField}
+                                              sourceField={sourceField}
+                                              conceptField={conceptField}
+                                              heldField={
+                                                heldField as IncomeFormField<"heldCents">
+                                              }
+                                              suggestedHeldCents={
+                                                suggestedHeldCents
+                                              }
+                                            />
+                                          )}
+                                        </form.Field>
                                       )}
                                     </form.Field>
                                   )}

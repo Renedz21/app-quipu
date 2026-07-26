@@ -129,6 +129,16 @@ export function getExtraordinarySubmitCta(type: ExtraordinaryType): string {
   }
 }
 
+// P3-4: held amount field
+export const INCOME_HELD_LABEL = "Ya comprometido";
+export const INCOME_HELD_OPTIONAL = "· opcional";
+export const INCOME_HELD_HINT =
+  "No se reparte en tus sobres. Sirve para deudas u obligaciones que salen de este ingreso.";
+export const INCOME_HELD_SUGGESTED = "Sugerido de compromisos sin cubrir";
+export const INCOME_IMPACT_GROSS_LABEL = "Bruto";
+export const INCOME_IMPACT_HELD_LABEL = "Apartado";
+export const INCOME_IMPACT_DISTRIBUTABLE_LABEL = "A repartir";
+
 export const INCOME_SOURCE_OPTIONS: ReadonlyArray<{
   value: IncomeSource;
   label: string;

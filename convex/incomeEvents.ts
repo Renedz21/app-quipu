@@ -22,6 +22,7 @@ import {
   sourceForExtraordinaryType,
 } from "./lib/extraordinaryIncome";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
+import { computeDistributableCents, validateHeldCents } from "./lib/incomeHold";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const HORIZON_DAYS = 15; // v2.5 initial: fixed at 15 for variable income model.
@@ -60,6 +61,8 @@ export const createIncomeEvent = mutation({
     extraordinaryType: v.optional(extraordinaryTypeValidator),
     extraordinaryLabel: v.optional(v.string()),
     distributionPolicy: v.optional(distributionPolicyValidator),
+    // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
+    heldCents: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -76,6 +79,24 @@ export const createIncomeEvent = mutation({
         data: { field: "amount" },
       });
     }
+
+    const heldCents = args.heldCents ?? 0;
+    if (heldCents !== 0) {
+      const holdError = validateHeldCents(args.amount, heldCents);
+      if (holdError) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: holdError,
+          data: { field: "heldCents" },
+        });
+      }
+    }
+
+    const distributableCents = computeDistributableCents(
+      args.amount,
+      heldCents,
+    );
+
     const incomeKind = args.incomeKind ?? "habitual";
     let resolvedSource = args.source;
     let resolvedDescription = "";
@@ -225,8 +246,9 @@ export const createIncomeEvent = mutation({
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
     };
+    // P3-4: distribute only the distributable portion (gross minus held).
     const distribution = applyDistributionPolicy(
-      args.amount,
+      distributableCents,
       weights,
       distributionPolicy,
     );
@@ -244,6 +266,7 @@ export const createIncomeEvent = mutation({
         extraordinaryLabel,
         distributionPolicy,
       }),
+      ...(heldCents > 0 && { heldCents }),
       distributionApplied: distribution,
     });
 
@@ -332,6 +355,8 @@ export const createIncomeEvent = mutation({
       cycleId,
       isNewCycle,
       amount: args.amount,
+      heldCents,
+      distributableCents,
       source: resolvedSource,
       description: resolvedDescription,
       distributionApplied: distribution,
@@ -370,6 +395,7 @@ export const updateIncomeEvent = mutation({
     extraordinaryType: v.optional(extraordinaryTypeValidator),
     extraordinaryLabel: v.optional(v.string()),
     distributionPolicy: v.optional(distributionPolicyValidator),
+    heldCents: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -503,13 +529,29 @@ export const updateIncomeEvent = mutation({
       });
     }
 
+    const heldCents = args.heldCents ?? 0;
+    if (heldCents !== 0) {
+      const holdError = validateHeldCents(args.amount, heldCents);
+      if (holdError) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: holdError,
+          data: { field: "heldCents" },
+        });
+      }
+    }
+    const distributableCents = computeDistributableCents(
+      args.amount,
+      heldCents,
+    );
+
     const weights = {
       allocationNeeds: profile.allocationNeeds,
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
     };
     const newDistribution = applyDistributionPolicy(
-      args.amount,
+      distributableCents,
       weights,
       distributionPolicy,
     );
@@ -546,6 +588,7 @@ export const updateIncomeEvent = mutation({
       incomeKind,
       distributionApplied: newDistribution,
       updatedAt: now,
+      ...(heldCents > 0 ? { heldCents } : { heldCents: undefined }),
       ...(incomeKind === "extraordinary" && extraordinaryType !== undefined
         ? {
             extraordinaryType,

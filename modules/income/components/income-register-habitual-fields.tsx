@@ -11,6 +11,7 @@ import type { IncomeSource } from "../types";
 import { IncomeAmountField } from "./income-amount-field";
 import { IncomeDatePicker } from "./income-date-picker";
 import type { IncomeFormField } from "./income-form-field";
+import { IncomeHeldField } from "./income-held-field";
 import { IncomeSourceChips } from "./income-source-chips";
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   occurredAtField: IncomeFormField<"occurredAt">;
   sourceField: IncomeFormField<"source">;
   conceptField: IncomeFormField<"concept">;
+  heldField: IncomeFormField<"heldCents">;
+  suggestedHeldCents?: number;
 };
 
 export function IncomeRegisterHabitualFields({
@@ -27,6 +30,8 @@ export function IncomeRegisterHabitualFields({
   occurredAtField,
   sourceField,
   conceptField,
+  heldField,
+  suggestedHeldCents,
 }: Props) {
   return (
     <>
@@ -42,6 +47,13 @@ export function IncomeRegisterHabitualFields({
         errors={amountField.state.meta.errors.filter(
           (error): error is { message?: string } => error != null,
         )}
+      />
+
+      <IncomeHeldField
+        currencyCode={currencyCode}
+        heldField={heldField}
+        amountCents={amountField.state.value}
+        suggestedHeldCents={suggestedHeldCents}
       />
 
       <Field

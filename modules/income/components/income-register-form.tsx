@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ArrowLeft } from "reicon-react";
 import type { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import {
@@ -39,6 +40,7 @@ import {
   resolveCycleDaysForPreview,
 } from "../lib/impactPreview";
 import { buildIncomeDescription } from "../lib/incomeForm";
+import { suggestHeldCentsForPreview } from "../lib/impactPreview";
 import {
   createIncomeRegisterSchema,
   type IncomeRegisterFormValues,
@@ -134,6 +136,7 @@ export function IncomeRegisterForm({
       extraordinaryType: undefined as ExtraordinaryType | undefined,
       extraordinaryLabel: "",
       distributionPolicy: undefined as DistributionPolicy | undefined,
+      heldCents: 0,
     } satisfies IncomeRegisterFormValues,
     validators: {
       onSubmit: ({ value }) => {
@@ -163,6 +166,9 @@ export function IncomeRegisterForm({
                 ? value.extraordinaryLabel.trim()
                 : undefined,
             distributionPolicy: value.distributionPolicy,
+            ...(value.heldCents && value.heldCents > 0
+              ? { heldCents: value.heldCents }
+              : {}),
           });
           track(AnalyticsEvents.INCOME_REGISTERED, {
             amount: value.amountCents,
@@ -214,6 +220,9 @@ export function IncomeRegisterForm({
           description,
           occurredAt: value.occurredAt,
           incomeKind: "habitual",
+          ...(value.heldCents && value.heldCents > 0
+            ? { heldCents: value.heldCents }
+            : {}),
         });
         track(AnalyticsEvents.INCOME_REGISTERED, {
           amount: value.amountCents,
@@ -245,31 +254,63 @@ export function IncomeRegisterForm({
     form.setFieldValue("extraordinaryType", undefined, silentSet);
     form.setFieldValue("extraordinaryLabel", "", silentSet);
     form.setFieldValue("distributionPolicy", undefined, silentSet);
+    form.setFieldValue("heldCents", 0, silentSet);
   };
 
   return (
-    <form
-      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-    >
-      <form.Subscribe selector={(state) => state.values}>
-        {(values) => {
-          const isExtraordinary = values.incomeKind === "extraordinary";
-          const showPick = isExtraordinary && extraStep === "pickType";
-          const showDetails =
-            isExtraordinary &&
-            extraStep === "details" &&
-            values.extraordinaryType;
+    <>
+      {/* Immersive mobile header — sticky, hidden on md+ (desktop keeps sidebar + page title) */}
+      <div className="fixed inset-x-0 top-0 z-30 flex h-[calc(52px+env(safe-area-inset-top))] items-end border-b border-line bg-canvas/95 px-4 pb-3 pt-[env(safe-area-inset-top)] backdrop-blur-md md:hidden">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-1 text-[13.5px] text-mute hover:text-ink"
+          aria-label="Volver al inicio"
+        >
+          <ArrowLeft size={16} aria-hidden />
+          Volver
+        </Link>
+        <span className="pointer-events-none absolute inset-x-0 bottom-3 text-center font-serif text-[17px] font-medium text-ink">
+          {INCOME_PAGE_TITLE}
+        </span>
+      </div>
 
-          const subtitle = isExtraordinary
-            ? showPick
-              ? INCOME_PAGE_SUBTITLE_KIND
-              : INCOME_EXTRAORDINARY_DETAILS_SUBTITLE
-            : INCOME_PAGE_SUBTITLE;
+      <form
+        className="mx-auto w-full max-w-6xl px-4 pt-[calc(68px+env(safe-area-inset-top))] pb-6 md:px-8 md:py-8 md:pt-8"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <form.Subscribe selector={(state) => state.values}>
+          {(values) => {
+            const isExtraordinary = values.incomeKind === "extraordinary";
+            const showPick = isExtraordinary && extraStep === "pickType";
+            const showDetails =
+              isExtraordinary &&
+              extraStep === "details" &&
+              values.extraordinaryType;
+            const showFormCtas = !isExtraordinary || Boolean(showDetails);
+
+            const subtitle = isExtraordinary
+              ? showPick
+                ? INCOME_PAGE_SUBTITLE_KIND
+                : INCOME_EXTRAORDINARY_DETAILS_SUBTITLE
+              : INCOME_PAGE_SUBTITLE;
+
+          // P3-4: suggestion from uncovered commitment remainders.
+          const uncoveredSum =
+            summary?.commitments?.reduce((sum, c) => {
+              const isUncovered =
+                c.cascadeStatus === "partial" ||
+                c.cascadeStatus === "not-started" ||
+                c.cascadeStatus === "overdue";
+              return sum + (isUncovered ? c.remaining : 0);
+            }, 0) ?? 0;
+          const suggestedHeldCents =
+            values.amountCents > 0 && uncoveredSum > 0
+              ? suggestHeldCentsForPreview(values.amountCents, uncoveredSum)
+              : undefined;
 
           const previewInput =
             values.amountCents > 0
@@ -301,88 +342,97 @@ export function IncomeRegisterForm({
                   distributionPolicy: isExtraordinary
                     ? values.distributionPolicy
                     : undefined,
+                  heldCents: values.heldCents ?? 0,
                 })
               : null;
 
-          const submitLabel =
-            isExtraordinary && values.extraordinaryType
-              ? getExtraordinarySubmitCta(values.extraordinaryType)
-              : INCOME_SUBMIT_CTA;
+            const submitLabel =
+              isExtraordinary && values.extraordinaryType
+                ? getExtraordinarySubmitCta(values.extraordinaryType)
+                : INCOME_SUBMIT_CTA;
 
-          return (
-            <>
-              {!showDetails ? (
-                <div className="mb-6 md:mb-8">
-                  <h1 className="font-serif text-[27px] font-medium text-ink">
-                    {INCOME_PAGE_TITLE}
-                  </h1>
-                  <p className="mt-1 text-[13.5px] text-mute">{subtitle}</p>
-                </div>
-              ) : null}
-
-              <div className="mb-6">
-                <IncomeKindToggle
-                  value={values.incomeKind}
-                  onChange={(kind) => {
-                    form.setFieldValue("incomeKind", kind);
-                    if (kind === "habitual") resetExtraordinary();
-                    else setExtraStep("pickType");
-                  }}
-                />
-              </div>
-
-              {showPick ? (
-                <>
-                  <p className="mb-3 font-mono text-[10.5px] tracking-[0.1em] text-mute uppercase">
-                    {INCOME_EXTRAORDINARY_TYPE_SECTION}
-                  </p>
-                  <IncomeExtraordinaryTypeGrid
-                    value={values.extraordinaryType}
-                    onChange={(type) => {
-                      setPickTypeError(null);
-                      form.setFieldValue("extraordinaryType", type);
-                      form.setFieldValue(
-                        "distributionPolicy",
-                        policyForExtraordinaryType(
-                          type,
-                          profile.extraordinaryRules,
-                        ),
-                        silentSet,
-                      );
-                    }}
-                    error={pickTypeError ?? undefined}
-                  />
-                  <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-[12.5px] text-mute">
-                      {INCOME_EXTRAORDINARY_PICK_HINT}
-                    </p>
-                    <Button
-                      type="button"
-                      className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas"
-                      onClick={() => {
-                        if (!values.extraordinaryType) {
-                          setPickTypeError(
-                            "Elige un tipo de ingreso extraordinario.",
-                          );
-                          return;
-                        }
-                        setExtraStep("details");
-                      }}
-                    >
-                      {INCOME_EXTRAORDINARY_CONTINUE_CTA}
-                    </Button>
+            return (
+              <>
+                {/* Desktop title — hidden on mobile (shown in fixed header above) */}
+                {!showDetails ? (
+                  <div className="mb-6 hidden md:mb-8 md:block">
+                    <h1 className="font-serif text-[27px] font-medium text-ink">
+                      {INCOME_PAGE_TITLE}
+                    </h1>
+                    <p className="mt-1 text-[13.5px] text-mute">{subtitle}</p>
                   </div>
-                </>
-              ) : null}
+                ) : null}
 
-              {!isExtraordinary || showDetails ? (
-                <div
-                  className={cn(
-                    "grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-7",
-                    showDetails && "mt-2",
-                  )}
-                >
-                  <div className="space-y-5">
+                {/* Mobile subtitle — only shown when NOT on desktop (title is in the fixed header) */}
+                {!showDetails ? (
+                  <p className="mb-4 text-[13px] text-mute md:hidden">
+                    {subtitle}
+                  </p>
+                ) : null}
+
+                <div className="mb-6">
+                  <IncomeKindToggle
+                    value={values.incomeKind}
+                    onChange={(kind) => {
+                      form.setFieldValue("incomeKind", kind);
+                      if (kind === "habitual") resetExtraordinary();
+                      else setExtraStep("pickType");
+                    }}
+                  />
+                </div>
+
+                {showPick ? (
+                  <>
+                    <p className="mb-3 font-mono text-[10.5px] tracking-[0.1em] text-mute uppercase">
+                      {INCOME_EXTRAORDINARY_TYPE_SECTION}
+                    </p>
+                    <IncomeExtraordinaryTypeGrid
+                      value={values.extraordinaryType}
+                      onChange={(type) => {
+                        setPickTypeError(null);
+                        form.setFieldValue("extraordinaryType", type);
+                        form.setFieldValue(
+                          "distributionPolicy",
+                          policyForExtraordinaryType(
+                            type,
+                            profile.extraordinaryRules,
+                          ),
+                          silentSet,
+                        );
+                      }}
+                      error={pickTypeError ?? undefined}
+                    />
+                    <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-[12.5px] text-mute">
+                        {INCOME_EXTRAORDINARY_PICK_HINT}
+                      </p>
+                      <Button
+                        type="button"
+                        className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas"
+                        onClick={() => {
+                          if (!values.extraordinaryType) {
+                            setPickTypeError(
+                              "Elige un tipo de ingreso extraordinario.",
+                            );
+                            return;
+                          }
+                          setExtraStep("details");
+                        }}
+                      >
+                        {INCOME_EXTRAORDINARY_CONTINUE_CTA}
+                      </Button>
+                    </div>
+                  </>
+                ) : null}
+
+                {!isExtraordinary || showDetails ? (
+                  <div
+                    className={cn(
+                      "grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-7",
+                      showDetails && "mt-2",
+                    )}
+                  >
+                    <div className="space-y-5">
                     {showDetails ? (
                       <form.Field name="amountCents">
                         {(amountField) => (
@@ -390,15 +440,23 @@ export function IncomeRegisterForm({
                             {(occurredAtField) => (
                               <form.Field name="extraordinaryLabel">
                                 {(labelField) => (
-                                  <IncomeExtraordinaryDetailsFields
-                                    currencyCode={currencyCode}
-                                    extraordinaryType={showDetails}
-                                    amountField={amountField}
-                                    occurredAtField={occurredAtField}
-                                    labelField={
-                                      labelField as IncomeFormField<"extraordinaryLabel">
-                                    }
-                                  />
+                                  <form.Field name="heldCents">
+                                    {(heldField) => (
+                                      <IncomeExtraordinaryDetailsFields
+                                        currencyCode={currencyCode}
+                                        extraordinaryType={showDetails}
+                                        amountField={amountField}
+                                        occurredAtField={occurredAtField}
+                                        labelField={
+                                          labelField as IncomeFormField<"extraordinaryLabel">
+                                        }
+                                        heldField={
+                                          heldField as IncomeFormField<"heldCents">
+                                        }
+                                        suggestedHeldCents={suggestedHeldCents}
+                                      />
+                                    )}
+                                  </form.Field>
                                 )}
                               </form.Field>
                             )}
@@ -414,13 +472,23 @@ export function IncomeRegisterForm({
                                 {(sourceField) => (
                                   <form.Field name="concept">
                                     {(conceptField) => (
-                                      <IncomeRegisterHabitualFields
-                                        currencyCode={currencyCode}
-                                        amountField={amountField}
-                                        occurredAtField={occurredAtField}
-                                        sourceField={sourceField}
-                                        conceptField={conceptField}
-                                      />
+                                      <form.Field name="heldCents">
+                                        {(heldField) => (
+                                          <IncomeRegisterHabitualFields
+                                            currencyCode={currencyCode}
+                                            amountField={amountField}
+                                            occurredAtField={occurredAtField}
+                                            sourceField={sourceField}
+                                            conceptField={conceptField}
+                                            heldField={
+                                              heldField as IncomeFormField<"heldCents">
+                                            }
+                                            suggestedHeldCents={
+                                              suggestedHeldCents
+                                            }
+                                          />
+                                        )}
+                                      </form.Field>
                                     )}
                                   </form.Field>
                                 )}
@@ -430,90 +498,122 @@ export function IncomeRegisterForm({
                         )}
                       </form.Field>
                     ) : null}
-                  </div>
+                    </div>
 
-                  <div className="flex flex-col gap-3.5">
-                    {showDetails && values.extraordinaryType ? (
-                      <IncomeExtraordinaryRuleBanner
-                        extraordinaryType={values.extraordinaryType}
-                        profileRules={profile.extraordinaryRules}
-                        allocationNeeds={profile.allocationNeeds}
-                        allocationWants={profile.allocationWants}
-                        allocationSavings={profile.allocationSavings}
-                        onChangeDestination={() => {
-                          setDestinationSubmitAfterConfirm(false);
-                          setDestinationOpen(true);
-                        }}
+                    <div className="flex flex-col gap-3.5">
+                      {showDetails && values.extraordinaryType ? (
+                        <IncomeExtraordinaryRuleBanner
+                          extraordinaryType={values.extraordinaryType}
+                          profileRules={profile.extraordinaryRules}
+                          allocationNeeds={profile.allocationNeeds}
+                          allocationWants={profile.allocationWants}
+                          allocationSavings={profile.allocationSavings}
+                          onChangeDestination={() => {
+                            setDestinationSubmitAfterConfirm(false);
+                            setDestinationOpen(true);
+                          }}
+                        />
+                      ) : null}
+                      <IncomeImpactPreview
+                        preview={previewInput}
+                        currencyCode={currencyCode}
+                        moveSurplusHref={
+                          showDetails ? "/savings/move?from=wants" : undefined
+                        }
                       />
-                    ) : null}
-                    <IncomeImpactPreview
-                      preview={previewInput}
-                      currencyCode={currencyCode}
-                      moveSurplusHref={
-                        showDetails ? "/savings/move?from=wants" : undefined
-                      }
-                    />
+                    </div>
                   </div>
-                </div>
-              ) : null}
+                ) : null}
 
-              {showDetails && values.extraordinaryType ? (
-                <IncomeDestinationDialog
-                  open={destinationOpen}
-                  onOpenChange={setDestinationOpen}
-                  extraordinaryType={values.extraordinaryType}
-                  amountCents={values.amountCents}
-                  currencyCode={currencyCode}
-                  preview={previewInput}
-                  value={values.distributionPolicy}
-                  onConfirm={(policy) => {
-                    form.setFieldValue("distributionPolicy", policy);
-                    if (destinationSubmitAfterConfirm) {
-                      setDestinationSubmitAfterConfirm(false);
-                      void form.handleSubmit();
-                    }
-                  }}
-                />
-              ) : null}
+                {showDetails && values.extraordinaryType ? (
+                  <IncomeDestinationDialog
+                    open={destinationOpen}
+                    onOpenChange={setDestinationOpen}
+                    extraordinaryType={values.extraordinaryType}
+                    amountCents={values.amountCents}
+                    currencyCode={currencyCode}
+                    preview={previewInput}
+                    value={values.distributionPolicy}
+                    onConfirm={(policy) => {
+                      form.setFieldValue("distributionPolicy", policy);
+                      if (destinationSubmitAfterConfirm) {
+                        setDestinationSubmitAfterConfirm(false);
+                        void form.handleSubmit();
+                      }
+                    }}
+                  />
+                ) : null}
 
-              {serverError ? (
-                <p className="mt-4 text-sm text-danger" role="alert">
-                  {serverError}
-                </p>
-              ) : null}
+                {serverError ? (
+                  <p className="mt-4 text-sm text-danger" role="alert">
+                    {serverError}
+                  </p>
+                ) : null}
 
-              {(!isExtraordinary || showDetails) && (
-                <div className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
-                  <Link
-                    href="/dashboard"
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "inline-flex h-[46px] rounded-[11px] border-line bg-card px-[22px] text-[14.5px] font-semibold text-mute hover:bg-surface-soft",
-                    )}
-                  >
-                    {INCOME_CANCEL_CTA}
-                  </Link>
+                {/* Desktop CTAs — hidden on mobile (moved to sticky footer below) */}
+                {showFormCtas && (
+                  <div className="mt-6 hidden flex-col-reverse gap-2.5 md:flex md:flex-row md:justify-end">
+                    <Link
+                      href="/dashboard"
+                      className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "inline-flex h-[46px] rounded-[11px] border-line bg-card px-[22px] text-[14.5px] font-semibold text-mute hover:bg-surface-soft",
+                      )}
+                    >
+                      {INCOME_CANCEL_CTA}
+                    </Link>
+                    <form.Subscribe
+                      selector={(state) =>
+                        [state.canSubmit, state.isSubmitting] as const
+                      }
+                    >
+                      {([canSubmit, isSubmitting]) => (
+                        <Button
+                          type="submit"
+                          disabled={!canSubmit || isSubmitting}
+                          className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas hover:bg-ink/90"
+                        >
+                          {isSubmitting ? "Registrando…" : submitLabel}
+                        </Button>
+                      )}
+                    </form.Subscribe>
+                  </div>
+                )}
+
+                {/* Mobile sticky footer CTAs — hidden on md+ */}
+                {showFormCtas && (
                   <form.Subscribe
                     selector={(state) =>
                       [state.canSubmit, state.isSubmitting] as const
                     }
                   >
                     {([canSubmit, isSubmitting]) => (
-                      <Button
-                        type="submit"
-                        disabled={!canSubmit || isSubmitting}
-                        className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas hover:bg-ink/90"
-                      >
-                        {isSubmitting ? "Registrando…" : submitLabel}
-                      </Button>
+                      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2.5 border-t border-line bg-canvas/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur-md md:hidden">
+                        <Link
+                          href="/dashboard"
+                          className={cn(
+                            buttonVariants({ variant: "outline" }),
+                            "inline-flex h-[44px] flex-1 rounded-[11px] border-line bg-card text-[14px] font-semibold text-mute hover:bg-surface-soft",
+                          )}
+                        >
+                          {INCOME_CANCEL_CTA}
+                        </Link>
+                        <Button
+                          type="submit"
+                          disabled={!canSubmit || isSubmitting}
+                          className="h-[44px] flex-1 rounded-[11px] bg-ink text-[14px] font-semibold text-canvas hover:bg-ink/90"
+                        >
+                          {isSubmitting ? "Registrando…" : submitLabel}
+                        </Button>
+                      </div>
                     )}
                   </form.Subscribe>
-                </div>
-              )}
-            </>
-          );
-        }}
-      </form.Subscribe>
-    </form>
+                )}
+              </>
+            );
+          }}
+        </form.Subscribe>
+      </form>
+    </>
   );
 }

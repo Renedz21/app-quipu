@@ -727,7 +727,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
-| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings) | Log unificado; `distributionApplied` nunca se recalcula; campos extraordinarios P2-7 |
+| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings), **`heldCents?`** (P3-4; entero céntimos 0..amount; default 0) | Log unificado; `distributionApplied` se calcula sobre `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto (Σ amount); campos extraordinarios P2-7 |
 
 ### 5.2 Funciones por archivo
 
@@ -1368,6 +1368,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-26 — P3-4: `heldCents` en `incomeEvents`.** Campo opcional (entero céntimos 0..amount; default 0) que reserva dinero antes del 50/30/20. `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto. Motor de cobertura P1-1 extendido: `heldCents` es pool compartido que financia compromisos (needs/wants) en cascada por `dueDay` antes de `distributionApplied`. UI: campo «Ya comprometido» en formulario habitual y extraordinario con sugerencia desde compromisos descubiertos; preview muestra Bruto · Apartado · A repartir cuando held > 0. Comentario legacy «Descontados atómicamente» en `fixedCommitments` corregido. §5.1 actualizado.
 - **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.
 - **2026-07-22 — DoD v2.5 + release gate.** §8.1 Definition of Done acotada (excluye Plus/variante C e PDF descargable); §8.3 P3 post-v2.5; §2.4 excepción informe UI-only; §9.3.2 CI + §9.4 checklist Vercel; §9.5 checklist Polar prod; P2-6 lint ✅; P2-8 parcial (CI, pendiente owner Vercel/D4/Polar prod).

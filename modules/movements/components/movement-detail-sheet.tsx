@@ -89,18 +89,19 @@ export function MovementDetailSheet({
     if (!movement) return;
     setIsDeleting(true);
     setDeleteError(null);
+    // Reset after try/catch (not `finally`): React Compiler rejects try/finally,
+    // and a trailing reset still runs on both success and rejection.
     try {
       if (movement.kind === "expense") {
         await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
       } else {
         await deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> });
       }
-      setIsDeleting(false);
       onOpenChange(false);
     } catch (error) {
       setDeleteError(fromConvexError(error).message);
-      setIsDeleting(false);
     }
+    setIsDeleting(false);
   }
 
   function renderContent() {

@@ -4,7 +4,7 @@
 > conversación contradice este archivo, **gana este archivo** (o se actualiza
 > explícitamente con fecha y motivo en el changelog del final).
 >
-> **Versión:** 1.0 · **Fecha:** 2026-07-20 · **Producto:** Quipu v2 (código v2.5, diseño v3.0)
+> **Versión:** 1.0 · **Fecha:** 2026-07-26 · **Producto:** Quipu v2 (código v2.5, diseño v3.0)
 >
 > Este documento absorbe y reemplaza: `docs/quipu.md`, `docs/arquitectura.md`,
 > `docs/quipu-design.md`, `docs/color-map-quipu2.md`, `docs/auth-smoke.md` y
@@ -120,7 +120,9 @@ Si no, no pertenece a Quipu.
 5. **Ciclos, no meses.** Un ciclo es la ventana durante la cual el dinero debe sobrevivir
    (ej. quincena, 30 días desde el pago). No es un mes calendario.
 6. **Compromisos fijos viven en el calendario** (`dueDay`: alquiler día 5, Netflix día 18).
-   Quipu no pregunta "¿con qué sueldo lo pagarás?" sino "¿ya tienes suficiente para cubrirlo?".
+   Quipu no pregunta "¿con qué sueldo lo pagarás?" sino "¿ya tienes suficiente para cubrirlo?"
+   **Cubierto** (reserva vía cascada) y **Pagado** (confirmación del usuario en el ciclo) son
+   señales distintas; marcar como pagado no mueve sobres (P3-7).
 7. **La métrica principal es disponibilidad diaria:** `remainingAmount / daysRemaining`
    → "Te quedan S/ 42 por día". Es una brújula, no un presupuesto rígido.
 8. **El coach sugiere, nunca aplica.** Detecta gastos acelerados, riesgos y desbalances;
@@ -416,7 +418,7 @@ Sin educación financiera, glosario, video ni tour: solo configuración.
    comprometer tu ciclo" + validación inline + días restantes con progress + badge de estado.
    **El hero nunca cambia de posición ni de propósito.**
 2. **Tus sobres:** 3 cards (orden fijo Necesidades·Gustos·Ahorro) con disponible/total + progress.
-3. **Próximos compromisos:** lista con "en N días" + monto + status de cobertura en header.
+3. **Próximos compromisos:** lista con "en N días" + monto + status de cobertura y pago en header.
 4. **Coach:** solo si tiene algo que decir (ver Bloque 7).
 5. **Movimientos recientes:** 4 items + "Ver todo", ingresos en verde, gastos en dark.
 Decisiones: "registrar" desde header (web) o FAB (móvil); **sin búsqueda, filtros ni tabs**
@@ -530,7 +532,6 @@ Si falta una, la pantalla está incompleta.
 
 - Móvil: Recuperación/Loading/Vacío (B1), Paso 2 Independiente y Mixto (B2), Variante B de gasto (B4), coach Sugerencia (B7).
 - Web: dashboard en estados no-positivos (vacío/crisis solo se ilustran en B7).
-- Pantallas ausentes: detalle de compromiso.
 - Modal de confirmación destructiva (diseñado en spec, no implementado).
 - Theme switcher a CSS variables y componentes codificados como sistema (no existe Storybook).
 
@@ -722,8 +723,8 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `financialCycles` | profileId, startDate, endDate, status (active/closed), `totalIncomeReceived?` | Snapshot materializado mantenido por `createIncomeEvent` |
 | `envelopes` | profileId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount, frozenUntil? | Saldo vivo O(1) para el dashboard |
 | `subEnvelopes` | profileId, parentEnvelopeType (**solo "savings"**), label, emoji, currentAmount, targetAmount?, isSystemDefault | Metas de ahorro; `isSystemDefault` = Fondo de Emergencia |
-| `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay?` (1–31, Lima), `coveredAt?`, `coveredBy?` | El compromiso vive en el calendario; cobertura cascada desde incomeEvents del ciclo |
-| `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp | Hechos inmutables |
+| `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay` (1–31, Lima), `coveredAt?`, `coveredBy?`, `postponedForCycleId?` (P1-10), **`paidAt?`**, **`paidForCycleId?`** (P3-7) | Cobertura cascada desde ingresos del ciclo; pago confirmado por ciclo (seguimiento, no mueve sobres) |
+| `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp, `updatedAt?` (P3-5) | Gastos del ciclo; editables en ciclo activo (P3-5) |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
@@ -733,9 +734,10 @@ componente `convex/betterAuth/` y no se re-exportan.
 
 | Archivo | Funciones |
 |---|---|
-| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations; P2-7 extiende args extraordinarios; P3-4 `heldCents`) |
-| `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations), `getRecentExpenses` (query) |
-| `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
+| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent`, `updateIncomeEvent` (mutations; P2-7 extraordinarios; P3-4 `heldCents`; P3-5 edición ciclo activo) |
+| `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations; P3-5), `getRecentExpenses` (query) |
+| `convex/movements.ts` | `listForActiveCycle` (query; lista unificada ingresos + gastos) |
+| `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk`, **`markCommitmentAsPaid`** (mutations; P3-7) |
 | `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach` (mutations) — sugiere, confirma, aplica |
 | `convex/lib/rescueTransfer.ts` | Puras: `validateRescueTransferApply`, `computeRescueEnvelopePatches` (con tests) |
 | `convex/lib/crisisResolution.ts` | Puras: opciones crisis, split savings→sobres, copy canon (con tests) |
@@ -743,6 +745,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/http.ts` | Router HTTP (endpoints auth) |
 | `convex/lib/budgetMath.ts` | Puras + constantes: `computeAllocations`, `isValidAllocations`, `isValidPaydays`, `computeRescueTransfer`, `suggestRescueTransfer`, `shouldWarnWantsBurn`, `evaluateCycleCompliance` (con tests) |
 | `convex/lib/commitmentCoverage.ts` | Puras: `computeCommitmentCoverage`, `computeAllCommitmentCoverage`, `mapCoverageStatusToDashboard` (con tests) |
+| `convex/lib/commitmentPayment.ts` | Puras: `resolveCommitmentPaymentStatus`, `isCommitmentPaidForCycle` (P3-7; TDD; separado de cobertura cascada) |
 | `convex/lib/evaluateCommitmentCoverage.ts` | Persiste `coveredAt` / `coveredBy` tras evaluación en mutaciones de ingreso |
 | `convex/savings.ts` | `getOverview`, `getEmergencyFundDetail`, `getMoveSurplusContext` (queries), `contributeToSubEnvelope`, `contributeToGoal`, `createSavingsGoal` (mutations); P2-7: `getCycleSavingsBreakdown`, `moveSurplusToSavings` |
 | `convex/lib/extraordinarySavingsSurplus.ts` | Puras: pool movible desde ingresos extraordinarios (TDD; origen `extraordinary` en mover sobrante) |
@@ -759,7 +762,10 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **`incomeModel` reemplazó a `workerType`** (v2.0 → v2.5, migración widen→migrate→narrow ejecutada 2026-07-08). `workerType` y `frequency` ya no existen en el schema ni en el código.
 - **`incomeEvents` unificó** `adHocIncomes` + sueldo. Migración 1:1 con `source: "other"` (trade-off aceptado).
 - **`fixedCommitments.dueDay`** reemplazó `frequency` (first/second/every_payday). Migración de `every_payday` con pérdida aceptada (→ primer payday).
-- **Cobertura de compromisos:** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo.
+- **Cobertura de compromisos (Cubierto):** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo (incl. pool `heldCents` P3-4). Responde: ¿hay dinero reservado para esta obligación?
+- **Pago de compromisos (Pagado — P3-7):** seguimiento independiente de la cobertura. `paidAt` + `paidForCycleId` marcan que el usuario confirmó haber pagado **en el ciclo activo** (`markCommitmentAsPaid`). **No mueve sobres ni re-ejecuta cascada.** Responde: ¿el usuario dice que ya pagó?
+- **Vencido (pago):** pasó `dueDay` (Lima) en el ciclo activo y el compromiso no está Pagado para ese ciclo (`resolveCommitmentPaymentStatus` → `overdue`). Distinto de cobertura parcial o pospuesto (`postponedForCycleId`, P1-10).
+- **Edición de movimientos (P3-5):** `updateExpense` / `updateIncomeEvent` solo en ciclo activo; re-aplican reparto y re-evalúan cobertura. `updateIncomeEvent` preserva `heldCents` si no se envía en args (`args.heldCents ?? event.heldCents ?? 0`). Desde `/movements` no se edita el apartado; solo al registrar ingreso.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
 - **Calendario de ciclo en Ajustes:** cambiar `payFrequency`, `paydays` o `cycleDurationDays` en `profiles` **no recalcula** el `financialCycles` activo (fechas, sobres e ingresos del ciclo en curso siguen igual). La nueva configuración aplica cuando se **abra el siguiente ciclo** (p. ej. al registrar un ingreso que cierre el ciclo actual, ver `createIncomeEvent`).
@@ -1047,8 +1053,8 @@ el DoD v2.5 ya está cubierto en la rama de trabajo.
 - **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
 - **Bloque 9 — Perfil y ajustes:** `/settings` (cuenta) + `/settings/system` (sistema + automatizaciones) + allocations + **wizard ciclo** (`/settings/cycle`, regla §5.3); **tema oscuro** (`next-themes` en Preferencias); **editar nombre** inline; **sesiones** (`sessionsApiReady`, cerrar todas vía Convex + `ConfirmDestructiveDialog`); Polar billing (2026-07-22). Sin selector de acento ni ícono.
-- **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard).
-- **Compromisos:** `/commitments` (lista con cobertura del ciclo, total `/ ciclo`, agregar compromiso; **detalle en sheet** + eliminar con diálogo destructivo reutilizable; nav sidebar/bottom activa; enlace «Ver todo» en dashboard).
+- **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard). **P3-5:** detalle + editar/eliminar ingresos y gastos del ciclo activo; móvil `Sheet` bottom, desktop `Dialog` centrado (`max-w-[400px]`).
+- **Compromisos:** `/commitments` (lista con cobertura + **pago** del ciclo, total `/ ciclo`, agregar compromiso). **Detalle:** móvil sheet / desktop dialog (mismo patrón que movimientos); filas Cobertura + Pago; botón «Marcar como pagado» (P3-7); eliminar con `ConfirmDestructiveDialog`; nav sidebar/bottom activa; enlace «Ver todo» en dashboard.
 
 **No existe todavía (bloquea DoD v2.5 — ver §8.1):**
 - Coach estado **tranquilo:** CTAs — **cerrado 2026-07-22** (§8.4).
@@ -1142,8 +1148,10 @@ flowchart LR
 | P3-1 | Quipu Plus + variante C | Spec Bloque 4 §C + `detectedExpenses`; valor de producto más allá de billing Polar. |
 | P3-2 | Informe anual PDF | Generación/descarga real; v2.5 mantiene UI-only en recompensas (§2.4). |
 | P3-3 | Storybook | §3.9 — catálogo de componentes; no bloquea release. |
-| P3-5 | Editar ingresos y gastos del ciclo activo | ⬜ Abierto — PR #34. Spec 2026-07-26: `updateExpense` / `updateIncomeEvent`; UI desde `/movements`; solo ciclo activo. |
-| P3-6 | Ingreso móvil full-screen inmersivo | ✅ **Cerrado 2026-07-26.** `/income/register` ocupa 100 % dvh en móvil: `IMMERSIVE_PATHS` en `AppLayoutShell` oculta bottom nav + FAB + `pb-24`; header sticky «Volver»; footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil (`max-md:` overrides). CTA «+ Ingreso» en header dashboard cuando hay ciclo activo (`DashboardHeaderActions`); FAB relabeled «Registrar gasto». Spec: `2026-07-26-income-register-mobile-fullscreen-ux.md`. |
+| P3-4 | Apartado `heldCents` en ingresos | ✅ **Cerrado 2026-07-26.** Campo opcional en `incomeEvents`; pool compartido para cascada de compromisos; UI «Ya comprometido» + preview Bruto · Apartado · A repartir. Merge #33. |
+| P3-5 | Editar ingresos y gastos del ciclo activo | ✅ **Cerrado 2026-07-26.** `updateExpense` / `updateIncomeEvent`; UI detalle/edición desde `/movements`; solo ciclo activo; desktop dialog / móvil sheet. Merge #34. |
+| P3-6 | Ingreso móvil full-screen inmersivo | ✅ **Cerrado 2026-07-26.** `/income/register` ocupa 100 % dvh en móvil: `IMMERSIVE_PATHS` en `AppLayoutShell` oculta bottom nav + FAB + `pb-24`; header sticky «Volver»; footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil (`max-md:` overrides). CTA «+ Ingreso» en header dashboard cuando hay ciclo activo (`DashboardHeaderActions`); FAB relabeled «Registrar gasto». Spec: `2026-07-26-income-register-mobile-fullscreen-ux.md`. Merge #32. |
+| P3-7 | Estado Pagado en compromisos | ✅ **Cerrado 2026-07-26.** Separación Cubierto (cascada) vs Pagado (confirmación usuario por ciclo) vs Vencido (pago). Schema `paidAt` / `paidForCycleId`; `markCommitmentAsPaid`; `convex/lib/commitmentPayment.ts` + TDD; UI lista + detalle con filas Cobertura/Pago. Futuro preparado: auto-marcar al vincular gasto ↔ compromiso (no implementado). |
 
 ### 8.6 Roadmap SaaS (orden de construcción — vigente 2026-07-22)
 
@@ -1163,13 +1171,13 @@ flowchart LR
 |---|---|
 | 1. Auth | ✅ Recuperación `/recuperar` + `/restablecer-contrasena` (2026-07-22). ✅ Verificación email (Resend en código, `requireEmailVerification`, `/verify-email`). Pendiente: panel lateral datos reales. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
+| 3. Dashboard | ✅ **P3-5/P3-7 (2026-07-26):** movimientos editables desde `/movements`; compromisos con fila Pago + marcar como pagado; detalle responsive sheet/dialog. |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
 | 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. ✅ **P3-6 (2026-07-26):** móvil full-screen inmersivo — sin bottom nav/FAB, header sticky «Volver», footer sticky safe-area, `IncomeDestinationDialog` full-screen en móvil, CTA «+ Ingreso» en dashboard header. |
 | 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
 | 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
 | 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
-| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Split cuenta/sistema (2026-07-24):** `/settings` + `/settings/system` + dark mode Preferencias. ✅ **Ajustes v2.5:** editar nombre, wizard `/settings/cycle`, sesiones, `ConfirmDestructiveDialog`. Compromiso: sheet en `/commitments`. |
+| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Split cuenta/sistema (2026-07-24):** `/settings` + `/settings/system` + dark mode Preferencias. ✅ **Ajustes v2.5:** editar nombre, wizard `/settings/cycle`, sesiones, `ConfirmDestructiveDialog`. ✅ **Compromisos (2026-07-26):** detalle sheet/dialog responsive, marcar como pagado (P3-7). |
 
 ### 8.5 Regla de actualización de esta sección
 
@@ -1370,7 +1378,9 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
-- **2026-07-26 — P3-4: `heldCents` en `incomeEvents`.** Campo opcional (entero céntimos 0..amount; default 0) que reserva dinero antes del 50/30/20. `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto. Motor de cobertura P1-1 extendido: `heldCents` es pool compartido que financia compromisos (needs/wants) en cascada por `dueDay`. UI: «Ya comprometido» + preview Bruto · Apartado · A repartir. Mergeado sobre P3-6 (form immersive + held).
+- **2026-07-26 — P3-7: Pagado en compromisos.** Decisión de producto: **Cubierto** (¿hay reserva vía cascada?) ≠ **Pagado** (¿usuario confirmó pago en el ciclo?) ≠ **Vencido** (pasó `dueDay` sin pagar). Schema `paidAt` / `paidForCycleId`; `markCommitmentAsPaid` no toca sobres; `convex/lib/commitmentPayment.ts` + tests; dashboard/lista/detalle con filas Cobertura + Pago. §5.3 y §8 actualizados.
+- **2026-07-26 — P3-5: editar movimientos + responsive detalle.** `updateExpense` / `updateIncomeEvent` (ciclo activo); UI `/movements`; patrón móvil sheet / desktop dialog (`movement-detail-sheet`, `commitment-detail-sheet`). Fix: `updateIncomeEvent` preserva `heldCents` existente. Merge #34.
+- **2026-07-26 — P3-4: `heldCents` en `incomeEvents`.** Campo opcional (entero céntimos 0..amount; default 0) que reserva dinero antes del 50/30/20. `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto. Motor de cobertura P1-1 extendido: `heldCents` es pool compartido que financia compromisos (needs/wants) en cascada por `dueDay`. UI: «Ya comprometido» + preview Bruto · Apartado · A repartir. Merge #33.
 - **2026-07-26 — P3-6 — Ingreso móvil full-screen.** `AppLayoutShell` oculta bottom nav y FAB en `/income/register`; header sticky «Volver» + footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil; CTA «+ Ingreso» en header dashboard (ciclo activo); FAB aria-label «Registrar gasto». Spec `2026-07-26-income-register-mobile-fullscreen-ux.md`.
 - **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.

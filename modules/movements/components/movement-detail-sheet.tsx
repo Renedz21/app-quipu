@@ -62,10 +62,6 @@ type Props = {
   currencyCode?: string;
 };
 
-/**
- * Owns try/finally + busy-flag reset outside the component so React Compiler
- * can memoize the sheet, while React Doctor still sees a finally cleanup.
- */
 async function runDeleteWithBusyFlag(
   setBusy: (busy: boolean) => void,
   run: () => Promise<unknown>,

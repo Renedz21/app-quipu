@@ -132,8 +132,10 @@ Si no, no pertenece a Quipu.
 10. **Facts over derivations:** se persisten hechos (gastos, ingresos, fechas,
     distribuciones aplicadas) y se calculan derivados (cobertura, disponibilidad,
     alertas). **Si un dato puede derivarse, no se guarda.** Excepciones deliberadas:
-    `distributionApplied` (verdad histórica, nunca se recalcula) y `totalIncomeReceived`
-    (snapshot materializado mantenido por `createIncomeEvent`).
+    `distributionApplied` (verdad histórica del evento: no se recalcula si cambian los %
+    globales; sí se regenera al **editar** ese mismo ingreso — decisión 2026-07-26),
+    `totalIncomeReceived` (snapshot materializado del bruto del ciclo) y, cuando se
+    implemente, `heldCents` (apartado confirmado antes del 50/30/20).
 
 ### 2.6 Filosofía visual
 
@@ -442,8 +444,10 @@ desde perfil (Ajustes → Automatizaciones), destino por evento (habitual / todo
 por sobre diferido), preview incluye **Nuevo disponible hoy**, confirmación con capa dorada y badge
 en movimientos. Decisiones: origen sigue siendo chip/enum backend; **todo ingreso se reparte** según
 política confirmada (50/30/20 del perfil o override de ese evento); `distributionApplied` no se
-recalcula; sin edición retroactiva en este flujo. Móvil: full-screen, no sheet.
-Spec: `docs/superpowers/specs/2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`.
+recalcula; sin edición retroactiva en este flujo. Móvil: **full-screen inmersivo (100% `dvh`),
+sin bottom nav ni sheet** — plan UX 2026-07-26 (`docs/superpowers/specs/2026-07-26-income-register-mobile-fullscreen-ux.md`).
+Hoy el form aún hereda el shell con bottom nav (gap a cerrar: P3-6).
+Spec histórico: `docs/superpowers/specs/2026-07-21-ingresos-extraordinarios-bloques-5-6-design.md`.
 
 **Bloque 6 — Ahorros "¿Qué estoy construyendo?"**
 **Un solo módulo** (`/savings`): stock (Fondo + metas) ≠ flujo del ciclo.
@@ -1145,6 +1149,7 @@ flowchart LR
 | P3-3 | Storybook | §3.9 — catálogo de componentes; no bloquea release. |
 | P3-4 | Apartado inteligente en ingresos (`heldCents`) | Spec 2026-07-26: bruto intacto; `distributable = amount − heldCents`; default sugerido desde compromisos descubiertos; preview Bruto/Apartado/A repartir; cobertura cuenta `heldCents`. |
 | P3-5 | Edición de ingresos y gastos (ciclo activo) | Spec 2026-07-26: `updateIncomeEvent` / `updateExpense`; rebuild de sobres; UI desde `/movements`; ciclos cerrados bloqueados; `updatedAt` sin ledger. |
+| P3-6 | Ingreso móvil full-screen (sin sheet/nav) | Spec UX 2026-07-26: `/income/register` immersive `<md` (sin bottom nav/FAB); CTA «Ingreso» en dashboard con ciclo; destino extraordinario no-Dialog en móvil; FAB sigue = gasto. |
 
 ### 8.6 Roadmap SaaS (orden de construcción — vigente 2026-07-22)
 
@@ -1166,7 +1171,7 @@ flowchart LR
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
 | 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). **P3-5:** detalle/editar/eliminar movimiento en sheet. |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
-| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. **Pendiente P3-4/P3-5:** apartado `heldCents` + editar desde movimientos (spec 2026-07-26). |
+| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. **Pendiente P3-4/P3-5:** apartado `heldCents` + editar desde movimientos. **Pendiente P3-6:** full-screen inmersivo móvil (hoy el form comparte shell con bottom nav; descubrimiento débil con ciclo activo). |
 | 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
 | 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
 | 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
@@ -1371,6 +1376,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-26 — Ingreso móvil full-screen (plan UX).** Diagnóstico: `/income/register` no usa `Sheet`, pero hereda bottom nav y el FAB con ciclo abre gasto → descubrimiento + contención mala en pantallas chicas. Plan: immersive 100% `dvh`, CTA «Ingreso» en header, sin ítem nuevo en bottom bar. Spec `2026-07-26-income-register-mobile-fullscreen-ux.md`; roadmap P3-6.
 - **2026-07-26 — Dominio financiero: edición + apartado.** Decisión de diseño (sin código aún): edición de ingresos/gastos en ciclo activo; apartado inteligente `heldCents` al registrar ingreso (neto distribuible). Spec `docs/superpowers/specs/2026-07-26-edicion-movimientos-y-apartado-ingresos-design.md`. Roadmap P3-4 / P3-5; §5.1/§5.3 y delta Bloques 3/5.
 - **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.

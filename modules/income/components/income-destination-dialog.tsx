@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowLeft } from "reicon-react";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -85,6 +86,66 @@ export function IncomeDestinationDialog({
 
   const selected = draft ?? value;
 
+  // Shared option cards rendered on both mobile and desktop
+  const optionCards = (
+    <div className="flex flex-col gap-3">
+      {OPTIONS.map((option) => {
+        const isSelected = selected === option.value;
+        const label =
+          option.value === "all_to_savings" && extraordinaryType === "cts"
+            ? "Todo al Fondo de emergencia"
+            : option.title;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setDraft(option.value)}
+            className={cn(
+              "flex items-center gap-4 rounded-[15px] border px-5 py-[18px] text-left transition-colors",
+              isSelected
+                ? "border-[1.5px] border-qp bg-qp-soft"
+                : "border-line bg-card hover:border-line-strong",
+            )}
+          >
+            <span
+              className={cn(
+                "size-[22px] shrink-0 rounded-full border-[6px] border-qp bg-card",
+                !isSelected && "border-[1.7px] border-[#C9C3BA] bg-transparent",
+              )}
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-[15.5px] text-ink">
+                  {label}
+                </span>
+                {option.recommended ? (
+                  <span className="rounded-full bg-qp-soft px-2 py-0.5 text-[10.5px] font-semibold text-qp-deep">
+                    Recomendado
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-0.5 text-[13px] text-ink-secondary">
+                {optionDetail(
+                  option.value,
+                  preview,
+                  amountCents,
+                  currencyCode,
+                  extraordinaryType,
+                )}
+              </p>
+            </div>
+            {option.value === "all_to_savings" && amountCents > 0 ? (
+              <span className="shrink-0 font-serif text-lg text-moss">
+                + {formatCents(amountCents, { currency: currencyCode })}
+              </span>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <Dialog
       open={open}
@@ -93,9 +154,46 @@ export function IncomeDestinationDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-w-[760px] rounded-[14px] border-line bg-canvas p-0">
-        <div className="px-[34px] py-[30px]">
-          <DialogHeader className="text-left">
+      {/*
+        Mobile (< md): full-screen immersive panel.
+        Desktop (md+): standard centered dialog at max-w-[760px].
+        Base UI DialogContent uses Tailwind classes for positioning (not inline styles),
+        so max-md: responsive overrides work correctly.
+      */}
+      <DialogContent
+        showCloseButton={false}
+        className={cn(
+          // Mobile full-screen overrides
+          "max-md:inset-0 max-md:top-0 max-md:left-0 max-md:translate-none max-md:max-w-full max-md:w-full max-md:h-dvh max-md:rounded-none max-md:flex max-md:flex-col max-md:overflow-hidden",
+          // Desktop: standard dialog
+          "md:max-w-[760px] md:rounded-[14px]",
+          // Shared
+          "border-line bg-canvas p-0",
+        )}
+      >
+        {/* Mobile header — sticky within the full-screen panel */}
+        <div className="flex items-center border-b border-line px-4 pt-[env(safe-area-inset-top)] pb-0 md:hidden">
+          <div className="flex h-[52px] flex-1 items-center justify-between">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="flex items-center gap-1 text-[13.5px] text-mute hover:text-ink"
+              aria-label={INCOME_DESTINATION_DIALOG_BACK}
+            >
+              <ArrowLeft size={16} aria-hidden />
+              {INCOME_DESTINATION_DIALOG_BACK}
+            </button>
+            <span className="pointer-events-none font-serif text-[17px] font-medium text-ink">
+              ¿A dónde va?
+            </span>
+            <span className="w-12" aria-hidden />
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-4 py-5 md:px-[34px] md:py-[30px]">
+          {/* Desktop header */}
+          <DialogHeader className="hidden text-left md:flex">
             <DialogTitle className="font-serif text-[26px] font-medium text-ink">
               {dialogTitle}
             </DialogTitle>
@@ -105,63 +203,7 @@ export function IncomeDestinationDialog({
             para este ingreso. Tu reparto habitual queda igual.
           </p>
 
-          <div className="mt-5 flex flex-col gap-3">
-            {OPTIONS.map((option) => {
-              const isSelected = selected === option.value;
-              const label =
-                option.value === "all_to_savings" && extraordinaryType === "cts"
-                  ? "Todo al Fondo de emergencia"
-                  : option.title;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setDraft(option.value)}
-                  className={cn(
-                    "flex items-center gap-4 rounded-[15px] border px-5 py-[18px] text-left transition-colors",
-                    isSelected
-                      ? "border-[1.5px] border-qp bg-qp-soft"
-                      : "border-line bg-card hover:border-line-strong",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "size-[22px] shrink-0 rounded-full border-[6px] border-qp bg-card",
-                      !isSelected &&
-                        "border-[1.7px] border-[#C9C3BA] bg-transparent",
-                    )}
-                    aria-hidden
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-[15.5px] text-ink">
-                        {label}
-                      </span>
-                      {option.recommended ? (
-                        <span className="rounded-full bg-qp-soft px-2 py-0.5 text-[10.5px] font-semibold text-qp-deep">
-                          Recomendado
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="mt-0.5 text-[13px] text-ink-secondary">
-                      {optionDetail(
-                        option.value,
-                        preview,
-                        amountCents,
-                        currencyCode,
-                        extraordinaryType,
-                      )}
-                    </p>
-                  </div>
-                  {option.value === "all_to_savings" && amountCents > 0 ? (
-                    <span className="shrink-0 font-serif text-lg text-moss">
-                      + {formatCents(amountCents, { currency: currencyCode })}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
+          <div className="mt-5">{optionCards}</div>
 
           <div className="mt-5 flex items-start gap-2.5 rounded-[12px] border border-qp-border bg-qp-soft px-[15px] py-3">
             <span
@@ -173,7 +215,8 @@ export function IncomeDestinationDialog({
             </p>
           </div>
 
-          <div className="mt-5 flex justify-end gap-2.5">
+          {/* Desktop CTAs — inside the scrollable body */}
+          <div className="mt-5 hidden justify-end gap-2.5 md:flex">
             <Button
               type="button"
               variant="outline"
@@ -186,6 +229,32 @@ export function IncomeDestinationDialog({
               type="button"
               disabled={!selected}
               className="h-[46px] rounded-[11px] bg-ink px-[26px] text-[14.5px] font-semibold text-canvas"
+              onClick={() => {
+                if (!selected) return;
+                onConfirm(selected);
+                onOpenChange(false);
+              }}
+            >
+              {INCOME_DESTINATION_DIALOG_CONFIRM}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile sticky footer CTAs */}
+        <div className="border-t border-line px-4 pt-3 pb-[max(env(safe-area-inset-bottom),12px)] md:hidden">
+          <div className="flex items-center gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-[44px] flex-1 rounded-[11px] border-line bg-card text-[14px] font-semibold text-mute"
+              onClick={() => onOpenChange(false)}
+            >
+              {INCOME_DESTINATION_DIALOG_BACK}
+            </Button>
+            <Button
+              type="button"
+              disabled={!selected}
+              className="h-[44px] flex-1 rounded-[11px] bg-ink text-[14px] font-semibold text-canvas"
               onClick={() => {
                 if (!selected) return;
                 onConfirm(selected);

@@ -733,8 +733,8 @@ componente `convex/betterAuth/` y no se re-exportan.
 
 | Archivo | Funciones |
 |---|---|
-| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations; P2-7 extiende args extraordinarios) |
-| `convex/expenses.ts` | `registerExpense`, `deleteExpense` (mutations), `getRecentExpenses` (query) |
+| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent`, `updateIncomeEvent` (mutations; P2-7 extiende args extraordinarios; P3-5 añade update) |
+| `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations), `getRecentExpenses` (query) |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
 | `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach` (mutations) — sugiere, confirma, aplica |
 | `convex/lib/rescueTransfer.ts` | Puras: `validateRescueTransferApply`, `computeRescueEnvelopePatches` (con tests) |
@@ -1142,6 +1142,8 @@ flowchart LR
 | P3-1 | Quipu Plus + variante C | Spec Bloque 4 §C + `detectedExpenses`; valor de producto más allá de billing Polar. |
 | P3-2 | Informe anual PDF | Generación/descarga real; v2.5 mantiene UI-only en recompensas (§2.4). |
 | P3-3 | Storybook | §3.9 — catálogo de componentes; no bloquea release. |
+| P3-5 | Editar ingresos y gastos del ciclo activo | ✅ **Cerrado 2026-07-26.** `updateExpense` (delta-patch envelope, cambia tipo de sobre) + `updateIncomeEvent` (delta-patch distribución, valida `occurredAt` en ventana del ciclo, re-evalúa cobertura). Schema: `updatedAt?: number` en `expenses` e `incomeEvents`. UI: items de `/movements` son botones → `MovementDetailSheet` con Editar/Eliminar; `ExpenseEditForm` (keypad + sobre); `IncomeEditForm` (monto + fuente + fecha + concepto). Solo ciclo activo; ciclo cerrado rechaza. |
+| P3-6 | Ingreso móvil full-screen inmersivo | ✅ **Cerrado 2026-07-26.** `/income/register` ocupa 100 % dvh en móvil: `IMMERSIVE_PATHS` en `AppLayoutShell` oculta bottom nav + FAB + `pb-24`; header sticky «Volver»; footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil (`max-md:` overrides). CTA «+ Ingreso» en header dashboard cuando hay ciclo activo (`DashboardHeaderActions`); FAB relabeled «Registrar gasto». Spec: `2026-07-26-income-register-mobile-fullscreen-ux.md`. |
 
 ### 8.6 Roadmap SaaS (orden de construcción — vigente 2026-07-22)
 
@@ -1163,7 +1165,7 @@ flowchart LR
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
 | 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
-| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. |
+| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. ✅ **P3-6 (2026-07-26):** móvil full-screen inmersivo — sin bottom nav/FAB, header sticky «Volver», footer sticky safe-area, `IncomeDestinationDialog` full-screen en móvil, CTA «+ Ingreso» en dashboard header. |
 | 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
 | 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
 | 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
@@ -1368,6 +1370,8 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-26 — P3-5 — Editar ingresos y gastos.** `updateExpense` / `updateIncomeEvent` en Convex (delta-patch sobres, validación ciclo activo, re-evaluación cobertura). `updatedAt?` en schema. UI: `MovementDetailSheet` + `ExpenseEditForm` + `IncomeEditForm` desde `/movements`. Helper `extractConcept` con unit tests.
+- **2026-07-26 — P3-6 — Ingreso móvil full-screen.** `AppLayoutShell` oculta bottom nav y FAB en `/income/register`; header sticky «Volver» + footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil; CTA «+ Ingreso» en header dashboard (ciclo activo); FAB aria-label «Registrar gasto». Spec `2026-07-26-income-register-mobile-fullscreen-ux.md`.
 - **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.
 - **2026-07-22 — DoD v2.5 + release gate.** §8.1 Definition of Done acotada (excluye Plus/variante C e PDF descargable); §8.3 P3 post-v2.5; §2.4 excepción informe UI-only; §9.3.2 CI + §9.4 checklist Vercel; §9.5 checklist Polar prod; P2-6 lint ✅; P2-8 parcial (CI, pendiente owner Vercel/D4/Polar prod).

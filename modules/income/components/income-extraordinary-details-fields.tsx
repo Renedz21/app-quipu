@@ -12,6 +12,7 @@ import {
 import { IncomeAmountField } from "./income-amount-field";
 import { IncomeDatePicker } from "./income-date-picker";
 import type { IncomeFormField } from "./income-form-field";
+import { IncomeHeldField } from "./income-held-field";
 
 type Props = {
   currencyCode: string;
@@ -19,6 +20,8 @@ type Props = {
   amountField: IncomeFormField<"amountCents">;
   occurredAtField: IncomeFormField<"occurredAt">;
   labelField: IncomeFormField<"extraordinaryLabel">;
+  heldField: IncomeFormField<"heldCents">;
+  suggestedHeldCents?: number;
 };
 
 export function IncomeExtraordinaryDetailsFields({
@@ -27,6 +30,8 @@ export function IncomeExtraordinaryDetailsFields({
   amountField,
   occurredAtField,
   labelField,
+  heldField,
+  suggestedHeldCents,
 }: Props) {
   const title = extraordinaryTypeDisplayTitle(extraordinaryType);
 
@@ -58,6 +63,13 @@ export function IncomeExtraordinaryDetailsFields({
         errors={amountField.state.meta.errors.filter(
           (error): error is { message?: string } => error != null,
         )}
+      />
+
+      <IncomeHeldField
+        currencyCode={currencyCode}
+        heldField={heldField}
+        amountCents={amountField.state.value}
+        suggestedHeldCents={suggestedHeldCents}
       />
 
       <IncomeDatePicker

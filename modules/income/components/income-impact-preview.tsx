@@ -5,6 +5,9 @@ import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import {
   ENVELOPE_INCOME_STYLES,
+  INCOME_IMPACT_DISTRIBUTABLE_LABEL,
+  INCOME_IMPACT_GROSS_LABEL,
+  INCOME_IMPACT_HELD_LABEL,
   INCOME_IMPACT_MOVE_SURPLUS,
   INCOME_IMPACT_TITLE,
   INCOME_NEW_DAILY_LABEL,
@@ -22,6 +25,8 @@ export function IncomeImpactPreview({
   currencyCode,
   moveSurplusHref,
 }: Props) {
+  const showHoldBreakdown = preview !== null && preview.heldCents > 0;
+
   return (
     <div className="rounded-2xl border border-qp-border bg-[linear-gradient(160deg,var(--qp-soft),var(--qp-canvas)_70%)] p-5 md:p-6">
       <p className="mb-4 font-mono text-[10.5px] tracking-[0.1em] text-qp-deep uppercase">
@@ -34,6 +39,34 @@ export function IncomeImpactPreview({
         </p>
       ) : (
         <>
+          {showHoldBreakdown ? (
+            <div className="mb-4 flex flex-col gap-1 rounded-[10px] border border-qp-border bg-card/60 px-3.5 py-3">
+              <div className="flex items-center justify-between text-[12.5px]">
+                <span className="text-mute">{INCOME_IMPACT_GROSS_LABEL}</span>
+                <span className="font-serif text-ink">
+                  {formatCents(
+                    preview.heldCents + preview.distributableCents,
+                    { currency: currencyCode },
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[12.5px]">
+                <span className="text-mute">{INCOME_IMPACT_HELD_LABEL}</span>
+                <span className="font-serif text-[#8A6A4E]">
+                  − {formatCents(preview.heldCents, { currency: currencyCode })}
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-center justify-between border-t border-qp-border pt-1.5 text-[13px] font-medium">
+                <span className="text-ink">{INCOME_IMPACT_DISTRIBUTABLE_LABEL}</span>
+                <span className="font-serif text-ink">
+                  {formatCents(preview.distributableCents, {
+                    currency: currencyCode,
+                  })}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-4">
             {(["needs", "wants", "savings"] as const).map((type) => {
               const styles = ENVELOPE_INCOME_STYLES[type];

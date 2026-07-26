@@ -8,6 +8,18 @@ import {
 
 export type { AllocationWeights } from "@/shared/lib/allocations";
 
+/**
+ * Suggests how many cents to hold from a new income based on uncovered
+ * commitment remainders. Result is min(amount, max(0, uncovered)).
+ * Mirrors convex/lib/incomeHold.ts:suggestHeldCents (no cross-boundary import).
+ */
+export function suggestHeldCentsForPreview(
+  amount: number,
+  uncoveredCommitmentsRemainingSum: number,
+): number {
+  return Math.min(amount, Math.max(0, Math.floor(uncoveredCommitmentsRemainingSum)));
+}
+
 export type EnvelopeType = "needs" | "wants" | "savings";
 export type EnvelopeBalances = EnvelopeAmounts;
 
@@ -65,6 +77,8 @@ export type ImpactPreviewInput = {
   currentEnvelopes: EnvelopeBalances;
   daysRemaining: number;
   distributionPolicy?: DistributionPolicy;
+  // P3-4: held amount before distribution. distributable = amountCents - heldCents.
+  heldCents?: number;
 };
 
 export type ImpactPreviewResult = {
@@ -73,6 +87,9 @@ export type ImpactPreviewResult = {
   currentDailyCents: number;
   projectedDailyCents: number;
   weightPercents: EnvelopeBalances;
+  // P3-4: hold breakdown (only present when heldCents > 0)
+  heldCents: number;
+  distributableCents: number;
 };
 
 export function computeImpactPreview(
@@ -80,9 +97,15 @@ export function computeImpactPreview(
 ): ImpactPreviewResult | null {
   if (input.amountCents <= 0) return null;
 
+  const heldCents = Math.max(
+    0,
+    Math.min(input.heldCents ?? 0, input.amountCents),
+  );
+  const distributableCents = input.amountCents - heldCents;
+
   const policy = input.distributionPolicy ?? "profile_default";
   const distribution = applyDistributionPolicy(
-    input.amountCents,
+    distributableCents,
     input.weights,
     policy,
   );
@@ -130,5 +153,7 @@ export function computeImpactPreview(
     currentDailyCents,
     projectedDailyCents,
     weightPercents,
+    heldCents,
+    distributableCents,
   };
 }

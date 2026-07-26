@@ -727,13 +727,13 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
-| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings) | Log unificado; `distributionApplied` nunca se recalcula; campos extraordinarios P2-7 |
+| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings), **`heldCents?`** (P3-4; entero céntimos 0..amount; default 0) | Log unificado; `distributionApplied` se calcula sobre `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto (Σ amount); campos extraordinarios P2-7 |
 
 ### 5.2 Funciones por archivo
 
 | Archivo | Funciones |
 |---|---|
-| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent`, `updateIncomeEvent` (mutations; P2-7 extiende args extraordinarios; P3-5 añade update) |
+| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent` (mutations; P2-7 extiende args extraordinarios; P3-4 `heldCents`) |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations), `getRecentExpenses` (query) |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk` (mutations) |
 | `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach` (mutations) — sugiere, confirma, aplica |
@@ -1142,7 +1142,7 @@ flowchart LR
 | P3-1 | Quipu Plus + variante C | Spec Bloque 4 §C + `detectedExpenses`; valor de producto más allá de billing Polar. |
 | P3-2 | Informe anual PDF | Generación/descarga real; v2.5 mantiene UI-only en recompensas (§2.4). |
 | P3-3 | Storybook | §3.9 — catálogo de componentes; no bloquea release. |
-| P3-5 | Editar ingresos y gastos del ciclo activo | ✅ **Cerrado 2026-07-26.** `updateExpense` (delta-patch envelope, cambia tipo de sobre) + `updateIncomeEvent` (delta-patch distribución, valida `occurredAt` en ventana del ciclo, re-evalúa cobertura). Schema: `updatedAt?: number` en `expenses` e `incomeEvents`. UI: items de `/movements` son botones → `MovementDetailSheet` con Editar/Eliminar; `ExpenseEditForm` (keypad + sobre); `IncomeEditForm` (monto + fuente + fecha + concepto). Solo ciclo activo; ciclo cerrado rechaza. |
+| P3-5 | Editar ingresos y gastos del ciclo activo | ⬜ Abierto — PR #34. Spec 2026-07-26: `updateExpense` / `updateIncomeEvent`; UI desde `/movements`; solo ciclo activo. |
 | P3-6 | Ingreso móvil full-screen inmersivo | ✅ **Cerrado 2026-07-26.** `/income/register` ocupa 100 % dvh en móvil: `IMMERSIVE_PATHS` en `AppLayoutShell` oculta bottom nav + FAB + `pb-24`; header sticky «Volver»; footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil (`max-md:` overrides). CTA «+ Ingreso» en header dashboard cuando hay ciclo activo (`DashboardHeaderActions`); FAB relabeled «Registrar gasto». Spec: `2026-07-26-income-register-mobile-fullscreen-ux.md`. |
 
 ### 8.6 Roadmap SaaS (orden de construcción — vigente 2026-07-22)
@@ -1370,7 +1370,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
-- **2026-07-26 — P3-5 — Editar ingresos y gastos.** `updateExpense` / `updateIncomeEvent` en Convex (delta-patch sobres, validación ciclo activo, re-evaluación cobertura). `updatedAt?` en schema. UI: `MovementDetailSheet` + `ExpenseEditForm` + `IncomeEditForm` desde `/movements`. Helper `extractConcept` con unit tests.
+- **2026-07-26 — P3-4: `heldCents` en `incomeEvents`.** Campo opcional (entero céntimos 0..amount; default 0) que reserva dinero antes del 50/30/20. `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto. Motor de cobertura P1-1 extendido: `heldCents` es pool compartido que financia compromisos (needs/wants) en cascada por `dueDay`. UI: «Ya comprometido» + preview Bruto · Apartado · A repartir. Mergeado sobre P3-6 (form immersive + held).
 - **2026-07-26 — P3-6 — Ingreso móvil full-screen.** `AppLayoutShell` oculta bottom nav y FAB en `/income/register`; header sticky «Volver» + footer sticky CTAs con safe-area; `IncomeDestinationDialog` full-screen en móvil; CTA «+ Ingreso» en header dashboard (ciclo activo); FAB aria-label «Registrar gasto». Spec `2026-07-26-income-register-mobile-fullscreen-ux.md`.
 - **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.

@@ -147,7 +147,10 @@ export const appTables = {
     isSystemDefault: v.boolean(), // true para el Fondo de Emergencia mandatorio del sistema
   }).index("by_profile", ["profileId"]),
 
-  // COMPROMISOS FIJOS: Descontados atómicamente antes de calcular el 50/30/20.
+  // COMPROMISOS FIJOS: Gastos recurrentes del calendario del usuario (alquiler día 5,
+  // Netflix día 18, etc.). NO se descuentan del ingreso antes del 50/30/20; el motor
+  // de cobertura P1-1 evalúa si los sobres ya asignados los financian. El mecanismo
+  // para reservar dinero antes de repartir es `heldCents` en el `incomeEvent`.
   // v2.5: el modelo es dueDay puro (día del mes, Lima). El campo "frequency"
   // viejo (first_payday / second_payday / every_payday) se eliminó porque
   // el frame del onboarding muestra "Cada día N", no el modelo de quincenas.
@@ -176,6 +179,8 @@ export const appTables = {
     amount: v.number(),
     description: v.string(),
     timestamp: v.number(),
+    // P3-5: trazabilidad mínima de edición; _creationTime cubre creación.
+    updatedAt: v.optional(v.number()),
   })
     .index("by_cycle_envelope_time", ["cycleId", "envelopeId", "timestamp"])
     .index("by_profile_time", ["profileId", "timestamp"]),
@@ -271,6 +276,11 @@ export const appTables = {
     distributionPolicy: v.optional(
       v.union(v.literal("profile_default"), v.literal("all_to_savings")),
     ),
+    // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
+    // distributable = amount - heldCents. totalIncomeReceived stays gross (sum of amount).
+    heldCents: v.optional(v.number()),
+    // P3-5: trazabilidad mínima de edición; _creationTime cubre creación.
+    updatedAt: v.optional(v.number()),
   })
     .index("by_cycle", ["cycleId"])
     .index("by_profile_time", ["profileId", "occurredAt"]),

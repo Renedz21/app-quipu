@@ -176,6 +176,7 @@ export const appTables = {
     amount: v.number(),
     description: v.string(),
     timestamp: v.number(),
+    updatedAt: v.optional(v.number()),
   })
     .index("by_cycle_envelope_time", ["cycleId", "envelopeId", "timestamp"])
     .index("by_profile_time", ["profileId", "timestamp"]),
@@ -271,6 +272,7 @@ export const appTables = {
     distributionPolicy: v.optional(
       v.union(v.literal("profile_default"), v.literal("all_to_savings")),
     ),
+    updatedAt: v.optional(v.number()),
   })
     .index("by_cycle", ["cycleId"])
     .index("by_profile_time", ["profileId", "occurredAt"]),

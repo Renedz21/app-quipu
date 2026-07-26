@@ -349,6 +349,227 @@ export const createIncomeEvent = mutation({
   },
 });
 
+export const updateIncomeEvent = mutation({
+  args: {
+    eventId: v.id("incomeEvents"),
+    amount: v.number(),
+    source: v.union(
+      v.literal("payroll"),
+      v.literal("freelance"),
+      v.literal("business"),
+      v.literal("gift"),
+      v.literal("refund"),
+      v.literal("investment"),
+      v.literal("other"),
+    ),
+    description: v.string(),
+    occurredAt: v.number(),
+    incomeKind: v.optional(
+      v.union(v.literal("habitual"), v.literal("extraordinary")),
+    ),
+    extraordinaryType: v.optional(extraordinaryTypeValidator),
+    extraordinaryLabel: v.optional(v.string()),
+    distributionPolicy: v.optional(distributionPolicyValidator),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+    if (!Number.isInteger(args.amount) || args.amount <= 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "El monto debe ser un entero de céntimos mayor a cero.",
+        data: { field: "amount" },
+      });
+    }
+
+    const incomeKind = args.incomeKind ?? "habitual";
+    let resolvedSource = args.source;
+    let resolvedDescription = "";
+    let distributionPolicy: DistributionPolicy = "profile_default";
+    let extraordinaryType: ExtraordinaryType | undefined;
+    let extraordinaryLabel: string | undefined;
+
+    if (incomeKind === "extraordinary") {
+      if (!args.extraordinaryType) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "Elige un tipo de ingreso extraordinario.",
+          data: { field: "extraordinaryType" },
+        });
+      }
+      extraordinaryType = args.extraordinaryType;
+      if (extraordinaryType === "custom") {
+        const label = args.extraordinaryLabel?.trim() ?? "";
+        if (!label || label.length > 80) {
+          throw new ConvexError({
+            code: "VALIDATION_ERROR",
+            message:
+              "Describe el ingreso (1–80 caracteres) para «Otro extraordinario».",
+            data: { field: "extraordinaryLabel" },
+          });
+        }
+        extraordinaryLabel = label;
+      } else if (args.extraordinaryLabel?.trim()) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            "La etiqueta personalizada solo aplica a «Otro extraordinario».",
+          data: { field: "extraordinaryLabel" },
+        });
+      }
+      if (!args.distributionPolicy) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "Confirma a dónde va este ingreso extraordinario.",
+          data: { field: "distributionPolicy" },
+        });
+      }
+      distributionPolicy = args.distributionPolicy;
+      resolvedSource = sourceForExtraordinaryType(extraordinaryType);
+      resolvedDescription = canonicalExtraordinaryDescription(
+        extraordinaryType,
+        extraordinaryLabel,
+      );
+    } else {
+      const description = args.description.trim();
+      if (!description) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "La descripción es obligatoria.",
+          data: { field: "description" },
+        });
+      }
+      resolvedDescription = description;
+      if (
+        args.extraordinaryType !== undefined ||
+        args.distributionPolicy !== undefined ||
+        args.extraordinaryLabel !== undefined
+      ) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            "Los campos extraordinarios solo aplican a ingresos extraordinarios.",
+        });
+      }
+    }
+
+    const event = await ctx.db.get(args.eventId);
+    if (!event) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "El ingreso no existe.",
+      });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile || event.profileId !== profile._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "No tienes permisos para editar este registro.",
+      });
+    }
+
+    const cycle = await ctx.db.get(event.cycleId);
+    if (cycle?.status !== "active") {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Solo puedes editar ingresos del ciclo activo.",
+      });
+    }
+
+    const now = Date.now();
+
+    // Reject occurredAt outside the cycle window or in the future.
+    if (args.occurredAt < cycle.startDate) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La fecha del ingreso debe estar dentro del ciclo activo.",
+        data: { field: "occurredAt" },
+      });
+    }
+    if (args.occurredAt > now) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La fecha del ingreso no puede ser futura.",
+        data: { field: "occurredAt" },
+      });
+    }
+
+    const weights = {
+      allocationNeeds: profile.allocationNeeds,
+      allocationWants: profile.allocationWants,
+      allocationSavings: profile.allocationSavings,
+    };
+    const newDistribution = applyDistributionPolicy(
+      args.amount,
+      weights,
+      distributionPolicy,
+    );
+    const oldDistribution = event.distributionApplied;
+
+    // Delta-patch envelopes for this event only.
+    const envelopes = await ctx.db
+      .query("envelopes")
+      .withIndex("by_cycle_type", (q) => q.eq("cycleId", event.cycleId))
+      .collect();
+
+    await Promise.all(
+      envelopes.map((env) => {
+        const delta = newDistribution[env.type] - oldDistribution[env.type];
+        return ctx.db.patch(env._id, {
+          allocatedAmount: env.allocatedAmount + delta,
+          remainingAmount: env.remainingAmount + delta,
+        });
+      }),
+    );
+
+    // Delta-patch the cycle's total income.
+    const amountDelta = args.amount - event.amount;
+    await ctx.db.patch(cycle._id, {
+      totalIncomeReceived: cycle.totalIncomeReceived + amountDelta,
+    });
+
+    // Patch the event document.
+    await ctx.db.patch(args.eventId, {
+      amount: args.amount,
+      source: resolvedSource,
+      description: resolvedDescription,
+      occurredAt: args.occurredAt,
+      incomeKind,
+      distributionApplied: newDistribution,
+      updatedAt: now,
+      ...(incomeKind === "extraordinary" && extraordinaryType !== undefined
+        ? {
+            extraordinaryType,
+            extraordinaryLabel,
+            distributionPolicy,
+          }
+        : {
+            extraordinaryType: undefined,
+            extraordinaryLabel: undefined,
+            distributionPolicy: undefined,
+          }),
+    });
+
+    await evaluateCommitmentCoverageForCycle(
+      ctx,
+      profile._id,
+      event.cycleId,
+      now,
+    );
+
+    return { success: true };
+  },
+});
+
 export const deleteIncomeEvent = mutation({
   args: { eventId: v.id("incomeEvents") },
   handler: async (ctx, args) => {

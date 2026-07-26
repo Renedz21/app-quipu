@@ -27,7 +27,10 @@ export function suggestHeldCents(
   amount: number,
   uncoveredCommitmentsRemainingSum: number,
 ): number {
-  return Math.min(amount, Math.max(0, Math.floor(uncoveredCommitmentsRemainingSum)));
+  return Math.min(
+    amount,
+    Math.max(0, Math.floor(uncoveredCommitmentsRemainingSum)),
+  );
 }
 
 /**

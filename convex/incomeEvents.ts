@@ -529,7 +529,7 @@ export const updateIncomeEvent = mutation({
       });
     }
 
-    const heldCents = args.heldCents ?? 0;
+    const heldCents = args.heldCents ?? event.heldCents ?? 0;
     if (heldCents !== 0) {
       const holdError = validateHeldCents(args.amount, heldCents);
       if (holdError) {

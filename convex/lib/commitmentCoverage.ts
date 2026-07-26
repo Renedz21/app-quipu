@@ -199,7 +199,10 @@ export function computeAllCommitmentCoverage(params: {
           covered += allocated;
           need -= allocated;
           eventHeldPool.set(event.id, heldAvailable - allocated);
-          fundingEvents.push({ eventId: `__held_${event.id}__`, amount: allocated });
+          fundingEvents.push({
+            eventId: `__held_${event.id}__`,
+            amount: allocated,
+          });
         }
       }
 

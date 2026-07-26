@@ -293,8 +293,18 @@ describe("heldCents coverage (P3-4)", () => {
   });
 
   it("held pool is shared across needs and wants commitments (not doubled)", () => {
-    const rent = commitment({ id: "rent", amount: 150_000, envelope: "needs", dueDay: 5 });
-    const spotify = commitment({ id: "spotify", amount: 150_000, envelope: "wants", dueDay: 18 });
+    const rent = commitment({
+      id: "rent",
+      amount: 150_000,
+      envelope: "needs",
+      dueDay: 5,
+    });
+    const spotify = commitment({
+      id: "spotify",
+      amount: 150_000,
+      envelope: "wants",
+      dueDay: 18,
+    });
     const events = [
       income({
         id: "payroll",
@@ -313,7 +323,9 @@ describe("heldCents coverage (P3-4)", () => {
     const rentResult = cascade.get("rent")!;
     const spotifyResult = cascade.get("spotify")!;
     // Total covered must not exceed heldCents = 200_000.
-    expect(rentResult.covered + spotifyResult.covered).toBeLessThanOrEqual(200_000);
+    expect(rentResult.covered + spotifyResult.covered).toBeLessThanOrEqual(
+      200_000,
+    );
     expect(rentResult.covered).toBe(150_000);
     expect(spotifyResult.covered).toBe(50_000);
   });

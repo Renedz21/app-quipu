@@ -88,7 +88,10 @@ export async function evaluateCommitmentCoverageForCycle(
         const coveredBy: Id<"incomeEvents">[] = [];
         for (const funding of coverage.fundingEvents) {
           const eventId = funding.eventId;
-          if (!eventId.startsWith("__boost_") && !eventId.startsWith("__held_")) {
+          if (
+            !eventId.startsWith("__boost_") &&
+            !eventId.startsWith("__held_")
+          ) {
             coveredBy.push(eventId as Id<"incomeEvents">);
           }
         }

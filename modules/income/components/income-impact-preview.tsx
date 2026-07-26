@@ -44,10 +44,9 @@ export function IncomeImpactPreview({
               <div className="flex items-center justify-between text-[12.5px]">
                 <span className="text-mute">{INCOME_IMPACT_GROSS_LABEL}</span>
                 <span className="font-serif text-ink">
-                  {formatCents(
-                    preview.heldCents + preview.distributableCents,
-                    { currency: currencyCode },
-                  )}
+                  {formatCents(preview.heldCents + preview.distributableCents, {
+                    currency: currencyCode,
+                  })}
                 </span>
               </div>
               <div className="flex items-center justify-between text-[12.5px]">
@@ -57,7 +56,9 @@ export function IncomeImpactPreview({
                 </span>
               </div>
               <div className="mt-0.5 flex items-center justify-between border-t border-qp-border pt-1.5 text-[13px] font-medium">
-                <span className="text-ink">{INCOME_IMPACT_DISTRIBUTABLE_LABEL}</span>
+                <span className="text-ink">
+                  {INCOME_IMPACT_DISTRIBUTABLE_LABEL}
+                </span>
                 <span className="font-serif text-ink">
                   {formatCents(preview.distributableCents, {
                     currency: currencyCode,

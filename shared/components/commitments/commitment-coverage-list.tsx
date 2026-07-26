@@ -14,6 +14,7 @@ export type CommitmentCoverageItem = {
   amount: number;
   envelope: "needs" | "wants";
   daysUntilDue: number;
+  nextDueAt?: number;
   coverageStatus: "covered" | "partial" | "uncovered";
   cascadeStatus?: "covered" | "partial" | "not-started" | "overdue";
   paymentStatus?: "paid" | "pending" | "overdue";
@@ -67,6 +68,7 @@ function CommitmentStatusLines({
     coverageStatus: commitment.coverageStatus,
     paymentStatus: commitment.paymentStatus,
     paidAtForCycle: commitment.paidAtForCycle,
+    daysUntilDue: commitment.daysUntilDue,
   });
 
   return (

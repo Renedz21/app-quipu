@@ -166,6 +166,8 @@ export const appTables = {
     coveredBy: v.optional(v.array(v.id("incomeEvents"))),
     // P1-10: pospuesto solo para el ciclo activo (coach crisis).
     postponedForCycleId: v.optional(v.id("financialCycles")),
+    // Concrete next payment due date (Lima midnight). Recurring rule stays in dueDay.
+    nextDueAt: v.optional(v.number()),
     // Seguimiento de pago confirmado por el usuario (por ciclo). No mueve sobres.
     paidAt: v.optional(v.number()),
     paidForCycleId: v.optional(v.id("financialCycles")),

@@ -1,19 +1,5 @@
 import type { Id } from "../_generated/dataModel";
-
-const LIMA_TIMEZONE = "America/Lima";
-
-function getLimaDay(now: number): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
-  }).formatToParts(new Date(now));
-
-  return Number(parts.find((part) => part.type === "day")?.value ?? 1);
-}
-
-export function isPastDueDay(dueDay: number, now: number): boolean {
-  return getLimaDay(now) > dueDay;
-}
+import { isPastNextDue } from "./commitmentDueDate";
 
 export type CommitmentPaymentStatus = "paid" | "pending" | "overdue";
 
@@ -32,14 +18,14 @@ export function isCommitmentPaidForCycle(
 }
 
 /**
- * Tracks whether the user confirmed paying the obligation this cycle.
+ * Tracks whether the user confirmed paying the obligation for the current due.
  * Independent from cascade coverage — does not move envelope balances.
  */
 export function resolveCommitmentPaymentStatus(params: {
   paidAt?: number;
   paidForCycleId?: Id<"financialCycles">;
   activeCycleId: Id<"financialCycles"> | null;
-  dueDay: number;
+  nextDueAt: number;
   now: number;
 }): CommitmentPaymentStatus {
   if (
@@ -58,7 +44,7 @@ export function resolveCommitmentPaymentStatus(params: {
     return "pending";
   }
 
-  if (isPastDueDay(params.dueDay, params.now)) {
+  if (isPastNextDue(params.nextDueAt, params.now)) {
     return "overdue";
   }
 

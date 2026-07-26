@@ -5,8 +5,10 @@ import {
   computeAllCommitmentCoverage,
   computeCoverageProgressPercent,
   computeUncoveredCommitmentRemainingCents,
+  daysUntilNextDue,
   mapCoverageStatusToDashboard,
 } from "./lib/commitmentCoverage";
+import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
@@ -17,7 +19,6 @@ import {
   computeDisplayDailyCents,
   computeEnvelopePercentRemaining,
   computeSurplusProjection,
-  daysUntilDueDay,
   detectEarlyCycle,
   evaluateCycleCompliance,
   mergeRecentMovements,
@@ -67,27 +68,35 @@ export const getSummary = query({
 
     if (!activeCycle) {
       const emptyCommitments = sortCommitmentsByDue(
-        commitmentsRaw.map((commitment) => ({
-          id: commitment._id,
-          name: commitment.name,
-          amount: commitment.amount,
-          envelope: commitment.envelope,
-          dueDay: commitment.dueDay,
-          daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
-          covered: 0,
-          remaining: commitment.amount,
-          progressPercent: 0,
-          coverageStatus: "uncovered" as const,
-          cascadeStatus: "not-started" as const,
-          paymentStatus: resolveCommitmentPaymentStatus({
-            paidAt: commitment.paidAt,
-            paidForCycleId: commitment.paidForCycleId,
-            activeCycleId: null,
+        commitmentsRaw.map((commitment) => {
+          const nextDueAt = resolveCommitmentNextDueAt({
             dueDay: commitment.dueDay,
-            now,
-          }),
-          paidAtForCycle: undefined,
-        })),
+            nextDueAt: commitment.nextDueAt,
+            createdAt: commitment._creationTime,
+          });
+          return {
+            id: commitment._id,
+            name: commitment.name,
+            amount: commitment.amount,
+            envelope: commitment.envelope,
+            dueDay: commitment.dueDay,
+            nextDueAt,
+            daysUntilDue: daysUntilNextDue(nextDueAt, now),
+            covered: 0,
+            remaining: commitment.amount,
+            progressPercent: 0,
+            coverageStatus: "uncovered" as const,
+            cascadeStatus: "not-started" as const,
+            paymentStatus: resolveCommitmentPaymentStatus({
+              paidAt: commitment.paidAt,
+              paidForCycleId: commitment.paidForCycleId,
+              activeCycleId: null,
+              nextDueAt,
+              now,
+            }),
+            paidAtForCycle: undefined,
+          };
+        }),
       );
 
       return {
@@ -218,6 +227,8 @@ export const getSummary = query({
         amount: commitment.amount,
         envelope: commitment.envelope,
         dueDay: commitment.dueDay,
+        nextDueAt: commitment.nextDueAt,
+        createdAt: commitment._creationTime,
       })),
       cycle: {
         startDate: activeCycle.startDate,
@@ -243,6 +254,11 @@ export const getSummary = query({
 
     const commitments = sortCommitmentsByDue(
       commitmentsRaw.map((commitment) => {
+        const nextDueAt = resolveCommitmentNextDueAt({
+          dueDay: commitment.dueDay,
+          nextDueAt: commitment.nextDueAt,
+          createdAt: commitment._creationTime,
+        });
         const coverage = commitmentCoverageById.get(commitment._id);
         const covered = coverage?.covered ?? 0;
         const remaining = coverage?.remaining ?? commitment.amount;
@@ -251,7 +267,7 @@ export const getSummary = query({
           paidAt: commitment.paidAt,
           paidForCycleId: commitment.paidForCycleId,
           activeCycleId: activeCycle._id,
-          dueDay: commitment.dueDay,
+          nextDueAt,
           now,
         });
 
@@ -261,7 +277,8 @@ export const getSummary = query({
           amount: commitment.amount,
           envelope: commitment.envelope,
           dueDay: commitment.dueDay,
-          daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
+          nextDueAt,
+          daysUntilDue: daysUntilNextDue(nextDueAt, now),
           covered,
           remaining,
           progressPercent: computeCoverageProgressPercent(

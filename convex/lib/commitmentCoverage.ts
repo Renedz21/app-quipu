@@ -1,12 +1,16 @@
-import { daysUntilDueDay } from "./dashboardMath";
-
-const LIMA_TIMEZONE = "America/Lima";
+import {
+  daysUntilNextDue,
+  isPastNextDue,
+  resolveCommitmentNextDueAt,
+} from "./commitmentDueDate";
 
 export type CommitmentSlice = {
   id: string;
   amount: number;
   envelope: "needs" | "wants";
   dueDay: number;
+  nextDueAt?: number;
+  createdAt?: number;
 };
 
 export type CycleSlice = {
@@ -47,29 +51,27 @@ export type CommitmentCoverageResult = {
 
 export type DashboardCoverageStatus = "covered" | "partial" | "uncovered";
 
-function getLimaDay(now: number): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
-  }).formatToParts(new Date(now));
-
-  return Number(parts.find((part) => part.type === "day")?.value ?? 1);
-}
-
-function isPastDueDay(dueDay: number, now: number): boolean {
-  return getLimaDay(now) > dueDay;
+function resolveCoverageNextDueAt(
+  commitment: CommitmentSlice,
+  now: number,
+): number {
+  return resolveCommitmentNextDueAt({
+    dueDay: commitment.dueDay,
+    nextDueAt: commitment.nextDueAt,
+    createdAt: commitment.createdAt ?? now,
+  });
 }
 
 export function resolveCommitmentCoverageStatus(params: {
   covered: number;
   remaining: number;
-  dueDay: number;
+  nextDueAt: number;
   now: number;
 }): CommitmentCoverageStatus {
-  const { covered, remaining, dueDay, now } = params;
+  const { covered, remaining, nextDueAt, now } = params;
 
   if (remaining <= 0) return "covered";
-  if (isPastDueDay(dueDay, now)) return "overdue";
+  if (isPastNextDue(nextDueAt, now)) return "overdue";
   if (covered > 0) return "partial";
   return "not-started";
 }
@@ -207,6 +209,7 @@ export function computeAllCommitmentCoverage(params: {
       }
 
       const remaining = commitment.amount - covered;
+      const nextDueAt = resolveCoverageNextDueAt(commitment, now);
       results.set(commitment.id, {
         covered,
         remaining,
@@ -214,7 +217,7 @@ export function computeAllCommitmentCoverage(params: {
         status: resolveCommitmentCoverageStatus({
           covered,
           remaining,
-          dueDay: commitment.dueDay,
+          nextDueAt,
           now,
         }),
       });
@@ -231,7 +234,7 @@ export function computeAllCommitmentCoverage(params: {
       status: resolveCommitmentCoverageStatus({
         covered: 0,
         remaining: commitment.amount,
-        dueDay: commitment.dueDay,
+        nextDueAt: resolveCoverageNextDueAt(commitment, now),
         now,
       }),
     });
@@ -263,7 +266,7 @@ export function computeCommitmentCoverage(params: {
       status: resolveCommitmentCoverageStatus({
         covered: 0,
         remaining: params.commitment.amount,
-        dueDay: params.commitment.dueDay,
+        nextDueAt: resolveCoverageNextDueAt(params.commitment, params.now),
         now: params.now,
       }),
     }
@@ -289,4 +292,4 @@ export function computeUncoveredCommitmentRemainingCents(
     .reduce((acc, commitment) => acc + commitment.remaining, 0);
 }
 
-export { daysUntilDueDay };
+export { daysUntilNextDue };

@@ -116,7 +116,12 @@ describe("computeCommitmentCoverage", () => {
   });
 
   it("marks overdue when due day passed and commitment is not fully covered", () => {
-    const rent = commitment({ id: "rent", amount: 100_000, dueDay: 5 });
+    const rent = commitment({
+      id: "rent",
+      amount: 100_000,
+      dueDay: 5,
+      nextDueAt: Date.parse("2026-07-05T05:00:00-05:00"),
+    });
     const events = [
       income({
         id: "payroll",

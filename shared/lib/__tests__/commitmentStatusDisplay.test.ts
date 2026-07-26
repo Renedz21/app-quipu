@@ -21,6 +21,16 @@ describe("formatCommitmentStatusLines", () => {
     ).toEqual(["Cubierto", "Pagado el 12 ago. 2026"]);
   });
 
+  it("shows vence hoy when due today and pending", () => {
+    expect(
+      formatCommitmentStatusLines({
+        coverageStatus: "covered",
+        paymentStatus: "pending",
+        daysUntilDue: 0,
+      }),
+    ).toEqual(["Cubierto", "Vence hoy"]);
+  });
+
   it("shows overdue payment line even when not covered", () => {
     expect(
       formatCommitmentStatusLines({

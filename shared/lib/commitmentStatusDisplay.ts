@@ -19,12 +19,16 @@ export function formatCoverageStatusLabel(
 export function formatPaymentStatusLabel(
   paymentStatus: CommitmentPaymentStatusLabel,
   paidAtForCycle?: number,
+  daysUntilDue?: number,
 ): string {
   if (paymentStatus === "paid" && paidAtForCycle != null) {
     return `Pagado el ${formatLimaDate(paidAtForCycle)}`;
   }
   if (paymentStatus === "overdue") {
     return "Vencido";
+  }
+  if (daysUntilDue === 0) {
+    return "Vence hoy";
   }
   return "Pendiente de pago";
 }
@@ -33,6 +37,7 @@ export function formatCommitmentStatusLines(params: {
   coverageStatus: CommitmentCoverageStatusLabel;
   paymentStatus: CommitmentPaymentStatusLabel;
   paidAtForCycle?: number;
+  daysUntilDue?: number;
 }): string[] {
   const lines: string[] = [formatCoverageStatusLabel(params.coverageStatus)];
 
@@ -47,7 +52,9 @@ export function formatCommitmentStatusLines(params: {
   }
 
   if (params.coverageStatus === "covered") {
-    lines.push("Pendiente de pago");
+    lines.push(
+      formatPaymentStatusLabel("pending", undefined, params.daysUntilDue),
+    );
   }
 
   return lines;

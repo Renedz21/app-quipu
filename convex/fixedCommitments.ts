@@ -4,9 +4,14 @@ import { mutation, query } from "./_generated/server";
 import {
   computeAllCommitmentCoverage,
   computeCoverageProgressPercent,
-  daysUntilDueDay,
+  daysUntilNextDue,
   mapCoverageStatusToDashboard,
 } from "./lib/commitmentCoverage";
+import {
+  computeInitialNextDueAt,
+  computeNextDueAtAfterPayment,
+  resolveCommitmentNextDueAt,
+} from "./lib/commitmentDueDate";
 import {
   isCommitmentPaidForCycle,
   resolveCommitmentPaymentStatus,
@@ -81,12 +86,16 @@ export const createFixedCommitment = mutation({
       });
     }
 
+    const createdAt = Date.now();
+    const nextDueAt = computeInitialNextDueAt(args.dueDay, createdAt);
+
     return await ctx.db.insert("fixedCommitments", {
       profileId: profile._id,
       name,
       amount: args.amount,
       envelope: args.envelope,
       dueDay: args.dueDay,
+      nextDueAt,
     });
   },
 });
@@ -181,9 +190,21 @@ export const markCommitmentAsPaid = mutation({
     }
 
     const paidAt = Date.now();
+    const currentNextDueAt = resolveCommitmentNextDueAt({
+      dueDay: commitment.dueDay,
+      nextDueAt: commitment.nextDueAt,
+      createdAt: commitment._creationTime,
+    });
+    const nextDueAt = computeNextDueAtAfterPayment({
+      currentNextDueAt,
+      dueDay: commitment.dueDay,
+      now: paidAt,
+    });
+
     await ctx.db.patch(args.commitmentId, {
       paidAt,
       paidForCycleId: activeCycle._id,
+      nextDueAt,
     });
 
     return { success: true as const, paidAt };
@@ -254,13 +275,16 @@ export const createCommitmentsBulk = mutation({
     }
 
     const ids: Id<"fixedCommitments">[] = [];
+    const createdAt = Date.now();
     for (const c of args.commitments) {
+      const nextDueAt = computeInitialNextDueAt(c.dueDay, createdAt);
       const id = await ctx.db.insert("fixedCommitments", {
         profileId: args.profileId,
         name: c.name.trim(),
         amount: c.amount,
         envelope: c.envelope,
         dueDay: c.dueDay,
+        nextDueAt,
       });
       ids.push(id);
     }
@@ -289,6 +313,11 @@ export const getCommitment = query({
       .unique();
 
     let coverageStatus: "covered" | "partial" | "uncovered" = "uncovered";
+    const nextDueAt = resolveCommitmentNextDueAt({
+      dueDay: commitment.dueDay,
+      nextDueAt: commitment.nextDueAt,
+      createdAt: commitment._creationTime,
+    });
     if (activeCycle) {
       const incomeEvents = await ctx.db
         .query("incomeEvents")
@@ -301,6 +330,8 @@ export const getCommitment = query({
             amount: commitment.amount,
             envelope: commitment.envelope,
             dueDay: commitment.dueDay,
+            nextDueAt: commitment.nextDueAt,
+            createdAt: commitment._creationTime,
           },
         ],
         cycle: {
@@ -324,7 +355,7 @@ export const getCommitment = query({
       paidAt: commitment.paidAt,
       paidForCycleId: commitment.paidForCycleId,
       activeCycleId: activeCycle?._id ?? null,
-      dueDay: commitment.dueDay,
+      nextDueAt,
       now,
     });
 
@@ -334,6 +365,8 @@ export const getCommitment = query({
       amount: commitment.amount,
       envelope: commitment.envelope,
       dueDay: commitment.dueDay,
+      nextDueAt,
+      daysUntilDue: daysUntilNextDue(nextDueAt, now),
       coveredAt: commitment.coveredAt,
       coverageStatus,
       paymentStatus,
@@ -377,29 +410,37 @@ export const getCommitmentCoverage = query({
         cycle: null,
         cycleId: null,
         totalCents,
-        commitments: commitments.map((commitment) => ({
-          id: commitment._id,
-          name: commitment.name,
-          amount: commitment.amount,
-          envelope: commitment.envelope,
-          dueDay: commitment.dueDay,
-          daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
-          covered: 0,
-          remaining: commitment.amount,
-          progressPercent: 0,
-          coverageStatus: "uncovered" as const,
-          cascadeStatus: "not-started" as const,
-          fundingEvents: [],
-          coveredAt: commitment.coveredAt,
-          paymentStatus: resolveCommitmentPaymentStatus({
-            paidAt: commitment.paidAt,
-            paidForCycleId: commitment.paidForCycleId,
-            activeCycleId: null,
+        commitments: commitments.map((commitment) => {
+          const nextDueAt = resolveCommitmentNextDueAt({
             dueDay: commitment.dueDay,
-            now,
-          }),
-          paidAtForCycle: undefined,
-        })),
+            nextDueAt: commitment.nextDueAt,
+            createdAt: commitment._creationTime,
+          });
+          return {
+            id: commitment._id,
+            name: commitment.name,
+            amount: commitment.amount,
+            envelope: commitment.envelope,
+            dueDay: commitment.dueDay,
+            daysUntilDue: daysUntilNextDue(nextDueAt, now),
+            nextDueAt,
+            covered: 0,
+            remaining: commitment.amount,
+            progressPercent: 0,
+            coverageStatus: "uncovered" as const,
+            cascadeStatus: "not-started" as const,
+            fundingEvents: [],
+            coveredAt: commitment.coveredAt,
+            paymentStatus: resolveCommitmentPaymentStatus({
+              paidAt: commitment.paidAt,
+              paidForCycleId: commitment.paidForCycleId,
+              activeCycleId: null,
+              nextDueAt,
+              now,
+            }),
+            paidAtForCycle: undefined,
+          };
+        }),
       };
     }
 
@@ -414,6 +455,8 @@ export const getCommitmentCoverage = query({
         amount: commitment.amount,
         envelope: commitment.envelope,
         dueDay: commitment.dueDay,
+        nextDueAt: commitment.nextDueAt,
+        createdAt: commitment._creationTime,
       })),
       cycle: {
         startDate: activeCycle.startDate,
@@ -439,6 +482,11 @@ export const getCommitmentCoverage = query({
       totalCents,
       commitments: commitments
         .map((commitment) => {
+          const nextDueAt = resolveCommitmentNextDueAt({
+            dueDay: commitment.dueDay,
+            nextDueAt: commitment.nextDueAt,
+            createdAt: commitment._creationTime,
+          });
           const coverage = coverageById.get(commitment._id);
           const covered = coverage?.covered ?? 0;
           const remaining = coverage?.remaining ?? commitment.amount;
@@ -447,7 +495,7 @@ export const getCommitmentCoverage = query({
             paidAt: commitment.paidAt,
             paidForCycleId: commitment.paidForCycleId,
             activeCycleId: activeCycle._id,
-            dueDay: commitment.dueDay,
+            nextDueAt,
             now,
           });
 
@@ -457,7 +505,8 @@ export const getCommitmentCoverage = query({
             amount: commitment.amount,
             envelope: commitment.envelope,
             dueDay: commitment.dueDay,
-            daysUntilDue: daysUntilDueDay(commitment.dueDay, now),
+            nextDueAt,
+            daysUntilDue: daysUntilNextDue(nextDueAt, now),
             covered,
             remaining,
             progressPercent: computeCoverageProgressPercent(

@@ -7,10 +7,10 @@ import {
 const CYCLE_A = "cycle_a" as never;
 const CYCLE_B = "cycle_b" as never;
 
-// 2026-08-15 12:00 Lima → day 15
-const AUG_15_NOON = new Date("2026-08-15T17:00:00.000Z").getTime();
-// 2026-08-20 12:00 Lima → day 20 (due day 18 passed)
-const AUG_20_NOON = new Date("2026-08-20T17:00:00.000Z").getTime();
+const FEB_6 = new Date("2026-02-06T05:00:00.000Z").getTime();
+const JAN_20_NOON = new Date("2026-01-20T17:00:00.000Z").getTime();
+const FEB_7_NOON = new Date("2026-02-07T17:00:00.000Z").getTime();
+const FEB_5_NOON = new Date("2026-02-05T17:00:00.000Z").getTime();
 
 describe("isCommitmentPaidForCycle", () => {
   it("returns true when paidForCycleId matches active cycle", () => {
@@ -30,44 +30,73 @@ describe("resolveCommitmentPaymentStatus", () => {
   it("returns paid when marked for the active cycle", () => {
     expect(
       resolveCommitmentPaymentStatus({
-        paidAt: AUG_15_NOON,
+        paidAt: JAN_20_NOON,
         paidForCycleId: CYCLE_A,
         activeCycleId: CYCLE_A,
-        dueDay: 30,
-        now: AUG_15_NOON,
+        nextDueAt: FEB_6,
+        now: JAN_20_NOON,
       }),
     ).toBe("paid");
   });
 
-  it("returns pending before due day when not paid", () => {
+  it("returns pending before next due when not paid", () => {
     expect(
       resolveCommitmentPaymentStatus({
         activeCycleId: CYCLE_A,
-        dueDay: 30,
-        now: AUG_15_NOON,
+        nextDueAt: FEB_6,
+        now: JAN_20_NOON,
       }),
     ).toBe("pending");
   });
 
-  it("returns overdue after due day when not paid", () => {
+  it("returns pending on the due date", () => {
     expect(
       resolveCommitmentPaymentStatus({
         activeCycleId: CYCLE_A,
-        dueDay: 18,
-        now: AUG_20_NOON,
+        nextDueAt: FEB_6,
+        now: FEB_6,
+      }),
+    ).toBe("pending");
+  });
+
+  it("returns overdue after next due when not paid", () => {
+    expect(
+      resolveCommitmentPaymentStatus({
+        activeCycleId: CYCLE_A,
+        nextDueAt: FEB_6,
+        now: FEB_7_NOON,
       }),
     ).toBe("overdue");
   });
 
-  it("returns paid even when due day passed", () => {
+  it("does not mark newly created commitments overdue before first due", () => {
     expect(
       resolveCommitmentPaymentStatus({
-        paidAt: AUG_20_NOON,
+        activeCycleId: CYCLE_A,
+        nextDueAt: FEB_6,
+        now: JAN_20_NOON,
+      }),
+    ).toBe("pending");
+  });
+
+  it("returns paid even when next due passed", () => {
+    expect(
+      resolveCommitmentPaymentStatus({
+        paidAt: FEB_7_NOON,
         paidForCycleId: CYCLE_A,
         activeCycleId: CYCLE_A,
-        dueDay: 18,
-        now: AUG_20_NOON,
+        nextDueAt: FEB_6,
+        now: FEB_7_NOON,
       }),
     ).toBe("paid");
+  });
+
+  it("returns pending without active cycle even if due passed", () => {
+    expect(
+      resolveCommitmentPaymentStatus({
+        nextDueAt: FEB_6,
+        now: FEB_5_NOON,
+      }),
+    ).toBe("pending");
   });
 });

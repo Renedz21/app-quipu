@@ -8,6 +8,7 @@ export const ADD_COMMITMENT_TITLE = "Nuevo compromiso";
 export const COMMITMENT_NAME_LABEL = "Nombre";
 export const COMMITMENT_AMOUNT_LABEL = "Monto (S/)";
 export const COMMITMENT_DUE_LABEL = "Día del mes";
+export const COMMITMENT_NEXT_DUE_LABEL = "Próximo pago";
 export const COMMITMENT_ENVELOPE_LABEL = "Sobre";
 export const COMMITMENT_CREATED_TOAST = "Compromiso agregado.";
 export const COMMITMENT_MARK_PAID = "Marcar como pagado";

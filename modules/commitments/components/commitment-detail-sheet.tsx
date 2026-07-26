@@ -18,7 +18,9 @@ import {
   COMMITMENT_COVERAGE_LABEL,
   COMMITMENT_MARK_PAID,
   COMMITMENT_MARK_PAID_SUCCESS,
+  COMMITMENT_NEXT_DUE_LABEL,
   COMMITMENT_PAYMENT_LABEL,
+  formatDueInDays,
 } from "@/shared/constants/commitments";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
@@ -26,6 +28,7 @@ import {
   formatCoverageStatusLabel,
   formatPaymentStatusLabel,
 } from "@/shared/lib/commitmentStatusDisplay";
+import { formatLimaDate } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
@@ -106,8 +109,15 @@ export function CommitmentDetailSheet({
             </dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-mute">Vencimiento</dt>
-            <dd className="font-medium text-ink">Día {detail.dueDay}</dd>
+            <dt className="text-mute">{COMMITMENT_NEXT_DUE_LABEL}</dt>
+            <dd className="text-right font-medium text-ink">
+              <div>{formatLimaDate(detail.nextDueAt)}</div>
+              {detail.paymentStatus !== "paid" ? (
+                <div className="text-xs font-normal text-mute">
+                  {formatDueInDays(detail.daysUntilDue)}
+                </div>
+              ) : null}
+            </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-mute">{COMMITMENT_COVERAGE_LABEL}</dt>
@@ -130,6 +140,7 @@ export function CommitmentDetailSheet({
               {formatPaymentStatusLabel(
                 detail.paymentStatus,
                 detail.paidAtForCycle,
+                detail.daysUntilDue,
               )}
             </dd>
           </div>

@@ -181,6 +181,166 @@ export const getRecentExpenses = query({
   },
 });
 
+export const updateExpense = mutation({
+  args: {
+    expenseId: v.id("expenses"),
+    amount: v.number(),
+    description: v.string(),
+    envelopeType: v.union(v.literal("needs"), v.literal("wants")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+    if (!Number.isInteger(args.amount) || args.amount <= 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "El monto debe ser un entero de céntimos mayor a cero.",
+        data: { field: "amount" },
+      });
+    }
+    if (args.description.length > 120) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La descripción no puede superar 120 caracteres.",
+        data: { field: "description" },
+      });
+    }
+
+    const expense = await ctx.db.get(args.expenseId);
+    if (!expense) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "El gasto no existe.",
+      });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile || expense.profileId !== profile._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "No tienes permisos para editar este registro.",
+      });
+    }
+
+    const cycle = await ctx.db.get(expense.cycleId);
+    if (cycle?.status !== "active") {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Solo puedes editar gastos del ciclo activo.",
+      });
+    }
+
+    const oldEnvelope = await ctx.db.get(expense.envelopeId);
+    if (!oldEnvelope) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "El sobre asociado a este gasto ya no existe.",
+      });
+    }
+
+    const now = Date.now();
+    let newEnvelopeId = expense.envelopeId;
+
+    if (oldEnvelope.type === args.envelopeType) {
+      // Same envelope: delta-patch remaining amount.
+      const delta = args.amount - expense.amount;
+      await ctx.db.patch(oldEnvelope._id, {
+        remainingAmount: oldEnvelope.remainingAmount - delta,
+      });
+    } else {
+      // Envelope type changed: restore to old, deduct from new.
+      await ctx.db.patch(oldEnvelope._id, {
+        remainingAmount: oldEnvelope.remainingAmount + expense.amount,
+      });
+
+      const newEnvelope = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", expense.cycleId).eq("type", args.envelopeType),
+        )
+        .unique();
+      if (!newEnvelope) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "El sobre destino no existe en el ciclo actual.",
+        });
+      }
+      await ctx.db.patch(newEnvelope._id, {
+        remainingAmount: newEnvelope.remainingAmount - args.amount,
+      });
+      newEnvelopeId = newEnvelope._id;
+    }
+
+    await ctx.db.patch(args.expenseId, {
+      amount: args.amount,
+      description: args.description.trim(),
+      envelopeId: newEnvelopeId,
+      updatedAt: now,
+    });
+
+    // Re-evaluate coach burn warning when wants envelope is involved.
+    if (args.envelopeType === "wants") {
+      const wantsEnvelope = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", expense.cycleId).eq("type", "wants"),
+        )
+        .unique();
+      if (
+        wantsEnvelope &&
+        cycle &&
+        shouldWarnWantsBurn({
+          allocated: wantsEnvelope.allocatedAmount,
+          remaining: wantsEnvelope.remainingAmount,
+          cycleStart: cycle.startDate,
+          cycleEnd: cycle.endDate,
+          now,
+        })
+      ) {
+        const existing = await ctx.db
+          .query("coachInteractions")
+          .withIndex("by_profile_status", (q) =>
+            q.eq("profileId", profile._id).eq("status", "pending"),
+          )
+          .filter((q) => q.eq(q.field("triggerEvent"), WANTS_OVERFLOW_EVENT))
+          .first();
+
+        if (!existing) {
+          const burnPct =
+            ((wantsEnvelope.allocatedAmount - wantsEnvelope.remainingAmount) /
+              wantsEnvelope.allocatedAmount) *
+            100;
+          const daysElapsed = (now - cycle.startDate) / MS_PER_DAY;
+          const nudge = buildWantsOverflowNudge({
+            profileName: profile.name,
+            burnPercent: burnPct,
+            daysElapsed,
+          });
+          await ctx.db.insert("coachInteractions", {
+            profileId: profile._id,
+            cycleId: expense.cycleId,
+            triggerEvent: nudge.triggerEvent,
+            initialNudge: nudge.initialNudge,
+            options: nudge.options,
+            status: "pending",
+            createdAt: now,
+          });
+        }
+      }
+    }
+
+    return { success: true };
+  },
+});
+
 export const deleteExpense = mutation({
   args: { expenseId: v.id("expenses") },
   handler: async (ctx, args) => {

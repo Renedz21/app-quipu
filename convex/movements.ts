@@ -1,6 +1,5 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { mergeRecentMovements } from "./lib/dashboardMath";
 
 const MOVEMENTS_LIST_LIMIT = 500;
 
@@ -38,14 +37,7 @@ export const listForActiveCycle = query({
       return {
         currencyCode: profile.currencyCode,
         cycle: null,
-        movements: [] as Array<{
-          id: string;
-          kind: "expense" | "income";
-          label: string;
-          envelopeLabel?: string;
-          amount: number;
-          timestamp: number;
-        }>,
+        movements: [] as ReturnType<typeof buildMovements>,
       };
     }
 
@@ -72,30 +64,12 @@ export const listForActiveCycle = query({
         .collect(),
     ]);
 
-    const movements = mergeRecentMovements(
-      expensesRaw.map((expense) => ({
-        id: expense._id,
-        description: expense.description,
-        amount: expense.amount,
-        timestamp: expense.timestamp,
-        envelopeType: envelopeTypeById.get(expense.envelopeId),
-      })),
-      incomesRaw
-        .sort((a, b) => b.occurredAt - a.occurredAt)
-        .map((income) => ({
-          id: income._id,
-          description: income.description,
-          amount: income.amount,
-          occurredAt: income.occurredAt,
-          incomeKind: income.incomeKind,
-        })),
+    const movements = buildMovements(
+      expensesRaw,
+      incomesRaw,
+      envelopeTypeById,
       MOVEMENTS_LIST_LIMIT,
-    ).map((movement) => ({
-      ...movement,
-      envelopeLabel: movement.envelopeLabel
-        ? envelopeLabel(movement.envelopeLabel as "needs" | "wants" | "savings")
-        : undefined,
-    }));
+    );
 
     return {
       currencyCode: profile.currencyCode,
@@ -107,3 +81,68 @@ export const listForActiveCycle = query({
     };
   },
 });
+
+function buildMovements(
+  expenses: Doc<"expenses">[],
+  incomes: Doc<"incomeEvents">[],
+  envelopeTypeById: Map<Id<"envelopes">, Doc<"envelopes">["type"]>,
+  limit: number,
+) {
+  type ExpenseRow = {
+    id: string;
+    kind: "expense";
+    label: string;
+    envelopeLabel?: string;
+    amount: number;
+    timestamp: number;
+    isExtraordinaryIncome?: false;
+    envelopeType?: "needs" | "wants";
+  };
+
+  type IncomeRow = {
+    id: string;
+    kind: "income";
+    label: string;
+    amount: number;
+    timestamp: number;
+    isExtraordinaryIncome?: boolean;
+    occurredAt: number;
+    source: Doc<"incomeEvents">["source"];
+    incomeKind?: "habitual" | "extraordinary";
+    extraordinaryType?: Doc<"incomeEvents">["extraordinaryType"];
+    extraordinaryLabel?: string;
+    distributionPolicy?: Doc<"incomeEvents">["distributionPolicy"];
+  };
+
+  const expenseRows: ExpenseRow[] = expenses.map((expense) => {
+    const type = envelopeTypeById.get(expense.envelopeId);
+    return {
+      id: expense._id,
+      kind: "expense",
+      label: expense.description,
+      envelopeLabel: type ? envelopeLabel(type) : undefined,
+      amount: expense.amount,
+      timestamp: expense.timestamp,
+      envelopeType: type === "needs" || type === "wants" ? type : undefined,
+    };
+  });
+
+  const incomeRows: IncomeRow[] = incomes.map((income) => ({
+    id: income._id,
+    kind: "income",
+    label: income.description,
+    amount: income.amount,
+    timestamp: income.occurredAt,
+    isExtraordinaryIncome: income.incomeKind === "extraordinary",
+    occurredAt: income.occurredAt,
+    source: income.source,
+    incomeKind: income.incomeKind,
+    extraordinaryType: income.extraordinaryType,
+    extraordinaryLabel: income.extraordinaryLabel,
+    distributionPolicy: income.distributionPolicy,
+  }));
+
+  return [...expenseRows, ...incomeRows]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, limit);
+}

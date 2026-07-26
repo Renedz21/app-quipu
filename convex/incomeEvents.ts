@@ -21,11 +21,8 @@ import {
   type ExtraordinaryType,
   sourceForExtraordinaryType,
 } from "./lib/extraordinaryIncome";
-import {
-  computeDistributableCents,
-  validateHeldCents,
-} from "./lib/incomeHold";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
+import { computeDistributableCents, validateHeldCents } from "./lib/incomeHold";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const HORIZON_DAYS = 15; // v2.5 initial: fixed at 15 for variable income model.
@@ -95,7 +92,10 @@ export const createIncomeEvent = mutation({
       }
     }
 
-    const distributableCents = computeDistributableCents(args.amount, heldCents);
+    const distributableCents = computeDistributableCents(
+      args.amount,
+      heldCents,
+    );
 
     const incomeKind = args.incomeKind ?? "habitual";
     let resolvedSource = args.source;
@@ -395,6 +395,7 @@ export const updateIncomeEvent = mutation({
     extraordinaryType: v.optional(extraordinaryTypeValidator),
     extraordinaryLabel: v.optional(v.string()),
     distributionPolicy: v.optional(distributionPolicyValidator),
+    heldCents: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -409,40 +410,6 @@ export const updateIncomeEvent = mutation({
         code: "VALIDATION_ERROR",
         message: "El monto debe ser un entero de céntimos mayor a cero.",
         data: { field: "amount" },
-      });
-    }
-
-    const event = await ctx.db.get(args.eventId);
-    if (!event) {
-      throw new ConvexError({ code: "NOT_FOUND", message: "El ingreso no existe." });
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || event.profileId !== profile._id) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "No tienes permisos para editar este registro.",
-      });
-    }
-
-    const cycle = await ctx.db.get(event.cycleId);
-    if (cycle?.status !== "active") {
-      throw new ConvexError({
-        code: "VALIDATION_ERROR",
-        message: "Solo puedes editar ingresos del ciclo activo.",
-      });
-    }
-
-    // Validate occurredAt is within the active cycle window.
-    if (args.occurredAt < cycle.startDate || args.occurredAt >= cycle.endDate) {
-      throw new ConvexError({
-        code: "VALIDATION_ERROR",
-        message:
-          "La fecha debe estar dentro de la ventana del ciclo activo.",
-        data: { field: "occurredAt" },
       });
     }
 
@@ -517,30 +484,88 @@ export const updateIncomeEvent = mutation({
       }
     }
 
-    // Compute new distribution for this event.
+    const event = await ctx.db.get(args.eventId);
+    if (!event) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "El ingreso no existe.",
+      });
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile || event.profileId !== profile._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "No tienes permisos para editar este registro.",
+      });
+    }
+
+    const cycle = await ctx.db.get(event.cycleId);
+    if (cycle?.status !== "active") {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Solo puedes editar ingresos del ciclo activo.",
+      });
+    }
+
+    const now = Date.now();
+
+    // Reject occurredAt outside the cycle window or in the future.
+    if (args.occurredAt < cycle.startDate) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La fecha del ingreso debe estar dentro del ciclo activo.",
+        data: { field: "occurredAt" },
+      });
+    }
+    if (args.occurredAt > now) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La fecha del ingreso no puede ser futura.",
+        data: { field: "occurredAt" },
+      });
+    }
+
+    const heldCents = args.heldCents ?? 0;
+    if (heldCents !== 0) {
+      const holdError = validateHeldCents(args.amount, heldCents);
+      if (holdError) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: holdError,
+          data: { field: "heldCents" },
+        });
+      }
+    }
+    const distributableCents = computeDistributableCents(
+      args.amount,
+      heldCents,
+    );
+
     const weights = {
       allocationNeeds: profile.allocationNeeds,
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
     };
     const newDistribution = applyDistributionPolicy(
-      args.amount,
+      distributableCents,
       weights,
       distributionPolicy,
     );
     const oldDistribution = event.distributionApplied;
 
-    // Delta-patch envelopes: (new - old) per type.
+    // Delta-patch envelopes for this event only.
     const envelopes = await ctx.db
       .query("envelopes")
-      .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycle._id))
+      .withIndex("by_cycle_type", (q) => q.eq("cycleId", event.cycleId))
       .collect();
 
     await Promise.all(
       envelopes.map((env) => {
-        const oldAmt = oldDistribution[env.type] ?? 0;
-        const newAmt = newDistribution[env.type] ?? 0;
-        const delta = newAmt - oldAmt;
+        const delta = newDistribution[env.type] - oldDistribution[env.type];
         return ctx.db.patch(env._id, {
           allocatedAmount: env.allocatedAmount + delta,
           remainingAmount: env.remainingAmount + delta,
@@ -548,16 +573,14 @@ export const updateIncomeEvent = mutation({
       }),
     );
 
-    // Delta-patch totalIncomeReceived.
+    // Delta-patch the cycle's total income.
     const amountDelta = args.amount - event.amount;
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: cycle.totalIncomeReceived + amountDelta,
     });
 
-    const now = Date.now();
-
-    // Update the event document.
-    await ctx.db.patch(event._id, {
+    // Patch the event document.
+    await ctx.db.patch(args.eventId, {
       amount: args.amount,
       source: resolvedSource,
       description: resolvedDescription,
@@ -565,18 +588,26 @@ export const updateIncomeEvent = mutation({
       incomeKind,
       distributionApplied: newDistribution,
       updatedAt: now,
-      ...(extraordinaryType !== undefined
-        ? { extraordinaryType, extraordinaryLabel, distributionPolicy }
+      ...(heldCents > 0 ? { heldCents } : { heldCents: undefined }),
+      ...(incomeKind === "extraordinary" && extraordinaryType !== undefined
+        ? {
+            extraordinaryType,
+            extraordinaryLabel,
+            distributionPolicy,
+          }
         : {
-            // Clear extraordinary fields if switching to habitual.
             extraordinaryType: undefined,
             extraordinaryLabel: undefined,
             distributionPolicy: undefined,
           }),
     });
 
-    // Re-evaluate commitment coverage.
-    await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycle._id, now);
+    await evaluateCommitmentCoverageForCycle(
+      ctx,
+      profile._id,
+      event.cycleId,
+      now,
+    );
 
     return { success: true };
   },

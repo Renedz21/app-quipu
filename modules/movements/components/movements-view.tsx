@@ -4,15 +4,13 @@ import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
+import type { IncomeSource } from "@/modules/income/types";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate, formatLimaDateTime } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
-import type { IncomeSource } from "@/modules/income/types";
-import { MovementDetailSheet } from "./movement-detail-sheet";
-import type { MovementForDetail } from "./movement-detail-sheet";
 import {
   MOVEMENTS_BACK_LINK,
   MOVEMENTS_EMPTY_BODY,
@@ -27,6 +25,8 @@ import {
   MOVEMENTS_PAGE_SUBTITLE,
   MOVEMENTS_PAGE_TITLE,
 } from "../constants";
+import type { MovementForDetail } from "./movement-detail-sheet";
+import { MovementDetailSheet } from "./movement-detail-sheet";
 
 const MOVEMENT_DOT = {
   expense: {
@@ -49,14 +49,20 @@ function MovementsViewSkeleton() {
 }
 
 type MovementItem = NonNullable<
-  NonNullable<ReturnType<typeof useQuery<typeof api.movements.listForActiveCycle>>>
+  NonNullable<
+    ReturnType<typeof useQuery<typeof api.movements.listForActiveCycle>>
+  >
 >["movements"][number];
 
 function dotClass(movement: MovementItem): string {
   if (movement.kind === "income") {
-    return movement.isExtraordinaryIncome ? "bg-extraordinary-a" : MOVEMENT_DOT.income;
+    return movement.isExtraordinaryIncome
+      ? "bg-extraordinary-a"
+      : MOVEMENT_DOT.income;
   }
-  const label = movement.envelopeLabel as keyof typeof MOVEMENT_DOT.expense | undefined;
+  const label = movement.envelopeLabel as
+    | keyof typeof MOVEMENT_DOT.expense
+    | undefined;
   if (label === "Necesidades") return MOVEMENT_DOT.expense.Necesidades;
   if (label === "Gustos") return MOVEMENT_DOT.expense.Gustos;
   return MOVEMENT_DOT.expense.default;
@@ -177,10 +183,7 @@ export function MovementsView() {
               </p>
               <Link
                 href="/income/register"
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "mt-6",
-                )}
+                className={cn(buttonVariants({ variant: "outline" }), "mt-6")}
               >
                 {MOVEMENTS_EMPTY_CTA}
               </Link>
@@ -227,9 +230,7 @@ export function MovementsView() {
                     </span>
                     <span
                       className={`min-w-20 text-right font-serif text-[15px] ${
-                        movement.kind === "income"
-                          ? "text-qp-deep"
-                          : "text-ink"
+                        movement.kind === "income" ? "text-qp-deep" : "text-ink"
                       }`}
                     >
                       {movement.kind === "income" ? "+" : "−"}{" "}

@@ -9,12 +9,13 @@ import { fromConvexError } from "@/core/errors";
 import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
 import { buttonVariants } from "@/shared/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/shared/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
@@ -29,6 +30,7 @@ export function CommitmentDetailSheet({
   open,
   onOpenChange,
 }: Props) {
+  const isMobile = useIsMobile();
   const detail = useQuery(
     api.fixedCommitments.getCommitment,
     commitmentId ? { commitmentId } : "skip",
@@ -54,63 +56,83 @@ export function CommitmentDetailSheet({
     }
   }
 
+  const title = detail?.name ?? "Compromiso";
+
+  const body = (
+    <>
+      {detail === undefined ? (
+        <div className="h-24 animate-pulse rounded-xl bg-surface" />
+      ) : detail === null ? (
+        <p className="text-sm text-mute">No encontramos este compromiso.</p>
+      ) : (
+        <dl className="space-y-3 text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-mute">Monto</dt>
+            <dd className="font-serif text-lg text-ink">
+              {formatCents(detail.amount, {
+                currency: detail.currencyCode,
+              })}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-mute">Sobre</dt>
+            <dd className="font-medium text-ink">
+              {ENVELOPE_LABELS[detail.envelope]}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-mute">Vencimiento</dt>
+            <dd className="font-medium text-ink">Día {detail.dueDay}</dd>
+          </div>
+          {detail.coveredAt ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-mute">Cubierto</dt>
+              <dd className="text-qp-deep">Sí</dd>
+            </div>
+          ) : null}
+        </dl>
+      )}
+      {detail ? (
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "mt-6 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
+          )}
+          onClick={() => setConfirmOpen(true)}
+        >
+          Eliminar compromiso
+        </button>
+      ) : null}
+    </>
+  );
+
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle className="font-serif text-xl">
-              {detail?.name ?? "Compromiso"}
+      {isMobile ? (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          <SheetContent
+            side="bottom"
+            showCloseButton
+            className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-3"
+          >
+            <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line" />
+            <SheetTitle className="mb-4 shrink-0 pr-8 font-serif text-xl text-ink">
+              {title}
             </SheetTitle>
-          </SheetHeader>
-          {detail === undefined ? (
-            <div className="mt-4 h-24 animate-pulse rounded-xl bg-surface" />
-          ) : detail === null ? (
-            <p className="mt-4 text-sm text-mute">
-              No encontramos este compromiso.
-            </p>
-          ) : (
-            <dl className="mt-4 space-y-3 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-mute">Monto</dt>
-                <dd className="font-serif text-lg text-ink">
-                  {formatCents(detail.amount, {
-                    currency: detail.currencyCode,
-                  })}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-mute">Sobre</dt>
-                <dd className="font-medium text-ink">
-                  {ENVELOPE_LABELS[detail.envelope]}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-mute">Vencimiento</dt>
-                <dd className="font-medium text-ink">Día {detail.dueDay}</dd>
-              </div>
-              {detail.coveredAt ? (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-mute">Cubierto</dt>
-                  <dd className="text-qp-deep">Sí</dd>
-                </div>
-              ) : null}
-            </dl>
-          )}
-          {detail ? (
-            <button
-              type="button"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "mt-6 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
-              )}
-              onClick={() => setConfirmOpen(true)}
-            >
-              Eliminar compromiso
-            </button>
-          ) : null}
-        </SheetContent>
-      </Sheet>
+            {body}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogContent className="max-w-[400px] gap-0 rounded-[22px] border-line bg-card p-0">
+            <DialogTitle className="px-5 pt-5 pr-12 font-serif text-xl text-ink">
+              {title}
+            </DialogTitle>
+            <div className="px-5 pb-5 pt-4">{body}</div>
+          </DialogContent>
+        </Dialog>
+      )}
       <ConfirmDestructiveDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}

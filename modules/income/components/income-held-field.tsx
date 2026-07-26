@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
 import { formatCents, parseToCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
@@ -29,15 +29,12 @@ export function IncomeHeldField({
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState("");
   const currentValue = heldField.state.value ?? 0;
-
-  useEffect(() => {
-    if (focused) return;
-    setDraft(
-      currentValue > 0
-        ? formatCents(currentValue, { currency: currencyCode })
-        : "",
-    );
-  }, [currentValue, currencyCode, focused]);
+  const formattedValue =
+    currentValue > 0
+      ? formatCents(currentValue, { currency: currencyCode })
+      : "";
+  // Derive when idle; only use local draft while the user is typing.
+  const displayValue = focused ? draft : formattedValue;
 
   const commit = () => {
     const trimmed = draft.trim();
@@ -104,8 +101,11 @@ export function IncomeHeldField({
             ? "border-[1.5px] border-danger bg-[#FDF7F5] focus:border-danger"
             : "border-line bg-card focus:border-qp focus:ring-[3px] focus:ring-qp/20",
         )}
-        value={draft}
-        onFocus={() => setFocused(true)}
+        value={displayValue}
+        onFocus={() => {
+          setFocused(true);
+          setDraft(formattedValue);
+        }}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => {
           setFocused(false);

@@ -723,11 +723,11 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `envelopes` | profileId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount, frozenUntil? | Saldo vivo O(1) para el dashboard |
 | `subEnvelopes` | profileId, parentEnvelopeType (**solo "savings"**), label, emoji, currentAmount, targetAmount?, isSystemDefault | Metas de ahorro; `isSystemDefault` = Fondo de Emergencia |
 | `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay?` (1–31, Lima), `coveredAt?`, `coveredBy?` | El compromiso vive en el calendario; cobertura cascada desde incomeEvents del ciclo |
-| `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp | Hechos inmutables |
+| `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp | Hechos del ciclo; **edición en ciclo activo** decidida 2026-07-26 (spec; aún sin `update*`) |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
-| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings) | Log unificado; `distributionApplied` nunca se recalcula; campos extraordinarios P2-7 |
+| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings) | Log unificado; `distributionApplied` no se recalcula por cambios de % globales; **sí** al editar el propio evento (decisión 2026-07-26). Próximo: `heldCents` (apartado antes del 50/30/20). Campos extraordinarios P2-7 |
 
 ### 5.2 Funciones por archivo
 
@@ -759,7 +759,8 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **`incomeModel` reemplazó a `workerType`** (v2.0 → v2.5, migración widen→migrate→narrow ejecutada 2026-07-08). `workerType` y `frequency` ya no existen en el schema ni en el código.
 - **`incomeEvents` unificó** `adHocIncomes` + sueldo. Migración 1:1 con `source: "other"` (trade-off aceptado).
 - **`fixedCommitments.dueDay`** reemplazó `frequency` (first/second/every_payday). Migración de `every_payday` con pérdida aceptada (→ primer payday).
-- **Cobertura de compromisos:** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo.
+- **Cobertura de compromisos:** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo. Los `fixedCommitments` de calendario **no** se descuentan ciegamente del ingreso antes del 50/30/20 (decisión audit 2026-07-07). **Apartado por evento** (`heldCents`, decisión 2026-07-26): el usuario confirma un monto no distribuible (sugerido desde compromisos descubiertos); solo el neto se reparte. Spec: `docs/superpowers/specs/2026-07-26-edicion-movimientos-y-apartado-ingresos-design.md`.
+- **Edición de movimientos (decidido, no implementado):** `updateExpense` / `updateIncomeEvent` solo en ciclo `active`; rebuild de sobres desde hechos; `updatedAt` opcional; sin ledger de historial en v1. Misma spec.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
 - **Calendario de ciclo en Ajustes:** cambiar `payFrequency`, `paydays` o `cycleDurationDays` en `profiles` **no recalcula** el `financialCycles` activo (fechas, sobres e ingresos del ciclo en curso siguen igual). La nueva configuración aplica cuando se **abra el siguiente ciclo** (p. ej. al registrar un ingreso que cierre el ciclo actual, ver `createIncomeEvent`).
@@ -1142,6 +1143,8 @@ flowchart LR
 | P3-1 | Quipu Plus + variante C | Spec Bloque 4 §C + `detectedExpenses`; valor de producto más allá de billing Polar. |
 | P3-2 | Informe anual PDF | Generación/descarga real; v2.5 mantiene UI-only en recompensas (§2.4). |
 | P3-3 | Storybook | §3.9 — catálogo de componentes; no bloquea release. |
+| P3-4 | Apartado inteligente en ingresos (`heldCents`) | Spec 2026-07-26: bruto intacto; `distributable = amount − heldCents`; default sugerido desde compromisos descubiertos; preview Bruto/Apartado/A repartir; cobertura cuenta `heldCents`. |
+| P3-5 | Edición de ingresos y gastos (ciclo activo) | Spec 2026-07-26: `updateIncomeEvent` / `updateExpense`; rebuild de sobres; UI desde `/movements`; ciclos cerrados bloqueados; `updatedAt` sin ledger. |
 
 ### 8.6 Roadmap SaaS (orden de construcción — vigente 2026-07-22)
 
@@ -1161,9 +1164,9 @@ flowchart LR
 |---|---|
 | 1. Auth | ✅ Recuperación `/recuperar` + `/restablecer-contrasena` (2026-07-22). ✅ Verificación email (Resend en código, `requireEmailVerification`, `/verify-email`). Pendiente: panel lateral datos reales. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). |
+| 3. Dashboard | — (lista completa en `/movements` desde dashboard «Ver todo»). **P3-5:** detalle/editar/eliminar movimiento en sheet. |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
-| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. |
+| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. **Pendiente P3-4/P3-5:** apartado `heldCents` + editar desde movimientos (spec 2026-07-26). |
 | 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
 | 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
 | 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
@@ -1368,6 +1371,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-26 — Dominio financiero: edición + apartado.** Decisión de diseño (sin código aún): edición de ingresos/gastos en ciclo activo; apartado inteligente `heldCents` al registrar ingreso (neto distribuible). Spec `docs/superpowers/specs/2026-07-26-edicion-movimientos-y-apartado-ingresos-design.md`. Roadmap P3-4 / P3-5; §5.1/§5.3 y delta Bloques 3/5.
 - **2026-07-24 — Bloque 9 split + dark mode.** Ajustes separados: `/settings` (cuenta) y `/settings/system` (sistema + automatizaciones); hub móvil; modo oscuro vía `next-themes` en Preferencias; sin selector de acento ni ícono en recompensas.
 - **2026-07-24 — Bloque 6 claridad UX.** Un módulo Ahorros: Fondo=stock, ciclo=flujo; overview alinea canon (Fondo hero → metas → ciclo neutro); `/savings/fund` layout desktop; home Ahorro muestra apartado del ciclo; aporte a metas no toca el Fondo; tokens shield qp20/qp21 suavizados.
 - **2026-07-22 — DoD v2.5 + release gate.** §8.1 Definition of Done acotada (excluye Plus/variante C e PDF descargable); §8.3 P3 post-v2.5; §2.4 excepción informe UI-only; §9.3.2 CI + §9.4 checklist Vercel; §9.5 checklist Polar prod; P2-6 lint ✅; P2-8 parcial (CI, pendiente owner Vercel/D4/Polar prod).

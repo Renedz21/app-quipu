@@ -324,11 +324,7 @@ export const appTables = {
       v.literal("manual"),
       v.literal("volume"),
     ),
-    severity: v.union(
-      v.literal("low"),
-      v.literal("medium"),
-      v.literal("high"),
-    ),
+    severity: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
     snippet: v.optional(v.string()),
     status: v.union(
       v.literal("open"),

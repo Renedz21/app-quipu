@@ -7,12 +7,8 @@ import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import { AnalyticsEvents, getAuthSignupContext, track } from "@/core/analytics";
 import { clientEnv } from "@/core/env.client";
-import {
-  authFetchOptions,
-  requireTurnstileToken,
-} from "../lib/auth-fetch-options";
-import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
+import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -22,6 +18,10 @@ import {
 } from "@/shared/components/ui/field";
 import { cn } from "@/shared/lib/utils";
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
+import {
+  authFetchOptions,
+  requireTurnstileToken,
+} from "../lib/auth-fetch-options";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { signUpSchema } from "../schemas";
 import { AuthBanner } from "./auth-banner";
@@ -240,7 +240,10 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
                 }}
               </form.Field>
             </FieldGroup>
-            <TurnstileWidget onTokenChange={setTurnstileToken} className="min-h-16" />
+            <TurnstileWidget
+              onTokenChange={setTurnstileToken}
+              className="min-h-16"
+            />
             <form.Subscribe
               selector={(s: any) => [s.canSubmit, s.isSubmitting]}
             >

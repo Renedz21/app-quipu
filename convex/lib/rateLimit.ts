@@ -1,4 +1,4 @@
-import { RateLimiter, HOUR, MINUTE } from "@convex-dev/rate-limiter";
+import { HOUR, MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "../_generated/api";
 
 /** Límites distribuidos para auth y emails transaccionales. */

@@ -15,11 +15,8 @@ import {
   FieldLabel,
 } from "@/shared/components/ui/field";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
-import {
-  authFetchOptions,
-  requireTurnstileToken,
-} from "../lib/auth-fetch-options";
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
+import { requireTurnstileToken } from "../lib/auth-fetch-options";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { AuthSidePanel } from "./auth-side-panel";

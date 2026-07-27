@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clientEnv } from "@/core/env.client";
 
 declare global {
@@ -37,12 +37,21 @@ export function TurnstileWidget({
   const [scriptReady, setScriptReady] = useState(false);
   const siteKey = clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-  const renderWidget = useCallback(() => {
-    if (!siteKey || !containerRef.current || !window.turnstile) return;
+  useEffect(() => {
+    if (
+      !scriptReady ||
+      !siteKey ||
+      !containerRef.current ||
+      !window.turnstile
+    ) {
+      return;
+    }
+
     if (widgetIdRef.current) {
       window.turnstile.remove(widgetIdRef.current);
       widgetIdRef.current = null;
     }
+
     widgetIdRef.current = window.turnstile.render(containerRef.current, {
       sitekey: siteKey,
       theme: "auto",
@@ -50,16 +59,14 @@ export function TurnstileWidget({
       "expired-callback": () => onTokenChange(null),
       "error-callback": () => onTokenChange(null),
     });
-  }, [onTokenChange, siteKey]);
 
-  useEffect(() => {
-    if (scriptReady) renderWidget();
     return () => {
       if (widgetIdRef.current && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
       }
     };
-  }, [renderWidget, scriptReady]);
+  }, [onTokenChange, scriptReady]);
 
   if (!siteKey) return null;
 

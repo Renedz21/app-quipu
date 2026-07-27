@@ -1,13 +1,19 @@
 import { v } from "convex/values";
 import { components } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { internalMutation, internalQuery, mutation, type QueryCtx } from "../_generated/server";
-import { assertAdminSecret } from "../lib/adminAuth";
 import {
-  highestSeverity,
-  scanTextsForContentFlags,
-} from "../lib/contentFlags";
-import { extractEmailDomain, isBlockedEmailDomain } from "../lib/email/domainPolicy";
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+  mutation,
+  type QueryCtx,
+} from "../_generated/server";
+import { assertAdminSecret } from "../lib/adminAuth";
+import { highestSeverity, scanTextsForContentFlags } from "../lib/contentFlags";
+import {
+  extractEmailDomain,
+  isBlockedEmailDomain,
+} from "../lib/email/domainPolicy";
 
 const profileSummaryValidator = v.object({
   _id: v.id("profiles"),
@@ -80,34 +86,30 @@ async function buildInvestigationBundleForProfile(
     throw new Error("Profile not found");
   }
 
-  const incomeEvents = await ctx.db
-    .query("incomeEvents")
-    .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
-    .order("desc")
-    .take(25);
-
-  const cycles = await ctx.db
-    .query("financialCycles")
-    .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
-    .collect();
-
-  const fixedCommitments = await ctx.db
-    .query("fixedCommitments")
-    .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
-    .collect();
-
-  const openFlags = await ctx.db
-    .query("accountReviewFlags")
-    .withIndex("by_status", (q) => q.eq("status", "open"))
-    .collect();
-
-  const authUserRecord = await ctx.runQuery(
-    components.betterAuth.adapter.findOne,
-    {
-      model: "user",
-      where: [{ field: "_id", operator: "eq", value: profile.userId }],
-    },
-  );
+  const [incomeEvents, cycles, fixedCommitments, openFlags, authUserRecord] =
+    await Promise.all([
+      ctx.db
+        .query("incomeEvents")
+        .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
+        .order("desc")
+        .take(25),
+      ctx.db
+        .query("financialCycles")
+        .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("accountReviewFlags")
+        .withIndex("by_status", (q) => q.eq("status", "open"))
+        .collect(),
+      ctx.runQuery(components.betterAuth.adapter.findOne, {
+        model: "user",
+        where: [{ field: "_id", operator: "eq", value: profile.userId }],
+      }),
+    ]);
 
   const authUser =
     authUserRecord &&
@@ -194,11 +196,7 @@ export const enqueueManualReviewFlag = internalMutation({
       v.literal("volume"),
     ),
     snippet: v.optional(v.string()),
-    severity: v.union(
-      v.literal("low"),
-      v.literal("medium"),
-      v.literal("high"),
-    ),
+    severity: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
   },
   returns: v.id("accountReviewFlags"),
   handler: async (ctx, args) => {
@@ -215,7 +213,7 @@ export const enqueueManualReviewFlag = internalMutation({
 });
 
 export async function maybeFlagProfileFromTexts(
-  ctx: { db: { insert: Function; query: Function } },
+  ctx: Pick<MutationCtx, "db">,
   profileId: Id<"profiles">,
   texts: Array<string | undefined | null>,
   reason: "content" | "volume" = "content",

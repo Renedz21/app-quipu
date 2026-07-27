@@ -11,11 +11,11 @@ import {
 import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
+import { usePasskeySupport } from "../hooks/use-passkey-support";
 import {
   authFetchOptions,
   requireTurnstileToken,
 } from "../lib/auth-fetch-options";
-import { usePasskeySupport } from "../hooks/use-passkey-support";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { passwordOnlySchema } from "../schemas";
 import { AuthSidePanel } from "./auth-side-panel";

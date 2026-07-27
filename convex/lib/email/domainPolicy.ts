@@ -25,7 +25,10 @@ const GMAIL_TYPO_PATTERNS = [
 export function extractEmailDomain(email: string): string {
   const at = email.lastIndexOf("@");
   if (at < 1) return "";
-  return email.slice(at + 1).trim().toLowerCase();
+  return email
+    .slice(at + 1)
+    .trim()
+    .toLowerCase();
 }
 
 export function isBlockedEmailDomain(domain: string): boolean {

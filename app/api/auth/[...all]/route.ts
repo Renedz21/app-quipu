@@ -1,12 +1,14 @@
+import { checkBotId } from "botid/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { handler } from "@/auth/auth-server";
 import {
   authPathRequiresTurnstile,
   verifyTurnstileToken,
 } from "@/lib/turnstile/verify";
-import { checkBotId } from "botid/server";
-import { type NextRequest, NextResponse } from "next/server";
 
-async function guardAuthPost(request: NextRequest): Promise<NextResponse | null> {
+async function guardAuthPost(
+  request: NextRequest,
+): Promise<NextResponse | null> {
   if (request.method !== "POST") return null;
 
   const botCheck = await checkBotId();

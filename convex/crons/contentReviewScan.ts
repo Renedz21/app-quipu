@@ -1,10 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { maybeFlagProfileFromTexts } from "../admin/investigation";
-import {
-  highestSeverity,
-  scanTextsForContentFlags,
-} from "../lib/contentFlags";
+import { highestSeverity, scanTextsForContentFlags } from "../lib/contentFlags";
 
 export const scanOpenProfilesForContentFlags = internalMutation({
   args: {},
@@ -14,39 +11,48 @@ export const scanOpenProfilesForContentFlags = internalMutation({
   }),
   handler: async (ctx) => {
     const profiles = await ctx.db.query("profiles").take(200);
-    let flagsCreated = 0;
+    const existingOpen = await ctx.db
+      .query("accountReviewFlags")
+      .withIndex("by_status", (q) => q.eq("status", "open"))
+      .collect();
+    const flaggedProfileIds = new Set(
+      existingOpen
+        .filter((flag) => flag.reason === "content")
+        .map((flag) => flag.profileId),
+    );
 
-    for (const profile of profiles) {
-      const incomeEvents = await ctx.db
-        .query("incomeEvents")
-        .withIndex("by_profile_time", (q) => q.eq("profileId", profile._id))
-        .order("desc")
-        .take(10);
+    const scanResults = await Promise.all(
+      profiles.map(async (profile) => {
+        const incomeEvents = await ctx.db
+          .query("incomeEvents")
+          .withIndex("by_profile_time", (q) => q.eq("profileId", profile._id))
+          .order("desc")
+          .take(10);
 
-      const texts = [
-        ...incomeEvents.map((event) => event.description),
-        ...(profile.variableIncomeSources ?? []),
-      ];
-      const matches = scanTextsForContentFlags(texts);
-      if (!matches.length) continue;
+        const texts = [
+          ...incomeEvents.map((event) => event.description),
+          ...(profile.variableIncomeSources ?? []),
+        ];
+        const matches = scanTextsForContentFlags(texts);
+        return { profileId: profile._id, texts, matches };
+      }),
+    );
 
-      const existingOpen = await ctx.db
-        .query("accountReviewFlags")
-        .withIndex("by_status", (q) => q.eq("status", "open"))
-        .collect();
-      const alreadyFlagged = existingOpen.some(
-        (flag) =>
-          flag.profileId === profile._id && flag.reason === "content",
-      );
-      if (alreadyFlagged) continue;
+    const toFlag = scanResults.filter(({ profileId, matches }) => {
+      if (!matches.length) return false;
+      if (flaggedProfileIds.has(profileId)) return false;
+      return highestSeverity(matches) !== null;
+    });
 
-      const severity = highestSeverity(matches);
-      if (!severity) continue;
+    await Promise.all(
+      toFlag.map(({ profileId, texts }) =>
+        maybeFlagProfileFromTexts(ctx, profileId, texts, "content"),
+      ),
+    );
 
-      await maybeFlagProfileFromTexts(ctx, profile._id, texts, "content");
-      flagsCreated += 1;
-    }
-
-    return { profilesScanned: profiles.length, flagsCreated };
+    return {
+      profilesScanned: profiles.length,
+      flagsCreated: toFlag.length,
+    };
   },
 });

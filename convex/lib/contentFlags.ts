@@ -6,22 +6,21 @@ export type ContentFlagMatch = {
   severity: "low" | "medium" | "high";
 };
 
-const REVIEW_TERMS: Array<{ term: string; severity: ContentFlagMatch["severity"] }> =
-  [
-    { term: "extorsion", severity: "high" },
-    { term: "extorsión", severity: "high" },
-    { term: "cobro de cupo", severity: "high" },
-    { term: "vacuna", severity: "medium" },
-    { term: "narco", severity: "high" },
-    { term: "sicario", severity: "high" },
-    { term: "lavado", severity: "medium" },
-  ];
+const REVIEW_TERMS: Array<{
+  term: string;
+  severity: ContentFlagMatch["severity"];
+}> = [
+  { term: "extorsion", severity: "high" },
+  { term: "extorsión", severity: "high" },
+  { term: "cobro de cupo", severity: "high" },
+  { term: "vacuna", severity: "medium" },
+  { term: "narco", severity: "high" },
+  { term: "sicario", severity: "high" },
+  { term: "lavado", severity: "medium" },
+];
 
 function normalizeText(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase();
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 }
 
 export function scanTextForContentFlags(text: string): ContentFlagMatch[] {

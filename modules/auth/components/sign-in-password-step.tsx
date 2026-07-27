@@ -1,3 +1,4 @@
+import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -10,7 +11,6 @@ import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { RecoverPasswordLink } from "./recover-password-link";
 import { SignInPasskeyButton } from "./sign-in-passkey-button";
-import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 
 export function PasswordStep({
   form,

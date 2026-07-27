@@ -73,12 +73,6 @@ Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
   `convex/testing.ts:setMyPlan` (guard `CONVEX_DEPLOYMENT` empieza con `dev:`) no
   corre en local; el smoke de rescate premium no se puede ejercitar contra el
   backend local anónimo.
-- **E2E smoke (`pnpm test:e2e:smoke`) hoy falla contra un deployment nuevo** por
-  auth, no por infra de tests: el sign-up usa `autoSignIn:false` +
-  `requireEmailVerification:true`, así que `/api/auth/convex/token` responde 401
-  (no hay sesión). Es un tema de auth/sesión (lado Convex), independiente de la
-  paralelización. Playwright no levanta el dev server en local (solo en CI):
-  hay que tener `pnpm dev` corriendo aparte.
 - **Alcance de agentes CI/CD-front:** ajustes de CI/CD, estilos y frontend no
   requieren tocar lógica de Convex; para eso basta `pnpm dev` (+ Convex local si
   se necesita datos). Levantar Convex en la nube está fuera de ese alcance.

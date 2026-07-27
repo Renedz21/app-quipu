@@ -12,8 +12,6 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "test": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:smoke": "playwright test --grep @smoke",
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
@@ -50,7 +48,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.2",
-    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",

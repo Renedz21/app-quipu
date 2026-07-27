@@ -52,6 +52,21 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
+async function runMutationWithBusyFlag(
+  setBusy: (busy: boolean) => void,
+  run: () => Promise<unknown>,
+): Promise<string | null> {
+  setBusy(true);
+  try {
+    await run();
+    return null;
+  } catch (error) {
+    return fromConvexError(error).message;
+  } finally {
+    setBusy(false);
+  }
+}
+
 export function CommitmentDetailSheet({
   commitment,
   currencyCode,
@@ -70,31 +85,32 @@ export function CommitmentDetailSheet({
 
   async function handleMarkAsPaid() {
     if (!commitment) return;
-    setIsMarkingPaid(true);
-    try {
-      await markAsPaid({ commitmentId: commitment.id as Id<"fixedCommitments"> });
-      toast.success(COMMITMENT_MARK_PAID_SUCCESS);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsMarkingPaid(false);
+    const errorMessage = await runMutationWithBusyFlag(
+      setIsMarkingPaid,
+      async () => {
+        await markAsPaid({
+          commitmentId: commitment.id as Id<"fixedCommitments">,
+        });
+        toast.success(COMMITMENT_MARK_PAID_SUCCESS);
+      },
+    );
+    if (errorMessage) {
+      toast.error(errorMessage);
     }
   }
 
   async function handleDelete() {
     if (!commitment) return;
-    setPending(true);
-    try {
+    const errorMessage = await runMutationWithBusyFlag(setPending, async () => {
       await deleteCommitment({
         commitmentId: commitment.id as Id<"fixedCommitments">,
       });
       toast.success("Compromiso eliminado.");
       setConfirmOpen(false);
       onOpenChange(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
+    });
+    if (errorMessage) {
+      toast.error(errorMessage);
     }
   }
 

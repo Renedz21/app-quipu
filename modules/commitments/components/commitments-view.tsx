@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
-import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
 import type { CommitmentCoverageItem } from "@/shared/components/commitments/commitment-coverage-list";
+import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -26,8 +26,8 @@ import {
   COMMITMENTS_PAGE_TITLE,
   COMMITMENTS_TOTAL_SUFFIX,
 } from "../constants";
-import { CommitmentDetailSheet } from "./commitment-detail-sheet";
 import type { CommitmentForDetail } from "./commitment-detail-sheet";
+import { CommitmentDetailSheet } from "./commitment-detail-sheet";
 
 export function CommitmentsViewSkeleton() {
   return (

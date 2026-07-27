@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
@@ -25,10 +25,6 @@ import {
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import {
-  daysUntilNextDue,
-  resolveCommitmentNextDueAt,
-} from "@/shared/lib/commitmentDueDate";
-import {
   formatCoverageStatusLabel,
   formatPaymentStatusLabel,
 } from "@/shared/lib/commitmentStatusDisplay";
@@ -36,22 +32,49 @@ import { formatLimaDate } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 
+export type CommitmentForDetail = {
+  id: string;
+  name: string;
+  amount: number;
+  envelope: "needs" | "wants";
+  nextDueAt: number;
+  daysUntilDue: number;
+  coverageStatus: "covered" | "partial" | "uncovered";
+  paymentStatus?: "paid" | "pending" | "overdue";
+  paidAtForCycle?: number;
+};
+
 type Props = {
-  commitmentId: Id<"fixedCommitments"> | null;
+  commitment: CommitmentForDetail | null;
+  currencyCode: string;
+  hasActiveCycle: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
+async function runMutationWithBusyFlag(
+  setBusy: (busy: boolean) => void,
+  run: () => Promise<unknown>,
+): Promise<string | null> {
+  setBusy(true);
+  try {
+    await run();
+    return null;
+  } catch (error) {
+    return fromConvexError(error).message;
+  } finally {
+    setBusy(false);
+  }
+}
+
 export function CommitmentDetailSheet({
-  commitmentId,
+  commitment,
+  currencyCode,
+  hasActiveCycle,
   open,
   onOpenChange,
 }: Props) {
   const isMobile = useIsMobile();
-  const detail = useQuery(
-    api.fixedCommitments.getCommitment,
-    commitmentId ? { commitmentId } : "skip",
-  );
   const deleteCommitment = useMutation(
     api.fixedCommitments.deleteFixedCommitment,
   );
@@ -61,137 +84,116 @@ export function CommitmentDetailSheet({
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
 
   async function handleMarkAsPaid() {
-    if (!commitmentId) return;
-    setIsMarkingPaid(true);
-    try {
-      await markAsPaid({ commitmentId });
-      toast.success(COMMITMENT_MARK_PAID_SUCCESS);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setIsMarkingPaid(false);
+    if (!commitment) return;
+    const errorMessage = await runMutationWithBusyFlag(
+      setIsMarkingPaid,
+      async () => {
+        await markAsPaid({
+          commitmentId: commitment.id as Id<"fixedCommitments">,
+        });
+        toast.success(COMMITMENT_MARK_PAID_SUCCESS);
+      },
+    );
+    if (errorMessage) {
+      toast.error(errorMessage);
     }
   }
 
   async function handleDelete() {
-    if (!commitmentId) return;
-    setPending(true);
-    try {
-      await deleteCommitment({ commitmentId });
+    if (!commitment) return;
+    const errorMessage = await runMutationWithBusyFlag(setPending, async () => {
+      await deleteCommitment({
+        commitmentId: commitment.id as Id<"fixedCommitments">,
+      });
       toast.success("Compromiso eliminado.");
       setConfirmOpen(false);
       onOpenChange(false);
-    } catch (error) {
-      toast.error(fromConvexError(error).message);
-    } finally {
-      setPending(false);
+    });
+    if (errorMessage) {
+      toast.error(errorMessage);
     }
   }
 
-  const title = detail?.name ?? "Compromiso";
+  const title = commitment?.name ?? "Compromiso";
 
-  const resolvedDue =
-    detail != null
-      ? (() => {
-          const nextDueAt = resolveCommitmentNextDueAt({
-            dueDay: detail.dueDay,
-            nextDueAt: detail.nextDueAt,
-            createdAt: detail.createdAt ?? Date.now(),
-          });
-          return {
-            nextDueAt,
-            daysUntilDue:
-              detail.daysUntilDue ?? daysUntilNextDue(nextDueAt, Date.now()),
-          };
-        })()
-      : null;
-
-  const body = (
+  const body = commitment ? (
     <>
-      {detail === undefined ? (
-        <div className="h-24 animate-pulse rounded-xl bg-surface" />
-      ) : detail === null ? (
-        <p className="text-sm text-mute">No encontramos este compromiso.</p>
-      ) : (
-        <dl className="space-y-3 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-mute">Monto</dt>
-            <dd className="font-serif text-lg text-ink">
-              {formatCents(detail.amount, {
-                currency: detail.currencyCode,
-              })}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-mute">Sobre</dt>
-            <dd className="font-medium text-ink">
-              {ENVELOPE_LABELS[detail.envelope]}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-mute">{COMMITMENT_NEXT_DUE_LABEL}</dt>
-            <dd className="text-right font-medium text-ink">
-              <div>{formatLimaDate(resolvedDue!.nextDueAt)}</div>
-              {detail.paymentStatus !== "paid" ? (
-                <div className="text-xs font-normal text-mute">
-                  {formatDueInDays(resolvedDue!.daysUntilDue)}
-                </div>
-              ) : null}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-mute">{COMMITMENT_COVERAGE_LABEL}</dt>
-            <dd className="font-medium text-ink">
-              {formatCoverageStatusLabel(detail.coverageStatus)}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-mute">{COMMITMENT_PAYMENT_LABEL}</dt>
-            <dd
-              className={cn(
-                "font-medium",
-                detail.paymentStatus === "paid"
-                  ? "text-qp-deep"
-                  : detail.paymentStatus === "overdue"
-                    ? "text-danger-ink"
-                    : "text-ink",
-              )}
-            >
-              {formatPaymentStatusLabel(
-                detail.paymentStatus,
-                detail.paidAtForCycle,
-                resolvedDue!.daysUntilDue,
-              )}
-            </dd>
-          </div>
-        </dl>
-      )}
-      {detail ? (
-        <div className="mt-6 space-y-2.5">
-          {detail.hasActiveCycle && detail.paymentStatus !== "paid" ? (
-            <Button
-              type="button"
-              disabled={isMarkingPaid}
-              onClick={() => void handleMarkAsPaid()}
-              className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
-            >
-              {isMarkingPaid ? "Guardando…" : COMMITMENT_MARK_PAID}
-            </Button>
-          ) : null}
-          <button
-            type="button"
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "h-12 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
-            )}
-            onClick={() => setConfirmOpen(true)}
-          >
-            Eliminar compromiso
-          </button>
+      <dl className="space-y-3 text-sm">
+        <div className="flex justify-between gap-4">
+          <dt className="text-mute">Monto</dt>
+          <dd className="font-serif text-lg text-ink">
+            {formatCents(commitment.amount, {
+              currency: currencyCode,
+            })}
+          </dd>
         </div>
-      ) : null}
+        <div className="flex justify-between gap-4">
+          <dt className="text-mute">Sobre</dt>
+          <dd className="font-medium text-ink">
+            {ENVELOPE_LABELS[commitment.envelope]}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-mute">{COMMITMENT_NEXT_DUE_LABEL}</dt>
+          <dd className="text-right font-medium text-ink">
+            <div>{formatLimaDate(commitment.nextDueAt)}</div>
+            {commitment.paymentStatus !== "paid" ? (
+              <div className="text-xs font-normal text-mute">
+                {formatDueInDays(commitment.daysUntilDue)}
+              </div>
+            ) : null}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-mute">{COMMITMENT_COVERAGE_LABEL}</dt>
+          <dd className="font-medium text-ink">
+            {formatCoverageStatusLabel(commitment.coverageStatus)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-mute">{COMMITMENT_PAYMENT_LABEL}</dt>
+          <dd
+            className={cn(
+              "font-medium",
+              commitment.paymentStatus === "paid"
+                ? "text-qp-deep"
+                : commitment.paymentStatus === "overdue"
+                  ? "text-danger-ink"
+                  : "text-ink",
+            )}
+          >
+            {formatPaymentStatusLabel(
+              commitment.paymentStatus ?? "pending",
+              commitment.paidAtForCycle,
+              commitment.daysUntilDue,
+            )}
+          </dd>
+        </div>
+      </dl>
+      <div className="mt-6 space-y-2.5">
+        {hasActiveCycle && commitment.paymentStatus !== "paid" ? (
+          <Button
+            type="button"
+            disabled={isMarkingPaid}
+            onClick={() => void handleMarkAsPaid()}
+            className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
+          >
+            {isMarkingPaid ? "Guardando…" : COMMITMENT_MARK_PAID}
+          </Button>
+        ) : null}
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "h-12 w-full border-danger-line text-danger-ink hover:bg-danger-banner",
+          )}
+          onClick={() => setConfirmOpen(true)}
+        >
+          Eliminar compromiso
+        </button>
+      </div>
     </>
-  );
+  ) : null;
 
   return (
     <>

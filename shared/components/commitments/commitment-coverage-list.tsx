@@ -26,7 +26,7 @@ type Props = {
   commitments: CommitmentCoverageItem[];
   currencyCode: string;
   showCoverageHeader?: boolean;
-  onCommitmentClick?: (id: string) => void;
+  onCommitmentClick?: (commitment: CommitmentCoverageItem) => void;
 };
 
 function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
@@ -157,7 +157,7 @@ export function CommitmentCoverageList({
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
               onClick={
                 onCommitmentClick
-                  ? () => onCommitmentClick(commitment.id)
+                  ? () => onCommitmentClick(commitment)
                   : undefined
               }
               disabled={!onCommitmentClick}

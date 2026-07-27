@@ -31,13 +31,16 @@ export function LegalShell({ title, updatedAt, children }: Props) {
         </div>
       </main>
 
-      <footer className="flex justify-center gap-5 border-t border-line-soft pt-5 text-[12.5px] text-mute-subtle">
+      <footer className="flex flex-wrap justify-center gap-5 border-t border-line-soft pt-5 text-[12.5px] text-mute-subtle">
         <Link href="/terminos" className="hover:text-body">
           Términos
         </Link>
         <Link href="/privacidad" className="hover:text-body">
           Privacidad
         </Link>
+        <a href="mailto:abuse@quipu-finance.app" className="hover:text-body">
+          Reportar abuso
+        </a>
       </footer>
     </div>
   );

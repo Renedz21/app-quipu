@@ -11,6 +11,11 @@
  * para el servidor.
  */
 
+import { initBotId } from "botid/client/core";
 import { initPostHog } from "@/core/analytics";
+
+initBotId({
+  protect: [{ path: "/api/auth/*", method: "POST" }],
+});
 
 initPostHog();

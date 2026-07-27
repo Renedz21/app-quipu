@@ -2,6 +2,7 @@ import { passkey } from "@better-auth/passkey";
 import type { AuthFunctions, GenericCtx } from "@convex-dev/better-auth";
 import { createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { z } from "zod";
 import { components, internal } from "./_generated/api";
@@ -12,6 +13,7 @@ import {
   sendPasswordResetEmail as deliverPasswordResetEmail,
   sendVerificationEmail as deliverVerificationEmail,
 } from "./lib/email/authMail";
+import { assertEmailAllowed } from "./lib/email/domainPolicy";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
@@ -25,26 +27,31 @@ const emailSchema = z
   .pipe(z.email("Email inválido"));
 const authFunctions: AuthFunctions = internal.auth;
 
+async function enforceAuthEmailRateLimit(
+  ctx: GenericCtx<DataModel>,
+  email: string,
+  action: "verification" | "password_reset" | "sign_up",
+): Promise<void> {
+  if (!isRunMutationCtx(ctx)) return;
+  await ctx.runMutation(internal.lib.authRateLimit.assertAuthRateLimit, {
+    email,
+    action,
+  });
+}
+
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,
   {
     authFunctions,
     triggers: {
       user: {
-        // El profile se crea al terminar el onboarding (createProfile).
-        // No auto-crear aquí: un profile vacío bloquea el redirect
-        // /onboarding → /dashboard y ensucia el dominio.
-        onUpdate: async () => {
-          // sincroniza email u otros campos si cambian
-        },
+        onUpdate: async () => {},
         onDelete: async (ctx, authUser) => {
           const profile = await ctx.db
             .query("profiles")
             .withIndex("by_userId", (q) => q.eq("userId", authUser._id))
             .unique();
           if (!profile) return;
-          // D3: borrado en cascada de todos los datos financieros del dominio
-          // (las tablas de Better Auth las borra el propio plugin).
           await ctx.runMutation(internal.profiles.deleteAllDataForProfile, {
             profileId: profile._id,
           });
@@ -61,11 +68,27 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   return {
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
+    rateLimit: {
+      enabled: true,
+      storage: "memory",
+      window: 60,
+      max: 100,
+      customRules: {
+        "/sign-in/email": { window: 10, max: 3 },
+        "/sign-up/email": { window: 600, max: 3 },
+        "/forget-password": { window: 900, max: 3 },
+        "/request-password-reset": { window: 900, max: 3 },
+        "/send-verification-email": { window: 300, max: 2 },
+        "/passkey/*": { window: 60, max: 10 },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       autoSignIn: false,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
+        assertEmailAllowed(user.email);
+        await enforceAuthEmailRateLimit(ctx, user.email, "password_reset");
         await deliverPasswordResetEmail({
           to: user.email,
           url,
@@ -75,6 +98,16 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
+        assertEmailAllowed(user.email);
+        const createdAtMs =
+          typeof user.createdAt === "number"
+            ? user.createdAt
+            : new Date(user.createdAt).getTime();
+        const isNewSignup = Date.now() - createdAtMs < 5 * 60 * 1000;
+        if (isNewSignup) {
+          await enforceAuthEmailRateLimit(ctx, user.email, "sign_up");
+        }
+        await enforceAuthEmailRateLimit(ctx, user.email, "verification");
         await deliverVerificationEmail({
           to: user.email,
           url,
@@ -83,8 +116,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       },
     },
     user: {
-      // D3: habilita "Eliminar cuenta" (Ajustes). El trigger onDelete de
-      // arriba hace el borrado en cascada del dominio.
       deleteUser: { enabled: true },
     },
     plugins: [
@@ -99,11 +130,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         },
         registration: {
           requireSession: false,
-          resolveUser: async ({ context, ctx }) => {
+          resolveUser: async ({ context, ctx: passkeyCtx }) => {
             const { success, data: email } = emailSchema.safeParse(context);
             if (!success) throw new Error("Email inválido");
+            assertEmailAllowed(email);
 
-            const { internalAdapter } = ctx.context;
+            const { internalAdapter } = passkeyCtx.context;
             const found = await internalAdapter.findUserByEmail(email);
             if (found?.user) {
               return {

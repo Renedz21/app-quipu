@@ -1,3 +1,4 @@
+import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -16,6 +17,7 @@ export function PasswordStep({
   email,
   error,
   reason,
+  onTurnstileTokenChange,
   onChangeEmail,
   showPasskey,
 }: {
@@ -23,6 +25,8 @@ export function PasswordStep({
   email: string;
   error: "credentials" | "passkey" | "unverified" | null;
   reason?: string;
+  turnstileToken?: string | null;
+  onTurnstileTokenChange: (token: string | null) => void;
   onChangeEmail: VoidFunction;
   showPasskey: boolean;
 }) {
@@ -49,6 +53,13 @@ export function PasswordStep({
           variant="info"
           title="Contraseña actualizada"
           description="Ya puedes entrar con tu contraseña nueva."
+        />
+      )}
+      {reason === "suspended" && (
+        <AuthBanner
+          variant="error"
+          title="Cuenta suspendida"
+          description="Tu cuenta no está disponible. Si crees que es un error, escríbenos a abuse@quipu-finance.app."
         />
       )}
       {error === "unverified" && (
@@ -130,6 +141,10 @@ export function PasswordStep({
         <div className="flex justify-end">
           <RecoverPasswordLink email={email} />
         </div>
+        <TurnstileWidget
+          onTokenChange={onTurnstileTokenChange}
+          className="min-h-16"
+        />
         <form.Subscribe selector={(s: any) => [s.canSubmit, s.isSubmitting]}>
           {([canSubmit, isSubmitting]: [boolean, boolean]) => (
             <Button

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { authClient } from "@/auth/auth-client";
 import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
+import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -15,6 +16,7 @@ import {
 } from "@/shared/components/ui/field";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
+import { requireTurnstileToken } from "../lib/auth-fetch-options";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { AuthSidePanel } from "./auth-side-panel";
@@ -26,18 +28,31 @@ export function ForgotPasswordView({
 }) {
   const [sent, setSent] = useState(false);
   const [requestError, setRequestError] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: { email: initialEmail },
     validators: { onChange: emailOnlySchema },
     onSubmit: async ({ value }) => {
       setRequestError(false);
+      if (
+        !requireTurnstileToken(
+          turnstileToken,
+          clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        )
+      ) {
+        setRequestError(true);
+        return;
+      }
       const { error } = await authClient.$fetch("/request-password-reset", {
         method: "POST",
         body: {
           email: value.email,
           redirectTo: `${clientEnv.NEXT_PUBLIC_APP_URL}/restablecer-contrasena`,
         },
+        ...(turnstileToken
+          ? { headers: { "x-cf-turnstile-token": turnstileToken } }
+          : {}),
       });
       if (error) {
         setRequestError(true);
@@ -129,6 +144,10 @@ export function ForgotPasswordView({
                       }}
                     </form.Field>
                   </FieldGroup>
+                  <TurnstileWidget
+                    onTokenChange={setTurnstileToken}
+                    className="min-h-16"
+                  />
                   <form.Subscribe
                     selector={(s) => [s.canSubmit, s.isSubmitting] as const}
                   >

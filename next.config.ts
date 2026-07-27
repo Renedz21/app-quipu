@@ -1,4 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 
 const posthogHost =
@@ -14,6 +15,7 @@ const scriptSrc = [
   "'unsafe-inline'",
   process.env.NODE_ENV === "development" ? "'unsafe-eval'" : "",
   posthogHost,
+  "https://challenges.cloudflare.com",
 ]
   .filter(Boolean)
   .join(" ");
@@ -21,10 +23,11 @@ const scriptSrc = [
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src ${scriptSrc}`,
-  `connect-src 'self' ${posthogHost} https://*.convex.cloud wss://*.convex.cloud https://*.convex.site`,
+  `connect-src 'self' ${posthogHost} https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://challenges.cloudflare.com`,
   `img-src 'self' data: blob: ${posthogHost}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
+  "frame-src https://challenges.cloudflare.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -60,7 +63,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withBotId(nextConfig), {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

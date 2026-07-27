@@ -25,25 +25,18 @@ configurar `RESEND_API_KEY` + `RESEND_FROM` en prod (owner).
 
 ## D2 — Rate limiting en memoria (storage distribuido no disponible)
 
-**Severidad original:** Media · **Estado:** mitigado parcialmente
+**Severidad original:** Media · **Estado:** ✅ **Mitigado con rate-limiter Convex (2026-07-27)**
 
-**El problema.** `rateLimit.storage: "memory"` (en `convex/auth.ts`) guarda los
-contadores en un `Map` por aislado serverless de Convex: los aislados se reciclan
-y son varios, así que el límite efectivo es impredecible y rebasable con
-suficiente volumen distribuido.
+**El problema.** `rateLimit.storage: "memory"` en Better Auth guarda contadores por aislado serverless.
 
-**Por qué no se resolvió.** El storage `"database"` de Better Auth requiere
-`adapter.incrementOne`, que el adaptador de Convex (`@convex-dev/better-auth`)
-**no implementa** — activarlo rompería todos los endpoints con limiter.
+**Lo aplicado (2026-07-27).**
 
-**Lo aplicado (2026-07-22).** `enabled: true` explícito (independiente de
-`NODE_ENV`) + regla estricta `/passkey/*` → 10 req/60s. Las rutas
-`/sign-in*` y `/sign-up*` ya tienen las reglas estrictas por defecto (3/10s).
+- Componente `@convex-dev/rate-limiter` montado en `convex/convex.config.ts`.
+- `convex/lib/authRateLimit.ts` — límites distribuidos en hooks de verificación, reset y sign-up.
+- Better Auth `rateLimit.enabled: true` + reglas custom en paths auth (defensa adicional en memoria).
+- Cooldown email vía `emailSendLog` (3 min).
 
-**Plan de resolución.** Vigilar que `@convex-dev/better-auth` implemente
-`incrementOne` (o que Better Auth ofrezca un storage compatible); entonces
-migrar a `storage: "database"`. Alternativa: un `customStorage` propio sobre
-una tabla `rateLimit` en el schema del componente.
+**Pendiente (opcional).** Migrar Better Auth a `storage: "database"` cuando `@convex-dev/better-auth` implemente `incrementOne`.
 
 ---
 

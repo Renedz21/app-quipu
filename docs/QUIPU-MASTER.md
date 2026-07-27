@@ -1290,6 +1290,7 @@ Sin deployment Convex, E2E fallará aunque lint/typecheck pasen.
 - Env vars validadas en `core/env.ts` y `core/env.client.ts`. Secretos solo en servidor; `NEXT_PUBLIC_*` es hostil.
 - `convex/_generated/` es autogenerado: **nunca editar a mano**.
 - Turbopack es default; ante un bug raro de build, descartar con `next dev --turbopack=false`.
+- **Cursor Cloud Agents:** `.cursor/environment.json` → `bash scripts/cloud-agent-update.sh` (pnpm + restore/update de skills desde `skills-lock.json`). Tras cambiar skills/deps: merge a `master` y agente **nuevo**, o Dashboard → *New Setup Run*. gstack opcional vía secret `QUIPU_CLOUD_SETUP_GSTACK=1`.
 
 **Cutover prod legacy → v2.5 (mismo deployment `patient-chihuahua-640` o similar):**
 
@@ -1378,6 +1379,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-27 — Cloud Agent environment.** `.cursor/environment.json` + `scripts/cloud-agent-update.sh`; `skills-lock.json` al día (caveman/ponytail/superpowers/Convex/Vercel/Better Auth/Next.js workflow skills). AGENTS.md Cloud notes actualizadas.
 - **2026-07-26 — P3-7: Pagado en compromisos.** Decisión de producto: **Cubierto** (¿hay reserva vía cascada?) ≠ **Pagado** (¿usuario confirmó pago en el ciclo?) ≠ **Vencido** (pasó `dueDay` sin pagar). Schema `paidAt` / `paidForCycleId`; `markCommitmentAsPaid` no toca sobres; `convex/lib/commitmentPayment.ts` + tests; dashboard/lista/detalle con filas Cobertura + Pago. §5.3 y §8 actualizados.
 - **2026-07-26 — P3-5: editar movimientos + responsive detalle.** `updateExpense` / `updateIncomeEvent` (ciclo activo); UI `/movements`; patrón móvil sheet / desktop dialog (`movement-detail-sheet`, `commitment-detail-sheet`). Fix: `updateIncomeEvent` preserva `heldCents` existente. Merge #34.
 - **2026-07-26 — P3-4: `heldCents` en `incomeEvents`.** Campo opcional (entero céntimos 0..amount; default 0) que reserva dinero antes del 50/30/20. `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto. Motor de cobertura P1-1 extendido: `heldCents` es pool compartido que financia compromisos (needs/wants) en cascada por `dueDay`. UI: «Ya comprometido» + preview Bruto · Apartado · A repartir. Merge #33.

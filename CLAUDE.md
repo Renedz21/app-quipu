@@ -54,6 +54,15 @@ Si algo contradice al maestro, gana el maestro (o se actualiza explícitamente a
 Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
 (dev, lint, test, build) viven en `README.md` y `docs/QUIPU-MASTER.md` §9.
 
+- **Environment config:** `.cursor/environment.json` (repo) define el `install`
+  script. Tiene prioridad sobre el environment personal del dashboard. Tras
+  cambiar skills o deps, merge a `master` y arranca un **agente nuevo** (o
+  Dashboard → environment → *New Setup Run* / *Update with Agent* para
+  refrescar el snapshot).
+- **Instalar deps + skills:** `bash scripts/cloud-agent-update.sh` (lo corre el
+  boot del Cloud Agent). Restaura desde `skills-lock.json` y actualiza packs
+  críticos (`caveman`, `ponytail`, `superpowers`, Convex, Vercel, Better Auth,
+  Next.js). En local: `npx skills update -y -p`.
 - **Instalar deps:** `pnpm install` (Node 22 + pnpm 10 vía Corepack ya presentes).
   El script de arranque del entorno ya lo corre.
 - **`.env.local` no existe en el repo y no hay `.env.example`.** El front no

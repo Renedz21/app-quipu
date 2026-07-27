@@ -48,10 +48,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# AI skills
+# AI skills (restored on Cloud boot via skills-lock.json + scripts/cloud-agent-update.sh)
 .agents/*
 .claude/*
 .cursor/*
+!.cursor/environment.json
 .codegraph/*
 
 # Ledger local de SDD (superpowers); docs/ sí se commitea

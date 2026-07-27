@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { action, internalMutation, mutation } from "./_generated/server";
+import { internalAction, internalMutation, mutation } from "./_generated/server";
 import {
   type PolarSubscriptionSnapshot,
   polarSubscriptionFromWebhook,
@@ -26,7 +26,7 @@ function snapshotFromPolarSubscription(
   };
 }
 
-export const syncProducts = action({
+export const syncProducts = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {

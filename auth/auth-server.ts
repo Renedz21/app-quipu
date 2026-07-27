@@ -4,6 +4,7 @@ import { cache } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { clientEnv } from "@/core/env.client";
+import { isAccountAccessAllowed } from "@/lib/account-status";
 
 export const {
   handler,
@@ -61,6 +62,9 @@ export async function requireOnboardedProfile(): Promise<Doc<"profiles">> {
   const profile = await getMyProfileRsc();
   if (!profile) {
     redirect("/onboarding");
+  }
+  if (!isAccountAccessAllowed(profile.accountStatus)) {
+    redirect("/sign-in?reason=suspended");
   }
   return profile;
 }

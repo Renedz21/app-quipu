@@ -12,6 +12,7 @@ const clientSchema = z.object({
   ),
   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.url().optional(),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
 });
 
 export const clientEnv = clientSchema.parse({
@@ -22,6 +23,7 @@ export const clientEnv = clientSchema.parse({
   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN:
     process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
   NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 });
 
 export type ClientEnv = z.infer<typeof clientSchema>;

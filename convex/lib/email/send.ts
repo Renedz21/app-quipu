@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { z } from "zod";
+import { assertEmailAllowed } from "./domainPolicy";
 
 export const outboundEmailSchema = z.object({
   to: z.email(),
@@ -16,6 +17,7 @@ export type OutboundEmail = z.infer<typeof outboundEmailSchema>;
  */
 export async function sendOutboundEmail(params: OutboundEmail): Promise<void> {
   const { to, subject, html, text } = outboundEmailSchema.parse(params);
+  assertEmailAllowed(to);
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {

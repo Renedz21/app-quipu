@@ -8,8 +8,13 @@ import {
   stampAndComputeDaysSinceLastLogin,
   track,
 } from "@/core/analytics";
+import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
+import {
+  authFetchOptions,
+  requireTurnstileToken,
+} from "../lib/auth-fetch-options";
 import { usePasskeySupport } from "../hooks/use-passkey-support";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { passwordOnlySchema } from "../schemas";
@@ -52,6 +57,7 @@ export function SignInView({
   const [error, setError] = useState<
     "credentials" | "passkey" | "unverified" | null
   >(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!support.conditionalUI) return;
@@ -82,10 +88,22 @@ export function SignInView({
     onSubmit: async ({ value }) => {
       if (step.kind !== "password") return;
       setError(null);
-      const { error: err } = await authClient.signIn.email({
-        email: step.email,
-        password: value.password,
-      });
+      if (
+        !requireTurnstileToken(
+          turnstileToken,
+          clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        )
+      ) {
+        setError("credentials");
+        return;
+      }
+      const { error: err } = await authClient.signIn.email(
+        {
+          email: step.email,
+          password: value.password,
+        },
+        authFetchOptions(turnstileToken),
+      );
       if (err) {
         setError(isEmailNotVerified(err) ? "unverified" : "credentials");
         return;
@@ -123,8 +141,11 @@ export function SignInView({
                 email={step.email}
                 error={error}
                 reason={reason}
+                turnstileToken={turnstileToken}
+                onTurnstileTokenChange={setTurnstileToken}
                 onChangeEmail={() => {
                   setError(null);
+                  setTurnstileToken(null);
                   setStep({ kind: "email" });
                 }}
                 showPasskey={support.webauthn}

@@ -6,6 +6,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import { AnalyticsEvents, getAuthSignupContext, track } from "@/core/analytics";
+import { clientEnv } from "@/core/env.client";
+import {
+  authFetchOptions,
+  requireTurnstileToken,
+} from "../lib/auth-fetch-options";
+import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -61,17 +67,30 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
   const [serverError, setServerError] = useState(false);
 
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: { name: "", email: initialEmail, password: "" },
     validators: { onChange: signUpSchema },
     onSubmit: async ({ value }) => {
       setServerError(false);
-      const { error } = await authClient.signUp.email({
-        email: value.email,
-        password: value.password,
-        name: value.name,
-      });
+      if (
+        !requireTurnstileToken(
+          turnstileToken,
+          clientEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        )
+      ) {
+        setServerError(true);
+        return;
+      }
+      const { error } = await authClient.signUp.email(
+        {
+          email: value.email,
+          password: value.password,
+          name: value.name,
+        },
+        authFetchOptions(turnstileToken),
+      );
       if (error) {
         if (isUserAlreadyExists(error)) {
           router.push(
@@ -221,6 +240,7 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
                 }}
               </form.Field>
             </FieldGroup>
+            <TurnstileWidget onTokenChange={setTurnstileToken} className="min-h-16" />
             <form.Subscribe
               selector={(s: any) => [s.canSubmit, s.isSubmitting]}
             >

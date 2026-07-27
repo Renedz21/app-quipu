@@ -55,7 +55,15 @@ export default function TerminosPage() {
         <p className={SECTION_BODY}>
           Te comprometes a usar Quipu solo para fines lícitos y personales. No
           está permitido intentar acceder a cuentas ajenas, interferir con el
-          servicio, ni usarlo para registrar actividad ilegal.
+          servicio, ni usarlo para registrar actividad ilegal. Si detectas abuso
+          de la plataforma, repórtalo a{" "}
+          <a
+            href="mailto:abuse@quipu-finance.app"
+            className="underline underline-offset-2"
+          >
+            abuse@quipu-finance.app
+          </a>
+          .
         </p>
       </section>
 

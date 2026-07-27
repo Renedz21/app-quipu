@@ -8,21 +8,28 @@
  * @module
  */
 
+import type * as admin_investigation from "../admin/investigation.js";
+import type * as admin_suspension from "../admin/suspension.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
 import type * as coachEngine from "../coachEngine.js";
+import type * as crons from "../crons.js";
+import type * as crons_contentReviewScan from "../crons/contentReviewScan.js";
 import type * as dashboard from "../dashboard.js";
 import type * as expenses from "../expenses.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
 import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
+import type * as lib_adminAuth from "../lib/adminAuth.js";
 import type * as lib_appDataTables from "../lib/appDataTables.js";
+import type * as lib_authRateLimit from "../lib/authRateLimit.js";
 import type * as lib_billingSync from "../lib/billingSync.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
 import type * as lib_coachState from "../lib/coachState.js";
 import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_commitmentDueDate from "../lib/commitmentDueDate.js";
 import type * as lib_commitmentPayment from "../lib/commitmentPayment.js";
+import type * as lib_contentFlags from "../lib/contentFlags.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
 import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
@@ -30,6 +37,8 @@ import type * as lib_email_authEmailLayout from "../lib/email/authEmailLayout.js
 import type * as lib_email_authEmailTokens from "../lib/email/authEmailTokens.js";
 import type * as lib_email_authMail from "../lib/email/authMail.js";
 import type * as lib_email_authTemplates from "../lib/email/authTemplates.js";
+import type * as lib_email_domainPolicy from "../lib/email/domainPolicy.js";
+import type * as lib_email_emailSendLog from "../lib/email/emailSendLog.js";
 import type * as lib_email_send from "../lib/email/send.js";
 import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_evaluateClosedCycle from "../lib/evaluateClosedCycle.js";
@@ -39,6 +48,7 @@ import type * as lib_extraordinarySavingsSurplus from "../lib/extraordinarySavin
 import type * as lib_gamificationMath from "../lib/gamificationMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
 import type * as lib_incomeHold from "../lib/incomeHold.js";
+import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
 import type * as lib_resetAppTables from "../lib/resetAppTables.js";
 import type * as lib_savingsMath from "../lib/savingsMath.js";
@@ -61,21 +71,28 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/investigation": typeof admin_investigation;
+  "admin/suspension": typeof admin_suspension;
   auth: typeof auth;
   billing: typeof billing;
   coachEngine: typeof coachEngine;
+  crons: typeof crons;
+  "crons/contentReviewScan": typeof crons_contentReviewScan;
   dashboard: typeof dashboard;
   expenses: typeof expenses;
   fixedCommitments: typeof fixedCommitments;
   http: typeof http;
   incomeEvents: typeof incomeEvents;
+  "lib/adminAuth": typeof lib_adminAuth;
   "lib/appDataTables": typeof lib_appDataTables;
+  "lib/authRateLimit": typeof lib_authRateLimit;
   "lib/billingSync": typeof lib_billingSync;
   "lib/budgetMath": typeof lib_budgetMath;
   "lib/coachState": typeof lib_coachState;
   "lib/commitmentCoverage": typeof lib_commitmentCoverage;
   "lib/commitmentDueDate": typeof lib_commitmentDueDate;
   "lib/commitmentPayment": typeof lib_commitmentPayment;
+  "lib/contentFlags": typeof lib_contentFlags;
   "lib/crisisResolution": typeof lib_crisisResolution;
   "lib/cycleSavingsBreakdown": typeof lib_cycleSavingsBreakdown;
   "lib/dashboardMath": typeof lib_dashboardMath;
@@ -83,6 +100,8 @@ declare const fullApi: ApiFromModules<{
   "lib/email/authEmailTokens": typeof lib_email_authEmailTokens;
   "lib/email/authMail": typeof lib_email_authMail;
   "lib/email/authTemplates": typeof lib_email_authTemplates;
+  "lib/email/domainPolicy": typeof lib_email_domainPolicy;
+  "lib/email/emailSendLog": typeof lib_email_emailSendLog;
   "lib/email/send": typeof lib_email_send;
   "lib/entitlements": typeof lib_entitlements;
   "lib/evaluateClosedCycle": typeof lib_evaluateClosedCycle;
@@ -92,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   "lib/gamificationMath": typeof lib_gamificationMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
   "lib/incomeHold": typeof lib_incomeHold;
+  "lib/rateLimit": typeof lib_rateLimit;
   "lib/rescueTransfer": typeof lib_rescueTransfer;
   "lib/resetAppTables": typeof lib_resetAppTables;
   "lib/savingsMath": typeof lib_savingsMath;
@@ -137,4 +157,5 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
   polar: import("@convex-dev/polar/_generated/component.js").ComponentApi<"polar">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
 };

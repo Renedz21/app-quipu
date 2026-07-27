@@ -102,6 +102,13 @@ export const appTables = {
     dailySummaryEnabled: v.optional(v.boolean()),
     cycleAlertsEnabled: v.optional(v.boolean()),
     createdAt: v.number(),
+    accountStatus: v.optional(
+      v.union(
+        v.literal("active"),
+        v.literal("suspended"),
+        v.literal("under_review"),
+      ),
+    ),
   })
     .index("by_userId", ["userId"])
     .index("by_polarCustomerId", ["polarCustomerId"])
@@ -302,6 +309,34 @@ export const appTables = {
     subEnvelopeId: v.id("subEnvelopes"),
     createdAt: v.number(),
   }).index("by_cycle", ["cycleId"]),
+
+  emailSendLog: defineTable({
+    email: v.string(),
+    kind: v.union(v.literal("verification"), v.literal("password_reset")),
+    sentAt: v.number(),
+  }).index("by_email_kind", ["email", "kind"]),
+
+  accountReviewFlags: defineTable({
+    profileId: v.id("profiles"),
+    reason: v.union(
+      v.literal("content"),
+      v.literal("email"),
+      v.literal("manual"),
+      v.literal("volume"),
+    ),
+    severity: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+    ),
+    snippet: v.optional(v.string()),
+    status: v.union(
+      v.literal("open"),
+      v.literal("dismissed"),
+      v.literal("actioned"),
+    ),
+    createdAt: v.number(),
+  }).index("by_status", ["status", "createdAt"]),
 };
 
 const schema = defineSchema(appTables);

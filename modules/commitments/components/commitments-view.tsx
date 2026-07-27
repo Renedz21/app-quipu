@@ -4,9 +4,9 @@ import { useQuery } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
+import type { CommitmentCoverageItem } from "@/shared/components/commitments/commitment-coverage-list";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -27,6 +27,7 @@ import {
   COMMITMENTS_TOTAL_SUFFIX,
 } from "../constants";
 import { CommitmentDetailSheet } from "./commitment-detail-sheet";
+import type { CommitmentForDetail } from "./commitment-detail-sheet";
 
 export function CommitmentsViewSkeleton() {
   return (
@@ -43,8 +44,25 @@ export function CommitmentsView() {
   const data = useQuery(api.fixedCommitments.getCommitmentCoverage, {});
   const searchParams = useSearchParams();
   const [addOpen, setAddOpen] = useState(false);
-  const [detailId, setDetailId] = useState<Id<"fixedCommitments"> | null>(null);
+  const [selectedCommitment, setSelectedCommitment] =
+    useState<CommitmentForDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  function openCommitmentDetail(commitment: CommitmentCoverageItem) {
+    if (!commitment.nextDueAt) return;
+    setSelectedCommitment({
+      id: commitment.id,
+      name: commitment.name,
+      amount: commitment.amount,
+      envelope: commitment.envelope,
+      nextDueAt: commitment.nextDueAt,
+      daysUntilDue: commitment.daysUntilDue,
+      coverageStatus: commitment.coverageStatus,
+      paymentStatus: commitment.paymentStatus,
+      paidAtForCycle: commitment.paidAtForCycle,
+    });
+    setDetailOpen(true);
+  }
 
   useEffect(() => {
     if (searchParams.get("add") === "1") {
@@ -143,10 +161,7 @@ export function CommitmentsView() {
               commitments={data.commitments}
               currencyCode={data.currencyCode}
               showCoverageHeader
-              onCommitmentClick={(id) => {
-                setDetailId(id as Id<"fixedCommitments">);
-                setDetailOpen(true);
-              }}
+              onCommitmentClick={openCommitmentDetail}
             />
             <div className="border-t border-line-divider p-4 md:px-4.5">
               <button
@@ -163,7 +178,9 @@ export function CommitmentsView() {
 
       <AddCommitmentDialog open={addOpen} onOpenChange={setAddOpen} />
       <CommitmentDetailSheet
-        commitmentId={detailId}
+        commitment={selectedCommitment}
+        currencyCode={data.currencyCode}
+        hasActiveCycle={data.cycle != null}
         open={detailOpen}
         onOpenChange={setDetailOpen}
       />

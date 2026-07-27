@@ -57,12 +57,5 @@ next-env.d.ts
 # Ledger local de SDD (superpowers); docs/ sí se commitea
 /.superpowers/sdd/
 
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/
-
 # Convex prod snapshots (datos reales; no commitear)
 /backups/

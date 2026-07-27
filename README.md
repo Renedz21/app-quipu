@@ -22,7 +22,6 @@ pnpm dev                     # terminal 2 → http://localhost:3000
 ```bash
 pnpm typecheck
 pnpm test
-pnpm test:e2e:smoke          # requiere convex dev + pnpm dev corriendo
 ```
 
 ---
@@ -51,7 +50,7 @@ Todas las variables se validan en build vía [`core/env.ts`](core/env.ts). Las q
 | Auth | Better Auth + passkey |
 | Forms | TanStack Form + Zod |
 | UI | shadcn/ui sobre Base UI |
-| Calidad | Biome · Vitest · Playwright |
+| Calidad | Biome · Vitest |
 
 ---
 
@@ -92,8 +91,6 @@ pnpm typecheck        # TypeScript (0 errores)
 pnpm lint             # Biome check
 pnpm lint:fix         # Biome auto-fix
 pnpm test             # Vitest (unitarios)
-pnpm test:e2e         # Playwright (todos)
-pnpm test:e2e:smoke   # Smoke P0 (@smoke, 4 flujos)
 npx convex dashboard  # UI de Convex
 ```
 
@@ -133,7 +130,7 @@ npx convex dashboard  # UI de Convex
 
 Todo el desarrollo va en la rama de trabajo actual. **Nada mergea a `main` hasta que la app esté completa.** Los P0 bloquean el release del producto, no un merge intermedio.
 
-CI: Playwright corre en push/PR a `main` (ver [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml)).
+CI: lint, typecheck y Vitest corren en push/PR a `main`/`master` (ver [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ---
 
@@ -143,7 +140,6 @@ CI: Playwright corre en push/PR a `main` (ver [`.github/workflows/playwright.yml
 |----------|-------------|
 | Build falla por env | Variables en `.env.local` y esquema en `core/env.ts` |
 | Tipos de Convex desactualizados | Correr `npx convex dev` y commitear `_generated/` |
-| E2E fallan | Ambos servidores corriendo (`convex dev` + `pnpm dev`) |
 | Auth no funciona | `BETTER_AUTH_SECRET` (≥32 chars) y URLs de Convex correctas |
 
 ---

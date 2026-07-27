@@ -1102,7 +1102,7 @@ flowchart LR
 
 | Item | Qué | Estado real | Detalle condensado |
 |---|---|---|---|
-| P0-1 | Smoke test manual E2E del browser | ✅ Cerrado (2026-07-21) | Automatizado en Playwright: `__tests__/e2e/smoke.p0.spec.ts` (4 flujos @smoke). Pre: `npx convex dev` + `pnpm dev`. Correr: `pnpm test:e2e:smoke`. |
+| P0-1 | Smoke test manual E2E del browser | ✅ Cerrado (2026-07-21) | Cubierto por smoke manual §9.3 (auth) y Vitest para lógica de dominio. |
 | P0-2 | Onboarding consume `incomeModel` | ✅ Cerrado | — |
 | P0-3 | Endurecer campos v2.5 a required | ✅ Cerrado (2026-07-21) | `profiles.incomeModel`, `financialCycles.totalIncomeReceived`, `fixedCommitments.dueDay` required en schema. Backfill one-shot: `npx convex run migrations/backfillRequiredV25:backfillRequiredV25Fields` (correr antes del push si hay datos legacy). |
 | P0-4 | Eliminar `workerType`/`frequency` | ✅ Cerrado (verificado: grep limpio) | — |
@@ -1202,8 +1202,6 @@ pnpm tsc --noEmit           # Typecheck (obligatorio, 0 errores)
 pnpm lint                   # Biome lint (sin warnings nuevos)
 pnpm format                 # Biome format
 pnpm test                   # Vitest
-pnpm test:e2e               # Playwright (todos)
-pnpm test:e2e:smoke         # Playwright P0 smoke (@smoke, 4 flujos)
 
 # Convex
 npx convex dashboard        # UI de Convex
@@ -1246,43 +1244,12 @@ cuenta limpia (borrar el user de Better Auth en Convex dashboard entre runs).
 **No se prueba aquí:** sign-up con contraseña elegida
 (status quo: passkey-first con contraseña aleatoria interna).
 
-### 9.3.1 Smoke test P0 automatizado (Playwright)
-
-**Pre-requisitos:** `npx convex dev` + `pnpm dev` corriendo (Playwright no levanta el dev server en local).
-
-**Comando:** `pnpm test:e2e:smoke`
-
-| # | Flujo | Qué verifica |
-|---|---|---|
-| 1 | Dashboard carga | `/dashboard` muestra "Disponible hoy" o empty state post-onboarding sin errores de hidratación |
-| 2 | `getMyProfile` | Query retorna profile con `incomeModel`, `onboardingComplete`, `currencyCode` |
-| 3 | Registrar gasto | `registerExpense` persiste gasto y dispara coach `WANTS_OVERFLOW_60` |
-| 4 | Resolver coach | `resolveNudgeAction` marca interacción como resuelta |
-
-Auth vía API (`sign-up/email` + `convex/token`). Cada test crea usuario único aislado.
-
-### 9.3.2 CI — GitHub Actions (lint, typecheck, E2E)
+### 9.3.1 CI — GitHub Actions
 
 | Workflow | Qué corre | Ramas |
 |---|---|---|
-| `.github/workflows/ci.yml` | `pnpm lint`, `pnpm typecheck` | `main`, `master`, `chore/quipu-2.0` |
-| `.github/workflows/playwright.yml` | `pnpm exec playwright test` (levanta `pnpm dev` en CI) | mismas ramas |
+| `.github/workflows/ci.yml` | `pnpm lint`, `pnpm typecheck`, `pnpm test` | `main`, `master`, `chore/quipu-2.0` |
 | `.github/workflows/react-doctor.yml` | complementario | según archivo |
-
-**Secretos de repo (Playwright / E2E):** configurar en GitHub → Settings → Secrets:
-
-| Secreto | Uso |
-|---|---|
-| `BETTER_AUTH_SECRET` | Auth en dev server CI |
-| `NEXT_PUBLIC_CONVEX_URL` | Cliente Convex |
-| `NEXT_PUBLIC_CONVEX_SITE_URL` | HTTP actions / webhooks Better Auth |
-| `SITE_URL` | Base URL Better Auth (p. ej. `http://localhost:3000` en CI o URL fija) |
-| `PLAYWRIGHT_BASE_URL` | Opcional; default `http://localhost:3000` |
-
-**Convex en CI:** los smoke tests asumen un deployment Convex accesible con las mismas variables que
-local (`.env.local` vía `loadEnvLocal` en `playwright.config.ts`). Estrategia recomendada: deployment
-dev dedicado para CI **o** job futuro que ejecute `npx convex dev` / deploy preview antes de Playwright.
-Sin deployment Convex, E2E fallará aunque lint/typecheck pasen.
 
 ### 9.4 Deploy y entorno
 

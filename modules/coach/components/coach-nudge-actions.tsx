@@ -57,6 +57,11 @@ export function CoachNudgeActions({
       setActiveSuggestion(result.suggestion);
       setDialogOpen(true);
     }
+
+    if (result.mode === "free_advice") {
+      setActiveSuggestion({ transfer: 0, projectedDeficit: 0 });
+      setDialogOpen(true);
+    }
   }
 
   return (

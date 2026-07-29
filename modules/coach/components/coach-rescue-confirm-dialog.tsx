@@ -20,6 +20,9 @@ import {
   RESCUE_CONFIRM_APPLY_CTA,
   RESCUE_CONFIRM_DISMISS_CTA,
   RESCUE_CONFIRM_TITLE,
+  RESCUE_PAYWALL_BODY,
+  RESCUE_PAYWALL_CLOSE,
+  RESCUE_PAYWALL_TITLE,
 } from "../constants";
 import { handleRescueApply } from "../lib/handle-rescue-apply";
 
@@ -51,7 +54,9 @@ export function CoachRescueConfirmDialog({
     body: string;
   } | null>(null);
 
-  const paywallOpen = paywall !== null;
+  const paywallOnly =
+    suggestion.transfer <= 0 && suggestion.projectedDeficit <= 0;
+  const paywallOpen = paywall !== null || paywallOnly;
 
   function handleOpenChange(next: boolean) {
     if (!next && paywallOpen) return;
@@ -64,8 +69,8 @@ export function CoachRescueConfirmDialog({
       const result = await handleRescueApply({ applyRescue, interactionId });
       if (result.kind === "paywall_required") {
         setPaywall({
-          title: "El rescate de sobres es parte de Quipu Plus",
-          body: "Mueve dinero entre sobres sin tener que pensarlo tú. Y mucho más: predicciones por sobre, plan de crisis en un paso, avisos de compromisos e informe de cierre.",
+          title: RESCUE_PAYWALL_TITLE,
+          body: RESCUE_PAYWALL_BODY,
         });
         return;
       }
@@ -103,26 +108,36 @@ export function CoachRescueConfirmDialog({
       <DialogContent showCloseButton={false} className="rounded-[14px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl text-ink">
-            {RESCUE_CONFIRM_TITLE}
+            {paywallOnly ? RESCUE_PAYWALL_TITLE : RESCUE_CONFIRM_TITLE}
           </DialogTitle>
-          <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
-            Transferir{" "}
-            <strong className="font-semibold text-ink">
-              {formatCents(suggestion.transfer, { currency: currencyCode })}
-            </strong>{" "}
-            de Ahorro a Gustos para cubrir{" "}
-            <strong className="font-semibold text-ink">
-              {formatCents(suggestion.projectedDeficit, {
-                currency: currencyCode,
-              })}
-            </strong>{" "}
-            de déficit. Esta acción mueve dinero entre sobres; no registra un
-            gasto nuevo.
-          </DialogDescription>
+          {paywallOnly ? (
+            <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
+              Quipu Plus mueve dinero entre sobres cuando detecta un déficit,
+              sin que tengas que confirmar cada vez.
+            </DialogDescription>
+          ) : (
+            <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
+              Transferir{" "}
+              <strong className="font-semibold text-ink">
+                {formatCents(suggestion.transfer, { currency: currencyCode })}
+              </strong>{" "}
+              de Ahorro a Gustos para cubrir{" "}
+              <strong className="font-semibold text-ink">
+                {formatCents(suggestion.projectedDeficit, {
+                  currency: currencyCode,
+                })}
+              </strong>{" "}
+              de déficit. Esta acción mueve dinero entre sobres; no registra un
+              gasto nuevo.
+            </DialogDescription>
+          )}
         </DialogHeader>
-        {paywall ? (
+        {paywallOnly || paywall ? (
           <div className="mt-4">
-            <PremiumLockCard title={paywall.title} body={paywall.body} />
+            <PremiumLockCard
+              title={paywall?.title ?? RESCUE_PAYWALL_TITLE}
+              body={paywall?.body ?? RESCUE_PAYWALL_BODY}
+            />
           </div>
         ) : null}
         <DialogFooter className="mt-4 gap-2 sm:justify-stretch">
@@ -133,7 +148,7 @@ export function CoachRescueConfirmDialog({
               className="rounded-[11px]"
               onClick={() => onOpenChange(false)}
             >
-              Cerrar
+              {RESCUE_PAYWALL_CLOSE}
             </Button>
           ) : (
             <>

@@ -51,6 +51,13 @@ export function CoachRescueConfirmDialog({
     body: string;
   } | null>(null);
 
+  const paywallOpen = paywall !== null;
+
+  function handleOpenChange(next: boolean) {
+    if (!next && paywallOpen) return;
+    onOpenChange(next);
+  }
+
   async function handleApply() {
     setIsSubmitting(true);
     try {
@@ -92,7 +99,7 @@ export function CoachRescueConfirmDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent showCloseButton={false} className="rounded-[14px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl text-ink">
@@ -113,30 +120,43 @@ export function CoachRescueConfirmDialog({
             gasto nuevo.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:justify-stretch">
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-[11px]"
-            disabled={isSubmitting}
-            onClick={() => void handleDismiss()}
-          >
-            {RESCUE_CONFIRM_DISMISS_CTA}
-          </Button>
-          <Button
-            type="button"
-            className="rounded-[11px] bg-ink text-canvas hover:bg-ink/90"
-            disabled={isSubmitting}
-            onClick={() => void handleApply()}
-          >
-            {RESCUE_CONFIRM_APPLY_CTA}
-          </Button>
-        </DialogFooter>
         {paywall ? (
           <div className="mt-4">
             <PremiumLockCard title={paywall.title} body={paywall.body} />
           </div>
         ) : null}
+        <DialogFooter className="mt-4 gap-2 sm:justify-stretch">
+          {paywallOpen ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-[11px]"
+              onClick={() => onOpenChange(false)}
+            >
+              Cerrar
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-[11px]"
+                disabled={isSubmitting}
+                onClick={() => void handleDismiss()}
+              >
+                {RESCUE_CONFIRM_DISMISS_CTA}
+              </Button>
+              <Button
+                type="button"
+                className="rounded-[11px] bg-ink text-canvas hover:bg-ink/90"
+                disabled={isSubmitting}
+                onClick={() => void handleApply()}
+              >
+                {RESCUE_CONFIRM_APPLY_CTA}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

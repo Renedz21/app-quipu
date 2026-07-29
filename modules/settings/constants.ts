@@ -34,6 +34,14 @@ export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_PREPARING = "Preparando…";
 export const SETTINGS_PLAN_BILLING_UNAVAILABLE =
   "Facturación no disponible; intenta más tarde.";
+export const SETTINGS_PLAN_VALUE_HEADING = "Qué hace Quipu por ti";
+export const SETTINGS_PLAN_VALUE_BULLETS = [
+  "Aplica tus reglas de grati y CTS sin confirmar, una sola vez.",
+  "Predice cuándo te quedas sin dinero en cada sobre.",
+  "Recibe un plan de crisis en un paso cuando algo no cuadra.",
+  "Recibe avisos de tus compromisos antes de que venzan.",
+  "Tu informe de cierre, automático al terminar cada ciclo.",
+] as const;
 export const SETTINGS_CHECKOUT_SUCCESS =
   "Listo. Tu plan se actualizará en unos segundos.";
 export const SETTINGS_SIDEBAR_PLUS_LINK = "Quipu Plus";

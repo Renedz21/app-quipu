@@ -17,8 +17,10 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
 ]);
 
 const GMAIL_TYPO_PATTERNS = [
+  // gm + 2–4 chars + ail (p. ej. gmxxail.com). No usar gmai[l1]: también matchea gmail.com.
   /^gm[a-z]{2,4}ail\.com$/i,
-  /^gmai[l1]\.com$/i,
+  /^gmai\.com$/i,
+  /^gmai1\.com$/i,
   /^gnail\.com$/i,
 ];
 

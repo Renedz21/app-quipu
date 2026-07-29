@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { z } from "zod";
+import { isDevelopmentDeployment } from "../deployment";
 import { assertEmailAllowed } from "./domainPolicy";
 
 export const outboundEmailSchema = z.object({
@@ -18,6 +19,16 @@ export type OutboundEmail = z.infer<typeof outboundEmailSchema>;
 export async function sendOutboundEmail(params: OutboundEmail): Promise<void> {
   const { to, subject, html, text } = outboundEmailSchema.parse(params);
   assertEmailAllowed(to);
+
+  if (isDevelopmentDeployment()) {
+    console.log(
+      "[Quipu dev] sendOutboundEmail omitido — Resend desactivado.",
+      subject,
+      "→",
+      to,
+    );
+    return;
+  }
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {

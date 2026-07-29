@@ -33,6 +33,7 @@ import type * as lib_contentFlags from "../lib/contentFlags.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
 import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
+import type * as lib_deployment from "../lib/deployment.js";
 import type * as lib_email_authEmailLayout from "../lib/email/authEmailLayout.js";
 import type * as lib_email_authEmailTokens from "../lib/email/authEmailTokens.js";
 import type * as lib_email_authMail from "../lib/email/authMail.js";
@@ -96,6 +97,7 @@ declare const fullApi: ApiFromModules<{
   "lib/crisisResolution": typeof lib_crisisResolution;
   "lib/cycleSavingsBreakdown": typeof lib_cycleSavingsBreakdown;
   "lib/dashboardMath": typeof lib_dashboardMath;
+  "lib/deployment": typeof lib_deployment;
   "lib/email/authEmailLayout": typeof lib_email_authEmailLayout;
   "lib/email/authEmailTokens": typeof lib_email_authEmailTokens;
   "lib/email/authMail": typeof lib_email_authMail;

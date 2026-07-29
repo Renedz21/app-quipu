@@ -1,3 +1,4 @@
+import { isDevelopmentDeployment } from "../deployment";
 import {
   buildPasswordResetEmail,
   buildVerificationEmail,
@@ -10,10 +11,35 @@ type AuthEmailRecipient = {
   name?: string | null;
 };
 
-export async function sendVerificationEmail(
+type AuthEmailKind = "verification" | "password_reset";
+
+function logAuthEmailLinkToConsole(
+  kind: AuthEmailKind,
   params: AuthEmailRecipient,
+): void {
+  const label =
+    kind === "verification"
+      ? "Verificación de correo (registro)"
+      : "Restablecer contraseña";
+
+  console.log(
+    `[Quipu dev] ${label} — Resend desactivado.\n` +
+      `  to: ${params.to}\n` +
+      `  url: ${params.url}`,
+  );
+}
+
+async function deliverAuthEmail(
+  kind: AuthEmailKind,
+  params: AuthEmailRecipient,
+  build: typeof buildVerificationEmail,
 ): Promise<void> {
-  const { subject, html, text } = buildVerificationEmail({
+  if (isDevelopmentDeployment()) {
+    logAuthEmailLinkToConsole(kind, params);
+    return;
+  }
+
+  const { subject, html, text } = build({
     url: params.url,
     name: params.name ?? undefined,
   });
@@ -26,18 +52,14 @@ export async function sendVerificationEmail(
   });
 }
 
+export async function sendVerificationEmail(
+  params: AuthEmailRecipient,
+): Promise<void> {
+  await deliverAuthEmail("verification", params, buildVerificationEmail);
+}
+
 export async function sendPasswordResetEmail(
   params: AuthEmailRecipient,
 ): Promise<void> {
-  const { subject, html, text } = buildPasswordResetEmail({
-    url: params.url,
-    name: params.name ?? undefined,
-  });
-
-  await sendOutboundEmail({
-    to: params.to,
-    subject,
-    html,
-    text,
-  });
+  await deliverAuthEmail("password_reset", params, buildPasswordResetEmail);
 }

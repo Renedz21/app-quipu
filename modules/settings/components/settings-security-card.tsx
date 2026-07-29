@@ -103,7 +103,7 @@ export function SettingsSecurityCard({
       )}
     >
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+        <span className="min-w-0 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
           {SETTINGS_SECURITY_LABEL}
         </span>
         <LockKeyholeOpen
@@ -159,8 +159,8 @@ export function SettingsSecurityCard({
         </p>
       ) : null}
 
-      <div className="flex items-center justify-between gap-3 border-t border-line-soft pt-3.5">
-        <span className="text-[13px] text-ink-secondary">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-line-soft pt-3.5">
+        <span className="min-w-0 flex-1 text-[13px] text-ink-secondary">
           {SETTINGS_SESSIONS_LABEL}
           {sessionsApiReady && activeSessionCount != null ? (
             <span className="mt-0.5 block text-[11px] text-faint">
@@ -173,7 +173,7 @@ export function SettingsSecurityCard({
             <button
               type="button"
               onClick={() => setRevokeOpen(true)}
-              className="text-[12.5px] font-medium text-danger-ink hover:underline"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-[11px] px-2.5 text-[12.5px] font-medium text-danger-ink hover:bg-danger-bg hover:underline"
             >
               {SETTINGS_SESSIONS_REVOKE_ALL}
             </button>
@@ -188,7 +188,7 @@ export function SettingsSecurityCard({
             />
           </>
         ) : (
-          <span className="max-w-[11rem] text-right text-[11.5px] leading-snug text-faint">
+          <span className="max-w-[11rem] shrink-0 text-right text-[11.5px] leading-snug text-faint">
             {SETTINGS_SESSIONS_STUB}
           </span>
         )}

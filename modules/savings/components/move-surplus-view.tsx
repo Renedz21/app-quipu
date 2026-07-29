@@ -10,6 +10,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
+import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
@@ -67,7 +68,12 @@ export function MoveSurplusView({
   if (context === null) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
-        <BackLink />
+        <BackLink
+          href="/savings"
+          className="text-[13px] font-medium text-mute hover:text-ink"
+        >
+          {MOVE_SURPLUS_PAGE_BACK}
+        </BackLink>
         <p className="mt-6 text-sm text-mute">{MOVE_SURPLUS_NO_CYCLE_BODY}</p>
         <Link
           href="/income/register"
@@ -82,7 +88,12 @@ export function MoveSurplusView({
   if (totalSurplusAvailable(context) <= 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
-        <BackLink />
+        <BackLink
+          href="/savings"
+          className="text-[13px] font-medium text-mute hover:text-ink"
+        >
+          {MOVE_SURPLUS_PAGE_BACK}
+        </BackLink>
         <h1 className="mt-4 font-serif text-2xl text-ink">
           {MOVE_SURPLUS_PAGE_TITLE}
         </h1>
@@ -159,7 +170,12 @@ export function MoveSurplusView({
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 md:py-8">
-      <BackLink />
+      <BackLink
+        href="/savings"
+        className="text-[13px] font-medium text-mute hover:text-ink"
+      >
+        {MOVE_SURPLUS_PAGE_BACK}
+      </BackLink>
       <h1 className="mt-4 font-serif text-[26px] font-medium text-ink">
         {MOVE_SURPLUS_PAGE_TITLE}
       </h1>
@@ -168,17 +184,6 @@ export function MoveSurplusView({
       </p>
       {form}
     </div>
-  );
-}
-
-function BackLink() {
-  return (
-    <Link
-      href="/savings"
-      className="text-[13px] font-medium text-mute hover:text-ink"
-    >
-      ← {MOVE_SURPLUS_PAGE_BACK}
-    </Link>
   );
 }
 

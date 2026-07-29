@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PLUS_MONTHLY_PRICE, PLUS_PAYWALL_CTA } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -7,6 +8,7 @@ type Props = {
   /** Por qué le ahorra trabajo o estrés (copy canon: acción + beneficio). */
   body: string;
   className?: string;
+  ctaLabel?: string;
 };
 
 /**
@@ -15,14 +17,27 @@ type Props = {
  * responde `PLAN_REQUIRED` o al renderizar una sección exclusiva de Plus
  * para usuarios free. Nunca esconde la salida ni bloquea funciones gratis.
  */
-export function PremiumLockCard({ title, body, className }: Props) {
+export function PremiumLockCard({
+  title,
+  body,
+  className,
+  ctaLabel = PLUS_PAYWALL_CTA,
+}: Props) {
   return (
     <section
-      className={cn("rounded-[14px] border border-line bg-card p-5", className)}
+      className={cn(
+        "rounded-[14px] border border-qp-border/60 bg-card p-5 shadow-[inset_3px_0_0_0_var(--qp)]",
+        className,
+      )}
     >
-      <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-qp-deep">
-        Quipu Plus
-      </span>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-qp-deep">
+          Quipu Plus
+        </span>
+        <span className="font-mono text-[10px] tracking-wide text-faint">
+          {PLUS_MONTHLY_PRICE}
+        </span>
+      </div>
       <h3 className="mt-2 font-serif text-[19px] font-medium text-ink">
         {title}
       </h3>
@@ -31,7 +46,7 @@ export function PremiumLockCard({ title, body, className }: Props) {
         href="/settings#plan"
         className="mt-4 inline-flex rounded-[11px] bg-ink px-4 py-2.5 text-[13.5px] font-semibold text-canvas transition-colors hover:bg-ink/90"
       >
-        Ver Quipu Plus
+        {ctaLabel}
       </Link>
     </section>
   );

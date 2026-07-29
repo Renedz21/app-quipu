@@ -86,11 +86,13 @@ comportamientos peligrosos, recomienda acciones, construye hábitos.
 **NO (decisiones, no omisiones):**
 
 - No pide estados financieros, patrimonio, sueldo exacto ni veinte categorías.
-- No conecta con bancos (registro manual por diseño), no hace contabilidad, no invierte,
-  no calcula impuestos, no gestiona tarjetas.
-- Sin chat (el coach es declarativo, nunca conversacional), sin OCR, sin push en v2.5,
-  sin OAuth social, sin multi-moneda, sin multi-idioma, sin ML opaco, sin leaderboards,
-  sin export a Excel/PDF, sin confeti ni infantilismo.
+- No conecta con bancos en v2.5 (registro manual por diseño); sync bancaria y email inbound
+  son parte del roadmap premium (Fases 2–4, §8.6). No hace contabilidad, no invierte, no calcula
+  impuestos, no gestiona tarjetas.
+- Sin chat (el coach es declarativo, nunca conversacional), sin OCR en v2.5, sin push en v2.5,
+  sin OAuth social, sin multi-moneda, sin multi-idioma, sin ML opaco (el coach sigue declarativo,
+  §2.5 regla 8), sin leaderboards. Export Excel/PDF y detección OCR desde email/PDF son parte
+  del roadmap premium (Fases 2–3, §8.6). Sin confeti ni infantilismo.
 
 **Excepción v2.5 (informe anual):** en `/progress/rewards` la recompensa «Informe anual» es **solo UI**
 (preview / copy gamificado); la generación y descarga PDF queda para **v2.6**. No abre export masivo
@@ -127,7 +129,9 @@ Si no, no pertenece a Quipu.
    → "Te quedan S/ 42 por día". Es una brújula, no un presupuesto rígido.
 8. **El coach sugiere, nunca aplica.** Detecta gastos acelerados, riesgos y desbalances;
    propone acciones (congelar sobre, transferencia de rescate). Toda acción requiere
-   confirmación explícita del usuario (doble opt-in).
+   confirmación explícita del usuario (doble opt-in). **Excepción premium:** una regla de
+   automatizaciones configurada por el usuario en Ajustes vale como opt-in: al registrar el
+   ingreso correspondiente, Quipu Plus aplica el destino sin volver a preguntar.
 9. **Gamificación para reforzar hábitos, no para entretener.** La racha cuenta ciclos
    consecutivos en orden. Si se rompe: no desaparece, no castiga, no humilla. La
    disciplina no se reinicia; se reconstruye.
@@ -1160,7 +1164,7 @@ flowchart LR
 | Fase | Objetivo | Estado |
 |---|---|---|
 | **0 — Confianza** | Resend auth, D3, legal, CI, Sentry/PostHog, entitlements | ✅ Código 2026-07-22; owner: D4, Resend prod, Vercel |
-| **1 — Plus v1** | Predicción, recordatorios, recurrencia, reglas auto, informe cierre, crisis avanzado | ⬜ No iniciado |
+| **1 — Plus v1** | Predicción, reglas auto, crisis avanzado, recordatorios in-app, informe cierre | 🟡 En progreso (2026-07-28, Slices 0–5) |
 | **2 — Email inbound** | Parsers banco + `pendingExpenses` + variante C | ⬜ No iniciado |
 | **3 — Import PDF/Excel** | Mismo embudo que Fase 2 | ⬜ No iniciado |
 | **4 — Con MRR** | Gmail, sync bancario, pareja, coach LLM | ⬜ Fuera de alcance hasta demanda |
@@ -1199,8 +1203,9 @@ npx convex dev              # Convex backend en dev
 
 # Validación (antes de commit/PR)
 pnpm tsc --noEmit           # Typecheck (obligatorio, 0 errores)
-pnpm lint                   # Biome lint (sin warnings nuevos)
-pnpm format                 # Biome format
+pnpm lint                   # Biome check (format + lint; warnings preexistentes OK)
+pnpm format                 # Biome format --write
+pnpm ci:quality             # Biome ci (lo que corre el job quality en GitHub Actions)
 pnpm test                   # Vitest
 
 # Convex
@@ -1248,7 +1253,7 @@ cuenta limpia (borrar el user de Better Auth en Convex dashboard entre runs).
 
 | Workflow | Qué corre | Ramas |
 |---|---|---|
-| `.github/workflows/ci.yml` | `pnpm lint`, `pnpm typecheck`, `pnpm test` | `main`, `master`, `chore/quipu-2.0` |
+| `.github/workflows/ci.yml` | `pnpm ci:quality` (Biome format+lint), `pnpm typecheck`, `pnpm test` | `main`, `master`, `chore/quipu-2.0` |
 | `.github/workflows/react-doctor.yml` | complementario | según archivo |
 
 ### 9.4 Deploy y entorno
@@ -1345,6 +1350,8 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-29 — CI quality = Biome ci.** El job `quality` corre `pnpm ci:quality` (`biome ci .`) para format + lint; ya no un paso genérico «Lint». React Compiler: handlers async de rescate usan `Promise.finally` (no `try/finally`) para que el compiler pueda memoizar.
+- **2026-07-28 — Plus v1 Slice 0 (paywall real).** El rescue del coach muestra `PremiumLockCard` para usuarios free en vez de error no manejado (`coach-rescue-confirm-dialog.tsx` + `modules/coach/lib/handle-rescue-apply.ts` + TDD). Tarjeta de plan en Ajustes lista los 5 bullets de valor de Quipu Plus. Canon §2.4: bancos/OCR/export movidos a "roadmap premium" (Fases 2–3); §2.5 regla 8 anota que la regla de automatizaciones del usuario = opt-in válido. §8.6 Fase 1 marcada "en progreso". Plan en `docs/superpowers/plans/2026-07-28-plus-v1.md`.
 - **2026-07-26 — P3-7: Pagado en compromisos.** Decisión de producto: **Cubierto** (¿hay reserva vía cascada?) ≠ **Pagado** (¿usuario confirmó pago en el ciclo?) ≠ **Vencido** (pasó `dueDay` sin pagar). Schema `paidAt` / `paidForCycleId`; `markCommitmentAsPaid` no toca sobres; `convex/lib/commitmentPayment.ts` + tests; dashboard/lista/detalle con filas Cobertura + Pago. §5.3 y §8 actualizados.
 - **2026-07-26 — P3-5: editar movimientos + responsive detalle.** `updateExpense` / `updateIncomeEvent` (ciclo activo); UI `/movements`; patrón móvil sheet / desktop dialog (`movement-detail-sheet`, `commitment-detail-sheet`). Fix: `updateIncomeEvent` preserva `heldCents` existente. Merge #34.
 - **2026-07-26 — P3-4: `heldCents` en `incomeEvents`.** Campo opcional (entero céntimos 0..amount; default 0) que reserva dinero antes del 50/30/20. `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto. Motor de cobertura P1-1 extendido: `heldCents` es pool compartido que financia compromisos (needs/wants) en cascada por `dueDay`. UI: «Ya comprometido» + preview Bruto · Apartado · A repartir. Merge #33.

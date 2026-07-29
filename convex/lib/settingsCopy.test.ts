@@ -28,11 +28,13 @@ describe("payFrequencyLabel", () => {
 describe("planDisplay", () => {
   it("stubs premium copy without Polar fields", () => {
     expect(planDisplay("premium").label).toBe("Quipu Plus");
-    expect(planDisplay("premium").priceCopy).toBe("S/ 14.90/mes");
+    expect(planDisplay("premium").priceCopy).toBe("US$ 4.99/mes");
   });
 
   it("describes free tier", () => {
-    expect(planDisplay("free").priceCopy).toBeNull();
+    expect(planDisplay("free").priceCopy).toBe(
+      "Automatización desde US$ 4.99/mes",
+    );
     expect(planDisplay("free").statusCopy).toBe("Plan gratuito");
   });
 });

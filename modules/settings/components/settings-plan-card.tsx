@@ -16,6 +16,8 @@ import {
   SETTINGS_PLAN_PLUS_PRICE,
   SETTINGS_PLAN_PREPARING,
   SETTINGS_PLAN_UPGRADE,
+  SETTINGS_PLAN_VALUE_BULLETS,
+  SETTINGS_PLAN_VALUE_HEADING,
 } from "../constants";
 import type { SettingsSubscriptionOverview } from "../types";
 
@@ -72,22 +74,24 @@ export function SettingsPlanCard({ subscription, className }: Props) {
         className,
       )}
     >
-      <div className="mb-3.5 flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-faint">
+      <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
+        <span className="min-w-0 font-mono text-[10px] uppercase tracking-widest text-faint">
           {SETTINGS_PLAN_LABEL}
         </span>
         {isPremium ? (
-          <span className="rounded-full bg-qp-soft px-2.5 py-0.5 text-[10.5px] font-semibold text-qp-deep">
+          <span className="shrink-0 rounded-full bg-qp-soft px-2.5 py-0.5 text-[10.5px] font-semibold text-qp-deep">
             {SETTINGS_PLAN_ACTIVE_BADGE}
           </span>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-baseline gap-2.5">
-        <span className="font-serif text-2xl text-ink">
+      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <span className="min-w-0 wrap-break-word font-serif text-2xl text-ink">
           {isPremium ? SETTINGS_PLAN_PLUS_NAME : SETTINGS_PLAN_FREE_NAME}
         </span>
         {subscription.priceDisplay ? (
-          <span className="text-sm text-mute">{subscription.priceDisplay}</span>
+          <span className="shrink-0 text-sm text-mute">
+            {subscription.priceDisplay}
+          </span>
         ) : null}
       </div>
       {subscription.renewalSummary ? (
@@ -95,6 +99,25 @@ export function SettingsPlanCard({ subscription, className }: Props) {
           {subscription.renewalSummary}
         </p>
       ) : null}
+      <div className="mt-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+          {SETTINGS_PLAN_VALUE_HEADING}
+        </p>
+        <ul className="mt-2 space-y-1.5">
+          {SETTINGS_PLAN_VALUE_BULLETS.map((line) => (
+            <li
+              key={line}
+              className="flex gap-2 text-[13px] leading-snug text-ink-secondary"
+            >
+              <span
+                aria-hidden
+                className="mt-1.5 size-1.5 shrink-0 rounded-full bg-qp"
+              />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {isPremium ? (
           <button

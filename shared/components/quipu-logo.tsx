@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib/utils";
 
 /**
- * Logo canon: tres líneas (quipu) + wordmark Newsreader.
+ * Logo canon: tres líneas (quipu) + wordmark Geist.
  * Server-safe. Reusable en auth, sidebar y landing.
  */
 export function QuipuLogo({ className }: { className?: string }) {

@@ -69,19 +69,19 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
       <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
         {SETTINGS_PROFILE_LABEL}
       </div>
-      <div className="mb-4 flex items-center gap-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
         <span
           className="flex size-[54px] shrink-0 items-center justify-center rounded-full bg-qp-tint font-serif text-2xl text-qp-deep"
           aria-hidden
         >
           {getInitial(editing ? draft : profile.name)}
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-[12rem]">
           {editing ? (
             <Input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="h-10 text-[15px]"
+              className="h-11 max-w-full text-[15px]"
               autoFocus
               maxLength={80}
               aria-label="Nombre"
@@ -100,12 +100,12 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
           )}
         </div>
         {editing ? (
-          <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row">
+          <div className="flex w-full shrink-0 flex-wrap gap-1.5 sm:w-auto sm:flex-row">
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="border-line"
+              className="min-h-11 border-line"
               disabled={pending}
               onClick={cancelEdit}
             >
@@ -114,6 +114,7 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
             <Button
               type="button"
               size="sm"
+              className="min-h-11"
               disabled={pending}
               onClick={() => void saveName()}
             >
@@ -129,7 +130,7 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
             }}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
-              "shrink-0 border-line text-ink-secondary md:inline-flex",
+              "min-h-11 shrink-0 border-line text-ink-secondary",
             )}
           >
             {SETTINGS_EDIT_PROFILE}

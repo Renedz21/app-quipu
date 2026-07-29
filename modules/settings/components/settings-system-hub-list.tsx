@@ -41,12 +41,12 @@ export function SettingsSystemHubList({
     <div className="rounded-[14px] border border-line bg-card px-4 py-0.5">
       <Link
         href="/settings/allocations"
-        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PERCENTAGES_LABEL}
         </span>
-        <span className="flex gap-0.5" aria-hidden>
+        <span className="flex shrink-0 gap-0.5" aria-hidden>
           <span
             className={cn("size-1.5 rounded-full", envelopeDotClass("needs"))}
           />
@@ -57,45 +57,49 @@ export function SettingsSystemHubList({
             className={cn("size-1.5 rounded-full", envelopeDotClass("savings"))}
           />
         </span>
-        <span className="text-[11.5px] text-faint">
+        <span className="shrink-0 text-[11.5px] tabular-nums text-faint">
           {needs}/{wants}/{savings}
         </span>
         <ListRowChevron />
       </Link>
       <Link
         href="/settings/system#compromisos"
-        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_COMMITMENTS_LABEL}
         </span>
-        <span className="text-[11.5px] text-faint">{commitmentCount}</span>
+        <span className="shrink-0 text-[11.5px] tabular-nums text-faint">
+          {commitmentCount}
+        </span>
         <ListRowChevron />
       </Link>
       <Link
         href="/settings/cycle"
-        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_CYCLE_LABEL}
         </span>
-        <span className="text-[11.5px] text-faint">{cycleDays} días</span>
+        <span className="shrink-0 text-[11.5px] text-faint">
+          {cycleDays} días
+        </span>
         <ListRowChevron />
       </Link>
       <Link
         href="/settings/system#preferencias"
-        className="flex items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PREFERENCES_LABEL}
         </span>
         <ListRowChevron />
       </Link>
       <Link
         href="/settings/system#automatizaciones"
-        className="flex items-center gap-2 py-2.5"
+        className="flex min-h-11 items-center gap-2 py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_EXTRAORDINARY_LABEL}
         </span>
         <ListRowChevron />

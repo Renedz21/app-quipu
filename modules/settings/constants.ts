@@ -2,7 +2,7 @@ export const SETTINGS_PAGE_TITLE = "Ajustes";
 export const SETTINGS_PAGE_SUBTITLE = "Tu cuenta primero; tu sistema, al lado.";
 export const SETTINGS_MOBILE_ACCOUNT_LABEL = "Cuenta";
 export const SETTINGS_SYSTEM_SLOT_NOTE = "system-column";
-export const SETTINGS_SYSTEM_GO_LINK = "Tu sistema →";
+export const SETTINGS_SYSTEM_GO_LINK = "Tu sistema";
 export const SETTINGS_SYSTEM_PAGE_SUBTITLE =
   "Porcentajes, ciclo, compromisos y preferencias.";
 export const SETTINGS_SYSTEM_SHORT = "Sistema";
@@ -22,18 +22,29 @@ export const SETTINGS_NAME_ERROR = "No pudimos guardar el nombre.";
 export const SETTINGS_PLAN_LABEL = "Plan y suscripción";
 export const SETTINGS_PLAN_PLUS_NAME = "Quipu Plus";
 export const SETTINGS_PLAN_FREE_NAME = "Plan Quipu";
-export const SETTINGS_PLAN_PLUS_PRICE = "S/ 14.90/mes";
+export {
+  PLUS_CHECKOUT_CTA as SETTINGS_PLAN_UPGRADE,
+  PLUS_MONTHLY_PRICE as SETTINGS_PLAN_PLUS_PRICE,
+  PLUS_UPGRADE_PRICE_HINT as SETTINGS_PLAN_PLUS_PRICE_HINT,
+} from "@/shared/constants/plan";
 export const SETTINGS_PLAN_FREE_BODY =
   "Gratis, sin límite de registros manuales.";
 export const SETTINGS_PLAN_RENEWAL_AUTOMATIC = "Renovación automática";
 export const SETTINGS_PLAN_RENEWAL_PREFIX = "Próxima renovación";
 export const SETTINGS_PLAN_CANCELED_UNTIL = "Cancelado · activo hasta";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
-export const SETTINGS_PLAN_UPGRADE = "Pasar a Quipu Plus";
 export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_PREPARING = "Preparando…";
 export const SETTINGS_PLAN_BILLING_UNAVAILABLE =
   "Facturación no disponible; intenta más tarde.";
+export const SETTINGS_PLAN_VALUE_HEADING = "Qué hace Quipu por ti";
+export const SETTINGS_PLAN_VALUE_BULLETS = [
+  "Aplica tus reglas de grati y CTS sin confirmar, una sola vez.",
+  "Predice cuándo te quedas sin dinero en cada sobre.",
+  "Recibe un plan de crisis en un paso cuando algo no cuadra.",
+  "Recibe avisos de tus compromisos antes de que venzan.",
+  "Tu informe de cierre, automático al terminar cada ciclo.",
+] as const;
 export const SETTINGS_CHECKOUT_SUCCESS =
   "Listo. Tu plan se actualizará en unos segundos.";
 export const SETTINGS_SIDEBAR_PLUS_LINK = "Quipu Plus";
@@ -55,6 +66,8 @@ export const SETTINGS_EXPORT_DATA = "Descargar mis datos";
 export const SETTINGS_EXPORT_DATA_PREPARING = "Preparando tu descarga…";
 export const SETTINGS_EXPORT_DATA_ERROR =
   "No pudimos preparar tu descarga. Intenta de nuevo.";
+export const SETTINGS_DANGER_ZONE_LABEL = "Zona sensible";
+export const SETTINGS_DANGER_ZONE_HINT = "Borra tu cuenta de forma permanente.";
 export const SETTINGS_DELETE_ACCOUNT = "Eliminar cuenta";
 export const SETTINGS_DELETE_ACCOUNT_TITLE =
   "¿Eliminar tu cuenta para siempre?";

@@ -8,14 +8,14 @@
   --color-background: var(--qp-canvas);
   --color-foreground: var(--qp-ink);
   --font-sans: var(--font-sans);
-  --font-serif: var(--font-serif);
-  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-sans);
+  --font-mono: var(--font-sans);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--qp);
   --color-sidebar-border: var(--qp-line);
   --color-sidebar-accent-foreground: var(--qp-ink);
   --color-sidebar-accent: var(--qp-soft);
-  --color-sidebar-primary-foreground: var(--qp-canvas);
+  --color-sidebar-primary-foreground: var(--qp-on-accent);
   --color-sidebar-primary: var(--qp);
   --color-sidebar-foreground: var(--qp-ink);
   --color-sidebar: var(--qp-sidebar);
@@ -31,7 +31,7 @@
   --color-muted-foreground: var(--qp-mute);
   --color-muted: var(--qp-surface-soft);
   --color-paper: var(--qp-canvas);
-  --color-primary-foreground: var(--qp-canvas);
+  --color-primary-foreground: var(--qp-on-accent);
   --color-primary: var(--qp);
   --color-primary-soft: var(--qp-tint);
   --color-popover-foreground: var(--qp-ink);
@@ -58,6 +58,8 @@
   --color-surface: var(--qp-surface);
   --color-surface-soft: var(--qp-surface-soft);
   --color-surface-warm: var(--qp-surface-warm);
+  --color-control: var(--qp-control);
+  --color-on-accent: var(--qp-on-accent);
   --color-ink: var(--qp-ink);
   --color-ink-secondary: var(--qp-ink-secondary);
   --color-body: var(--qp-body);
@@ -184,6 +186,7 @@
 }
 
 :root {
+  color-scheme: light;
   --radius: 0.625rem;
 
   --qp-canvas: oklch(0.985 0.0041 91.45);
@@ -191,6 +194,10 @@
   --qp-surface: oklch(1 0 0);
   --qp-surface-soft: oklch(0.9913 0.0029 84.56);
   --qp-surface-warm: oklch(0.9676 0.0057 84.57);
+  /* Control fill (selects, soft inputs) — cream in light; lifted in dark */
+  --qp-control: oklch(0.96 0.007 84);
+  /* Ink on filled accent CTAs — always paper-light (never follows dark canvas) */
+  --qp-on-accent: oklch(0.985 0.0041 91.45);
   --qp-ink: oklch(0.2454 0.0087 75.2);
   --qp-ink-secondary: oklch(0.335 0.0117 78.15);
   --qp-body: oklch(0.452 0.0129 76.49);
@@ -308,91 +315,106 @@ html[data-accent="clay"] {
 }
 
 .dark {
-  /* QP acento en dark */
-  --qp: oklch(0.62 0.085 170);
-  --qp-deep: oklch(0.78 0.07 165);
-  --qp-text: oklch(0.74 0.045 165);
-  --qp-tint: oklch(0.28 0.04 160 / 0.35);
-  --qp-soft: oklch(0.28 0.04 160 / 0.22);
-  --qp-selected: oklch(0.32 0.045 160 / 0.28);
-  --qp-border: oklch(0.42 0.045 160 / 0.45);
-  --qp-sidebar: oklch(0.17 0.008 160);
-  --qp-gradient: oklch(0.22 0.018 160);
-  --qp-coach-from: oklch(0.24 0.028 160);
-  --qp-coach-to: oklch(0.2 0.02 155);
-  --qp-success: oklch(0.26 0.04 160 / 0.38);
-  --qp-panel: oklch(0.28 0.038 160 / 0.48);
-  --qp-shield-from: oklch(0.23 0.038 160);
-  --qp-shield-to: oklch(0.19 0.03 160);
-  --qp-shield-line: oklch(0.4 0.045 160 / 0.55);
-  --qp10: oklch(0.22 0.022 160);
-  --qp-subtle-border: oklch(0.36 0.035 160 / 0.45);
-  --qp-divider: oklch(0.3 0.015 160);
-  --qp-track: oklch(0.32 0.018 160);
-  --qp-dot: oklch(0.58 0.04 160);
+  /* Native controls (select/option/input) follow dark OS chrome */
+  color-scheme: dark;
 
-  /* QP neutros en dark — más contraste en textos secundarios */
-  --qp-canvas: oklch(0.18 0.005 80);
-  --qp-canvas-page: oklch(0.15 0.005 80);
-  --qp-surface: oklch(0.2 0.005 80);
-  --qp-surface-soft: oklch(0.18 0.005 80);
-  --qp-surface-warm: oklch(0.16 0.005 80);
-  --qp-ink: oklch(0.94 0.005 80);
-  --qp-ink-secondary: oklch(0.84 0.008 80);
-  --qp-body: oklch(0.8 0.008 80);
-  --qp-mute: oklch(0.72 0.01 80);
-  --qp-mute-subtle: oklch(0.68 0.01 80);
-  --qp-faint: oklch(0.64 0.01 80);
-  --qp-faint-soft: oklch(0.6 0.01 80);
-  --qp-line: oklch(0.34 0.008 80);
-  --qp-line-strong: oklch(0.36 0.008 80);
-  --qp-line-soft: oklch(0.3 0.008 80);
-  --qp-line-muted: oklch(0.28 0.008 80);
-  --qp-line-section: oklch(0.27 0.008 80);
-  --qp-line-divider: oklch(0.26 0.008 80);
-  --qp-line-white: oklch(0.24 0.008 80);
+  /*
+   * Tinta dark — first-class: warm charcoal with clear elevation.
+   * Mute/faint stay AA-strong (coordinated with a11y). Soft fills are solid
+   * enough to read; accent glows as musgo, not neon fog.
+   */
 
-  /* QP sobres en dark */
-  --qp-steel: oklch(0.72 0.05 264);
-  --qp-steel-soft: oklch(0.3 0.05 251.4 / 0.28);
-  --qp-moss: oklch(0.72 0.06 166);
-  --qp-moss-soft: oklch(0.3 0.05 150.44 / 0.28);
-  --qp-clay: oklch(0.78 0.05 57);
-  --qp-clay-soft: oklch(0.3 0.05 75.64 / 0.28);
+  /* QP acento */
+  --qp: oklch(0.68 0.09 172);
+  --qp-deep: oklch(0.84 0.055 168);
+  --qp-text: oklch(0.8 0.05 168);
+  --qp-tint: oklch(0.32 0.05 165 / 0.52);
+  /* Solid soft fill — accent selects / chips stay readable */
+  --qp-soft: oklch(0.29 0.042 162);
+  --qp-selected: oklch(0.31 0.045 162);
+  --qp-border: oklch(0.52 0.055 165 / 0.72);
+  --qp-sidebar: oklch(0.145 0.01 160);
+  --qp-gradient: oklch(0.24 0.028 160);
+  --qp-coach-from: oklch(0.27 0.038 160);
+  --qp-coach-to: oklch(0.21 0.028 155);
+  --qp-success: oklch(0.3 0.048 160 / 0.5);
+  --qp-panel: oklch(0.32 0.045 160 / 0.55);
+  --qp-shield-from: oklch(0.27 0.042 160);
+  --qp-shield-to: oklch(0.21 0.032 160);
+  --qp-shield-line: oklch(0.48 0.055 160 / 0.72);
+  --qp10: oklch(0.25 0.03 160);
+  --qp-subtle-border: oklch(0.46 0.05 160 / 0.65);
+  --qp-divider: oklch(0.36 0.022 160);
+  --qp-track: oklch(0.38 0.028 160);
+  --qp-dot: oklch(0.64 0.05 160);
 
-  /* Extraordinarios en dark */
-  --extraordinary-a: oklch(0.78 0.12 75);
-  --extraordinary-b: oklch(0.84 0.08 80);
-  --extraordinary-surface: oklch(0.26 0.04 75);
-  --extraordinary-border: oklch(0.48 0.06 75);
-  --extraordinary-dashed-bg: oklch(0.22 0.028 75);
-  --extraordinary-dashed-border: oklch(0.42 0.045 75);
-  --extraordinary-icon-bg: oklch(0.28 0.038 75);
-  --extraordinary-banner-from: oklch(0.25 0.042 80);
-  --extraordinary-banner-to: oklch(0.22 0.032 80);
-  --extraordinary-rule-title: oklch(0.84 0.07 80);
-  --extraordinary-rule-body: oklch(0.76 0.05 85);
+  /* Neutros — page < canvas < soft < surface(card) < warm/control (lifted) */
+  --qp-canvas-page: oklch(0.13 0.007 75);
+  --qp-canvas: oklch(0.165 0.008 75);
+  --qp-surface-soft: oklch(0.195 0.008 75);
+  --qp-surface: oklch(0.23 0.009 75);
+  --qp-surface-warm: oklch(0.265 0.01 78);
+  --qp-control: oklch(0.275 0.01 78);
 
-  /* Error / crisis en dark */
-  --danger-bg: oklch(0.25 0.04 30 / 0.32);
-  --danger-banner: oklch(0.28 0.05 30 / 0.38);
-  --danger-line: oklch(0.55 0.08 32 / 0.55);
-  --danger-ink: oklch(0.84 0.08 30);
-  --danger-text: oklch(0.8 0.07 32);
+  /* Ink hierarchy — crisp titles; mute/faint stay AA on charcoal */
+  --qp-ink: oklch(0.96 0.004 80);
+  --qp-ink-secondary: oklch(0.88 0.006 80);
+  --qp-body: oklch(0.84 0.007 80);
+  --qp-mute: oklch(0.8 0.008 80);
+  --qp-mute-subtle: oklch(0.76 0.008 80);
+  --qp-faint: oklch(0.72 0.008 80);
+  --qp-faint-soft: oklch(0.68 0.008 80);
 
-  /* Advertencia en dark */
-  --warning: oklch(0.78 0.12 85);
-  --warning-bg: oklch(0.28 0.04 90 / 0.32);
-  --warning-border: oklch(0.42 0.06 90 / 0.45);
-  --warning-text: oklch(0.82 0.08 85);
+  /* Borders — visible structure */
+  --qp-line: oklch(0.42 0.01 80);
+  --qp-line-strong: oklch(0.46 0.01 80);
+  --qp-line-soft: oklch(0.36 0.009 80);
+  --qp-line-muted: oklch(0.34 0.009 80);
+  --qp-line-section: oklch(0.38 0.01 80);
+  --qp-line-divider: oklch(0.3 0.008 80);
+  --qp-line-white: oklch(0.28 0.008 80);
 
-  /* Tags / sugeridos en dark */
-  --suggested-bg: oklch(0.26 0.03 72 / 0.35);
-  --suggested-border: oklch(0.4 0.04 72 / 0.45);
-  --suggested-text: oklch(0.8 0.06 62);
-  --needs-tag-text: oklch(0.78 0.05 265);
-  --needs-tag-muted: oklch(0.68 0.035 267);
-  --needs-tag-border: oklch(0.38 0.03 266 / 0.5);
+  /* Sobres — soft fills hold on charcoal */
+  --qp-steel: oklch(0.74 0.055 264);
+  --qp-steel-soft: oklch(0.32 0.055 251 / 0.42);
+  --qp-moss: oklch(0.74 0.065 166);
+  --qp-moss-soft: oklch(0.32 0.055 150 / 0.42);
+  --qp-clay: oklch(0.8 0.055 57);
+  --qp-clay-soft: oklch(0.32 0.055 75 / 0.42);
+
+  /* Extraordinarios — warm gold badges that stay crisp */
+  --extraordinary-a: oklch(0.82 0.13 78);
+  --extraordinary-b: oklch(0.88 0.08 82);
+  --extraordinary-surface: oklch(0.29 0.048 78);
+  --extraordinary-border: oklch(0.54 0.07 78);
+  --extraordinary-dashed-bg: oklch(0.24 0.035 78);
+  --extraordinary-dashed-border: oklch(0.5 0.055 78);
+  --extraordinary-icon-bg: oklch(0.33 0.055 78);
+  --extraordinary-banner-from: oklch(0.29 0.055 82);
+  --extraordinary-banner-to: oklch(0.24 0.038 80);
+  --extraordinary-rule-title: oklch(0.9 0.07 80);
+  --extraordinary-rule-body: oklch(0.8 0.045 85);
+
+  /* Error / crisis */
+  --danger-bg: oklch(0.28 0.045 30 / 0.42);
+  --danger-banner: oklch(0.3 0.055 30 / 0.48);
+  --danger-line: oklch(0.58 0.085 32 / 0.65);
+  --danger-ink: oklch(0.86 0.08 30);
+  --danger-text: oklch(0.82 0.07 32);
+
+  /* Advertencia */
+  --warning: oklch(0.8 0.12 85);
+  --warning-bg: oklch(0.3 0.045 90 / 0.4);
+  --warning-border: oklch(0.48 0.07 90 / 0.55);
+  --warning-text: oklch(0.86 0.08 85);
+
+  /* Tags / sugeridos */
+  --suggested-bg: oklch(0.3 0.035 72 / 0.42);
+  --suggested-border: oklch(0.46 0.05 72 / 0.55);
+  --suggested-text: oklch(0.84 0.065 62);
+  --needs-tag-text: oklch(0.82 0.055 265);
+  --needs-tag-muted: oklch(0.72 0.04 267);
+  --needs-tag-border: oklch(0.42 0.035 266 / 0.6);
 }
 
 @layer base {

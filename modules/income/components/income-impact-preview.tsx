@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "reicon-react";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -122,7 +123,7 @@ export function IncomeImpactPreview({
                 <span className="size-2 rounded-full bg-moss" aria-hidden />
                 {INCOME_IMPACT_MOVE_SURPLUS}
               </span>
-              <span aria-hidden>→</span>
+              <ArrowRight size={16} color="currentColor" aria-hidden />
             </Link>
           ) : null}
         </>

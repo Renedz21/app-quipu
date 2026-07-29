@@ -28,8 +28,6 @@ import {
   SETTINGS_PROFILE_LABEL,
   SETTINGS_SECURITY_LABEL,
   SETTINGS_SIGN_OUT,
-  SETTINGS_SYSTEM_GO_LINK,
-  SETTINGS_SYSTEM_LABEL,
 } from "../constants";
 import { mapConvexSettingsOverview } from "../lib/buildSettingsOverview";
 import { useSettingsCommitments, useSettingsOverview } from "../queries";
@@ -37,6 +35,7 @@ import { SettingsAccountActions } from "./settings-account-actions";
 import { SettingsPlanCard } from "./settings-plan-card";
 import { SettingsProfileCard } from "./settings-profile-card";
 import { SettingsSecurityCard } from "./settings-security-card";
+import { SettingsSystemGoCard } from "./settings-system-go-card";
 import { SettingsSystemHubList } from "./settings-system-hub-list";
 
 /** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
@@ -100,22 +99,22 @@ function MobileAccountList({
     <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5">
       <Link
         href="/settings/account#perfil"
-        className="flex items-center gap-2 border-b border-line-soft py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PROFILE_LABEL}
         </span>
         <ListRowChevron />
       </Link>
       <Link
         href="/settings/account#plan"
-        className="flex items-center gap-2 border-b border-line-soft py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PLAN_LABEL}
         </span>
         {isPremium ? (
-          <span className="rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
+          <span className="shrink-0 rounded-full bg-qp-soft px-2 py-0.5 text-[11px] font-semibold text-qp-deep">
             {SETTINGS_PLAN_ACTIVE_BADGE}
           </span>
         ) : null}
@@ -123,13 +122,15 @@ function MobileAccountList({
       </Link>
       <Link
         href="/settings/account#seguridad"
-        className="flex items-center gap-2 py-2.5"
+        className="flex min-h-11 items-center gap-2 py-2.5"
       >
-        <span className="flex-1 text-[13.5px] text-ink">
+        <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_SECURITY_LABEL}
         </span>
         {passkeyCount > 0 ? (
-          <span className="text-[11px] text-faint">{passkeyCount}</span>
+          <span className="shrink-0 text-[11px] text-faint">
+            {passkeyCount}
+          </span>
         ) : null}
         <ListRowChevron />
       </Link>
@@ -144,7 +145,7 @@ function MobileHubSignOut() {
     <div className="rounded-[14px] border border-line bg-card px-4">
       <button
         type="button"
-        className="flex w-full items-center py-2.5 text-left text-[13.5px] text-danger-ink"
+        className="flex min-h-11 w-full items-center py-2.5 text-left text-[13.5px] text-danger-ink"
         onClick={() => {
           void (async () => {
             track(AnalyticsEvents.USER_LOGGED_OUT, {});
@@ -228,9 +229,7 @@ export function SettingsView() {
           isPremium={overview.profile.plan === "premium"}
         />
 
-        <p className="mb-2 mt-1 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">
-          {SETTINGS_SYSTEM_LABEL}
-        </p>
+        <SettingsSystemGoCard className="mt-3.5 mb-2.5" />
         {profile ? (
           <SettingsSystemHubList
             needs={profile.allocationNeeds}
@@ -248,29 +247,23 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* Desktop — solo cuenta; sistema vive en /settings/system */}
+      {/* Desktop — cuenta; sistema vía card primaria → /settings/system */}
       <div className="hidden md:block">
-        <header className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h1 className="font-serif text-[27px] font-medium text-ink">
-              {SETTINGS_PAGE_TITLE}
-            </h1>
-            <p className="mt-1 text-[13.5px] text-mute-subtle">
-              {SETTINGS_PAGE_SUBTITLE}
-            </p>
-          </div>
-          <Link
-            href="/settings/system"
-            className="shrink-0 text-[13px] font-semibold text-qp-deep underline-offset-4 hover:underline"
-          >
-            {SETTINGS_SYSTEM_GO_LINK}
-          </Link>
+        <header className="mb-5">
+          <h1 className="font-serif text-[27px] font-medium text-ink">
+            {SETTINGS_PAGE_TITLE}
+          </h1>
+          <p className="mt-1 text-[13.5px] text-mute-subtle">
+            {SETTINGS_PAGE_SUBTITLE}
+          </p>
         </header>
 
-        <div className="flex flex-col gap-3.5 md:flex-row md:gap-3.5">
-          <div className="flex flex-1 flex-col gap-3.5">
+        <SettingsSystemGoCard className="mb-5" />
+
+        <div className="flex min-w-0 flex-col gap-3.5 md:flex-row md:gap-3.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-3.5">
             <SettingsProfileCard id="perfil" profile={overview.profile} />
-            <div id="plan" className="scroll-mt-6">
+            <div id="plan" className="min-w-0 scroll-mt-6">
               <SettingsPlanCard subscription={overview.subscription} />
               {showCheckoutBanner ? (
                 <p
@@ -282,7 +275,7 @@ export function SettingsView() {
               ) : null}
             </div>
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <SettingsSecurityCard
               id="seguridad"
               sessionsApiReady={overview.sessionsApiReady}

@@ -11,11 +11,59 @@ type Props = {
   className?: string;
 };
 
+/** Shared by all four tabs — left had 24, right had 18 (looked smaller). */
+const BOTTOM_NAV_ICON_SIZE = 24;
+
 function navItemActive(pathname: string, href: string) {
   if (href === "/settings") {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
   return pathname === href;
+}
+
+function BottomNavItem({
+  item,
+  active,
+}: {
+  item: (typeof BOTTOM_NAV_ITEMS)[number];
+  active: boolean;
+}) {
+  const content = (
+    <>
+      <AppNavIcon
+        label={item.label}
+        active={active}
+        size={BOTTOM_NAV_ICON_SIZE}
+      />
+      <span className={cn(active && "font-semibold text-qp-deep")}>
+        {item.label}
+      </span>
+    </>
+  );
+
+  const itemClassName = cn(
+    "flex flex-col items-center gap-1 text-[9.5px] text-mute",
+    active && "text-qp-deep",
+    item.disabled && "opacity-70",
+  );
+
+  if (item.disabled) {
+    return (
+      <span className={itemClassName} aria-disabled>
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      className={itemClassName}
+      aria-current={active ? "page" : undefined}
+    >
+      {content}
+    </Link>
+  );
 }
 
 export function AppBottomNav({ className }: Props) {
@@ -29,83 +77,25 @@ export function AppBottomNav({ className }: Props) {
       )}
     >
       <div className="grid grid-cols-5 items-start">
-        {BOTTOM_NAV_ITEMS.slice(0, 2).map((item) => {
-          const active = !item.disabled && navItemActive(pathname, item.href);
-          const content = (
-            <>
-              <AppNavIcon label={item.label} active={active} size={24} />
-              <span className={cn(active && "font-semibold text-qp-deep")}>
-                {item.label}
-              </span>
-            </>
-          );
-
-          const itemClassName = cn(
-            "flex flex-col items-center gap-1 text-[9.5px] text-mute",
-            active && "text-qp-deep",
-            item.disabled && "opacity-70",
-          );
-
-          if (item.disabled) {
-            return (
-              <span key={item.label} className={itemClassName} aria-disabled>
-                {content}
-              </span>
-            );
-          }
-
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={itemClassName}
-              aria-current={active ? "page" : undefined}
-            >
-              {content}
-            </Link>
-          );
-        })}
+        {BOTTOM_NAV_ITEMS.slice(0, 2).map((item) => (
+          <BottomNavItem
+            key={item.label}
+            item={item}
+            active={!item.disabled && navItemActive(pathname, item.href)}
+          />
+        ))}
 
         <div className="-mt-3.5 flex justify-center">
           <DashboardFab />
         </div>
 
-        {BOTTOM_NAV_ITEMS.slice(2).map((item) => {
-          const active = !item.disabled && navItemActive(pathname, item.href);
-          const content = (
-            <>
-              <AppNavIcon label={item.label} active={active} size={18} />
-              <span className={cn(active && "font-semibold text-qp-deep")}>
-                {item.label}
-              </span>
-            </>
-          );
-
-          const itemClassName = cn(
-            "flex flex-col items-center gap-1 text-[9.5px] text-mute",
-            active && "text-qp-deep",
-            item.disabled && "opacity-70",
-          );
-
-          if (item.disabled) {
-            return (
-              <span key={item.label} className={itemClassName} aria-disabled>
-                {content}
-              </span>
-            );
-          }
-
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={itemClassName}
-              aria-current={active ? "page" : undefined}
-            >
-              {content}
-            </Link>
-          );
-        })}
+        {BOTTOM_NAV_ITEMS.slice(2).map((item) => (
+          <BottomNavItem
+            key={item.label}
+            item={item}
+            active={!item.disabled && navItemActive(pathname, item.href)}
+          />
+        ))}
       </div>
     </div>
   );

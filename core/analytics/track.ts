@@ -33,8 +33,6 @@ export function track<E extends AnalyticsEvent>(
   event: E,
   properties: AnalyticsEventPayloads[E],
 ): void {
-  if (!isPosthogConfigured()) return;
-
   if (process.env.NODE_ENV === "development") {
     const schema = payloadSchemaFor(event);
     if (schema) {
@@ -48,6 +46,8 @@ export function track<E extends AnalyticsEvent>(
       }
     }
   }
+
+  if (!isPosthogConfigured()) return;
 
   posthog.capture(event, properties as Record<string, unknown>);
 }

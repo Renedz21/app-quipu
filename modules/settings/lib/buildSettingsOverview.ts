@@ -3,6 +3,7 @@ import { MODEL_DISPLAY_LABELS } from "@/modules/onboarding/constants";
 import {
   SETTINGS_PLAN_FREE_BODY,
   SETTINGS_PLAN_PLUS_PRICE,
+  SETTINGS_PLAN_PLUS_PRICE_HINT,
   SETTINGS_PLAN_RENEWAL_AUTOMATIC,
 } from "../constants";
 import type { SettingsOverviewQueryResult } from "../queries";
@@ -89,7 +90,9 @@ export function buildSettingsOverviewFromProfile(
     subscription: {
       plan: profile.plan,
       status: isPremium ? "active" : "free",
-      priceDisplay: isPremium ? SETTINGS_PLAN_PLUS_PRICE : null,
+      priceDisplay: isPremium
+        ? SETTINGS_PLAN_PLUS_PRICE
+        : SETTINGS_PLAN_PLUS_PRICE_HINT,
       renewalSummary: isPremium
         ? SETTINGS_PLAN_RENEWAL_AUTOMATIC
         : SETTINGS_PLAN_FREE_BODY,

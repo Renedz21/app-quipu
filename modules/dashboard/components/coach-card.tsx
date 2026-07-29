@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ChatDots } from "reicon-react";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
+import { PremiumLockCard } from "@/shared/components/premium-lock-card";
 import { Button } from "@/shared/components/ui/button";
 import {
   COACH_EARLY_REGISTER_CTA,
@@ -97,6 +98,8 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
   const isWarning = coach.kind === "warning";
   const isCrisis = coach.kind === "crisis";
   const isSuggestion = coach.kind === "suggestion";
+
+  const [rescueUpsell, setRescueUpsell] = useState(false);
 
   useEffect(() => {
     track(AnalyticsEvents.FINANCIAL_INSIGHT_VIEWED, {
@@ -208,7 +211,17 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
           currencyCode={currencyCode}
           rescueSuggestion={coach.rescueSuggestion}
           awaitingRescueConfirmation={coach.awaitingRescueConfirmation}
+          onFreeRescueUpsell={() => setRescueUpsell(true)}
         />
+      ) : null}
+
+      {rescueUpsell ? (
+        <div className="mt-4">
+          <PremiumLockCard
+            title="El rescate es parte de Quipu Plus"
+            body="Mueve dinero entre sobres sin tener que pensarlo tú. Y mucho más: predicciones por sobre, plan de crisis en un paso, avisos de compromisos e informe de cierre."
+          />
+        </div>
       ) : null}
 
       {isCrisis ? (

@@ -54,9 +54,7 @@ export function CoachRescueConfirmDialog({
     body: string;
   } | null>(null);
 
-  const paywallOnly =
-    suggestion.transfer <= 0 && suggestion.projectedDeficit <= 0;
-  const paywallOpen = paywall !== null || paywallOnly;
+  const paywallOpen = paywall !== null;
 
   function handleOpenChange(next: boolean) {
     if (!next && paywallOpen) return;
@@ -108,36 +106,26 @@ export function CoachRescueConfirmDialog({
       <DialogContent showCloseButton={false} className="rounded-[14px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl text-ink">
-            {paywallOnly ? RESCUE_PAYWALL_TITLE : RESCUE_CONFIRM_TITLE}
+            {RESCUE_CONFIRM_TITLE}
           </DialogTitle>
-          {paywallOnly ? (
-            <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
-              Quipu Plus mueve dinero entre sobres cuando detecta un déficit,
-              sin que tengas que confirmar cada vez.
-            </DialogDescription>
-          ) : (
-            <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
-              Transferir{" "}
-              <strong className="font-semibold text-ink">
-                {formatCents(suggestion.transfer, { currency: currencyCode })}
-              </strong>{" "}
-              de Ahorro a Gustos para cubrir{" "}
-              <strong className="font-semibold text-ink">
-                {formatCents(suggestion.projectedDeficit, {
-                  currency: currencyCode,
-                })}
-              </strong>{" "}
-              de déficit. Esta acción mueve dinero entre sobres; no registra un
-              gasto nuevo.
-            </DialogDescription>
-          )}
+          <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
+            Transferir{" "}
+            <strong className="font-semibold text-ink">
+              {formatCents(suggestion.transfer, { currency: currencyCode })}
+            </strong>{" "}
+            de Ahorro a Gustos para cubrir{" "}
+            <strong className="font-semibold text-ink">
+              {formatCents(suggestion.projectedDeficit, {
+                currency: currencyCode,
+              })}
+            </strong>{" "}
+            de déficit. Esta acción mueve dinero entre sobres; no registra un
+            gasto nuevo.
+          </DialogDescription>
         </DialogHeader>
-        {paywallOnly || paywall ? (
+        {paywall ? (
           <div className="mt-4">
-            <PremiumLockCard
-              title={paywall?.title ?? RESCUE_PAYWALL_TITLE}
-              body={paywall?.body ?? RESCUE_PAYWALL_BODY}
-            />
+            <PremiumLockCard title={paywall.title} body={paywall.body} />
           </div>
         ) : null}
         <DialogFooter className="mt-4 gap-2 sm:justify-stretch">

@@ -23,6 +23,7 @@ type Props = {
   currencyCode: string;
   rescueSuggestion?: RescueSuggestion;
   awaitingRescueConfirmation?: boolean;
+  onFreeRescueUpsell?: () => void;
 };
 
 export function CoachNudgeActions({
@@ -31,6 +32,7 @@ export function CoachNudgeActions({
   currencyCode,
   rescueSuggestion,
   awaitingRescueConfirmation = false,
+  onFreeRescueUpsell,
 }: Props) {
   const resolveNudge = useMutation(api.coachEngine.resolveNudgeAction);
   const [dialogOpen, setDialogOpen] = useState(awaitingRescueConfirmation);
@@ -59,8 +61,7 @@ export function CoachNudgeActions({
     }
 
     if (result.mode === "free_advice") {
-      setActiveSuggestion({ transfer: 0, projectedDeficit: 0 });
-      setDialogOpen(true);
+      onFreeRescueUpsell?.();
     }
   }
 

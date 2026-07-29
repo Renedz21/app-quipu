@@ -21,6 +21,7 @@ import {
   type ExtraordinaryType,
   sourceForExtraordinaryType,
 } from "./lib/extraordinaryIncome";
+import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 import { computeDistributableCents, validateHeldCents } from "./lib/incomeHold";
 
@@ -97,12 +98,24 @@ export const createIncomeEvent = mutation({
       heldCents,
     );
 
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
+    }
+
     const incomeKind = args.incomeKind ?? "habitual";
     let resolvedSource = args.source;
     let resolvedDescription = "";
     let distributionPolicy: DistributionPolicy = "profile_default";
     let extraordinaryType: ExtraordinaryType | undefined;
     let extraordinaryLabel: string | undefined;
+    let appliedByAutoRule = false;
 
     if (incomeKind === "extraordinary") {
       if (!args.extraordinaryType) {
@@ -133,14 +146,22 @@ export const createIncomeEvent = mutation({
         });
       }
 
-      if (!args.distributionPolicy) {
+      const resolved = resolveExtraordinaryIncomePolicy({
+        isPremium: profile.plan === "premium",
+        extraordinaryType,
+        rules: profile.extraordinaryRules,
+        autoApply: profile.extraordinaryRulesAutoApply,
+        distributionPolicy: args.distributionPolicy,
+      });
+      if (!resolved.ok) {
         throw new ConvexError({
           code: "VALIDATION_ERROR",
           message: "Confirma a dónde va este ingreso extraordinario.",
           data: { field: "distributionPolicy" },
         });
       }
-      distributionPolicy = args.distributionPolicy;
+      distributionPolicy = resolved.distributionPolicy;
+      appliedByAutoRule = resolved.appliedByAutoRule;
       resolvedSource = sourceForExtraordinaryType(extraordinaryType);
       resolvedDescription = canonicalExtraordinaryDescription(
         extraordinaryType,
@@ -167,17 +188,6 @@ export const createIncomeEvent = mutation({
             "Los campos extraordinarios solo aplican a ingresos extraordinarios.",
         });
       }
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Perfil no encontrado.",
-      });
     }
 
     const now = Date.now();
@@ -265,6 +275,7 @@ export const createIncomeEvent = mutation({
         extraordinaryType,
         extraordinaryLabel,
         distributionPolicy,
+        ...(appliedByAutoRule && { appliedByAutoRule: true }),
       }),
       ...(heldCents > 0 && { heldCents }),
       distributionApplied: distribution,
@@ -419,6 +430,7 @@ export const updateIncomeEvent = mutation({
     let distributionPolicy: DistributionPolicy = "profile_default";
     let extraordinaryType: ExtraordinaryType | undefined;
     let extraordinaryLabel: string | undefined;
+    let appliedByAutoRule = false;
 
     if (incomeKind === "extraordinary") {
       if (!args.extraordinaryType) {
@@ -448,14 +460,6 @@ export const updateIncomeEvent = mutation({
           data: { field: "extraordinaryLabel" },
         });
       }
-      if (!args.distributionPolicy) {
-        throw new ConvexError({
-          code: "VALIDATION_ERROR",
-          message: "Confirma a dónde va este ingreso extraordinario.",
-          data: { field: "distributionPolicy" },
-        });
-      }
-      distributionPolicy = args.distributionPolicy;
       resolvedSource = sourceForExtraordinaryType(extraordinaryType);
       resolvedDescription = canonicalExtraordinaryDescription(
         extraordinaryType,
@@ -501,6 +505,25 @@ export const updateIncomeEvent = mutation({
         code: "FORBIDDEN",
         message: "No tienes permisos para editar este registro.",
       });
+    }
+
+    if (incomeKind === "extraordinary" && extraordinaryType) {
+      const resolved = resolveExtraordinaryIncomePolicy({
+        isPremium: profile.plan === "premium",
+        extraordinaryType,
+        rules: profile.extraordinaryRules,
+        autoApply: profile.extraordinaryRulesAutoApply,
+        distributionPolicy: args.distributionPolicy,
+      });
+      if (!resolved.ok) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: "Confirma a dónde va este ingreso extraordinario.",
+          data: { field: "distributionPolicy" },
+        });
+      }
+      distributionPolicy = resolved.distributionPolicy;
+      appliedByAutoRule = resolved.appliedByAutoRule;
     }
 
     const cycle = await ctx.db.get(event.cycleId);
@@ -594,11 +617,15 @@ export const updateIncomeEvent = mutation({
             extraordinaryType,
             extraordinaryLabel,
             distributionPolicy,
+            ...(appliedByAutoRule
+              ? { appliedByAutoRule: true }
+              : { appliedByAutoRule: undefined }),
           }
         : {
             extraordinaryType: undefined,
             extraordinaryLabel: undefined,
             distributionPolicy: undefined,
+            appliedByAutoRule: undefined,
           }),
     });
 

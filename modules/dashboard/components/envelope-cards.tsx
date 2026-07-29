@@ -61,7 +61,7 @@ export function EnvelopeCards({
       aria-labelledby="dashboard-envelopes-heading"
     >
       <EnvelopeSectionLabel />
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-3 md:gap-3">
         {envelopes.map((envelope) => {
           const styles = ENVELOPE_STYLES[envelope.type];
           // Ahorro no se "gasta": el home muestra lo apartado del ciclo
@@ -81,7 +81,7 @@ export function EnvelopeCards({
           return (
             <article
               key={envelope.type}
-              className={`rounded-[14px] border border-line bg-card p-4 md:p-5 ${
+              className={`rounded-[14px] border border-line bg-card p-3 md:p-5 ${
                 !isSavings
                   ? "cursor-pointer transition-colors hover:bg-surface-warm"
                   : ""
@@ -100,7 +100,7 @@ export function EnvelopeCards({
                   }
                 : {})}
             >
-              <div className="mb-3.5 flex items-center gap-2">
+              <div className="mb-2 flex items-center gap-2 md:mb-3.5">
                 <span
                   className={`size-2 rounded-full ${styles.dot}`}
                   aria-hidden
@@ -114,7 +114,7 @@ export function EnvelopeCards({
                   </span>
                 ) : null}
               </div>
-              <p className="font-serif text-2xl text-ink">
+              <p className="font-serif text-xl text-ink md:text-2xl">
                 {formatCents(displayAmount, {
                   currency: currencyCode,
                 })}
@@ -135,7 +135,7 @@ export function EnvelopeCards({
                   </>
                 )}
               </p>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-[4px] bg-qp-track">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-[4px] bg-qp-track md:mt-3">
                 <div
                   className={`h-full rounded-[4px] ${styles.bar}`}
                   style={{ width: `${percent}%` }}

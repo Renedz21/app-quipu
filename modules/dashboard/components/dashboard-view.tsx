@@ -6,6 +6,7 @@ import { useDashboardSummary } from "../queries";
 import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
 import { CommitmentsList } from "./commitments-list";
+import { CycleCloseReportCard } from "./cycle-close-report-card";
 import { DashboardEmptyCycle } from "./dashboard-empty-cycle";
 import { DashboardError } from "./dashboard-error";
 import {
@@ -14,6 +15,7 @@ import {
 } from "./dashboard-header";
 import { DashboardHero } from "./dashboard-hero";
 import { DashboardHeroSkeleton } from "./dashboard-hero-skeleton";
+import { DashboardSecondaryInsights } from "./dashboard-secondary-insights";
 import { EnvelopeCards } from "./envelope-cards";
 import { EnvelopeCardsSkeleton } from "./envelope-cards-skeleton";
 import { RecentMovements } from "./recent-movements";
@@ -86,15 +88,32 @@ function DashboardContent({ profileName }: Props) {
         currencyCode={summary.profile.currencyCode}
       />
 
+      <CycleCloseReportCard currencyCode={summary.profile.currencyCode} />
+
       <Suspense fallback={<EnvelopeCardsSkeleton />}>
-        <div className="mt-5 space-y-5">
+        <div className="mt-3 space-y-3 md:mt-5 md:space-y-5">
           <EnvelopeCards
             envelopes={summary.envelopes}
             currencyCode={summary.profile.currencyCode}
             isEarlyCycle={summary.isEarlyCycle}
           />
 
-          <div className="grid gap-3 lg:grid-cols-[1.25fr_1fr]">
+          <RecentMovements
+            movements={summary.movements}
+            currencyCode={summary.profile.currencyCode}
+            isEarlyCycle={summary.isEarlyCycle}
+          />
+
+          {summary.coach && isFullWidthCoach(summary.coach) ? (
+            <CoachCard
+              coach={summary.coach}
+              currencyCode={summary.profile.currencyCode}
+              layout="full"
+              isPremium={summary.profile.plan === "premium"}
+            />
+          ) : null}
+
+          <div className="grid gap-3 md:gap-4 lg:grid-cols-[1.25fr_1fr]">
             <CommitmentsList
               commitments={summary.commitments}
               currencyCode={summary.profile.currencyCode}
@@ -104,22 +123,14 @@ function DashboardContent({ profileName }: Props) {
               <CoachCard
                 coach={summary.coach}
                 currencyCode={summary.profile.currencyCode}
+                isPremium={summary.profile.plan === "premium"}
               />
             ) : null}
           </div>
 
-          {summary.coach && isFullWidthCoach(summary.coach) ? (
-            <CoachCard
-              coach={summary.coach}
-              currencyCode={summary.profile.currencyCode}
-              layout="full"
-            />
-          ) : null}
-
-          <RecentMovements
-            movements={summary.movements}
+          <DashboardSecondaryInsights
             currencyCode={summary.profile.currencyCode}
-            isEarlyCycle={summary.isEarlyCycle}
+            isPremium={summary.profile.plan === "premium"}
           />
         </div>
       </Suspense>
@@ -129,7 +140,7 @@ function DashboardContent({ profileName }: Props) {
 
 export function DashboardView({ profileName }: Props) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-8 md:py-8">
       <DashboardContent profileName={profileName} />
     </div>
   );

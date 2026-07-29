@@ -1,18 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { ChevronDown } from "reicon-react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
+import { PremiumLockCard } from "@/shared/components/premium-lock-card";
 import {
   type ExtraordinaryProfileRule,
   type ExtraordinaryRules,
   extraordinaryProfileRuleLabel,
   mergeExtraordinaryRules,
+  mergeExtraordinaryRulesAutoApply,
 } from "@/shared/lib/extraordinaryIncome";
 import { cn } from "@/shared/lib/utils";
 import { useUpdateExtraordinaryRules } from "../actions";
 import {
+  SETTINGS_EXTRAORDINARY_AUTO_APPLY_HINT,
+  SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL,
+  SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY,
+  SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE,
   SETTINGS_EXTRAORDINARY_BONUS,
   SETTINGS_EXTRAORDINARY_BONUS_HINT,
   SETTINGS_EXTRAORDINARY_CTS,
@@ -27,6 +34,7 @@ import {
   SETTINGS_EXTRAORDINARY_PROFIT,
   SETTINGS_EXTRAORDINARY_PROFIT_HINT,
 } from "../constants";
+import { SettingsToggle } from "./settings-toggle";
 
 const RULE_OPTIONS: ExtraordinaryProfileRule[] = [
   "profile_default",
@@ -118,18 +126,47 @@ export function SettingsExtraordinarySection({
 }) {
   const profile = useMyProfile();
   const updateRules = useUpdateExtraordinaryRules();
+  const [showAutoApplyPaywall, setShowAutoApplyPaywall] = useState(false);
 
   if (!profile) return null;
 
   const rules = mergeExtraordinaryRules(profile.extraordinaryRules);
+  const autoApply = mergeExtraordinaryRulesAutoApply(
+    profile.extraordinaryRulesAutoApply,
+  );
+  const isPremium = profile.plan === "premium";
 
   async function onRuleChange(
     key: keyof ExtraordinaryRules,
     value: ExtraordinaryProfileRule,
   ) {
     try {
+      const nextRules = { ...rules, [key]: value };
+      const nextAutoApply = { ...autoApply };
+      if (value === "ask_each_time") {
+        nextAutoApply[key] = false;
+      }
       await updateRules({
-        extraordinaryRules: { ...rules, [key]: value },
+        extraordinaryRules: nextRules,
+        extraordinaryRulesAutoApply: nextAutoApply,
+      });
+    } catch (error) {
+      toast.error(fromConvexError(error).message);
+    }
+  }
+
+  async function onAutoApplyChange(
+    key: keyof ExtraordinaryRules,
+    checked: boolean,
+  ) {
+    if (!isPremium) {
+      setShowAutoApplyPaywall(true);
+      return;
+    }
+    try {
+      await updateRules({
+        extraordinaryRules: rules,
+        extraordinaryRulesAutoApply: { ...autoApply, [key]: checked },
       });
     } catch (error) {
       toast.error(fromConvexError(error).message);
@@ -157,53 +194,85 @@ export function SettingsExtraordinarySection({
           const current = rules[row.key];
           const savingsRule =
             current === "all_to_savings" || current === "all_to_emergency_fund";
+          const canAutoApply = current !== "ask_each_time";
           return (
             <li
               key={row.key}
-              className="flex flex-col gap-3 rounded-[14px] border border-line-strong bg-canvas px-[18px] py-[15px] sm:flex-row sm:items-center sm:gap-3.5"
+              className="flex flex-col gap-3 rounded-[14px] border border-line-strong bg-canvas px-[18px] py-[15px]"
             >
-              <RowIcon kind={row.icon} />
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[15px] text-ink">
-                  {row.label}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3.5">
+                <RowIcon kind={row.icon} />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-[15px] text-ink">
+                    {row.label}
+                  </div>
+                  <div className="text-[12.5px] text-mute">{row.subtitle}</div>
                 </div>
-                <div className="text-[12.5px] text-mute">{row.subtitle}</div>
+                <label className="relative inline-flex min-w-[12rem] items-center">
+                  <select
+                    className={cn(
+                      "h-10 w-full cursor-pointer appearance-none rounded-[10px] border py-2 pr-9 pl-3.5 text-[13.5px] font-semibold outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                      savingsRule
+                        ? "border-qp-border bg-qp-soft text-qp-deep"
+                        : "border-line bg-control text-ink",
+                    )}
+                    value={current}
+                    onChange={(event) =>
+                      void onRuleChange(
+                        row.key,
+                        event.target.value as ExtraordinaryProfileRule,
+                      )
+                    }
+                  >
+                    {RULE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {extraordinaryProfileRuleLabel(option)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    className={cn(
+                      "pointer-events-none absolute right-3",
+                      savingsRule ? "text-qp-deep" : "text-mute",
+                    )}
+                    aria-hidden
+                  />
+                </label>
               </div>
-              <label className="relative inline-flex min-w-[12rem] items-center">
-                <select
-                  className={cn(
-                    "h-10 w-full cursor-pointer appearance-none rounded-[10px] border py-2 pr-9 pl-3.5 text-[13.5px] font-semibold outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                    savingsRule
-                      ? "border-qp-border bg-qp-soft text-qp-deep"
-                      : "border-line bg-control text-ink",
-                  )}
-                  value={current}
-                  onChange={(event) =>
-                    void onRuleChange(
-                      row.key,
-                      event.target.value as ExtraordinaryProfileRule,
-                    )
-                  }
-                >
-                  {RULE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {extraordinaryProfileRuleLabel(option)}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={14}
-                  className={cn(
-                    "pointer-events-none absolute right-3",
-                    savingsRule ? "text-qp-deep" : "text-mute",
-                  )}
-                  aria-hidden
-                />
-              </label>
+
+              {canAutoApply ? (
+                <div className="flex items-center justify-between gap-3 border-t border-line-subtle pt-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-ink">
+                      {SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL}
+                    </p>
+                    <p className="text-[12px] text-mute">
+                      {SETTINGS_EXTRAORDINARY_AUTO_APPLY_HINT}
+                    </p>
+                  </div>
+                  <SettingsToggle
+                    label={`${SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL} — ${row.label}`}
+                    checked={isPremium && autoApply[row.key]}
+                    onCheckedChange={(checked) =>
+                      void onAutoApplyChange(row.key, checked)
+                    }
+                  />
+                </div>
+              ) : null}
             </li>
           );
         })}
       </ul>
+
+      {showAutoApplyPaywall ? (
+        <div className="mt-4">
+          <PremiumLockCard
+            title={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE}
+            body={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY}
+          />
+        </div>
+      ) : null}
 
       <p className="mt-3 text-[12.5px] leading-snug text-mute">
         {SETTINGS_EXTRAORDINARY_FOOTER}

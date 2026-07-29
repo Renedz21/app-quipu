@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   HERO_EMPTY_CTA,
+  INCOME_DESKTOP_CTA,
   INCOME_MOBILE_CTA,
 } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
@@ -10,25 +11,40 @@ import { buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { DashboardRegisterButton } from "./dashboard-register-button";
 
-export function DashboardHeaderActions() {
+type Props = {
+  layout: "mobile" | "desktop";
+};
+
+export function DashboardHeaderActions({ layout }: Props) {
   const summary = useDashboardSummary();
   const hasActiveCycle = Boolean(summary?.cycle);
+  const isMobile = layout === "mobile";
 
   if (hasActiveCycle) {
     return (
-      <div className="flex items-center gap-2">
-        {/* «Ingreso» CTA — mobile only, leads to full-screen income register */}
+      <div className={cn("flex items-center gap-2", isMobile && "w-full")}>
         <Link
           href="/income/register"
           className={cn(
             buttonVariants({ variant: "secondary", size: "sm" }),
-            "border-line bg-card text-mute hover:bg-surface-soft md:hidden",
+            "border-line bg-card text-mute hover:bg-surface-soft",
+            isMobile
+              ? "min-h-10 flex-1 rounded-[11px] text-[13px] font-semibold"
+              : "rounded-[11px] px-4",
           )}
         >
-          {INCOME_MOBILE_CTA}
+          {isMobile ? INCOME_MOBILE_CTA : INCOME_DESKTOP_CTA}
         </Link>
-        {/* Expense register (opens bottom sheet) — visible on all sizes */}
-        <DashboardRegisterButton />
+        <DashboardRegisterButton
+          size="sm"
+          showLabel
+          variant={isMobile ? "secondary" : "primary"}
+          className={cn(
+            isMobile
+              ? "min-h-10 flex-1 rounded-[11px] text-[13px] font-semibold"
+              : "rounded-[11px] bg-ink px-[18px] text-canvas hover:bg-ink/90",
+          )}
+        />
       </div>
     );
   }
@@ -37,8 +53,9 @@ export function DashboardHeaderActions() {
     <Link
       href="/income/register"
       className={cn(
-        buttonVariants({ variant: "secondary", size: "sm" }),
-        "bg-ink text-canvas hover:bg-ink/90 md:hidden",
+        buttonVariants({ size: "sm" }),
+        "rounded-[11px] bg-ink text-canvas hover:bg-ink/90",
+        isMobile ? "inline-flex min-h-10 w-full justify-center" : "px-[18px]",
       )}
     >
       {HERO_EMPTY_CTA}

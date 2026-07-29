@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Calendar, Check } from "reicon-react";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
 import { buttonVariants } from "@/shared/components/ui/button";
+import { SectionLink } from "@/shared/components/ui/section-link";
 import { cn } from "@/shared/lib/utils";
 import {
   COMMITMENTS_COVERED_HEADER,
@@ -23,7 +24,7 @@ type Props = {
 
 function CommitmentsEmptyState() {
   return (
-    <div className="flex flex-col items-center px-2 py-4 text-center md:px-4 md:py-6">
+    <div className="flex flex-col items-center px-2 py-3 text-center md:px-4 md:py-6">
       <span
         className="mb-3 flex size-10 items-center justify-center rounded-[11px] bg-surface-warm"
         aria-hidden
@@ -61,9 +62,9 @@ export function CommitmentsList({
   return (
     <section
       aria-labelledby="dashboard-commitments"
-      className="rounded-[14px] border border-line bg-card p-4 md:p-5"
+      className="rounded-[14px] border border-line bg-card p-3 md:p-5"
     >
-      <div className="mb-3.5 flex items-center justify-between gap-3">
+      <div className="mb-2.5 flex items-center justify-between gap-3 md:mb-3.5">
         <h2
           id="dashboard-commitments"
           className="text-sm font-semibold text-ink md:text-[14.5px]"
@@ -72,12 +73,9 @@ export function CommitmentsList({
         </h2>
         <div className="flex items-center gap-2">
           {showViewAll ? (
-            <Link
-              href="/commitments"
-              className="text-[12.5px] font-medium text-qp-deep hover:underline"
-            >
+            <SectionLink href="/commitments">
               {COMMITMENTS_VIEW_ALL}
-            </Link>
+            </SectionLink>
           ) : null}
           {!showRichEmpty ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-qp-deep">
@@ -106,12 +104,9 @@ export function CommitmentsList({
       ) : commitments.length === 0 ? (
         <p className="text-sm text-mute">
           Aún no tienes compromisos registrados.{" "}
-          <Link
-            href="/commitments"
-            className="font-medium text-qp-deep hover:underline"
-          >
+          <SectionLink href="/commitments" variant="inline">
             Ver compromisos
-          </Link>
+          </SectionLink>
         </p>
       ) : (
         <div className="-mx-4 overflow-hidden md:-mx-5">

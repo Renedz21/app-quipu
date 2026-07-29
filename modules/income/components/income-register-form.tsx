@@ -34,7 +34,10 @@ import {
   INCOME_PAGE_TITLE,
   INCOME_SUBMIT_CTA,
 } from "../constants";
-import { policyForExtraordinaryType } from "../lib/extraordinaryPolicy";
+import {
+  policyForExtraordinaryType,
+  shouldSkipExtraordinaryConfirmation,
+} from "../lib/extraordinaryPolicy";
 import {
   computeImpactPreview,
   resolveCycleDaysForPreview,
@@ -149,7 +152,13 @@ export function IncomeRegisterForm({
       setServerError(null);
       try {
         if (value.incomeKind === "extraordinary") {
-          if (!value.distributionPolicy) {
+          const skipConfirmation = shouldSkipExtraordinaryConfirmation(
+            profile.plan === "premium",
+            value.extraordinaryType,
+            profile.extraordinaryRules,
+            profile.extraordinaryRulesAutoApply,
+          );
+          if (!value.distributionPolicy && !skipConfirmation) {
             setDestinationSubmitAfterConfirm(true);
             setDestinationOpen(true);
             return;
@@ -165,7 +174,9 @@ export function IncomeRegisterForm({
               value.extraordinaryType === "custom"
                 ? value.extraordinaryLabel.trim()
                 : undefined,
-            distributionPolicy: value.distributionPolicy,
+            ...(value.distributionPolicy
+              ? { distributionPolicy: value.distributionPolicy }
+              : {}),
             ...(value.heldCents && value.heldCents > 0
               ? { heldCents: value.heldCents }
               : {}),
@@ -205,7 +216,14 @@ export function IncomeRegisterForm({
           }
           onSuccess(response, {
             incomeKind: "extraordinary",
-            distributionPolicy: value.distributionPolicy,
+            distributionPolicy:
+              value.distributionPolicy ??
+              (value.extraordinaryType
+                ? policyForExtraordinaryType(
+                    value.extraordinaryType,
+                    profile.extraordinaryRules,
+                  )
+                : undefined),
           });
           return;
         }

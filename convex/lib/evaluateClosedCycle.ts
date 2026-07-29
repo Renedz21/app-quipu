@@ -14,8 +14,11 @@ export async function evaluateClosedCycle(
   cycleId: Id<"financialCycles">,
   now: number,
 ) {
-  const cycle = await ctx.db.get(cycleId);
+  const cycle = await ctx.db.get("financialCycles", cycleId);
   if (!cycle) return;
+
+  const profile = await ctx.db.get("profiles", profileId);
+  const closedAtPremium = profile?.plan === "premium";
 
   const existingHistory = await ctx.db
     .query("cycleHistory")
@@ -99,6 +102,7 @@ export async function evaluateClosedCycle(
     evaluatedAt: now,
     wantsWithinBudget,
     allCommitmentsCovered,
+    closedAtPremium,
   });
 
   const currentStreak = streakRow?.currentStreak ?? 0;

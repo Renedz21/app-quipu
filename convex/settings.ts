@@ -412,6 +412,14 @@ const extraordinaryProfileRuleValidator = v.union(
   v.literal("ask_each_time"),
 );
 
+const extraordinaryRulesAutoApplyValidator = v.object({
+  cts: v.optional(v.boolean()),
+  gratifications: v.optional(v.boolean()),
+  corporate_bonus: v.optional(v.boolean()),
+  profit_sharing: v.optional(v.boolean()),
+  custom: v.optional(v.boolean()),
+});
+
 export const updateExtraordinaryRules = mutation({
   args: {
     extraordinaryRules: v.object({
@@ -421,7 +429,11 @@ export const updateExtraordinaryRules = mutation({
       profit_sharing: extraordinaryProfileRuleValidator,
       custom: extraordinaryProfileRuleValidator,
     }),
+    extraordinaryRulesAutoApply: v.optional(
+      extraordinaryRulesAutoApplyValidator,
+    ),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -444,6 +456,9 @@ export const updateExtraordinaryRules = mutation({
 
     await ctx.db.patch(profile._id, {
       extraordinaryRules: args.extraordinaryRules,
+      ...(args.extraordinaryRulesAutoApply !== undefined && {
+        extraordinaryRulesAutoApply: args.extraordinaryRulesAutoApply,
+      }),
     });
 
     return { success: true };

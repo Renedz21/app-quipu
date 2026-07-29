@@ -126,6 +126,14 @@ export const SETTINGS_EXTRAORDINARY_DESCRIPTION =
   "Qué hace Quipu con cada ingreso extraordinario.";
 export const SETTINGS_EXTRAORDINARY_FOOTER =
   "Sugerencia, no regla: al registrar el ingreso puedes cambiar el destino.";
+export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL =
+  "Aplicar automáticamente";
+export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_HINT =
+  "Quipu Plus aplica la regla al registrar, sin volver a preguntar.";
+export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE =
+  "La auto-aplicación es parte de Quipu Plus";
+export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY =
+  "Configura una vez y Quipu reparte tus ingresos extraordinarios sin pedir confirmación.";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT = "Julio y diciembre";
 export const SETTINGS_EXTRAORDINARY_CTS = "CTS";

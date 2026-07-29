@@ -17,3 +17,6 @@ export const PLUS_CHECKOUT_CTA = "Automatizar mi dinero";
 
 /** Paywalls: qué obtienes + cuánto cuesta. */
 export const PLUS_PAYWALL_CTA = `Ver qué incluye · ${PLUS_MONTHLY_PRICE_INLINE}/mes`;
+
+/** Nudge inline: enlace corto a plan (dashboard, hints). */
+export const PLUS_UPSELL_LINK = "Quipu Plus";

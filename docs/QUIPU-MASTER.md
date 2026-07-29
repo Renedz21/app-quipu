@@ -391,13 +391,13 @@ Cada bloque responde **una pregunta**. Estado al 2026-07-22 (auditado en código
 |---|---|---|---|
 | 1 | Autenticación | ¿Eres tú? | ✅ Implementado (canon redesign) |
 | 2 | Onboarding | ¿Cómo se arma tu sistema? | ✅ Implementado (v3, 3 pasos) |
-| 3 | Dashboard | ¿Voy bien? | ✅ Implementado (2026-07-21, P1-4) |
+| 3 | Dashboard | ¿Voy bien? | ✅ Implementado (2026-07-21, P1-4); **Plus v1 (2026-07-29):** card Predicción + recordatorios in-app premium |
 | 4 | Registrar gasto | ¿De qué sobre sale? | ✅ Implementado (2026-07-21, variantes A/B) |
 | 5 | Ingresos | ¿Cuánto entró y a dónde va? | ✅ Implementado (habitual + extraordinario P2-7, 2026-07-22) |
 | 6 | Ahorros | ¿Qué estoy construyendo? | ✅ Implementado (P1-9 + mover sobrante P2-7, 2026-07-22) |
 | 7 | Coach | ¿Qué decisión debería tomar? | ✅ Implementado (2026-07-21, P1-10) |
 | 8 | Gamificación | ¿Qué he logrado? | ✅ Implementado (2026-07-21, P1-11) |
-| 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ✅ MVP (2026-07-21, P1-12); **Polar billing (2026-07-22)** — sesiones/ciclo wizard/nombre edit diferidos |
+| 9 | Perfil y ajustes | ¿Cómo funciona mi sistema? | ✅ MVP (2026-07-21, P1-12); **Polar billing (2026-07-22)** — sesiones/ciclo wizard/nombre edit diferidos; **Plus v1 (2026-07-29):** auto-aplicación de reglas extraordinarias (premium) |
 
 **Bloque 1 — Autenticación "¿Eres tú?"**
 Pantallas web: Landing · Login · Registro · Passkeys · Vacío · Error · Recuperación · Loading · Éxito
@@ -731,7 +731,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp, `updatedAt?` (P3-5) | Gastos del ciclo; editables en ciclo activo (P3-5) |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
-| `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered | "warning" = zona de amortiguación; hechos al cierre |
+| `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered, **`closedAtPremium?`** (Plus v1) | "warning" = zona de amortiguación; hechos al cierre; `closedAtPremium` congela si el usuario tenía Plus al cerrar |
 | `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings), **`heldCents?`** (P3-4; entero céntimos 0..amount; default 0) | Log unificado; `distributionApplied` se calcula sobre `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto (Σ amount); campos extraordinarios P2-7 |
 
 ### 5.2 Funciones por archivo
@@ -742,9 +742,12 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations; P3-5), `getRecentExpenses` (query) |
 | `convex/movements.ts` | `listForActiveCycle` (query; lista unificada ingresos + gastos) |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk`, **`markCommitmentAsPaid`** (mutations; P3-7) |
-| `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach` (mutations) — sugiere, confirma, aplica |
+| `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`, **`applyCrisisPlan`** (mutations; Plus v1 Slice 3) — sugiere, confirma, aplica |
 | `convex/lib/rescueTransfer.ts` | Puras: `validateRescueTransferApply`, `computeRescueEnvelopePatches` (con tests) |
 | `convex/lib/crisisResolution.ts` | Puras: opciones crisis, split savings→sobres, copy canon (con tests) |
+| `convex/lib/crisisPlan.ts` | Puras: plan numerado de crisis (postpone → cover → rescue → freeze); TDD; Plus v1 Slice 3 |
+| `convex/upcomingCommitments.ts` | `listUpcomingForBadge` (query premium; compromisos sin cubrir que vencen en ≤3 días) |
+| `convex/lib/upcomingCommitments.ts` | Puras: filtro ventana 3 días + badge label (TDD; Plus v1 Slice 4) |
 | `convex/auth.ts` | `authComponent`, `createAuthOptions`, `createAuth`, triggers onCreate/onUpdate/onDelete |
 | `convex/http.ts` | Router HTTP (endpoints auth) |
 | `convex/lib/budgetMath.ts` | Puras + constantes: `computeAllocations`, `isValidAllocations`, `isValidPaydays`, `computeRescueTransfer`, `suggestRescueTransfer`, `shouldWarnWantsBurn`, `evaluateCycleCompliance` (con tests) |
@@ -757,7 +760,9 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/profiles.ts` | `getMyProfile` (query), `createProfile`, `updateProfileSettings` (nombre + reparto/calendario; mutations) |
 | `convex/progress.ts` | `getOverview`, `getRewards`, `getAppearance` (queries), `updateAppearance` (mutation) |
 | `convex/lib/gamificationMath.ts` | Puras: racha, chart, logros, umbrales recompensa (con tests) |
-| `convex/lib/evaluateClosedCycle.ts` | Persiste `cycleHistory` + actualiza `streaks` al cerrar ciclo |
+| `convex/lib/evaluateClosedCycle.ts` | Persiste `cycleHistory` (+ `closedAtPremium` Plus v1) + actualiza `streaks` al cerrar ciclo |
+| `convex/cycleReport.ts` | `getLatestCloseReport` (query premium; informe de cierre al abrir ciclo nuevo) |
+| `convex/lib/cycleCloseReport.ts` | Puras: agrega ingresos/gastos/ahorro/racha del ciclo cerrado (TDD; Plus v1 Slice 5) |
 | `convex/lib/savingsMath.ts` | Puras: meta fondo 3 meses, meses cubiertos, progreso, ciclos para completar (con tests) |
 | `convex/lib/cycleSavingsBreakdown.ts` | Puras: objetivo / adicional / total del ciclo (TDD; P2-7) |
 
@@ -1053,7 +1058,8 @@ el DoD v2.5 ya está cubierto en la rama de trabajo.
 - **Bloque 4 — Registrar gasto:** variantes A/B vía `ExpenseRegisterProvider` en shell (sin ruta dedicada); `modules/expenses/`; variante C diferida.
 - **Bloque 5 — Ingresos:** `/income/register` habitual + extraordinario (P2-7), preview, confirmación con deltas.
 - **Bloque 6 — Ahorros:** `/savings`, `/savings/fund`, `/savings/move` + success; card ahorro del ciclo; hero Fondo, metas (máx 6), aporte manual al fondo y a metas custom (`contributeToGoal` UI); «Ajustar aporte» → `/settings/allocations`.
-- **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10).
+- **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10). **Plus v1 Slice 3:** premium en crisis ve plan numerado transaccional (`buildCrisisPlan` + `applyCrisisPlan` + `CoachCrisisPlanActions`); free mantiene acciones sueltas (`CoachCrisisActions`).
+- **Plus v1 Slice 4 — Recordatorios in-app:** badge «N vencen pronto» en dashboard (`UpcomingCommitmentsBadge` + `listUpcomingForBadge` gated); lista corta (≤3 ítems) + enlace a `/commitments`; free no ve nada. Sin email ni push.
 - **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
 - **Bloque 9 — Perfil y ajustes:** `/settings` (cuenta) + `/settings/system` (sistema + automatizaciones) + allocations + **wizard ciclo** (`/settings/cycle`, regla §5.3); **tema oscuro** (`next-themes` en Preferencias); **editar nombre** inline; **sesiones** (`sessionsApiReady`, cerrar todas vía Convex + `ConfirmDestructiveDialog`); Polar billing (2026-07-22). Sin selector de acento ni ícono.
@@ -1175,13 +1181,13 @@ flowchart LR
 |---|---|
 | 1. Auth | ✅ Recuperación `/recuperar` + `/restablecer-contrasena` (2026-07-22). ✅ Verificación email (Resend en código, `requireEmailVerification`, `/verify-email`). Pendiente: panel lateral datos reales. |
 | 2. Onboarding | Alinear copy y micro-detalles con §3.7; sin divergencia mayor. |
-| 3. Dashboard | ✅ **P3-5/P3-7 (2026-07-26):** movimientos editables desde `/movements`; compromisos con fila Pago + marcar como pagado; detalle responsive sheet/dialog. |
+| 3. Dashboard | ✅ **P3-5/P3-7 (2026-07-26):** movimientos editables desde `/movements`; compromisos con fila Pago + marcar como pagado; detalle responsive sheet/dialog. ✅ **Plus v1 Slice 2 (2026-07-29):** card Predicción (`CycleForecastCard` + `forecast.getCycleForecast`); free ve paywall. |
 | 4. Registrar gasto | Variante C (automático) cuando exista pipeline de detección. |
-| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. ✅ **P3-6 (2026-07-26):** móvil full-screen inmersivo — sin bottom nav/FAB, header sticky «Volver», footer sticky safe-area, `IncomeDestinationDialog` full-screen en móvil, CTA «+ Ingreso» en dashboard header. |
+| 5. Ingresos | ✅ **UI 5N (2026-07-22):** toggle habitual/extraordinario, grid tipos, reglas en Ajustes, badge movimientos. Selector fecha retroactiva fuera v2.5. ✅ **P3-6 (2026-07-26):** móvil full-screen inmersivo — sin bottom nav/FAB, header sticky «Volver», footer sticky safe-area, `IncomeDestinationDialog` full-screen en móvil, CTA «+ Ingreso» en dashboard header. ✅ **Plus v1 Slice 1 (2026-07-29):** reglas auto-aplicadas (premium); badge `auto` en movimientos; skip confirmación en registro cuando `extraordinaryRulesAutoApply` activo. |
 | 6. Ahorros | ✅ **6N (2026-07-22):** card ciclo, move + success, origen `extraordinary`; UI `contributeToGoal`; «Ajustar aporte» → reparto en Ajustes. |
 | 7. Coach | ✅ Tranquilo CTAs en card del **inicio** (2026-07-22). |
 | 8. Gamificación | Informe anual PDF descargable (post-v2.5); v2.5: preview UI-only §2.4. |
-| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Split cuenta/sistema (2026-07-24):** `/settings` + `/settings/system` + dark mode Preferencias. ✅ **Ajustes v2.5:** editar nombre, wizard `/settings/cycle`, sesiones, `ConfirmDestructiveDialog`. ✅ **Compromisos (2026-07-26):** detalle sheet/dialog responsive, marcar como pagado (P3-7). |
+| 9. Perfil/Ajustes | **Polar.sh billing (2026-07-22).** ✅ **Split cuenta/sistema (2026-07-24):** `/settings` + `/settings/system` + dark mode Preferencias. ✅ **Ajustes v2.5:** editar nombre, wizard `/settings/cycle`, sesiones, `ConfirmDestructiveDialog`. ✅ **Compromisos (2026-07-26):** detalle sheet/dialog responsive, marcar como pagado (P3-7). ✅ **Plus v1 Slice 1 (2026-07-29):** toggles auto-aplicación en Automatizaciones con paywall free. |
 
 ### 8.5 Regla de actualización de esta sección
 
@@ -1350,7 +1356,10 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-29 — Plus v1 Slices 1–2 (reglas auto + predicción).** Slice 1: `extraordinaryRulesAutoApply` en perfil; lib pura `convex/lib/extraordinaryRules.ts` + TDD; `createIncomeEvent`/`updateIncomeEvent` auto-aplican regla premium y persisten `appliedByAutoRule`; toggles «Aplicar automáticamente» en Ajustes → Automatizaciones (free ve `PremiumLockCard` al intentar activar); badge `auto` en movimientos. Slice 2: lib pura `convex/lib/cycleForecast.ts` + TDD (burn rate, días hasta agotar, proyección de cierre); query `forecast.getCycleForecast` gated; card «Predicción» en dashboard entre coach y movimientos (free ve paywall). Plan: `docs/superpowers/plans/2026-07-28-plus-v1.md`.
+- **2026-07-29 — Plus v1 Slices 3–4 (crisis avanzado + recordatorios).** Premium en crisis ve plan numerado transaccional (`convex/lib/crisisPlan.ts` + TDD) con CTA «Resolver en un paso» (`applyCrisisPlan` gated en `coachEngine.ts`; UI `CoachCrisisPlanActions`). Free mantiene acciones sueltas (`CoachCrisisActions`). Recordatorios in-app: query `listUpcomingForBadge` (compromisos sin cubrir que vencen en ≤3 días); badge + lista corta en dashboard (`UpcomingCommitmentsBadge`); free no ve nada. Sin email ni push.
 - **2026-07-29 — CI quality = Biome ci.** El job `quality` corre `pnpm ci:quality` (`biome ci .`) para format + lint; ya no un paso genérico «Lint». React Compiler: handlers async de rescate usan `Promise.finally` (no `try/finally`) para que el compiler pueda memoizar.
+- **2026-07-29 — Plus v1 Slice 5 (informe de cierre).** Al cerrar ciclo con plan premium, `evaluateClosedCycle` persiste `closedAtPremium` en `cycleHistory`. Query `getLatestCloseReport` agrega ingresos, gasto por sobre, ahorro apartado y racha del último ciclo cerrado; card en dashboard durante la primera semana del ciclo nuevo (descartable en localStorage). Free no ve el informe (`closedAtPremium = false`). Lib pura `cycleCloseReport.ts` + TDD.
 - **2026-07-28 — Plus v1 Slice 0 (paywall real).** El rescue del coach muestra `PremiumLockCard` para usuarios free en vez de error no manejado (`coach-rescue-confirm-dialog.tsx` + `modules/coach/lib/handle-rescue-apply.ts` + TDD). Tarjeta de plan en Ajustes lista los 5 bullets de valor de Quipu Plus. Canon §2.4: bancos/OCR/export movidos a "roadmap premium" (Fases 2–3); §2.5 regla 8 anota que la regla de automatizaciones del usuario = opt-in válido. §8.6 Fase 1 marcada "en progreso". Plan en `docs/superpowers/plans/2026-07-28-plus-v1.md`.
 - **2026-07-26 — P3-7: Pagado en compromisos.** Decisión de producto: **Cubierto** (¿hay reserva vía cascada?) ≠ **Pagado** (¿usuario confirmó pago en el ciclo?) ≠ **Vencido** (pasó `dueDay` sin pagar). Schema `paidAt` / `paidForCycleId`; `markCommitmentAsPaid` no toca sobres; `convex/lib/commitmentPayment.ts` + tests; dashboard/lista/detalle con filas Cobertura + Pago. §5.3 y §8 actualizados.
 - **2026-07-26 — P3-5: editar movimientos + responsive detalle.** `updateExpense` / `updateIncomeEvent` (ciclo activo); UI `/movements`; patrón móvil sheet / desktop dialog (`movement-detail-sheet`, `commitment-detail-sheet`). Fix: `updateIncomeEvent` preserva `heldCents` existente. Merge #34.

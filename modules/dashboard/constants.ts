@@ -37,6 +37,13 @@ export const MOVEMENTS_SECTION_LABEL = "Movimientos recientes";
 export const MOVEMENTS_VIEW_ALL = "Ver todo";
 export const COMMITMENTS_VIEW_ALL = "Ver todo";
 
+export const UPCOMING_COMMITMENTS_BADGE_ARIA = "Compromisos que vencen pronto";
+export const UPCOMING_COMMITMENTS_VIEW_ALL = "Ver todos";
+export const UPCOMING_COMMITMENTS_DUE_TODAY = "Vence hoy";
+export const UPCOMING_COMMITMENTS_DUE_TOMORROW = "Vence mañana";
+export const UPCOMING_COMMITMENTS_DUE_IN_DAYS = (days: number) =>
+  `Vence en ${days} días`;
+
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
 
@@ -63,7 +70,45 @@ export const COACH_EARLY_CTA_HINT = "Próximamente";
 export const MOVEMENTS_EMPTY_BODY =
   "Tu primer movimiento aparecerá aquí. Registrar un gasto toma menos de diez segundos.";
 
+export const DASHBOARD_SECONDARY_INSIGHTS_LABEL = "Predicción y vencimientos";
+export const FORECAST_SECTION_LABEL = "Predicción";
+export const FORECAST_EARLY_CYCLE_BODY =
+  "La predicción estará lista después del tercer día del ciclo.";
+export const FORECAST_DEPLETION_LINE = (
+  envelopeLabel: string,
+  calendarDay: number,
+) => `Te quedas sin ${envelopeLabel} el día ${calendarDay}`;
+export const FORECAST_SURPLUS_LINE = (envelopeLabel: string, amount: string) =>
+  `Cierras con ${amount} de sobra en ${envelopeLabel}`;
+export const FORECAST_DEFICIT_LINE = (envelopeLabel: string, amount: string) =>
+  `Faltan ${amount} en ${envelopeLabel} al cierre`;
+export const FORECAST_ALREADY_DEPLETED = (envelopeLabel: string) =>
+  `${envelopeLabel} ya está en cero`;
+export const FORECAST_PAYWALL_TITLE =
+  "Predice cuándo te quedas sin dinero en cada sobre";
+export const FORECAST_PAYWALL_BODY =
+  "Quipu calcula tu ritmo de gasto y te avisa si un sobre se agota antes de cerrar el ciclo.";
+export const FORECAST_PAYWALL_NUDGE = "Predice cuándo se agota cada sobre.";
+
 export const REGISTER_CTA = "Registrar";
 
-/** Mobile-only CTA in the dashboard header to access the income register (full-screen immersive). */
+/** localStorage key prefix for dismissed cycle close reports */
+export const CYCLE_CLOSE_REPORT_DISMISS_KEY = "quipu:cycle-close-report";
+
+export const CYCLE_CLOSE_REPORT_EYEBROW = "Informe de cierre";
+export const CYCLE_CLOSE_REPORT_TITLE = (cycleLabel: string) =>
+  `Tu ciclo ${cycleLabel} cerró`;
+export const CYCLE_CLOSE_REPORT_INCOME = "Entró";
+export const CYCLE_CLOSE_REPORT_SPEND = "Gastaste por sobre";
+export const CYCLE_CLOSE_REPORT_SAVINGS = "Apartaste en ahorro";
+export const CYCLE_CLOSE_REPORT_STREAK = "Racha";
+export const CYCLE_CLOSE_REPORT_STREAK_SUFFIX = (count: number) =>
+  count === 1 ? "ciclo en orden" : "ciclos en orden";
+export const CYCLE_CLOSE_REPORT_DISMISS = "Entendido";
+export const CYCLE_CLOSE_REPORT_EXTRAORDINARY_HINT =
+  "Incluye ingreso extraordinario";
+
+/** Short income CTA in the dashboard header (mobile action row). */
 export const INCOME_MOBILE_CTA = "+ Ingreso";
+/** Desktop income CTA in the dashboard header. */
+export const INCOME_DESKTOP_CTA = "Registrar ingreso";

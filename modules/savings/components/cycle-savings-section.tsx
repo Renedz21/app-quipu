@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { InfoCircle } from "reicon-react";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
@@ -357,9 +358,13 @@ function BelowObjectivePanel({
             className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-clay-soft"
             aria-hidden
           >
-            <span className="flex size-3.5 items-center justify-center rounded-full border-2 border-clay">
-              <span className="size-0.5 rounded-full bg-clay shadow-[0_3px_0_var(--color-clay)]" />
-            </span>
+            <InfoCircle
+              size={20}
+              color="var(--color-clay)"
+              weight="Outline"
+              strokeWidth={2.4}
+              strokeMiterlimit={5}
+            />
           </span>
           <h3 className="font-serif text-[22px] font-medium text-ink md:text-[25px]">
             {CYCLE_SAVINGS_BELOW_TITLE}
@@ -406,9 +411,7 @@ function BelowObjectivePanel({
       </article>
 
       <div className="flex items-start gap-3 rounded-[13px] border border-qp-shield-line bg-qp-success px-4 py-3.5">
-        <span className="mt-0.5 flex size-[22px] shrink-0 items-center justify-center rounded-full bg-moss text-white">
-          <span className="size-1 rounded-full bg-white shadow-[0_4px_0_#fff]" />
-        </span>
+        <InfoCircle size={64} weight="Filled" color="var(--color-qp)" />
         <p className="text-[13.5px] leading-relaxed text-qp-deep">
           <strong className="font-semibold">
             {CYCLE_SAVINGS_BELOW_REASSURANCE_TITLE}

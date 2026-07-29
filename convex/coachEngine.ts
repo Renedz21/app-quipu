@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { suggestRescueTransfer } from "./lib/budgetMath";
 import {
@@ -8,6 +8,7 @@ import {
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
 import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
+import { buildCrisisPlan } from "./lib/crisisPlan";
 import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
 import { requirePremiumProfile } from "./lib/entitlements";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
@@ -111,7 +112,7 @@ async function getOwnedProfileAndCycle(ctx: MutationCtx) {
 }
 
 async function getCycleCoverageContext(
-  ctx: MutationCtx,
+  ctx: QueryCtx | MutationCtx,
   profileId: Id<"profiles">,
   cycleId: Id<"financialCycles">,
   now: number,
@@ -574,6 +575,183 @@ export const snoozeCrisisCoach = mutation({
     });
 
     return { success: true };
+  },
+});
+
+export const applyCrisisPlan = mutation({
+  args: {},
+  returns: v.object({
+    success: v.boolean(),
+    appliedSteps: v.number(),
+    projectedCushionCents: v.number(),
+    canFullyResolve: v.boolean(),
+  }),
+  handler: async (ctx) => {
+    await requirePremiumProfile(ctx);
+
+    const now = Date.now();
+    const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
+    const context = await getCycleCoverageContext(
+      ctx,
+      profile._id,
+      cycle._id,
+      now,
+    );
+
+    if (
+      !context.savingsEnvelope ||
+      !context.needsEnvelope ||
+      !context.wantsEnvelope
+    ) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "No se encontraron los sobres del ciclo actual.",
+      });
+    }
+
+    const plan = buildCrisisPlan({
+      commitments: context.commitments.map((commitment) => ({
+        id: commitment.id,
+        name: commitment.name,
+        amount: commitment.amount,
+        remaining: commitment.remaining,
+        envelope: commitment.envelope,
+        dueDay: commitment.dueDay,
+      })),
+      savingsRemaining: context.savingsEnvelope.remainingAmount,
+      wantsRemaining: context.wantsEnvelope.remainingAmount,
+      needsRemaining: context.needsEnvelope.remainingAmount,
+      cycleEndDate: cycle.endDate,
+      currencySymbol: profile.currencySymbol,
+    });
+
+    if (!plan || plan.steps.length === 0) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "No hay un plan de crisis disponible para aplicar.",
+      });
+    }
+
+    let savingsEnvelope = context.savingsEnvelope;
+    let needsEnvelope = context.needsEnvelope;
+    let wantsEnvelope = context.wantsEnvelope;
+    let coverageBoost = {
+      needs: cycle.coverageBoost?.needs ?? 0,
+      wants: cycle.coverageBoost?.wants ?? 0,
+    };
+    const commitmentById = new Map(
+      context.commitments.map((item) => [item.id, item]),
+    );
+
+    for (const step of plan.steps) {
+      if (step.kind === "postpone" && step.commitmentId) {
+        const commitmentId = step.commitmentId as Id<"fixedCommitments">;
+        const target = commitmentById.get(commitmentId);
+        if (!target || target.remaining <= 0) {
+          throw new ConvexError({
+            code: "VALIDATION_ERROR",
+            message: "El compromiso del plan ya no está pendiente.",
+          });
+        }
+
+        await ctx.db.patch(commitmentId, {
+          postponedForCycleId: cycle._id,
+          coveredAt: now,
+          coveredBy: [],
+        });
+        continue;
+      }
+
+      if (
+        step.kind === "cover_from_savings" &&
+        step.transferTotal != null &&
+        step.needsBoost != null &&
+        step.wantsBoost != null
+      ) {
+        if (step.transferTotal <= 0) continue;
+        if (savingsEnvelope.remainingAmount < step.transferTotal) {
+          throw new ConvexError({
+            code: "VALIDATION_ERROR",
+            message:
+              "Ya no hay saldo en Ahorro del ciclo para cubrir compromisos.",
+          });
+        }
+
+        await ctx.db.patch(savingsEnvelope._id, {
+          remainingAmount: savingsEnvelope.remainingAmount - step.transferTotal,
+        });
+        await ctx.db.patch(needsEnvelope._id, {
+          remainingAmount: needsEnvelope.remainingAmount + step.needsBoost,
+        });
+        await ctx.db.patch(wantsEnvelope._id, {
+          remainingAmount: wantsEnvelope.remainingAmount + step.wantsBoost,
+        });
+        coverageBoost = {
+          needs: coverageBoost.needs + step.needsBoost,
+          wants: coverageBoost.wants + step.wantsBoost,
+        };
+        await ctx.db.patch(cycle._id, { coverageBoost });
+
+        savingsEnvelope = {
+          ...savingsEnvelope,
+          remainingAmount: savingsEnvelope.remainingAmount - step.transferTotal,
+        };
+        needsEnvelope = {
+          ...needsEnvelope,
+          remainingAmount: needsEnvelope.remainingAmount + step.needsBoost,
+        };
+        wantsEnvelope = {
+          ...wantsEnvelope,
+          remainingAmount: wantsEnvelope.remainingAmount + step.wantsBoost,
+        };
+        continue;
+      }
+
+      if (step.kind === "rescue_transfer" && step.rescueTransfer != null) {
+        if (step.rescueTransfer <= 0) continue;
+        if (savingsEnvelope.remainingAmount < step.rescueTransfer) {
+          throw new ConvexError({
+            code: "VALIDATION_ERROR",
+            message: "Ya no hay saldo en Ahorro para completar el rescate.",
+          });
+        }
+
+        await ctx.db.patch(savingsEnvelope._id, {
+          remainingAmount:
+            savingsEnvelope.remainingAmount - step.rescueTransfer,
+        });
+        await ctx.db.patch(wantsEnvelope._id, {
+          remainingAmount: wantsEnvelope.remainingAmount + step.rescueTransfer,
+        });
+
+        savingsEnvelope = {
+          ...savingsEnvelope,
+          remainingAmount:
+            savingsEnvelope.remainingAmount - step.rescueTransfer,
+        };
+        wantsEnvelope = {
+          ...wantsEnvelope,
+          remainingAmount: wantsEnvelope.remainingAmount + step.rescueTransfer,
+        };
+        continue;
+      }
+
+      if (step.kind === "freeze_wants") {
+        const freezeDays = step.freezeDays ?? 3;
+        await ctx.db.patch(wantsEnvelope._id, {
+          frozenUntil: now + freezeDays * 24 * 60 * 60 * 1000,
+        });
+      }
+    }
+
+    await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycle._id, now);
+
+    return {
+      success: true,
+      appliedSteps: plan.steps.length,
+      projectedCushionCents: plan.projectedCushionCents,
+      canFullyResolve: plan.canFullyResolve,
+    };
   },
 });
 

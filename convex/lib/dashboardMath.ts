@@ -21,6 +21,7 @@ export type MovementRecord = {
   amount: number;
   timestamp: number;
   isExtraordinaryIncome?: boolean;
+  appliedByAutoRule?: boolean;
 };
 
 type EnvelopeSlice = {
@@ -43,6 +44,7 @@ type IncomeSlice = {
   amount: number;
   occurredAt: number;
   incomeKind?: "habitual" | "extraordinary";
+  appliedByAutoRule?: boolean;
 };
 
 function getLimaParts(now: number) {
@@ -218,6 +220,7 @@ export function mergeRecentMovements(
     amount: income.amount,
     timestamp: income.occurredAt,
     isExtraordinaryIncome: income.incomeKind === "extraordinary",
+    appliedByAutoRule: income.appliedByAutoRule,
   }));
 
   return [...expenseRows, ...incomeRows]

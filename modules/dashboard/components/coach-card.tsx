@@ -7,15 +7,15 @@ import { ChatDots } from "reicon-react";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
+import { CoachCrisisPlanActions } from "@/modules/coach/components/coach-crisis-plan-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
 import {
-  RESCUE_PAYWALL_BODY,
   RESCUE_PAYWALL_CLOSE,
-  RESCUE_PAYWALL_TITLE,
+  RESCUE_PAYWALL_NUDGE,
 } from "@/modules/coach/constants";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
-import { PremiumLockCard } from "@/shared/components/premium-lock-card";
+import { PremiumUpsellNudge } from "@/shared/components/premium-upsell-nudge";
 import { Button } from "@/shared/components/ui/button";
 import {
   COACH_EARLY_REGISTER_CTA,
@@ -33,6 +33,7 @@ type Props = {
   coach: DashboardCoach;
   currencyCode: string;
   layout?: "inline" | "full";
+  isPremium?: boolean;
 };
 
 const INSIGHT_TYPE_BY_KIND: Record<DashboardCoach["kind"], string> = {
@@ -97,7 +98,12 @@ function scrollToEnvelopes() {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
+export function CoachCard({
+  coach,
+  currencyCode,
+  layout = "inline",
+  isPremium = false,
+}: Props) {
   const router = useRouter();
   const { open } = useExpenseRegister();
   const dismissRescueUpsell = useMutation(api.coachEngine.dismissRescueUpsell);
@@ -128,9 +134,9 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
   return (
     <section
       aria-labelledby="dashboard-coach"
-      className={`flex flex-col rounded-[14px] border p-4 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
+      className={`flex flex-col rounded-[14px] border p-3 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
     >
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2 md:mb-3">
         <span
           className={`flex size-7 items-center justify-center rounded-[9px] ${coachIconClass(coach.kind)}`}
         >
@@ -147,7 +153,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       </div>
 
       <p
-        className={`font-serif text-[15px] leading-snug md:text-[19px] md:leading-normal ${
+        className={`font-serif text-[14px] leading-snug md:text-[19px] md:leading-normal ${
           isCrisis ? "text-danger-ink" : "text-ink"
         }`}
       >
@@ -155,7 +161,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       </p>
 
       {isContigo ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2 md:mt-4">
           <Button
             type="button"
             size="sm"
@@ -179,7 +185,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       ) : null}
 
       {isTranquil ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2 md:mt-4">
           <Button
             type="button"
             size="sm"
@@ -201,7 +207,7 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       ) : null}
 
       {isWarning ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2 md:mt-4">
           <Button
             type="button"
             size="sm"
@@ -233,18 +239,15 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       ) : null}
 
       {coach.rescueUpsellAvailable ? (
-        <div className="mt-4 space-y-3">
-          <PremiumLockCard
-            title={RESCUE_PAYWALL_TITLE}
-            body={RESCUE_PAYWALL_BODY}
-          />
+        <div className="mt-3 space-y-2">
+          <PremiumUpsellNudge message={RESCUE_PAYWALL_NUDGE} />
           <Button
             type="button"
             size="sm"
-            variant="outline"
+            variant="ghost"
             disabled={isDismissingUpsell}
             onClick={() => void handleDismissRescueUpsell()}
-            className="rounded-[11px] border-line bg-canvas/70 text-ink-secondary"
+            className="h-auto px-0 text-[12px] text-faint hover:bg-transparent hover:text-mute"
           >
             {RESCUE_PAYWALL_CLOSE}
           </Button>
@@ -252,7 +255,11 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
       ) : null}
 
       {isCrisis ? (
-        <CoachCrisisActions options={coach.crisisOptions ?? []} />
+        isPremium && coach.crisisPlan ? (
+          <CoachCrisisPlanActions plan={coach.crisisPlan} />
+        ) : (
+          <CoachCrisisActions options={coach.crisisOptions ?? []} />
+        )
       ) : null}
     </section>
   );

@@ -11,6 +11,7 @@ import {
 } from "./lib/commitmentCoverage";
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
+import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
   buildEarlyCycleHeroBody,
@@ -180,6 +181,7 @@ export const getSummary = query({
         amount: income.amount,
         occurredAt: income.occurredAt,
         incomeKind: income.incomeKind,
+        appliedByAutoRule: income.appliedByAutoRule,
       })),
       4,
     ).map((movement) => ({
@@ -346,6 +348,26 @@ export const getSummary = query({
       crisisOptions,
     });
 
+    const needsEnvelope = envelopeByType.get("needs");
+    const crisisPlan =
+      profile.plan === "premium" && coachPresentation.kind === "crisis"
+        ? buildCrisisPlan({
+            commitments: commitments.map((commitment) => ({
+              id: commitment.id,
+              name: commitment.name,
+              amount: commitment.amount,
+              remaining: commitment.remaining,
+              envelope: commitment.envelope,
+              dueDay: commitment.dueDay,
+            })),
+            savingsRemaining,
+            wantsRemaining: wantsEnvelope?.remainingAmount ?? 0,
+            needsRemaining: needsEnvelope?.remainingAmount ?? 0,
+            cycleEndDate: activeCycle.endDate,
+            currencySymbol: profile.currencySymbol,
+          })
+        : null;
+
     const coach = {
       kind: coachPresentation.kind,
       message: coachPresentation.message,
@@ -354,6 +376,7 @@ export const getSummary = query({
         | undefined,
       options: coachPresentation.options,
       crisisOptions: coachPresentation.crisisOptions,
+      crisisPlan: crisisPlan ?? undefined,
       rescueSuggestion: pendingCoach?.rescueSuggestion ?? undefined,
       awaitingRescueConfirmation:
         pendingCoach?.selectedOptionId === "suggest_rescue" &&

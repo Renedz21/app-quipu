@@ -9,6 +9,7 @@ export type MovementItem = {
   amount: number;
   timestamp: number;
   isExtraordinaryIncome?: boolean;
+  appliedByAutoRule?: boolean;
 };
 
 const MOVEMENT_DOT = {
@@ -43,7 +44,7 @@ export function MovementList({ movements, currencyCode }: Props) {
       {movements.map((movement, index) => (
         <li
           key={movement.id}
-          className={`flex items-center gap-3 px-4 py-3 md:px-[18px] ${
+          className={`flex items-center gap-3 px-3 py-2.5 md:px-[18px] md:py-3 ${
             index < movements.length - 1 ? "border-b border-line-divider" : ""
           }`}
         >
@@ -59,6 +60,11 @@ export function MovementList({ movements, currencyCode }: Props) {
             {movement.isExtraordinaryIncome ? (
               <span className="ml-1.5 inline-flex rounded-full border border-extraordinary-border bg-extraordinary-surface px-1.5 py-0.5 text-[10px] font-semibold text-extraordinary-b">
                 Extraordinario
+              </span>
+            ) : null}
+            {movement.appliedByAutoRule ? (
+              <span className="ml-1.5 inline-flex rounded-full border border-qp-border bg-qp-soft px-1.5 py-0.5 text-[10px] font-semibold text-qp-deep">
+                auto
               </span>
             ) : null}
             {movement.envelopeLabel ? (

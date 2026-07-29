@@ -218,6 +218,12 @@ export function MovementsView() {
                           Extraordinario
                         </span>
                       ) : null}
+                      {"appliedByAutoRule" in movement &&
+                      movement.appliedByAutoRule ? (
+                        <span className="ml-1.5 inline-flex rounded-full border border-qp-border bg-qp-soft px-1.5 py-0.5 text-[10px] font-semibold text-qp-deep">
+                          auto
+                        </span>
+                      ) : null}
                       {"envelopeLabel" in movement && movement.envelopeLabel ? (
                         <span className="text-xs text-mute">
                           {" "}

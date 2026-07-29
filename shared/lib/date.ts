@@ -5,7 +5,7 @@
  * helpers para evitar repetir `Intl.DateTimeFormat` por todos lados.
  */
 
-import { LIMA_TIMEZONE } from "@/core/constants";
+import { LIMA_TIMEZONE } from "../constants/timezone";
 
 /**
  * Día del mes en timezone Lima (1-31).

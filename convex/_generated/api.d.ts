@@ -15,9 +15,11 @@ import type * as billing from "../billing.js";
 import type * as coachEngine from "../coachEngine.js";
 import type * as crons from "../crons.js";
 import type * as crons_contentReviewScan from "../crons/contentReviewScan.js";
+import type * as cycleReport from "../cycleReport.js";
 import type * as dashboard from "../dashboard.js";
 import type * as expenses from "../expenses.js";
 import type * as fixedCommitments from "../fixedCommitments.js";
+import type * as forecast from "../forecast.js";
 import type * as http from "../http.js";
 import type * as incomeEvents from "../incomeEvents.js";
 import type * as lib_adminAuth from "../lib/adminAuth.js";
@@ -31,7 +33,10 @@ import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_commitmentDueDate from "../lib/commitmentDueDate.js";
 import type * as lib_commitmentPayment from "../lib/commitmentPayment.js";
 import type * as lib_contentFlags from "../lib/contentFlags.js";
+import type * as lib_crisisPlan from "../lib/crisisPlan.js";
 import type * as lib_crisisResolution from "../lib/crisisResolution.js";
+import type * as lib_cycleCloseReport from "../lib/cycleCloseReport.js";
+import type * as lib_cycleForecast from "../lib/cycleForecast.js";
 import type * as lib_cycleSavingsBreakdown from "../lib/cycleSavingsBreakdown.js";
 import type * as lib_dashboardMath from "../lib/dashboardMath.js";
 import type * as lib_deployment from "../lib/deployment.js";
@@ -46,6 +51,7 @@ import type * as lib_entitlements from "../lib/entitlements.js";
 import type * as lib_evaluateClosedCycle from "../lib/evaluateClosedCycle.js";
 import type * as lib_evaluateCommitmentCoverage from "../lib/evaluateCommitmentCoverage.js";
 import type * as lib_extraordinaryIncome from "../lib/extraordinaryIncome.js";
+import type * as lib_extraordinaryRules from "../lib/extraordinaryRules.js";
 import type * as lib_extraordinarySavingsSurplus from "../lib/extraordinarySavingsSurplus.js";
 import type * as lib_gamificationMath from "../lib/gamificationMath.js";
 import type * as lib_incomeEventLogic from "../lib/incomeEventLogic.js";
@@ -55,6 +61,7 @@ import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
 import type * as lib_resetAppTables from "../lib/resetAppTables.js";
 import type * as lib_savingsMath from "../lib/savingsMath.js";
 import type * as lib_settingsCopy from "../lib/settingsCopy.js";
+import type * as lib_upcomingCommitments from "../lib/upcomingCommitments.js";
 import type * as migrations_backfillCommitmentNextDueAt from "../migrations/backfillCommitmentNextDueAt.js";
 import type * as migrations_backfillRequiredV25 from "../migrations/backfillRequiredV25.js";
 import type * as movements from "../movements.js";
@@ -65,6 +72,7 @@ import type * as resetDb from "../resetDb.js";
 import type * as savings from "../savings.js";
 import type * as settings from "../settings.js";
 import type * as testing from "../testing.js";
+import type * as upcomingCommitments from "../upcomingCommitments.js";
 
 import type {
   ApiFromModules,
@@ -80,9 +88,11 @@ declare const fullApi: ApiFromModules<{
   coachEngine: typeof coachEngine;
   crons: typeof crons;
   "crons/contentReviewScan": typeof crons_contentReviewScan;
+  cycleReport: typeof cycleReport;
   dashboard: typeof dashboard;
   expenses: typeof expenses;
   fixedCommitments: typeof fixedCommitments;
+  forecast: typeof forecast;
   http: typeof http;
   incomeEvents: typeof incomeEvents;
   "lib/adminAuth": typeof lib_adminAuth;
@@ -96,7 +106,10 @@ declare const fullApi: ApiFromModules<{
   "lib/commitmentDueDate": typeof lib_commitmentDueDate;
   "lib/commitmentPayment": typeof lib_commitmentPayment;
   "lib/contentFlags": typeof lib_contentFlags;
+  "lib/crisisPlan": typeof lib_crisisPlan;
   "lib/crisisResolution": typeof lib_crisisResolution;
+  "lib/cycleCloseReport": typeof lib_cycleCloseReport;
+  "lib/cycleForecast": typeof lib_cycleForecast;
   "lib/cycleSavingsBreakdown": typeof lib_cycleSavingsBreakdown;
   "lib/dashboardMath": typeof lib_dashboardMath;
   "lib/deployment": typeof lib_deployment;
@@ -111,6 +124,7 @@ declare const fullApi: ApiFromModules<{
   "lib/evaluateClosedCycle": typeof lib_evaluateClosedCycle;
   "lib/evaluateCommitmentCoverage": typeof lib_evaluateCommitmentCoverage;
   "lib/extraordinaryIncome": typeof lib_extraordinaryIncome;
+  "lib/extraordinaryRules": typeof lib_extraordinaryRules;
   "lib/extraordinarySavingsSurplus": typeof lib_extraordinarySavingsSurplus;
   "lib/gamificationMath": typeof lib_gamificationMath;
   "lib/incomeEventLogic": typeof lib_incomeEventLogic;
@@ -120,6 +134,7 @@ declare const fullApi: ApiFromModules<{
   "lib/resetAppTables": typeof lib_resetAppTables;
   "lib/savingsMath": typeof lib_savingsMath;
   "lib/settingsCopy": typeof lib_settingsCopy;
+  "lib/upcomingCommitments": typeof lib_upcomingCommitments;
   "migrations/backfillCommitmentNextDueAt": typeof migrations_backfillCommitmentNextDueAt;
   "migrations/backfillRequiredV25": typeof migrations_backfillRequiredV25;
   movements: typeof movements;
@@ -130,6 +145,7 @@ declare const fullApi: ApiFromModules<{
   savings: typeof savings;
   settings: typeof settings;
   testing: typeof testing;
+  upcomingCommitments: typeof upcomingCommitments;
 }>;
 
 /**

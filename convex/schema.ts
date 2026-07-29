@@ -84,6 +84,15 @@ export const appTables = {
         ),
       }),
     ),
+    extraordinaryRulesAutoApply: v.optional(
+      v.object({
+        cts: v.optional(v.boolean()),
+        gratifications: v.optional(v.boolean()),
+        corporate_bonus: v.optional(v.boolean()),
+        profit_sharing: v.optional(v.boolean()),
+        custom: v.optional(v.boolean()),
+      }),
+    ),
 
     // Estado del SaaS (Sincronizado vía Webhooks de Polar.sh)
     onboardingComplete: v.boolean(),
@@ -247,6 +256,8 @@ export const appTables = {
     evaluatedAt: v.number(),
     wantsWithinBudget: v.boolean(),
     allCommitmentsCovered: v.boolean(),
+    // Plus v1: whether the user had premium when this cycle closed.
+    closedAtPremium: v.optional(v.boolean()),
   })
     .index("by_profile_cycle", ["profileId", "cycleId"])
     .index("by_profileId", ["profileId"]),
@@ -291,6 +302,7 @@ export const appTables = {
     distributionPolicy: v.optional(
       v.union(v.literal("profile_default"), v.literal("all_to_savings")),
     ),
+    appliedByAutoRule: v.optional(v.boolean()),
     // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
     // distributable = amount - heldCents. totalIncomeReceived stays gross (sum of amount).
     heldCents: v.optional(v.number()),

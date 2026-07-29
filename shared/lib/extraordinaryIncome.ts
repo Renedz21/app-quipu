@@ -25,6 +25,14 @@ export type ExtraordinaryRules = {
   custom: ExtraordinaryProfileRule;
 };
 
+export type ExtraordinaryRulesAutoApply = {
+  cts: boolean;
+  gratifications: boolean;
+  corporate_bonus: boolean;
+  profit_sharing: boolean;
+  custom: boolean;
+};
+
 export const DEFAULT_EXTRAORDINARY_RULES: ExtraordinaryRules = {
   cts: "all_to_emergency_fund",
   gratifications: "profile_default",
@@ -37,6 +45,20 @@ export function mergeExtraordinaryRules(
   rules: Partial<ExtraordinaryRules> | undefined,
 ): ExtraordinaryRules {
   return { ...DEFAULT_EXTRAORDINARY_RULES, ...rules };
+}
+
+const DEFAULT_EXTRAORDINARY_RULES_AUTO_APPLY: ExtraordinaryRulesAutoApply = {
+  cts: false,
+  gratifications: false,
+  corporate_bonus: false,
+  profit_sharing: false,
+  custom: false,
+};
+
+export function mergeExtraordinaryRulesAutoApply(
+  autoApply: Partial<ExtraordinaryRulesAutoApply> | undefined,
+): ExtraordinaryRulesAutoApply {
+  return { ...DEFAULT_EXTRAORDINARY_RULES_AUTO_APPLY, ...autoApply };
 }
 
 export function resolveExtraordinaryRuleKey(

@@ -106,6 +106,7 @@ function buildMovements(
     amount: number;
     timestamp: number;
     isExtraordinaryIncome?: boolean;
+    appliedByAutoRule?: boolean;
     occurredAt: number;
     source: Doc<"incomeEvents">["source"];
     incomeKind?: "habitual" | "extraordinary";
@@ -134,6 +135,7 @@ function buildMovements(
     amount: income.amount,
     timestamp: income.occurredAt,
     isExtraordinaryIncome: income.incomeKind === "extraordinary",
+    appliedByAutoRule: income.appliedByAutoRule,
     occurredAt: income.occurredAt,
     source: income.source,
     incomeKind: income.incomeKind,

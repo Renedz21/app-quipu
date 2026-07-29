@@ -8,7 +8,7 @@
 export const APP_NAME = "Quipu";
 export const APP_TAGLINE = "Tu sueldo, con disciplina.";
 
-export const LIMA_TIMEZONE = "America/Lima";
+export { LIMA_TIMEZONE } from "@/shared/constants/timezone";
 
 /**
  * Moneda por defecto. Multi-moneda se manejará cuando se implemente.

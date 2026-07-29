@@ -139,7 +139,7 @@ export function SettingsExtraordinarySection({
   return (
     <section
       className={cn(
-        "rounded-[14px] border border-line bg-card px-[18px] py-4 md:px-5",
+        "rounded-[14px] border border-line-strong bg-card px-[18px] py-4 md:px-5",
         className,
       )}
     >
@@ -160,7 +160,7 @@ export function SettingsExtraordinarySection({
           return (
             <li
               key={row.key}
-              className="flex flex-col gap-3 rounded-[14px] border border-line bg-canvas px-[18px] py-[15px] sm:flex-row sm:items-center sm:gap-3.5"
+              className="flex flex-col gap-3 rounded-[14px] border border-line-strong bg-canvas px-[18px] py-[15px] sm:flex-row sm:items-center sm:gap-3.5"
             >
               <RowIcon kind={row.icon} />
               <div className="min-w-0 flex-1">
@@ -172,10 +172,10 @@ export function SettingsExtraordinarySection({
               <label className="relative inline-flex min-w-[12rem] items-center">
                 <select
                   className={cn(
-                    "h-10 w-full cursor-pointer appearance-none rounded-[10px] border py-2 pr-9 pl-3.5 text-[13.5px] font-semibold outline-none",
+                    "h-10 w-full cursor-pointer appearance-none rounded-[10px] border py-2 pr-9 pl-3.5 text-[13.5px] font-semibold outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
                     savingsRule
                       ? "border-qp-border bg-qp-soft text-qp-deep"
-                      : "border-line bg-[#F4F1EB] text-ink-secondary",
+                      : "border-line bg-control text-ink",
                   )}
                   value={current}
                   onChange={(event) =>
@@ -193,7 +193,10 @@ export function SettingsExtraordinarySection({
                 </select>
                 <ChevronDown
                   size={14}
-                  className="pointer-events-none absolute right-3 text-mute"
+                  className={cn(
+                    "pointer-events-none absolute right-3",
+                    savingsRule ? "text-qp-deep" : "text-mute",
+                  )}
                   aria-hidden
                 />
               </label>

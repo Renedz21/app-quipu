@@ -11,6 +11,7 @@ import {
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
+import { isRescueUpsellAvailable } from "./lib/coachRescueUpsell";
 import {
   buildEarlyCycleHeroBody,
   buildValidationCopy,
@@ -357,6 +358,7 @@ export const getSummary = query({
       awaitingRescueConfirmation:
         pendingCoach?.selectedOptionId === "suggest_rescue" &&
         pendingCoach?.rescueSuggestion != null,
+      rescueUpsellAvailable: isRescueUpsellAvailable(profile),
     };
 
     return {

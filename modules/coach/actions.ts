@@ -28,6 +28,10 @@ export function useSnoozeCrisisCoach() {
   return useMutation(api.coachEngine.snoozeCrisisCoach);
 }
 
+export function useDismissRescueUpsell() {
+  return useMutation(api.coachEngine.dismissRescueUpsell);
+}
+
 export type ResolveNudgeOptionId = "freeze_wants" | "suggest_rescue" | "ignore";
 
 export async function resolveNudgeAction(

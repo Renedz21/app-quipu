@@ -17,7 +17,7 @@ export const REWARDS_PAGE_TITLE = "Recompensas";
 export const REWARDS_PAGE_SUBTITLE =
   "Detalles para tu Quipu. Nada de trofeos dorados.";
 export const REWARDS_THEME_HINT =
-  "El tema claro u oscuro también está en Ajustes → Tu sistema → Preferencias.";
+  "El tema claro u oscuro también está en Preferencias, dentro de Ajustes · Tu sistema.";
 export const REWARDS_ACTIVATE = "Activar";
 export const REWARDS_ACTIVE = "Activo";
 export const REWARDS_CYCLES_MORE = (n: number) =>

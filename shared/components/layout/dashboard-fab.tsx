@@ -16,6 +16,7 @@ export function DashboardFab() {
   return (
     <Button
       type="button"
+      size="icon"
       // With an active cycle the FAB opens the expense sheet exclusively,
       // so label it "Registrar gasto" to avoid semantic collision with the
       // «+ Ingreso» CTA now shown in the dashboard header.
@@ -27,9 +28,16 @@ export function DashboardFab() {
         }
         router.push("/income/register");
       }}
-      className="size-13 rounded-full bg-ink text-canvas shadow-[0_10px_24px_-8px_color-mix(in_oklch,var(--qp-ink)_50%,transparent)] hover:bg-ink/90"
+      className="size-13 rounded-full bg-ink p-0 text-canvas shadow-[0_10px_24px_-8px_color-mix(in_oklch,var(--qp-ink)_50%,transparent)] hover:bg-ink/90"
     >
-      <Add size={48} color="var(--qp-canvas)" aria-hidden />
+      {/* className size-* beats Button's default [&_svg]:size-4 override */}
+      <Add
+        size={28}
+        color="var(--qp-canvas)"
+        className="size-7"
+        strokeWidth={2.5}
+        aria-hidden
+      />
     </Button>
   );
 }

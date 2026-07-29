@@ -15,7 +15,7 @@ export function SettingsSignOutItem({ className }: Props) {
 
   return (
     <SettingsAccountActionButton
-      tone="danger"
+      tone="neutral"
       className={className}
       onClick={async () => {
         track(AnalyticsEvents.USER_LOGGED_OUT, {});

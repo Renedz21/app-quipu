@@ -44,10 +44,11 @@ export function SettingsExportDataItem({ className }: Props) {
 
   return (
     <span
-      className={cn("inline-flex max-w-full flex-col items-start", className)}
+      className={cn("flex max-w-full flex-col items-stretch", className)}
     >
       <SettingsAccountActionButton
         tone="neutral"
+        className="w-full"
         onClick={handleExport}
         disabled={isExporting}
       >

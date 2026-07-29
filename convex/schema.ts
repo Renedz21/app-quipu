@@ -91,6 +91,9 @@ export const appTables = {
     polarCustomerId: v.optional(v.string()),
     polarSubscriptionId: v.optional(v.string()),
     coachCrisisSnoozedUntil: v.optional(v.number()),
+    // Free rescue upsell: triggered when user elige suggest_rescue sin Plus.
+    coachRescueUpsellAt: v.optional(v.number()),
+    coachRescueUpsellDismissedAt: v.optional(v.number()),
     appearanceTheme: v.optional(
       v.union(v.literal("light"), v.literal("tinta")),
     ),

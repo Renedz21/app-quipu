@@ -41,7 +41,7 @@ export default function TerminosPage() {
         <h2 className={SECTION_HEADING}>3. Planes y pagos</h2>
         <p className={SECTION_BODY}>
           El plan gratuito es completo y sin límite de registros manuales. Quipu
-          Plus (S/ 14.90 por mes) agrega automatización y se cobra por
+          Plus (US$ 4.99 por mes) agrega automatización y se cobra por
           adelantado a través de Polar.sh, nuestro procesador de pagos; no
           almacenamos los datos de tu tarjeta. La suscripción se renueva
           automáticamente y puedes cancelarla en cualquier momento desde

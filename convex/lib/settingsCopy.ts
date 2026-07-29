@@ -1,4 +1,8 @@
 import type { Doc } from "../_generated/dataModel";
+import {
+  PLUS_MONTHLY_PRICE,
+  PLUS_UPGRADE_PRICE_HINT,
+} from "../../shared/constants/plan";
 import { CYCLE_DAYS, type PayFrequency } from "./budgetMath";
 
 export type IncomeModel = Doc<"profiles">["incomeModel"];
@@ -50,14 +54,14 @@ export function planDisplay(plan: PlanTier): {
     return {
       tier: "premium",
       label: "Quipu Plus",
-      priceCopy: "S/ 14.90/mes",
+      priceCopy: PLUS_MONTHLY_PRICE,
       statusCopy: "Activo",
     };
   }
   return {
     tier: "free",
     label: "Quipu",
-    priceCopy: null,
+    priceCopy: PLUS_UPGRADE_PRICE_HINT,
     statusCopy: "Plan gratuito",
   };
 }

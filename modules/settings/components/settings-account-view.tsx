@@ -102,15 +102,15 @@ export function SettingsAccountView() {
         <h1 className="font-serif text-[23px] font-medium text-ink md:text-[27px]">
           {SETTINGS_MOBILE_ACCOUNT_LABEL}
         </h1>
-        <p className="mt-1 text-[12.5px] text-mute-subtle md:text-[13.5px]">
+        <p className="mt-1 max-w-full text-[12.5px] text-mute-subtle md:text-[13.5px]">
           {SETTINGS_PAGE_SUBTITLE}
         </p>
       </header>
 
-      <div className="flex flex-col gap-3.5 md:flex-row md:gap-3.5">
-        <div className="flex flex-1 flex-col gap-3.5">
+      <div className="flex min-w-0 flex-col gap-3.5 md:flex-row md:gap-3.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
           <SettingsProfileCard id="perfil" profile={overview.profile} />
-          <div id="plan" className="scroll-mt-6">
+          <div id="plan" className="min-w-0 scroll-mt-6">
             <SettingsPlanCard subscription={overview.subscription} />
             {showCheckoutBanner ? (
               <p
@@ -122,7 +122,7 @@ export function SettingsAccountView() {
             ) : null}
           </div>
         </div>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <SettingsSecurityCard
             id="seguridad"
             sessionsApiReady={overview.sessionsApiReady}

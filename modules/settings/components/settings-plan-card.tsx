@@ -74,22 +74,24 @@ export function SettingsPlanCard({ subscription, className }: Props) {
         className,
       )}
     >
-      <div className="mb-3.5 flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-faint">
+      <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
+        <span className="min-w-0 font-mono text-[10px] uppercase tracking-widest text-faint">
           {SETTINGS_PLAN_LABEL}
         </span>
         {isPremium ? (
-          <span className="rounded-full bg-qp-soft px-2.5 py-0.5 text-[10.5px] font-semibold text-qp-deep">
+          <span className="shrink-0 rounded-full bg-qp-soft px-2.5 py-0.5 text-[10.5px] font-semibold text-qp-deep">
             {SETTINGS_PLAN_ACTIVE_BADGE}
           </span>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-baseline gap-2.5">
-        <span className="font-serif text-2xl text-ink">
+      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <span className="min-w-0 wrap-break-word font-serif text-2xl text-ink">
           {isPremium ? SETTINGS_PLAN_PLUS_NAME : SETTINGS_PLAN_FREE_NAME}
         </span>
         {subscription.priceDisplay ? (
-          <span className="text-sm text-mute">{subscription.priceDisplay}</span>
+          <span className="shrink-0 text-sm text-mute">
+            {subscription.priceDisplay}
+          </span>
         ) : null}
       </div>
       {subscription.renewalSummary ? (

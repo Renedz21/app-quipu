@@ -18,8 +18,11 @@
  *     changes en defaults del SDK mientras dure el release actual).
  *
  * Si las variables de entorno faltan, NO se inicializa PostHog. Las llamadas
- * a `track()` se vuelven no-op en ese caso. En dev, `clientEnv` exige
- * las variables por Zod, así que el fallo es en build/start, no en runtime.
+ * a `track()` se vuelven no-op en ese caso.
+ *
+ * En desarrollo (`NODE_ENV === "development"`) PostHog no se inicializa ni
+ * envía eventos aunque las variables existan en `.env.local`. Los feature
+ * flags usan sus fallbacks locales (`FEATURE_FLAG_DEFAULTS`).
  */
 
 import posthog, { type PostHogConfig } from "posthog-js";
@@ -27,11 +30,17 @@ import { clientEnv } from "@/core/env.client";
 
 let initialized = false;
 
-export function isPosthogConfigured(): boolean {
+function hasPosthogEnv(): boolean {
   return Boolean(
     clientEnv.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
       clientEnv.NEXT_PUBLIC_POSTHOG_HOST,
   );
+}
+
+/** PostHog activo: env presente y no estamos en desarrollo local. */
+export function isPosthogConfigured(): boolean {
+  if (process.env.NODE_ENV === "development") return false;
+  return hasPosthogEnv();
 }
 
 /**

@@ -98,7 +98,7 @@ export function IncomeHeldField({
         className={cn(
           "flex h-[46px] w-full items-center rounded-[11px] border px-4 text-[14.5px] text-ink outline-none transition-colors",
           isInvalid
-            ? "border-[1.5px] border-danger bg-[#FDF7F5] focus:border-danger"
+            ? "border-[1.5px] border-danger bg-danger-bg focus:border-danger"
             : "border-line bg-card focus:border-qp focus:ring-[3px] focus:ring-qp/20",
         )}
         value={displayValue}

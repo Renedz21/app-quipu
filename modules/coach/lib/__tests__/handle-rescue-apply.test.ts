@@ -23,7 +23,10 @@ describe("handleRescueApply", () => {
 
   it("returns 'paywall_required' when Convex throws PLAN_REQUIRED", async () => {
     const applyRescue = vi.fn().mockRejectedValue({
-      data: { code: "PLAN_REQUIRED", message: "Esta función es parte de Quipu Plus." },
+      data: {
+        code: "PLAN_REQUIRED",
+        message: "Esta función es parte de Quipu Plus.",
+      },
     });
     const result = await handleRescueApply({ applyRescue, interactionId });
     expect(result).toEqual({ kind: "paywall_required" });
@@ -31,7 +34,10 @@ describe("handleRescueApply", () => {
 
   it("returns 'error' for any other thrown error", async () => {
     const applyRescue = vi.fn().mockRejectedValue({
-      data: { code: "INSUFFICIENT_FUNDS", message: "Saldo insuficiente en Ahorro" },
+      data: {
+        code: "INSUFFICIENT_FUNDS",
+        message: "Saldo insuficiente en Ahorro",
+      },
     });
     const result = await handleRescueApply({ applyRescue, interactionId });
     expect(result).toEqual({

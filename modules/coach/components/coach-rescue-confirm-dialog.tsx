@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
+import { PremiumLockCard } from "@/shared/components/premium-lock-card";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -15,13 +16,12 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { formatCents } from "@/shared/lib/money";
-import { PremiumLockCard } from "@/shared/components/premium-lock-card";
-import { handleRescueApply } from "../lib/handle-rescue-apply";
 import {
   RESCUE_CONFIRM_APPLY_CTA,
   RESCUE_CONFIRM_DISMISS_CTA,
   RESCUE_CONFIRM_TITLE,
 } from "../constants";
+import { handleRescueApply } from "../lib/handle-rescue-apply";
 
 type RescueSuggestion = {
   transfer: number;
@@ -46,9 +46,10 @@ export function CoachRescueConfirmDialog({
   const applyRescue = useMutation(api.coachEngine.applyRescueTransfer);
   const dismissRescue = useMutation(api.coachEngine.dismissRescueSuggestion);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paywall, setPaywall] = useState<{ title: string; body: string } | null>(
-    null,
-  );
+  const [paywall, setPaywall] = useState<{
+    title: string;
+    body: string;
+  } | null>(null);
 
   async function handleApply() {
     setIsSubmitting(true);

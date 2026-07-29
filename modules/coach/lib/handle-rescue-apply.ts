@@ -25,7 +25,9 @@ export async function handleRescueApply(args: {
   interactionId: Id<"coachInteractions">;
 }): Promise<RescueApplyResult> {
   try {
-    const result = await args.applyRescue({ interactionId: args.interactionId });
+    const result = await args.applyRescue({
+      interactionId: args.interactionId,
+    });
     return {
       kind: "applied",
       transfer: result.transfer,

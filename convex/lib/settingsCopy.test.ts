@@ -32,7 +32,9 @@ describe("planDisplay", () => {
   });
 
   it("describes free tier", () => {
-    expect(planDisplay("free").priceCopy).toBe("Automatización desde US$ 4.99/mes");
+    expect(planDisplay("free").priceCopy).toBe(
+      "Automatización desde US$ 4.99/mes",
+    );
     expect(planDisplay("free").statusCopy).toBe("Plan gratuito");
   });
 });

@@ -67,8 +67,7 @@ export const SETTINGS_EXPORT_DATA_PREPARING = "Preparando tu descarga…";
 export const SETTINGS_EXPORT_DATA_ERROR =
   "No pudimos preparar tu descarga. Intenta de nuevo.";
 export const SETTINGS_DANGER_ZONE_LABEL = "Zona sensible";
-export const SETTINGS_DANGER_ZONE_HINT =
-  "Borra tu cuenta de forma permanente.";
+export const SETTINGS_DANGER_ZONE_HINT = "Borra tu cuenta de forma permanente.";
 export const SETTINGS_DELETE_ACCOUNT = "Eliminar cuenta";
 export const SETTINGS_DELETE_ACCOUNT_TITLE =
   "¿Eliminar tu cuenta para siempre?";

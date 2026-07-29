@@ -90,7 +90,9 @@ export function buildSettingsOverviewFromProfile(
     subscription: {
       plan: profile.plan,
       status: isPremium ? "active" : "free",
-      priceDisplay: isPremium ? SETTINGS_PLAN_PLUS_PRICE : SETTINGS_PLAN_PLUS_PRICE_HINT,
+      priceDisplay: isPremium
+        ? SETTINGS_PLAN_PLUS_PRICE
+        : SETTINGS_PLAN_PLUS_PRICE_HINT,
       renewalSummary: isPremium
         ? SETTINGS_PLAN_RENEWAL_AUTOMATIC
         : SETTINGS_PLAN_FREE_BODY,

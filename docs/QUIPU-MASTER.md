@@ -1203,8 +1203,9 @@ npx convex dev              # Convex backend en dev
 
 # Validación (antes de commit/PR)
 pnpm tsc --noEmit           # Typecheck (obligatorio, 0 errores)
-pnpm lint                   # Biome lint (sin warnings nuevos)
-pnpm format                 # Biome format
+pnpm lint                   # Biome check (format + lint; warnings preexistentes OK)
+pnpm format                 # Biome format --write
+pnpm ci:quality             # Biome ci (lo que corre el job quality en GitHub Actions)
 pnpm test                   # Vitest
 
 # Convex
@@ -1252,7 +1253,7 @@ cuenta limpia (borrar el user de Better Auth en Convex dashboard entre runs).
 
 | Workflow | Qué corre | Ramas |
 |---|---|---|
-| `.github/workflows/ci.yml` | `pnpm lint`, `pnpm typecheck`, `pnpm test` | `main`, `master`, `chore/quipu-2.0` |
+| `.github/workflows/ci.yml` | `pnpm ci:quality` (Biome format+lint), `pnpm typecheck`, `pnpm test` | `main`, `master`, `chore/quipu-2.0` |
 | `.github/workflows/react-doctor.yml` | complementario | según archivo |
 
 ### 9.4 Deploy y entorno
@@ -1349,6 +1350,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-29 — CI quality = Biome ci.** El job `quality` corre `pnpm ci:quality` (`biome ci .`) para format + lint; ya no un paso genérico «Lint». React Compiler: handlers async de rescate usan `Promise.finally` (no `try/finally`) para que el compiler pueda memoizar.
 - **2026-07-28 — Plus v1 Slice 0 (paywall real).** El rescue del coach muestra `PremiumLockCard` para usuarios free en vez de error no manejado (`coach-rescue-confirm-dialog.tsx` + `modules/coach/lib/handle-rescue-apply.ts` + TDD). Tarjeta de plan en Ajustes lista los 5 bullets de valor de Quipu Plus. Canon §2.4: bancos/OCR/export movidos a "roadmap premium" (Fases 2–3); §2.5 regla 8 anota que la regla de automatizaciones del usuario = opt-in válido. §8.6 Fase 1 marcada "en progreso". Plan en `docs/superpowers/plans/2026-07-28-plus-v1.md`.
 - **2026-07-26 — P3-7: Pagado en compromisos.** Decisión de producto: **Cubierto** (¿hay reserva vía cascada?) ≠ **Pagado** (¿usuario confirmó pago en el ciclo?) ≠ **Vencido** (pasó `dueDay` sin pagar). Schema `paidAt` / `paidForCycleId`; `markCommitmentAsPaid` no toca sobres; `convex/lib/commitmentPayment.ts` + tests; dashboard/lista/detalle con filas Cobertura + Pago. §5.3 y §8 actualizados.
 - **2026-07-26 — P3-5: editar movimientos + responsive detalle.** `updateExpense` / `updateIncomeEvent` (ciclo activo); UI `/movements`; patrón móvil sheet / desktop dialog (`movement-detail-sheet`, `commitment-detail-sheet`). Fix: `updateIncomeEvent` preserva `heldCents` existente. Merge #34.

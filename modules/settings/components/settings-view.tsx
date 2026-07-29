@@ -128,7 +128,9 @@ function MobileAccountList({
           {SETTINGS_SECURITY_LABEL}
         </span>
         {passkeyCount > 0 ? (
-          <span className="shrink-0 text-[11px] text-faint">{passkeyCount}</span>
+          <span className="shrink-0 text-[11px] text-faint">
+            {passkeyCount}
+          </span>
         ) : null}
         <ListRowChevron />
       </Link>

@@ -1,5 +1,6 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { isRescueUpsellAvailable } from "./lib/coachRescueUpsell";
 import { resolveCoachPresentation } from "./lib/coachState";
 import {
   computeAllCommitmentCoverage,
@@ -11,7 +12,6 @@ import {
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
-import { isRescueUpsellAvailable } from "./lib/coachRescueUpsell";
 import {
   buildEarlyCycleHeroBody,
   buildValidationCopy,

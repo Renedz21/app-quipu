@@ -116,13 +116,13 @@ export function CoachCard({ coach, currencyCode, layout = "inline" }: Props) {
 
   async function handleDismissRescueUpsell() {
     setIsDismissingUpsell(true);
-    try {
-      await dismissRescueUpsell({});
-    } catch {
-      // Convex mutation errors surface via toast elsewhere; keep UI dismissible.
-    } finally {
-      setIsDismissingUpsell(false);
-    }
+    await dismissRescueUpsell({})
+      .catch(() => {
+        // Convex mutation errors surface via toast elsewhere; keep UI dismissible.
+      })
+      .finally(() => {
+        setIsDismissingUpsell(false);
+      });
   }
 
   return (

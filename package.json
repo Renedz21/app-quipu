@@ -11,6 +11,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
+    "format:check": "biome format --check .",
+    "ci:quality": "biome ci .",
     "test": "vitest",
     "doctor": "npx react-doctor@latest"
   },

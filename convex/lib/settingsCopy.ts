@@ -1,8 +1,8 @@
-import type { Doc } from "../_generated/dataModel";
 import {
   PLUS_MONTHLY_PRICE,
   PLUS_UPGRADE_PRICE_HINT,
 } from "../../shared/constants/plan";
+import type { Doc } from "../_generated/dataModel";
 import { CYCLE_DAYS, type PayFrequency } from "./budgetMath";
 
 export type IncomeModel = Doc<"profiles">["incomeModel"];

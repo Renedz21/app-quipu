@@ -63,42 +63,44 @@ export function CoachRescueConfirmDialog({
 
   async function handleApply() {
     setIsSubmitting(true);
-    try {
-      const result = await handleRescueApply({ applyRescue, interactionId });
-      if (result.kind === "paywall_required") {
-        setPaywall({
-          title: RESCUE_PAYWALL_TITLE,
-          body: RESCUE_PAYWALL_BODY,
-        });
-        return;
-      }
-      if (result.kind === "error") {
-        return;
-      }
-      track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
-        recommendation_type: "rescue_transfer",
-        interaction: "selected",
-        transfer_amount: result.transfer,
-      });
-      onOpenChange(false);
-    } finally {
+    const result = await handleRescueApply({
+      applyRescue,
+      interactionId,
+    }).finally(() => {
       setIsSubmitting(false);
+    });
+    if (result.kind === "paywall_required") {
+      setPaywall({
+        title: RESCUE_PAYWALL_TITLE,
+        body: RESCUE_PAYWALL_BODY,
+      });
+      return;
     }
+    if (result.kind === "error") {
+      return;
+    }
+    track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
+      recommendation_type: "rescue_transfer",
+      interaction: "selected",
+      transfer_amount: result.transfer,
+    });
+    onOpenChange(false);
   }
 
   async function handleDismiss() {
     setIsSubmitting(true);
-    try {
-      await dismissRescue({ interactionId });
-      track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
-        recommendation_type: "rescue_transfer",
-        interaction: "dismissed",
-        transfer_amount: suggestion.transfer,
+    await dismissRescue({ interactionId })
+      .then(() => {
+        track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
+          recommendation_type: "rescue_transfer",
+          interaction: "dismissed",
+          transfer_amount: suggestion.transfer,
+        });
+        onOpenChange(false);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-      onOpenChange(false);
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   return (

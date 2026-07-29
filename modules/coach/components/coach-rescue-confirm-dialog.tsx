@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { formatCents } from "@/shared/lib/money";
+import { PremiumLockCard } from "@/shared/components/premium-lock-card";
+import { handleRescueApply } from "../lib/handle-rescue-apply";
 import {
   RESCUE_CONFIRM_APPLY_CTA,
   RESCUE_CONFIRM_DISMISS_CTA,
@@ -44,15 +46,28 @@ export function CoachRescueConfirmDialog({
   const applyRescue = useMutation(api.coachEngine.applyRescueTransfer);
   const dismissRescue = useMutation(api.coachEngine.dismissRescueSuggestion);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paywall, setPaywall] = useState<{ title: string; body: string } | null>(
+    null,
+  );
 
   async function handleApply() {
     setIsSubmitting(true);
     try {
-      await applyRescue({ interactionId });
+      const result = await handleRescueApply({ applyRescue, interactionId });
+      if (result.kind === "paywall_required") {
+        setPaywall({
+          title: "El rescate de sobres es parte de Quipu Plus",
+          body: "Mueve dinero entre sobres sin tener que pensarlo tú. Y mucho más: predicciones por sobre, plan de crisis en un paso, avisos de compromisos e informe de cierre.",
+        });
+        return;
+      }
+      if (result.kind === "error") {
+        return;
+      }
       track(AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED, {
         recommendation_type: "rescue_transfer",
         interaction: "selected",
-        transfer_amount: suggestion.transfer,
+        transfer_amount: result.transfer,
       });
       onOpenChange(false);
     } finally {
@@ -116,6 +131,11 @@ export function CoachRescueConfirmDialog({
             {RESCUE_CONFIRM_APPLY_CTA}
           </Button>
         </DialogFooter>
+        {paywall ? (
+          <div className="mt-4">
+            <PremiumLockCard title={paywall.title} body={paywall.body} />
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

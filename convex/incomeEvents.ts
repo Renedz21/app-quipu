@@ -3,12 +3,14 @@ import {
   applyDistributionPolicy,
   type DistributionPolicy,
 } from "../shared/lib/allocations";
+import { validateAllocationPlan } from "../shared/lib/incomeAllocation";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
+import { persistIncomeAllocation } from "./lib/applyIncomeAllocation";
 import { CYCLE_DAYS, ENVELOPE_TYPES } from "./lib/budgetMath";
+import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import {
   computeCycleDayMetrics,
-  computeDailyAvailable,
   computeDisplayDailyCents,
 } from "./lib/dashboardMath";
 import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
@@ -22,8 +24,10 @@ import {
   sourceForExtraordinaryType,
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
+import type { AllocationPlan } from "./lib/incomeAllocation";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 import { computeDistributableCents, validateHeldCents } from "./lib/incomeHold";
+import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const HORIZON_DAYS = 15; // v2.5 initial: fixed at 15 for variable income model.
@@ -41,6 +45,28 @@ const distributionPolicyValidator = v.union(
   v.literal("profile_default"),
   v.literal("all_to_savings"),
 );
+
+const allocationPlanValidator = v.object({
+  reservations: v.array(
+    v.object({
+      commitmentId: v.id("fixedCommitments"),
+      amountCents: v.number(),
+    }),
+  ),
+  envelopes: v.object({
+    needs: v.number(),
+    wants: v.number(),
+    savings: v.number(),
+  }),
+  savingsContributions: v.array(
+    v.object({
+      amountCents: v.number(),
+      kind: v.union(v.literal("objective"), v.literal("additional")),
+      subEnvelopeId: v.optional(v.id("subEnvelopes")),
+    }),
+  ),
+  leaveUnallocatedCents: v.number(),
+});
 
 export const createIncomeEvent = mutation({
   args: {
@@ -63,7 +89,10 @@ export const createIncomeEvent = mutation({
     extraordinaryLabel: v.optional(v.string()),
     distributionPolicy: v.optional(distributionPolicyValidator),
     // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
+    // Ignored when `allocation` is provided (reservations replace heldCents).
     heldCents: v.optional(v.number()),
+    // Explicit distribution plan. When set, replaces auto 50/30/20 + heldCents.
+    allocation: v.optional(allocationPlanValidator),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -81,8 +110,39 @@ export const createIncomeEvent = mutation({
       });
     }
 
-    const heldCents = args.heldCents ?? 0;
-    if (heldCents !== 0) {
+    const explicitAllocation = args.allocation;
+    if (explicitAllocation) {
+      const validated = validateAllocationPlan(args.amount, {
+        reservations: explicitAllocation.reservations.map((row) => ({
+          commitmentId: row.commitmentId,
+          amountCents: row.amountCents,
+        })),
+        envelopes: explicitAllocation.envelopes,
+        savingsContributions: explicitAllocation.savingsContributions.map(
+          (row) => ({
+            amountCents: row.amountCents,
+            kind: row.kind,
+            subEnvelopeId: row.subEnvelopeId,
+          }),
+        ),
+        leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
+      });
+      if (!validated.ok) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: validated.message,
+          data: { field: "allocation" },
+        });
+      }
+    }
+
+    const heldCents = explicitAllocation
+      ? explicitAllocation.reservations.reduce(
+          (sum, row) => sum + row.amountCents,
+          0,
+        )
+      : (args.heldCents ?? 0);
+    if (!explicitAllocation && heldCents !== 0) {
       const holdError = validateHeldCents(args.amount, heldCents);
       if (holdError) {
         throw new ConvexError({
@@ -93,10 +153,11 @@ export const createIncomeEvent = mutation({
       }
     }
 
-    const distributableCents = computeDistributableCents(
-      args.amount,
-      heldCents,
-    );
+    const distributableCents = explicitAllocation
+      ? explicitAllocation.envelopes.needs +
+        explicitAllocation.envelopes.wants +
+        explicitAllocation.envelopes.savings
+      : computeDistributableCents(args.amount, heldCents);
 
     const profile = await ctx.db
       .query("profiles")
@@ -256,12 +317,14 @@ export const createIncomeEvent = mutation({
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
     };
-    // P3-4: distribute only the distributable portion (gross minus held).
-    const distribution = applyDistributionPolicy(
-      distributableCents,
-      weights,
-      distributionPolicy,
-    );
+
+    const distribution = explicitAllocation
+      ? { ...explicitAllocation.envelopes }
+      : applyDistributionPolicy(
+          distributableCents,
+          weights,
+          distributionPolicy,
+        );
 
     const eventId = await ctx.db.insert("incomeEvents", {
       profileId: profile._id,
@@ -281,6 +344,73 @@ export const createIncomeEvent = mutation({
       distributionApplied: distribution,
     });
 
+    const emergencyFund = (
+      await ctx.db
+        .query("subEnvelopes")
+        .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+        .collect()
+    ).find((row) => row.isSystemDefault);
+
+    let addedUnallocated = 0;
+    if (explicitAllocation) {
+      const plan: AllocationPlan = {
+        reservations: explicitAllocation.reservations.map((row) => ({
+          commitmentId: row.commitmentId,
+          amountCents: row.amountCents,
+        })),
+        envelopes: explicitAllocation.envelopes,
+        savingsContributions: explicitAllocation.savingsContributions.map(
+          (row) => ({
+            amountCents: row.amountCents,
+            kind: row.kind,
+            subEnvelopeId: row.subEnvelopeId,
+          }),
+        ),
+        leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
+      };
+      try {
+        const persisted = await persistIncomeAllocation(ctx, {
+          profileId: profile._id,
+          cycleId,
+          incomeEventId: eventId,
+          amountCents: args.amount,
+          plan,
+          now,
+          emergencyFundId: emergencyFund?._id,
+        });
+        addedUnallocated = persisted.unallocatedCents;
+      } catch (error) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "No se pudo aplicar la distribución.",
+          data: { field: "allocation" },
+        });
+      }
+    } else {
+      // Legacy auto-split: persist envelope lines only (no invented additional).
+      // heldCents remains event-level for cascade coverage; not unallocated.
+      for (const type of ENVELOPE_TYPES) {
+        const amountCents = distribution[type];
+        if (amountCents <= 0) continue;
+        await ctx.db.insert("incomeAllocationLines", {
+          profileId: profile._id,
+          cycleId,
+          incomeEventId: eventId,
+          destination:
+            type === "needs"
+              ? "envelope_needs"
+              : type === "wants"
+                ? "envelope_wants"
+                : "envelope_savings",
+          amountCents,
+          createdAt: now,
+        });
+      }
+    }
+
     // Update or seed envelopes.
     const envelopes = await ctx.db
       .query("envelopes")
@@ -288,7 +418,6 @@ export const createIncomeEvent = mutation({
       .collect();
 
     if (envelopes.length === 0) {
-      // New cycle: seed the 3 envelopes with the distribution.
       await Promise.all([
         ctx.db.insert("envelopes", {
           profileId: profile._id,
@@ -313,7 +442,6 @@ export const createIncomeEvent = mutation({
         }),
       ]);
     } else {
-      // Existing cycle: patch envelopes with the distribution.
       await Promise.all(
         envelopes.map((env) =>
           ctx.db.patch(env._id, {
@@ -324,7 +452,6 @@ export const createIncomeEvent = mutation({
       );
     }
 
-    // Update the cycle's snapshot.
     const cycle = await ctx.db.get(cycleId);
     if (!cycle) {
       throw new ConvexError({
@@ -334,6 +461,7 @@ export const createIncomeEvent = mutation({
     }
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: cycle.totalIncomeReceived + args.amount,
+      unallocatedCents: (cycle.unallocatedCents ?? 0) + addedUnallocated,
     });
 
     await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycleId, now);
@@ -355,11 +483,23 @@ export const createIncomeEvent = mutation({
       updatedCycle.endDate,
       now,
     );
+    const needsEnvelope = updatedEnvelopes.find((env) => env.type === "needs");
     const wantsEnvelope = updatedEnvelopes.find((env) => env.type === "wants");
-    const dailyAvailableCents = computeDailyAvailable(
-      wantsEnvelope?.remainingAmount ?? 0,
-      cycleMetrics.daysRemaining,
+    const savingsEnvelope = updatedEnvelopes.find(
+      (env) => env.type === "savings",
     );
+    const reservations = await ctx.db
+      .query("commitmentReservations")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
+      .collect();
+    const spendable = computeSpendableSnapshot({
+      needsRemainingCents: needsEnvelope?.remainingAmount ?? 0,
+      wantsRemainingCents: wantsEnvelope?.remainingAmount ?? 0,
+      savingsRemainingCents: savingsEnvelope?.remainingAmount ?? 0,
+      unallocatedCents: updatedCycle.unallocatedCents ?? 0,
+      activeReservedCents: sumActiveReservedCents(reservations),
+      daysRemaining: cycleMetrics.daysRemaining,
+    });
 
     return {
       eventId,
@@ -368,6 +508,9 @@ export const createIncomeEvent = mutation({
       amount: args.amount,
       heldCents,
       distributableCents,
+      unallocatedCents: updatedCycle.unallocatedCents ?? 0,
+      reservedCents: spendable.reservedCents,
+      spendableCents: spendable.spendableCents,
       source: resolvedSource,
       description: resolvedDescription,
       distributionApplied: distribution,
@@ -380,7 +523,9 @@ export const createIncomeEvent = mutation({
           delta: distribution[type],
         };
       }),
-      displayDailyCents: computeDisplayDailyCents(dailyAvailableCents),
+      displayDailyCents: computeDisplayDailyCents(
+        spendable.dailyAvailableCents,
+      ),
     };
   },
 });

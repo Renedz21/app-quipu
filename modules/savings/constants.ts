@@ -97,25 +97,26 @@ export const GOALS_EMPTY_BODY_MOBILE =
 
 export const CYCLE_SAVINGS_SECTION_TITLE = "Tu ahorro este ciclo";
 export const CYCLE_SAVINGS_OBJECTIVE_LABEL = "Ahorro objetivo";
-export const CYCLE_SAVINGS_OBJECTIVE_HINT = "Tu 20% de siempre";
+export const CYCLE_SAVINGS_OBJECTIVE_HINT = "Lo que ya aportaste a tu meta";
 export const CYCLE_SAVINGS_ADDITIONAL_LABEL = "Ahorro adicional";
-export const CYCLE_SAVINGS_ADDITIONAL_HINT = "Lo que decidiste sumar";
+export const CYCLE_SAVINGS_ADDITIONAL_HINT =
+  "Solo aportes que confirmaste explícitamente";
 export const CYCLE_SAVINGS_TOTAL_LABEL = "Ahorro del ciclo";
-export const CYCLE_SAVINGS_TOTAL_HINT = "Objetivo + adicional";
+export const CYCLE_SAVINGS_TOTAL_HINT = "Aportes reales al Fondo o metas";
 export const CYCLE_SAVINGS_BADGE_LABEL = "Este ciclo";
 export const CYCLE_SAVINGS_PARKED_COPY =
   "Ese monto ya está en tu Fondo o metas. No es un segundo total.";
 export const CYCLE_SAVINGS_AVAILABLE_COPY_PREFIX = "Quedan";
 export const CYCLE_SAVINGS_AVAILABLE_COPY_SUFFIX =
-  "libres en el sobre para aportar al Fondo o a una meta.";
+  "en el sobre de Ahorro, aún sin mover al Fondo.";
 
-export const CYCLE_SAVINGS_LEGEND_OBJECTIVE = "Objetivo — lo planeado";
+export const CYCLE_SAVINGS_LEGEND_OBJECTIVE = "Objetivo — aportado a la meta";
 export const CYCLE_SAVINGS_LEGEND_ADDITIONAL = "Adicional — lo que sumaste";
 export const CYCLE_SAVINGS_LEGEND_OBJECTIVE_SHORT = "Objetivo";
 export const CYCLE_SAVINGS_LEGEND_ADDITIONAL_SHORT = "Adicional";
 
 export const CYCLE_SAVINGS_SAVED_THIS_CYCLE_SUFFIX =
-  "ahorrado este ciclo · tu meta era";
+  "aportado hacia tu meta de";
 export const CYCLE_SAVINGS_META_WAS_PREFIX = "tu meta era";
 
 export const CYCLE_SAVINGS_ABOVE_BADGE_PREFIX = "Vas";
@@ -150,9 +151,9 @@ export function cycleSavingsRoundUpBody(moveFormatted: string): string {
 }
 
 export function cycleSavingsObjectiveHint(
-  allocationSavingsPercent: number,
+  _allocationSavingsPercent: number,
 ): string {
-  return `Tu ${allocationSavingsPercent}% de siempre`;
+  return "Aportes confirmados hacia tu meta del ciclo";
 }
 
 export const CYCLE_SAVINGS_SECTION_ID = "cycle-savings";

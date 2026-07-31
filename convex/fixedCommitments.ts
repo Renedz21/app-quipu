@@ -16,6 +16,7 @@ import {
   isCommitmentPaidForCycle,
   resolveCommitmentPaymentStatus,
 } from "./lib/commitmentPayment";
+import { applyPayFromReservations } from "./lib/commitmentReservation";
 
 export const listMyCommitments = query({
   args: {},
@@ -206,6 +207,52 @@ export const markCommitmentAsPaid = mutation({
       paidForCycleId: activeCycle._id,
       nextDueAt,
     });
+
+    // Consume active reservations first so reserved money is not spent twice.
+    const reservations = await ctx.db
+      .query("commitmentReservations")
+      .withIndex("by_commitment_cycle", (q) =>
+        q.eq("commitmentId", args.commitmentId).eq("cycleId", activeCycle._id),
+      )
+      .collect();
+    const pay = applyPayFromReservations({
+      dueCents: commitment.amount,
+      reservations: reservations.map((row) => ({
+        id: row._id,
+        reservedCents: row.reservedCents,
+        consumedCents: row.consumedCents,
+        releasedCents: row.releasedCents,
+        status: row.status,
+      })),
+    });
+    for (const patch of pay.reservationPatches) {
+      await ctx.db.patch(patch.id as (typeof reservations)[0]["_id"], {
+        consumedCents: patch.consumedCents,
+        status: patch.status,
+        updatedAt: paidAt,
+      });
+    }
+    if (pay.remainderCents > 0) {
+      const envelope = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", commitment.envelope),
+        )
+        .unique();
+      if (envelope && envelope.remainingAmount >= pay.remainderCents) {
+        await ctx.db.patch(envelope._id, {
+          remainingAmount: envelope.remainingAmount - pay.remainderCents,
+        });
+        await ctx.db.insert("expenses", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          envelopeId: envelope._id,
+          amount: pay.remainderCents,
+          description: `Pago: ${commitment.name}`,
+          timestamp: paidAt,
+        });
+      }
+    }
 
     return { success: true as const, paidAt };
   },

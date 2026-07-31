@@ -64,17 +64,27 @@ export function EnvelopeCards({
       <div className="grid gap-2 md:grid-cols-3 md:gap-3">
         {envelopes.map((envelope) => {
           const styles = ENVELOPE_STYLES[envelope.type];
-          // Ahorro no se "gasta": el home muestra lo apartado del ciclo
-          // (allocated), no el remanente del sobre tras mover al Fondo/metas.
+          // Ahorro en Home: muestra lo aportable del sobre (remaining) cuando
+          // hay ciclo en curso; si remaining es 0 y hay allocated, el dinero
+          // ya se movió al Fondo (no es un segundo total gastable).
           const isSavings = envelope.type === "savings";
           const displayAmount = isSavings
-            ? envelope.allocatedAmount
+            ? envelope.remainingAmount > 0
+              ? Math.max(0, envelope.remainingAmount)
+              : envelope.allocatedAmount
             : isEarlyCycle
               ? envelope.allocatedAmount
               : Math.max(0, envelope.remainingAmount);
           const percent = isSavings
             ? envelope.allocatedAmount > 0
-              ? 100
+              ? Math.round(
+                  (Math.max(
+                    0,
+                    envelope.allocatedAmount - envelope.remainingAmount,
+                  ) /
+                    envelope.allocatedAmount) *
+                    100,
+                )
               : 0
             : clampPercent(envelope.percentRemaining);
 

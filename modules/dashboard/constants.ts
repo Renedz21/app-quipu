@@ -47,16 +47,23 @@ export const UPCOMING_COMMITMENTS_DUE_IN_DAYS = (days: number) =>
 export const ENVELOPES_SECTION_LABEL = "Tus sobres";
 export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
 
-export const HERO_AVAILABLE_LABEL = "Disponible hoy";
+export const HERO_AVAILABLE_LABEL = "Puedes gastar hoy";
 export const HERO_AVAILABLE_BODY =
   "Puedes gastar esto hoy sin comprometer tu ciclo.";
 export const HERO_EARLY_CYCLE_BODY =
   "Tu presupuesto ya está repartido en sobres. Registra tu primer gasto cuando llegue.";
 export const HERO_DAYS_REMAINING = "Días restantes";
 export const HERO_CYCLE_HEALTH = "Salud del ciclo";
+export const HERO_LIQUIDITY_SPENDABLE = "En sobres";
+export const HERO_LIQUIDITY_RESERVED = "Reservado";
+export const HERO_LIQUIDITY_UNALLOCATED = "Por repartir";
+export const HERO_NEEDS_REVIEW_BANNER =
+  "Este ciclo necesita una corrección: el dinero registrado no refleja lo que puedes gastar.";
+export const HERO_NEEDS_REVIEW_CTA = "Corregir distribución";
 
 export const ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY = "completo · aún sin gastos";
-export const ENVELOPE_EARLY_SAVINGS_SUBCOPY = "se aparta al final del ciclo";
+export const ENVELOPE_EARLY_SAVINGS_SUBCOPY =
+  "meta del ciclo · aún por aportar";
 
 export const COMMITMENTS_EMPTY_TITLE = "Aún no tienes compromisos";
 export const COMMITMENTS_EMPTY_BODY =

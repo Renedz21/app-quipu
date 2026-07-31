@@ -34,6 +34,7 @@ import {
   INCOME_PAGE_TITLE,
   INCOME_SUBMIT_CTA,
 } from "../constants";
+import { buildIncomeAllocationPlan } from "../lib/buildAllocationPlan";
 import {
   policyForExtraordinaryType,
   shouldSkipExtraordinaryConfirmation,
@@ -232,15 +233,84 @@ export function IncomeRegisterForm({
           getIncomeSourceLabel(value.source),
           value.concept,
         );
+        const weights = {
+          allocationNeeds: profile.allocationNeeds,
+          allocationWants: profile.allocationWants,
+          allocationSavings: profile.allocationSavings,
+        };
+        let allocation:
+          | ReturnType<typeof buildIncomeAllocationPlan>
+          | undefined;
+        try {
+          const held = value.heldCents ?? 0;
+          const reservations: Array<{
+            commitmentId: string;
+            amountCents: number;
+          }> = [];
+          if (held > 0 && summary?.commitments?.length) {
+            let remainingHold = held;
+            const uncovered = [...summary.commitments]
+              .filter(
+                (commitment) =>
+                  commitment.coverageStatus !== "covered" &&
+                  commitment.remaining > 0,
+              )
+              .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+            for (const commitment of uncovered) {
+              if (remainingHold <= 0) break;
+              const take = Math.min(remainingHold, commitment.remaining);
+              if (take <= 0) continue;
+              reservations.push({
+                commitmentId: commitment.id,
+                amountCents: take,
+              });
+              remainingHold -= take;
+            }
+            // Any held that could not be linked stays unallocated (not savings).
+            allocation = buildIncomeAllocationPlan({
+              amountCents: value.amountCents,
+              weights,
+              reservations,
+              leaveUnallocatedCents: remainingHold,
+            });
+          } else if (held === 0) {
+            // Explicit plan: full auto-split into envelopes (no invented additional).
+            allocation = buildIncomeAllocationPlan({
+              amountCents: value.amountCents,
+              weights,
+            });
+          }
+        } catch {
+          allocation = undefined;
+        }
+
         const response = await createIncomeEvent({
           amount: value.amountCents,
           source: value.source,
           description,
           occurredAt: value.occurredAt,
           incomeKind: "habitual",
-          ...(value.heldCents && value.heldCents > 0
-            ? { heldCents: value.heldCents }
-            : {}),
+          ...(allocation
+            ? {
+                allocation: {
+                  reservations: allocation.reservations.map((row) => ({
+                    commitmentId: row.commitmentId as never,
+                    amountCents: row.amountCents,
+                  })),
+                  envelopes: allocation.envelopes,
+                  savingsContributions: allocation.savingsContributions.map(
+                    (row) => ({
+                      amountCents: row.amountCents,
+                      kind: row.kind,
+                      subEnvelopeId: row.subEnvelopeId as never,
+                    }),
+                  ),
+                  leaveUnallocatedCents: allocation.leaveUnallocatedCents,
+                },
+              }
+            : value.heldCents && value.heldCents > 0
+              ? { heldCents: value.heldCents }
+              : {}),
         });
         track(AnalyticsEvents.INCOME_REGISTERED, {
           amount: value.amountCents,

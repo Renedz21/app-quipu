@@ -2,9 +2,10 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { AnalyticsEvents, setPersonProperties, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -18,6 +19,7 @@ export function CycleCorrectView() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const startedTracked = useRef(false);
 
   const [needsText, setNeedsText] = useState("");
   const [wantsText, setWantsText] = useState("");
@@ -48,6 +50,17 @@ export function CycleCorrectView() {
     }
     setHydrated(true);
   }, [summary, hydrated]);
+
+  useEffect(() => {
+    if (!summary?.cycle || startedTracked.current) return;
+    startedTracked.current = true;
+    track(AnalyticsEvents.ALLOCATION_CORRECT_STARTED, {
+      cycle_id: summary.cycle.id,
+      needs_review: summary.cycle.needsReview === true,
+      reserved_cents: summary.hero?.reservedCents ?? 0,
+      unallocated_cents: summary.cycle.unallocatedCents ?? 0,
+    });
+  }, [summary]);
 
   if (summary === undefined) {
     return <p className="p-6 text-sm text-mute">Cargando…</p>;
@@ -95,6 +108,8 @@ export function CycleCorrectView() {
 
     setSaving(true);
     try {
+      const needsReviewBefore = summary?.cycle?.needsReview === true;
+      const cycleId = summary?.cycle?.id;
       await correct({
         setEnvelopeRemaining: {
           needs: needsCents,
@@ -117,6 +132,20 @@ export function CycleCorrectView() {
             : [],
         note: "Corrección manual del ciclo",
       });
+      if (cycleId) {
+        track(AnalyticsEvents.ALLOCATION_CORRECT_COMPLETED, {
+          cycle_id: cycleId,
+          needs_review_before: needsReviewBefore,
+          reserved_cents: reserveCents,
+          unallocated_cents: unallocatedCents,
+          contribute_cents: contributeCents,
+          ...(contributeCents > 0 ? { contribute_kind: contributeKind } : {}),
+        });
+        setPersonProperties({
+          allocation_needs_review: false,
+          allocation_corrected_at: Date.now(),
+        });
+      }
       router.push("/dashboard");
     } catch (error) {
       setServerError(fromConvexError(error).message);

@@ -203,6 +203,10 @@ export function IncomeRegisterForm({
             cycle_id: response.cycleId,
             days_remaining_in_cycle: summary?.cycle?.daysRemaining,
             is_first_income: response.isNewCycle,
+            used_explicit_allocation: false,
+            reserved_cents: 0,
+            unallocated_cents: 0,
+            legacy_held_path: (value.heldCents ?? 0) > 0,
           });
           track(AnalyticsEvents.EXTRA_INCOME_REGISTERED, {
             amount: value.amountCents,
@@ -325,6 +329,15 @@ export function IncomeRegisterForm({
           cycle_id: response.cycleId,
           days_remaining_in_cycle: summary?.cycle?.daysRemaining,
           is_first_income: response.isNewCycle,
+          used_explicit_allocation: Boolean(allocation),
+          reserved_cents: allocation
+            ? allocation.reservations.reduce(
+                (sum, row) => sum + row.amountCents,
+                0,
+              )
+            : 0,
+          unallocated_cents: allocation?.leaveUnallocatedCents ?? 0,
+          legacy_held_path: !allocation && (value.heldCents ?? 0) > 0,
         });
         if (response.isNewCycle) {
           trackFinancialCycleTransition(summary?.cycle?.id, response);

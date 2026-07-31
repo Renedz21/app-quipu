@@ -74,6 +74,17 @@ export function reset(): void {
 }
 
 /**
+ * Actualiza person properties (p. ej. flags de impacto del ledger).
+ * No reemplaza `identify`; solo setea props adicionales.
+ */
+export function setPersonProperties(
+  properties: Record<string, string | number | boolean | null>,
+): void {
+  if (!isPosthogConfigured()) return;
+  posthog.setPersonProperties(properties);
+}
+
+/**
  * Captura una excepción. Usado por `app/global-error.tsx` y el boundary raíz.
  * PostHog ya captura errores no manejados via `capture_exceptions: true`,
  * pero este wrapper permite agregar contexto extra.

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -91,6 +92,11 @@ export function SettingsSystemHubList({
       <Link
         href="/cycle/correct"
         className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+        onClick={() =>
+          track(AnalyticsEvents.ALLOCATION_CORRECT_CTA_CLICKED, {
+            source: "settings",
+          })
+        }
       >
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13.5px] text-ink">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { formatCents } from "@/shared/lib/money";
 import {
   HERO_AVAILABLE_BODY,
@@ -36,6 +37,16 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
     reservedCents > 0 || unallocatedCents > 0 || spendableCents > 0;
   const needsReview = cycle.needsReview === true;
 
+  function trackCorrectCta(
+    source: "dashboard_banner" | "dashboard_hint",
+  ): void {
+    track(AnalyticsEvents.ALLOCATION_CORRECT_CTA_CLICKED, {
+      source,
+      cycle_id: cycle.id,
+      needs_review: needsReview,
+    });
+  }
+
   return (
     <section
       aria-labelledby="dashboard-hero-title"
@@ -49,6 +60,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
           <Link
             href="/cycle/correct"
             className="text-[12.5px] font-semibold text-qp-deep underline-offset-2 hover:underline"
+            onClick={() => trackCorrectCta("dashboard_banner")}
           >
             {HERO_NEEDS_REVIEW_CTA}
           </Link>
@@ -59,6 +71,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
           <Link
             href="/cycle/correct"
             className="font-semibold text-qp-deep underline-offset-2 hover:underline"
+            onClick={() => trackCorrectCta("dashboard_hint")}
           >
             {HERO_CORRECT_CTA}
           </Link>

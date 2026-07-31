@@ -58,6 +58,12 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["date-fns"],
   },
+  async rewrites() {
+    return [
+      // Alias estático esperado por auditorías SEO → icono PNG 32×32 generado en app/icon.tsx
+      { source: "/favicon-32x32.png", destination: "/icon" },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

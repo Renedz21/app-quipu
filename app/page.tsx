@@ -2,17 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/auth/auth-server";
-import { pageMetadata, siteConfig } from "@/core/seo";
+import { defaultPageTitle, pageMetadata } from "@/core/seo";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 
-export const metadata: Metadata = {
-  ...pageMetadata({
-    title: siteConfig.name,
-    path: "/",
-    index: true,
-  }),
-  title: `${siteConfig.name} — ${siteConfig.tagline}`,
-};
+export const metadata: Metadata = pageMetadata({
+  title: defaultPageTitle,
+  path: "/",
+  index: true,
+});
 
 const landingSignals = [
   { label: "Tranquilidad", dotClass: "bg-qp" },

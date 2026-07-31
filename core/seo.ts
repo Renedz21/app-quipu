@@ -6,11 +6,16 @@ export const siteConfig = {
   name: "Quipu",
   tagline: "Tu sueldo, con disciplina.",
   landingLine: "Sabe si puedes gastar, en segundos.",
+  /** ~154 chars — dentro del rango 110–160 para SERP y OG. */
   description:
-    "Quipu ordena tu dinero en tres sobres (Necesidades, Gustos y Ahorro) para que sepas cuánto puedes gastar hoy sin arriesgar tu mes. Finanzas personales en soles (PEN), hecho para Perú.",
+    "Quipu divide tu sueldo en tres sobres (Necesidades, Gustos y Ahorro) para saber cuánto puedes gastar hoy. Finanzas personales en soles, hecho para Perú.",
   locale: "es_PE",
   language: "es",
+  /** Cuenta X/Twitter oficial; usada en twitter:site. */
+  twitterSite: "@heyedzon",
 } as const;
+
+export const defaultPageTitle = `${siteConfig.name} — ${siteConfig.tagline}`;
 
 export function getSiteUrl(): URL {
   return new URL(clientEnv.NEXT_PUBLIC_APP_URL);
@@ -66,6 +71,7 @@ export function pageMetadata({
     },
     twitter: {
       card: "summary_large_image",
+      site: siteConfig.twitterSite,
       title,
       description,
     },
@@ -75,7 +81,7 @@ export function pageMetadata({
 export const rootMetadata: Metadata = {
   metadataBase: getSiteUrl(),
   title: {
-    default: `${siteConfig.name} — ${siteConfig.tagline}`,
+    default: defaultPageTitle,
     template: `%s · ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -89,17 +95,21 @@ export const rootMetadata: Metadata = {
     type: "website",
     locale: "es_PE",
     siteName: siteConfig.name,
-    title: `${siteConfig.name} — ${siteConfig.tagline}`,
+    title: defaultPageTitle,
     description: siteConfig.description,
     url: absoluteUrl("/"),
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteConfig.name} — ${siteConfig.tagline}`,
+    site: siteConfig.twitterSite,
+    title: defaultPageTitle,
     description: siteConfig.description,
   },
   icons: {
-    icon: [{ url: "/icon", type: "image/png" }],
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
     apple: [{ url: "/apple-icon", type: "image/png" }],
   },
 };

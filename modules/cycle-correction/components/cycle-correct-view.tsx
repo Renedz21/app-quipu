@@ -7,90 +7,25 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, setPersonProperties, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
-import { formatCents, parseToCents } from "@/shared/lib/money";
-
-type FormState = {
-  cycleId: string | null;
-  needsText: string;
-  wantsText: string;
-  savingsText: string;
-  unallocatedText: string;
-  reserveText: string;
-  contributeText: string;
-  contributeKind: "objective" | "additional";
-  selectedCommitmentId: string;
-  serverError: string | null;
-  saving: boolean;
-};
-
-type FormAction =
-  | {
-      type: "hydrate";
-      cycleId: string;
-      needsText: string;
-      wantsText: string;
-      savingsText: string;
-      unallocatedText: string;
-      selectedCommitmentId: string;
-    }
-  | { type: "setField"; field: keyof FormState; value: string }
-  | { type: "setContributeKind"; kind: "objective" | "additional" }
-  | { type: "setServerError"; message: string | null }
-  | { type: "setSaving"; saving: boolean };
-
-const INITIAL_FORM: FormState = {
-  cycleId: null,
-  needsText: "",
-  wantsText: "",
-  savingsText: "",
-  unallocatedText: "",
-  reserveText: "",
-  contributeText: "",
-  contributeKind: "objective",
-  selectedCommitmentId: "",
-  serverError: null,
-  saving: false,
-};
-
-function formReducer(state: FormState, action: FormAction): FormState {
-  switch (action.type) {
-    case "hydrate":
-      if (state.cycleId === action.cycleId) return state;
-      return {
-        ...state,
-        cycleId: action.cycleId,
-        needsText: action.needsText,
-        wantsText: action.wantsText,
-        savingsText: action.savingsText,
-        unallocatedText: action.unallocatedText,
-        selectedCommitmentId: action.selectedCommitmentId,
-        serverError: null,
-      };
-    case "setField":
-      return { ...state, [action.field]: action.value };
-    case "setContributeKind":
-      return { ...state, contributeKind: action.kind };
-    case "setServerError":
-      return { ...state, serverError: action.message };
-    case "setSaving":
-      return { ...state, saving: action.saving };
-    default:
-      return state;
-  }
-}
-
-function moneyFromCents(cents: number): string {
-  return (cents / 100).toFixed(2);
-}
+import { parseToCents } from "@/shared/lib/money";
+import {
+  cycleCorrectFormReducer,
+  INITIAL_CYCLE_CORRECT_FORM,
+  moneyFromCents,
+} from "../lib/cycle-correct-form-state";
+import { CycleCorrectActions } from "./cycle-correct-actions";
+import { CycleCorrectContributeSection } from "./cycle-correct-contribute-section";
+import { CycleCorrectEnvelopeFields } from "./cycle-correct-envelope-fields";
+import { CycleCorrectReserveSection } from "./cycle-correct-reserve-section";
 
 export function CycleCorrectView() {
   const router = useRouter();
   const summary = useQuery(api.dashboard.getSummary, {});
   const correct = useMutation(api.cycleCorrection.correctActiveCycleAllocation);
-  const [form, dispatch] = useReducer(formReducer, INITIAL_FORM);
+  const [form, dispatch] = useReducer(
+    cycleCorrectFormReducer,
+    INITIAL_CYCLE_CORRECT_FORM,
+  );
   const startedTracked = useRef(false);
 
   useEffect(() => {
@@ -138,7 +73,6 @@ export function CycleCorrectView() {
   }
 
   const currencyCode = summary.profile.currencyCode;
-  const commitments = summary.commitments;
   const needs = summary.envelopes.find((e) => e.type === "needs");
   const activeCycle = summary.cycle;
 
@@ -242,175 +176,34 @@ export function CycleCorrectView() {
       </header>
 
       <div className="space-y-4">
-        <Field
-          label="Disponible en Necesidades"
-          value={form.needsText}
-          onChange={(value) =>
-            dispatch({ type: "setField", field: "needsText", value })
-          }
-          hint={
-            needs
-              ? `Ahora: ${formatCents(needs.remainingAmount, { currency: currencyCode })}`
-              : undefined
-          }
+        <CycleCorrectEnvelopeFields
+          needsText={form.needsText}
+          wantsText={form.wantsText}
+          savingsText={form.savingsText}
+          unallocatedText={form.unallocatedText}
+          needsRemainingCents={needs?.remainingAmount}
+          currencyCode={currencyCode}
+          dispatch={dispatch}
         />
-        <Field
-          label="Disponible en Gustos"
-          value={form.wantsText}
-          onChange={(value) =>
-            dispatch({ type: "setField", field: "wantsText", value })
-          }
+        <CycleCorrectReserveSection
+          commitments={summary.commitments}
+          selectedCommitmentId={form.selectedCommitmentId}
+          reserveText={form.reserveText}
+          currencyCode={currencyCode}
+          dispatch={dispatch}
         />
-        <Field
-          label="En sobre Ahorro (aún no en Fondo)"
-          value={form.savingsText}
-          onChange={(value) =>
-            dispatch({ type: "setField", field: "savingsText", value })
-          }
+        <CycleCorrectContributeSection
+          contributeKind={form.contributeKind}
+          contributeText={form.contributeText}
+          dispatch={dispatch}
         />
-        <Field
-          label="Por repartir"
-          value={form.unallocatedText}
-          onChange={(value) =>
-            dispatch({ type: "setField", field: "unallocatedText", value })
-          }
+        <CycleCorrectActions
+          saving={form.saving}
+          serverError={form.serverError}
+          onCancel={() => router.push("/dashboard")}
+          onSubmit={onSubmit}
         />
-
-        <div className="rounded-[14px] border border-line bg-card p-4">
-          <Label htmlFor="cycle-correct-commitment" className="text-[13px]">
-            Reservar para un compromiso
-          </Label>
-          <select
-            id="cycle-correct-commitment"
-            aria-label="Compromiso a reservar"
-            className="mt-2 w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm"
-            value={form.selectedCommitmentId}
-            onChange={(event) =>
-              dispatch({
-                type: "setField",
-                field: "selectedCommitmentId",
-                value: event.target.value,
-              })
-            }
-          >
-            <option value="">Sin reserva nueva</option>
-            {commitments.map((commitment) => (
-              <option key={commitment.id} value={commitment.id}>
-                {commitment.name} ·{" "}
-                {formatCents(commitment.amount, { currency: currencyCode })}
-              </option>
-            ))}
-          </select>
-          <Input
-            className="mt-2"
-            inputMode="decimal"
-            placeholder="0.00"
-            aria-label="Monto a reservar"
-            value={form.reserveText}
-            onChange={(event) =>
-              dispatch({
-                type: "setField",
-                field: "reserveText",
-                value: event.target.value,
-              })
-            }
-          />
-        </div>
-
-        <div className="rounded-[14px] border border-line bg-card p-4">
-          <Label className="text-[13px]">Aportar al Fondo ahora</Label>
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              className={`rounded-md border px-3 py-1.5 text-[12.5px] ${
-                form.contributeKind === "objective"
-                  ? "border-qp bg-qp-panel text-qp-deep"
-                  : "border-line"
-              }`}
-              onClick={() =>
-                dispatch({ type: "setContributeKind", kind: "objective" })
-              }
-            >
-              Hacia la meta
-            </button>
-            <button
-              type="button"
-              className={`rounded-md border px-3 py-1.5 text-[12.5px] ${
-                form.contributeKind === "additional"
-                  ? "border-qp bg-qp-panel text-qp-deep"
-                  : "border-line"
-              }`}
-              onClick={() =>
-                dispatch({ type: "setContributeKind", kind: "additional" })
-              }
-            >
-              Adicional
-            </button>
-          </div>
-          <Input
-            className="mt-2"
-            inputMode="decimal"
-            placeholder="0.00"
-            aria-label="Monto a aportar al Fondo"
-            value={form.contributeText}
-            onChange={(event) =>
-              dispatch({
-                type: "setField",
-                field: "contributeText",
-                value: event.target.value,
-              })
-            }
-          />
-        </div>
-
-        {form.serverError ? (
-          <p className="text-sm text-danger-ink">{form.serverError}</p>
-        ) : null}
-
-        <div className="flex gap-2 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={() => router.push("/dashboard")}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            className="flex-1"
-            disabled={form.saving}
-            onClick={() => onSubmit()}
-          >
-            {form.saving ? "Guardando…" : "Aplicar corrección"}
-          </Button>
-        </div>
       </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  hint?: string;
-}) {
-  return (
-    <div>
-      <Label className="text-[13px]">{label}</Label>
-      {hint ? <p className="mt-0.5 text-[11px] text-mute">{hint}</p> : null}
-      <Input
-        className="mt-1.5"
-        inputMode="decimal"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
     </div>
   );
 }

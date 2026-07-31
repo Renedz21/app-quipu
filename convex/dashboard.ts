@@ -11,7 +11,10 @@ import {
 } from "./lib/commitmentCoverage";
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
-import { sumActiveReservedCents } from "./lib/commitmentReservation";
+import {
+  activeReservedCents,
+  sumActiveReservedCents,
+} from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
@@ -257,10 +260,14 @@ export const getSummary = query({
         id: income._id,
         occurredAt: income.occurredAt,
         distributionApplied: income.distributionApplied,
-        heldCents: income.heldCents,
       })),
       now,
       coverageBoost: activeCycle.coverageBoost ?? undefined,
+      reservations: reservationsForCycle.map((row) => ({
+        commitmentId: row.commitmentId,
+        activeCents: activeReservedCents(row),
+        incomeEventId: row.incomeEventId,
+      })),
       excludedCommitmentIds: (() => {
         const ids = new Set<Id<"fixedCommitments">>();
         for (const commitment of commitmentsRaw) {

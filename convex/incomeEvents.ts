@@ -1,8 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import {
-  applyDistributionPolicy,
-  type DistributionPolicy,
-} from "../shared/lib/allocations";
+import type { DistributionPolicy } from "../shared/lib/allocations";
 import { validateAllocationPlan } from "../shared/lib/incomeAllocation";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
@@ -13,6 +10,7 @@ import {
   computeCycleDayMetrics,
   computeDisplayDailyCents,
 } from "./lib/dashboardMath";
+import { buildDefaultAllocationPlan } from "./lib/defaultAllocationPlan";
 import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
 import {
   clearCommitmentCoverageForProfile,
@@ -25,9 +23,8 @@ import {
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
-import { planIncomeDeleteLedgerReverse } from "./lib/incomeDeleteReverse";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
-import { computeDistributableCents, validateHeldCents } from "./lib/incomeHold";
+import { reverseIncomeAllocationLedger } from "./lib/reverseIncomeAllocationLedger";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -89,11 +86,8 @@ export const createIncomeEvent = mutation({
     extraordinaryType: v.optional(extraordinaryTypeValidator),
     extraordinaryLabel: v.optional(v.string()),
     distributionPolicy: v.optional(distributionPolicyValidator),
-    // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
-    // Ignored when `allocation` is provided (reservations replace heldCents).
-    heldCents: v.optional(v.number()),
-    // Explicit distribution plan. When set, replaces auto 50/30/20 + heldCents.
-    allocation: v.optional(allocationPlanValidator),
+    // Explicit distribution plan (required). Reservations + envelopes + contributions.
+    allocation: allocationPlanValidator,
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -112,53 +106,37 @@ export const createIncomeEvent = mutation({
     }
 
     const explicitAllocation = args.allocation;
-    if (explicitAllocation) {
-      const validated = validateAllocationPlan(args.amount, {
-        reservations: explicitAllocation.reservations.map((row) => ({
-          commitmentId: row.commitmentId,
+    const validated = validateAllocationPlan(args.amount, {
+      reservations: explicitAllocation.reservations.map((row) => ({
+        commitmentId: row.commitmentId,
+        amountCents: row.amountCents,
+      })),
+      envelopes: explicitAllocation.envelopes,
+      savingsContributions: explicitAllocation.savingsContributions.map(
+        (row) => ({
           amountCents: row.amountCents,
-        })),
-        envelopes: explicitAllocation.envelopes,
-        savingsContributions: explicitAllocation.savingsContributions.map(
-          (row) => ({
-            amountCents: row.amountCents,
-            kind: row.kind,
-            subEnvelopeId: row.subEnvelopeId,
-          }),
-        ),
-        leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
+          kind: row.kind,
+          subEnvelopeId: row.subEnvelopeId,
+        }),
+      ),
+      leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
+    });
+    if (!validated.ok) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: validated.message,
+        data: { field: "allocation" },
       });
-      if (!validated.ok) {
-        throw new ConvexError({
-          code: "VALIDATION_ERROR",
-          message: validated.message,
-          data: { field: "allocation" },
-        });
-      }
     }
 
-    const heldCents = explicitAllocation
-      ? explicitAllocation.reservations.reduce(
-          (sum, row) => sum + row.amountCents,
-          0,
-        )
-      : (args.heldCents ?? 0);
-    if (!explicitAllocation && heldCents !== 0) {
-      const holdError = validateHeldCents(args.amount, heldCents);
-      if (holdError) {
-        throw new ConvexError({
-          code: "VALIDATION_ERROR",
-          message: holdError,
-          data: { field: "heldCents" },
-        });
-      }
-    }
-
-    const distributableCents = explicitAllocation
-      ? explicitAllocation.envelopes.needs +
-        explicitAllocation.envelopes.wants +
-        explicitAllocation.envelopes.savings
-      : computeDistributableCents(args.amount, heldCents);
+    const heldCents = explicitAllocation.reservations.reduce(
+      (sum, row) => sum + row.amountCents,
+      0,
+    );
+    const distributableCents =
+      explicitAllocation.envelopes.needs +
+      explicitAllocation.envelopes.wants +
+      explicitAllocation.envelopes.savings;
 
     const profile = await ctx.db
       .query("profiles")
@@ -260,7 +238,6 @@ export const createIncomeEvent = mutation({
       )
       .unique();
 
-    // Resolve which cycle the event belongs to.
     const resolvedId = resolveCycleForEvent({
       activeCycle: activeCycle
         ? {
@@ -279,17 +256,14 @@ export const createIncomeEvent = mutation({
     if (resolvedId && activeCycle && resolvedId === activeCycle._id) {
       cycleId = activeCycle._id;
     } else {
-      // Close the previous active cycle (if any) and open a new one.
       if (activeCycle) {
         await evaluateClosedCycle(ctx, profile._id, activeCycle._id, now);
         await ctx.db.patch(activeCycle._id, { status: "closed" });
       }
-      // Compute the new cycle's window.
       let cycleDays: number;
       if (profile.incomeModel === "variable") {
         cycleDays = profile.cycleDurationDays ?? HORIZON_DAYS;
       } else {
-        // fixed or mixed
         const freq = profile.payFrequency;
         if (!freq) {
           throw new ConvexError({
@@ -313,19 +287,7 @@ export const createIncomeEvent = mutation({
       await clearCommitmentCoverageForProfile(ctx, profile._id);
     }
 
-    const weights = {
-      allocationNeeds: profile.allocationNeeds,
-      allocationWants: profile.allocationWants,
-      allocationSavings: profile.allocationSavings,
-    };
-
-    const distribution = explicitAllocation
-      ? { ...explicitAllocation.envelopes }
-      : applyDistributionPolicy(
-          distributableCents,
-          weights,
-          distributionPolicy,
-        );
+    const distribution = { ...explicitAllocation.envelopes };
 
     const eventId = await ctx.db.insert("incomeEvents", {
       profileId: profile._id,
@@ -352,67 +314,45 @@ export const createIncomeEvent = mutation({
         .collect()
     ).find((row) => row.isSystemDefault);
 
-    let addedUnallocated = 0;
-    if (explicitAllocation) {
-      const plan: AllocationPlan = {
-        reservations: explicitAllocation.reservations.map((row) => ({
-          commitmentId: row.commitmentId,
+    const plan: AllocationPlan = {
+      reservations: explicitAllocation.reservations.map((row) => ({
+        commitmentId: row.commitmentId,
+        amountCents: row.amountCents,
+      })),
+      envelopes: explicitAllocation.envelopes,
+      savingsContributions: explicitAllocation.savingsContributions.map(
+        (row) => ({
           amountCents: row.amountCents,
-        })),
-        envelopes: explicitAllocation.envelopes,
-        savingsContributions: explicitAllocation.savingsContributions.map(
-          (row) => ({
-            amountCents: row.amountCents,
-            kind: row.kind,
-            subEnvelopeId: row.subEnvelopeId,
-          }),
-        ),
-        leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
-      };
-      try {
-        const persisted = await persistIncomeAllocation(ctx, {
-          profileId: profile._id,
-          cycleId,
-          incomeEventId: eventId,
-          amountCents: args.amount,
-          plan,
-          now,
-          emergencyFundId: emergencyFund?._id,
-        });
-        addedUnallocated = persisted.unallocatedCents;
-      } catch (error) {
-        throw new ConvexError({
-          code: "VALIDATION_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "No se pudo aplicar la distribución.",
-          data: { field: "allocation" },
-        });
-      }
-    } else {
-      // Legacy auto-split: persist envelope lines only (no invented additional).
-      // heldCents remains event-level for cascade coverage; not unallocated.
-      for (const type of ENVELOPE_TYPES) {
-        const amountCents = distribution[type];
-        if (amountCents <= 0) continue;
-        await ctx.db.insert("incomeAllocationLines", {
-          profileId: profile._id,
-          cycleId,
-          incomeEventId: eventId,
-          destination:
-            type === "needs"
-              ? "envelope_needs"
-              : type === "wants"
-                ? "envelope_wants"
-                : "envelope_savings",
-          amountCents,
-          createdAt: now,
-        });
-      }
+          kind: row.kind,
+          subEnvelopeId: row.subEnvelopeId,
+        }),
+      ),
+      leaveUnallocatedCents: explicitAllocation.leaveUnallocatedCents,
+    };
+
+    let addedUnallocated = 0;
+    try {
+      const persisted = await persistIncomeAllocation(ctx, {
+        profileId: profile._id,
+        cycleId,
+        incomeEventId: eventId,
+        amountCents: args.amount,
+        plan,
+        now,
+        emergencyFundId: emergencyFund?._id,
+      });
+      addedUnallocated = persisted.unallocatedCents;
+    } catch (error) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "No se pudo aplicar la distribución.",
+        data: { field: "allocation" },
+      });
     }
 
-    // Update or seed envelopes.
     const envelopes = await ctx.db
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
@@ -463,6 +403,7 @@ export const createIncomeEvent = mutation({
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: cycle.totalIncomeReceived + args.amount,
       unallocatedCents: (cycle.unallocatedCents ?? 0) + addedUnallocated,
+      ...(addedUnallocated > 0 ? { needsReview: true } : {}),
     });
 
     await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycleId, now);
@@ -552,7 +493,7 @@ export const updateIncomeEvent = mutation({
     extraordinaryType: v.optional(extraordinaryTypeValidator),
     extraordinaryLabel: v.optional(v.string()),
     distributionPolicy: v.optional(distributionPolicyValidator),
-    heldCents: v.optional(v.number()),
+    allocation: v.optional(allocationPlanValidator),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -670,6 +611,8 @@ export const updateIncomeEvent = mutation({
       }
       distributionPolicy = resolved.distributionPolicy;
       appliedByAutoRule = resolved.appliedByAutoRule;
+    } else if (event.distributionPolicy) {
+      distributionPolicy = event.distributionPolicy;
     }
 
     const cycle = await ctx.db.get(event.cycleId);
@@ -682,7 +625,6 @@ export const updateIncomeEvent = mutation({
 
     const now = Date.now();
 
-    // Reject occurredAt outside the cycle window or in the future.
     if (args.occurredAt < cycle.startDate) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -698,59 +640,202 @@ export const updateIncomeEvent = mutation({
       });
     }
 
-    const heldCents = args.heldCents ?? event.heldCents ?? 0;
-    if (heldCents !== 0) {
-      const holdError = validateHeldCents(args.amount, heldCents);
-      if (holdError) {
-        throw new ConvexError({
-          code: "VALIDATION_ERROR",
-          message: holdError,
-          data: { field: "heldCents" },
-        });
-      }
-    }
-    const distributableCents = computeDistributableCents(
-      args.amount,
-      heldCents,
-    );
-
     const weights = {
       allocationNeeds: profile.allocationNeeds,
       allocationWants: profile.allocationWants,
       allocationSavings: profile.allocationSavings,
     };
-    const newDistribution = applyDistributionPolicy(
-      distributableCents,
-      weights,
-      distributionPolicy,
-    );
-    const oldDistribution = event.distributionApplied;
 
-    // Delta-patch envelopes for this event only.
+    // Capture prior reservation intents before reversing the ledger.
+    const priorLines = await ctx.db
+      .query("incomeAllocationLines")
+      .withIndex("by_income_event", (q) => q.eq("incomeEventId", args.eventId))
+      .collect();
+    const priorReservations = priorLines
+      .filter(
+        (line) =>
+          line.destination === "commitment_reservation" &&
+          line.commitmentId &&
+          line.amountCents > 0,
+      )
+      .map((line) => ({
+        commitmentId: line.commitmentId as Id<"fixedCommitments">,
+        amountCents: line.amountCents,
+      }));
+    const priorUnallocated = priorLines
+      .filter((line) => line.destination === "unallocated")
+      .reduce((sum, line) => sum + line.amountCents, 0);
+
+    // 1) Reverse envelopes from old snapshot.
+    const oldDistribution = event.distributionApplied;
     const envelopes = await ctx.db
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", event.cycleId))
       .collect();
-
     await Promise.all(
-      envelopes.map((env) => {
-        const delta = newDistribution[env.type] - oldDistribution[env.type];
-        return ctx.db.patch(env._id, {
-          allocatedAmount: env.allocatedAmount + delta,
-          remainingAmount: env.remainingAmount + delta,
-        });
-      }),
+      envelopes.map((env) =>
+        ctx.db.patch(env._id, {
+          allocatedAmount: env.allocatedAmount - oldDistribution[env.type],
+          remainingAmount: env.remainingAmount - oldDistribution[env.type],
+        }),
+      ),
     );
 
-    // Delta-patch the cycle's total income.
-    const amountDelta = args.amount - event.amount;
-    await ctx.db.patch(cycle._id, {
-      totalIncomeReceived: cycle.totalIncomeReceived + amountDelta,
-      // Editing income can leave envelopes inconsistent with real cash; nudge review.
-      needsReview: true,
+    // 2) Reverse allocation ledger.
+    const reverse = await reverseIncomeAllocationLedger(ctx, {
+      profileId: profile._id,
+      cycleId: cycle._id,
+      incomeEventId: args.eventId,
+      now,
+      note: "Reverso por edición de ingreso",
     });
 
-    // Patch the event document.
+    // 3) Build / validate new plan.
+    let plan: AllocationPlan;
+    if (args.allocation) {
+      const validated = validateAllocationPlan(args.amount, {
+        reservations: args.allocation.reservations.map((row) => ({
+          commitmentId: row.commitmentId,
+          amountCents: row.amountCents,
+        })),
+        envelopes: args.allocation.envelopes,
+        savingsContributions: args.allocation.savingsContributions.map(
+          (row) => ({
+            amountCents: row.amountCents,
+            kind: row.kind,
+            subEnvelopeId: row.subEnvelopeId,
+          }),
+        ),
+        leaveUnallocatedCents: args.allocation.leaveUnallocatedCents,
+      });
+      if (!validated.ok) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message: validated.message,
+          data: { field: "allocation" },
+        });
+      }
+      plan = {
+        reservations: args.allocation.reservations.map((row) => ({
+          commitmentId: row.commitmentId,
+          amountCents: row.amountCents,
+        })),
+        envelopes: args.allocation.envelopes,
+        savingsContributions: args.allocation.savingsContributions.map(
+          (row) => ({
+            amountCents: row.amountCents,
+            kind: row.kind,
+            subEnvelopeId: row.subEnvelopeId,
+          }),
+        ),
+        leaveUnallocatedCents: args.allocation.leaveUnallocatedCents,
+      };
+    } else {
+      // Rebuild: keep prior reservations (capped), migrate orphan held → unallocated.
+      const reservedBudget = priorReservations.reduce(
+        (sum, row) => sum + row.amountCents,
+        0,
+      );
+      let leaveUnallocated = priorUnallocated;
+      if (
+        priorReservations.length === 0 &&
+        (event.heldCents ?? 0) > 0 &&
+        leaveUnallocated === 0
+      ) {
+        leaveUnallocated = Math.min(event.heldCents ?? 0, args.amount);
+      }
+      if (reservedBudget + leaveUnallocated > args.amount) {
+        // Scale down reservations first, then unallocated.
+        const scale =
+          args.amount / Math.max(1, reservedBudget + leaveUnallocated);
+        leaveUnallocated = Math.floor(leaveUnallocated * scale);
+        let remaining = args.amount - leaveUnallocated;
+        const scaled: typeof priorReservations = [];
+        for (const row of priorReservations) {
+          const take = Math.min(row.amountCents, remaining);
+          if (take > 0) scaled.push({ ...row, amountCents: take });
+          remaining -= take;
+        }
+        plan = buildDefaultAllocationPlan({
+          amountCents: args.amount,
+          weights,
+          distributionPolicy,
+          reservations: scaled,
+          leaveUnallocatedCents: leaveUnallocated,
+        });
+      } else {
+        plan = buildDefaultAllocationPlan({
+          amountCents: args.amount,
+          weights,
+          distributionPolicy,
+          reservations: priorReservations,
+          leaveUnallocatedCents: leaveUnallocated,
+        });
+      }
+    }
+
+    const emergencyFund = (
+      await ctx.db
+        .query("subEnvelopes")
+        .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+        .collect()
+    ).find((row) => row.isSystemDefault);
+
+    let addedUnallocated = 0;
+    try {
+      const persisted = await persistIncomeAllocation(ctx, {
+        profileId: profile._id,
+        cycleId: cycle._id,
+        incomeEventId: args.eventId,
+        amountCents: args.amount,
+        plan,
+        now,
+        emergencyFundId: emergencyFund?._id,
+      });
+      addedUnallocated = persisted.unallocatedCents;
+    } catch (error) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "No se pudo aplicar la distribución.",
+        data: { field: "allocation" },
+      });
+    }
+
+    const newDistribution = plan.envelopes;
+    const envelopesAfter = await ctx.db
+      .query("envelopes")
+      .withIndex("by_cycle_type", (q) => q.eq("cycleId", event.cycleId))
+      .collect();
+    await Promise.all(
+      envelopesAfter.map((env) =>
+        ctx.db.patch(env._id, {
+          allocatedAmount: env.allocatedAmount + newDistribution[env.type],
+          remainingAmount: env.remainingAmount + newDistribution[env.type],
+        }),
+      ),
+    );
+
+    const heldCents = plan.reservations.reduce(
+      (sum, row) => sum + row.amountCents,
+      0,
+    );
+    const amountDelta = args.amount - event.amount;
+    const needsReview = addedUnallocated > 0;
+
+    await ctx.db.patch(cycle._id, {
+      totalIncomeReceived: cycle.totalIncomeReceived + amountDelta,
+      unallocatedCents: Math.max(
+        0,
+        (cycle.unallocatedCents ?? 0) -
+          reverse.unallocatedDeltaCents +
+          addedUnallocated,
+      ),
+      needsReview,
+    });
+
     await ctx.db.patch(args.eventId, {
       amount: args.amount,
       source: resolvedSource,
@@ -826,7 +911,6 @@ export const deleteIncomeEvent = mutation({
       });
     }
 
-    // Reverse the distribution on envelopes.
     const envelopes = await ctx.db
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycle._id))
@@ -842,57 +926,14 @@ export const deleteIncomeEvent = mutation({
       ),
     );
 
-    // Reverse allocation ledger (unallocated, reservations, confirmed contributions).
-    const allocationLines = await ctx.db
-      .query("incomeAllocationLines")
-      .withIndex("by_income_event", (q) => q.eq("incomeEventId", args.eventId))
-      .collect();
-    const reversePlan = planIncomeDeleteLedgerReverse(
-      allocationLines.map((line) => ({
-        destination: line.destination,
-        amountCents: line.amountCents,
-        reservationId: line.reservationId,
-        subEnvelopeId: line.subEnvelopeId,
-        contributionKind: line.contributionKind,
-      })),
-    );
-
     const now = Date.now();
-    for (const reservationId of reversePlan.reservationIdsToRelease) {
-      const reservation = await ctx.db.get(reservationId);
-      if (!reservation) continue;
-      const active =
-        reservation.reservedCents -
-        reservation.consumedCents -
-        reservation.releasedCents;
-      await ctx.db.patch(reservationId, {
-        status: "released",
-        releasedCents: reservation.releasedCents + Math.max(0, active),
-        updatedAt: now,
-      });
-      await ctx.db.insert("internalTransfers", {
-        profileId: profile._id,
-        cycleId: cycle._id,
-        kind: "reservation_release",
-        amountCents: Math.max(0, active),
-        from: `reservation:${reservationId}`,
-        to: "deleted_income",
-        note: "Reverso por eliminación de ingreso",
-        createdAt: now,
-      });
-    }
-
-    for (const reversal of reversePlan.subEnvelopeReversals) {
-      const sub = await ctx.db.get(reversal.subEnvelopeId);
-      if (!sub) continue;
-      await ctx.db.patch(reversal.subEnvelopeId, {
-        currentAmount: Math.max(0, sub.currentAmount - reversal.amountCents),
-      });
-    }
-
-    for (const line of allocationLines) {
-      await ctx.db.delete(line._id);
-    }
+    const reverse = await reverseIncomeAllocationLedger(ctx, {
+      profileId: profile._id,
+      cycleId: cycle._id,
+      incomeEventId: args.eventId,
+      now,
+      note: "Reverso por eliminación de ingreso",
+    });
 
     const remainingIncomes = await ctx.db
       .query("incomeEvents")
@@ -902,7 +943,6 @@ export const deleteIncomeEvent = mutation({
       (row) => row._id !== args.eventId,
     );
 
-    // Reverse the cycle's total + unallocated from this event.
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: Math.max(
         0,
@@ -910,9 +950,8 @@ export const deleteIncomeEvent = mutation({
       ),
       unallocatedCents: Math.max(
         0,
-        (cycle.unallocatedCents ?? 0) - reversePlan.unallocatedDeltaCents,
+        (cycle.unallocatedCents ?? 0) - reverse.unallocatedDeltaCents,
       ),
-      // If other incomes remain, ask the user to review; empty cycle is fine.
       needsReview: otherIncomes.length > 0 ? true : false,
     });
 

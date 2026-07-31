@@ -16,7 +16,10 @@ import {
   isCommitmentPaidForCycle,
   resolveCommitmentPaymentStatus,
 } from "./lib/commitmentPayment";
-import { applyPayFromReservations } from "./lib/commitmentReservation";
+import {
+  activeReservedCents,
+  applyPayFromReservations,
+} from "./lib/commitmentReservation";
 
 export const listMyCommitments = query({
   args: {},
@@ -366,10 +369,16 @@ export const getCommitment = query({
       createdAt: commitment._creationTime,
     });
     if (activeCycle) {
-      const incomeEvents = await ctx.db
-        .query("incomeEvents")
-        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-        .collect();
+      const [incomeEvents, reservationRows] = await Promise.all([
+        ctx.db
+          .query("incomeEvents")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+        ctx.db
+          .query("commitmentReservations")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+      ]);
       const coverageById = computeAllCommitmentCoverage({
         commitments: [
           {
@@ -389,9 +398,13 @@ export const getCommitment = query({
           id: event._id,
           occurredAt: event.occurredAt,
           distributionApplied: event.distributionApplied,
-          heldCents: event.heldCents,
         })),
         now,
+        reservations: reservationRows.map((row) => ({
+          commitmentId: row.commitmentId,
+          activeCents: activeReservedCents(row),
+          incomeEventId: row.incomeEventId,
+        })),
       });
       const cascadeStatus =
         coverageById.get(commitment._id)?.status ?? "not-started";

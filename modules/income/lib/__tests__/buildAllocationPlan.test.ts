@@ -32,4 +32,14 @@ describe("buildIncomeAllocationPlan", () => {
     expect(plan.envelopes).toEqual({ needs: 0, wants: 0, savings: 0 });
     expect(plan.savingsContributions).toEqual([]);
   });
+
+  it("all_to_savings puts remainder into savings envelope only", () => {
+    const plan = buildIncomeAllocationPlan({
+      amountCents: 100_000,
+      weights: WEIGHTS,
+      reservations: [{ commitmentId: "debt", amountCents: 20_000 }],
+      distributionPolicy: "all_to_savings",
+    });
+    expect(plan.envelopes).toEqual({ needs: 0, wants: 0, savings: 80_000 });
+  });
 });

@@ -308,7 +308,8 @@ export const appTables = {
     ),
     appliedByAutoRule: v.optional(v.boolean()),
     // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
-    // distributable = amount - heldCents. totalIncomeReceived stays gross (sum of amount).
+    // Historical: sum of reservation cents at create/update time (display).
+    // Coverage and spendable use commitmentReservations, not this field.
     heldCents: v.optional(v.number()),
     // P3-5: trazabilidad mínima de edición; _creationTime cubre creación.
     updatedAt: v.optional(v.number()),

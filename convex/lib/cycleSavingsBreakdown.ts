@@ -185,10 +185,6 @@ export function computeCycleSavingsBreakdown(input: {
 }): CycleSavingsBreakdownNumbers {
   const surplusContributions = input.surplusContributions ?? [];
   const allocationLines = input.allocationLines ?? [];
-  const hasContributionFacts =
-    allocationLines.some(
-      (line) => line.destination === "savings_contribution",
-    ) || surplusContributions.length > 0;
 
   const savingsObjectiveTargetCents = sumObjectiveTargetFromEvents(
     input.incomeEvents,
@@ -202,42 +198,17 @@ export function computeCycleSavingsBreakdown(input: {
     input.savingsEnvelope?.remainingAmount ?? 0,
   );
 
-  const objectiveFromLines =
+  const savingsObjectiveContributedCents =
     sumObjectiveContributionLines(allocationLines) +
     sumObjectiveSurplusContributions(surplusContributions);
-
-  // Legacy fallback: if no contribution facts exist, approximate objective
-  // contributed as money already moved out of the savings envelope (set-aside),
-  // capped by the target. Never invent "additional" from unspent balances.
-  const savingsObjectiveContributedCents = hasContributionFacts
-    ? objectiveFromLines > 0
-      ? objectiveFromLines
-      : // Surplus-only additional cycles may still have set-aside from envelope moves
-        Math.min(savingsSetAsideCents, savingsObjectiveTargetCents)
-    : Math.min(savingsSetAsideCents, savingsObjectiveTargetCents);
 
   const savingsAdditionalCents = sumAdditionalSavingsFromContributions(
     surplusContributions,
     allocationLines,
   );
 
-  // Avoid double-counting: if set-aside already includes surplus moved through
-  // the savings envelope path, additional is still only confirmed surplus rows.
-  // Cycle total = confirmed contributions only.
-  let savingsCycleContributedCents =
+  const savingsCycleContributedCents =
     savingsObjectiveContributedCents + savingsAdditionalCents;
-
-  // When we only have set-aside legacy (no lines) and surplus rows that moved
-  // from needs/wants directly to Fondo, objectiveContributed may be set-aside
-  // while additional is surplus — that is correct and additive.
-  if (
-    hasContributionFacts &&
-    objectiveFromLines === 0 &&
-    savingsAdditionalCents > 0 &&
-    savingsSetAsideCents === 0
-  ) {
-    savingsCycleContributedCents = savingsAdditionalCents;
-  }
 
   const savingsObjectiveCents = savingsObjectiveContributedCents;
   const savingsTotalCents = savingsCycleContributedCents;

@@ -164,6 +164,55 @@ export function IncomeRegisterForm({
             setDestinationOpen(true);
             return;
           }
+          const weights = {
+            allocationNeeds: profile.allocationNeeds,
+            allocationWants: profile.allocationWants,
+            allocationSavings: profile.allocationSavings,
+          };
+          const resolvedPolicy: DistributionPolicy =
+            value.distributionPolicy ??
+            (value.extraordinaryType
+              ? (policyForExtraordinaryType(
+                  value.extraordinaryType,
+                  profile.extraordinaryRules,
+                ) ?? "profile_default")
+              : "profile_default");
+          const held = value.heldCents ?? 0;
+          const reservations: Array<{
+            commitmentId: string;
+            amountCents: number;
+          }> = [];
+          let leaveUnallocated = 0;
+          if (held > 0 && summary?.commitments?.length) {
+            let remainingHold = held;
+            const uncovered = [...summary.commitments]
+              .filter(
+                (commitment) =>
+                  commitment.coverageStatus !== "covered" &&
+                  commitment.remaining > 0,
+              )
+              .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+            for (const commitment of uncovered) {
+              if (remainingHold <= 0) break;
+              const take = Math.min(remainingHold, commitment.remaining);
+              if (take <= 0) continue;
+              reservations.push({
+                commitmentId: commitment.id,
+                amountCents: take,
+              });
+              remainingHold -= take;
+            }
+            leaveUnallocated = remainingHold;
+          } else if (held > 0) {
+            leaveUnallocated = held;
+          }
+          const allocation = buildIncomeAllocationPlan({
+            amountCents: value.amountCents,
+            weights,
+            reservations,
+            leaveUnallocatedCents: leaveUnallocated,
+            distributionPolicy: resolvedPolicy,
+          });
           const response = await createIncomeEvent({
             amount: value.amountCents,
             source: "payroll",
@@ -178,9 +227,21 @@ export function IncomeRegisterForm({
             ...(value.distributionPolicy
               ? { distributionPolicy: value.distributionPolicy }
               : {}),
-            ...(value.heldCents && value.heldCents > 0
-              ? { heldCents: value.heldCents }
-              : {}),
+            allocation: {
+              reservations: allocation.reservations.map((row) => ({
+                commitmentId: row.commitmentId as never,
+                amountCents: row.amountCents,
+              })),
+              envelopes: allocation.envelopes,
+              savingsContributions: allocation.savingsContributions.map(
+                (row) => ({
+                  amountCents: row.amountCents,
+                  kind: row.kind,
+                  subEnvelopeId: row.subEnvelopeId as never,
+                }),
+              ),
+              leaveUnallocatedCents: allocation.leaveUnallocatedCents,
+            },
           });
           track(AnalyticsEvents.INCOME_REGISTERED, {
             amount: value.amountCents,
@@ -203,10 +264,12 @@ export function IncomeRegisterForm({
             cycle_id: response.cycleId,
             days_remaining_in_cycle: summary?.cycle?.daysRemaining,
             is_first_income: response.isNewCycle,
-            used_explicit_allocation: false,
-            reserved_cents: 0,
-            unallocated_cents: 0,
-            legacy_held_path: (value.heldCents ?? 0) > 0,
+            used_explicit_allocation: true,
+            reserved_cents: allocation.reservations.reduce(
+              (sum, row) => sum + row.amountCents,
+              0,
+            ),
+            unallocated_cents: allocation.leaveUnallocatedCents,
           });
           track(AnalyticsEvents.EXTRA_INCOME_REGISTERED, {
             amount: value.amountCents,
@@ -221,14 +284,7 @@ export function IncomeRegisterForm({
           }
           onSuccess(response, {
             incomeKind: "extraordinary",
-            distributionPolicy:
-              value.distributionPolicy ??
-              (value.extraordinaryType
-                ? policyForExtraordinaryType(
-                    value.extraordinaryType,
-                    profile.extraordinaryRules,
-                  )
-                : undefined),
+            distributionPolicy: resolvedPolicy,
           });
           return;
         }
@@ -242,51 +298,41 @@ export function IncomeRegisterForm({
           allocationWants: profile.allocationWants,
           allocationSavings: profile.allocationSavings,
         };
-        let allocation:
-          | ReturnType<typeof buildIncomeAllocationPlan>
-          | undefined;
-        try {
-          const held = value.heldCents ?? 0;
-          const reservations: Array<{
-            commitmentId: string;
-            amountCents: number;
-          }> = [];
-          if (held > 0 && summary?.commitments?.length) {
-            let remainingHold = held;
-            const uncovered = [...summary.commitments]
-              .filter(
-                (commitment) =>
-                  commitment.coverageStatus !== "covered" &&
-                  commitment.remaining > 0,
-              )
-              .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
-            for (const commitment of uncovered) {
-              if (remainingHold <= 0) break;
-              const take = Math.min(remainingHold, commitment.remaining);
-              if (take <= 0) continue;
-              reservations.push({
-                commitmentId: commitment.id,
-                amountCents: take,
-              });
-              remainingHold -= take;
-            }
-            // Any held that could not be linked stays unallocated (not savings).
-            allocation = buildIncomeAllocationPlan({
-              amountCents: value.amountCents,
-              weights,
-              reservations,
-              leaveUnallocatedCents: remainingHold,
+        const held = value.heldCents ?? 0;
+        const reservations: Array<{
+          commitmentId: string;
+          amountCents: number;
+        }> = [];
+        let leaveUnallocated = 0;
+        if (held > 0 && summary?.commitments?.length) {
+          let remainingHold = held;
+          const uncovered = [...summary.commitments]
+            .filter(
+              (commitment) =>
+                commitment.coverageStatus !== "covered" &&
+                commitment.remaining > 0,
+            )
+            .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+          for (const commitment of uncovered) {
+            if (remainingHold <= 0) break;
+            const take = Math.min(remainingHold, commitment.remaining);
+            if (take <= 0) continue;
+            reservations.push({
+              commitmentId: commitment.id,
+              amountCents: take,
             });
-          } else if (held === 0) {
-            // Explicit plan: full auto-split into envelopes (no invented additional).
-            allocation = buildIncomeAllocationPlan({
-              amountCents: value.amountCents,
-              weights,
-            });
+            remainingHold -= take;
           }
-        } catch {
-          allocation = undefined;
+          leaveUnallocated = remainingHold;
+        } else if (held > 0) {
+          leaveUnallocated = held;
         }
+        const allocation = buildIncomeAllocationPlan({
+          amountCents: value.amountCents,
+          weights,
+          reservations,
+          leaveUnallocatedCents: leaveUnallocated,
+        });
 
         const response = await createIncomeEvent({
           amount: value.amountCents,
@@ -294,27 +340,21 @@ export function IncomeRegisterForm({
           description,
           occurredAt: value.occurredAt,
           incomeKind: "habitual",
-          ...(allocation
-            ? {
-                allocation: {
-                  reservations: allocation.reservations.map((row) => ({
-                    commitmentId: row.commitmentId as never,
-                    amountCents: row.amountCents,
-                  })),
-                  envelopes: allocation.envelopes,
-                  savingsContributions: allocation.savingsContributions.map(
-                    (row) => ({
-                      amountCents: row.amountCents,
-                      kind: row.kind,
-                      subEnvelopeId: row.subEnvelopeId as never,
-                    }),
-                  ),
-                  leaveUnallocatedCents: allocation.leaveUnallocatedCents,
-                },
-              }
-            : value.heldCents && value.heldCents > 0
-              ? { heldCents: value.heldCents }
-              : {}),
+          allocation: {
+            reservations: allocation.reservations.map((row) => ({
+              commitmentId: row.commitmentId as never,
+              amountCents: row.amountCents,
+            })),
+            envelopes: allocation.envelopes,
+            savingsContributions: allocation.savingsContributions.map(
+              (row) => ({
+                amountCents: row.amountCents,
+                kind: row.kind,
+                subEnvelopeId: row.subEnvelopeId as never,
+              }),
+            ),
+            leaveUnallocatedCents: allocation.leaveUnallocatedCents,
+          },
         });
         track(AnalyticsEvents.INCOME_REGISTERED, {
           amount: value.amountCents,
@@ -329,15 +369,12 @@ export function IncomeRegisterForm({
           cycle_id: response.cycleId,
           days_remaining_in_cycle: summary?.cycle?.daysRemaining,
           is_first_income: response.isNewCycle,
-          used_explicit_allocation: Boolean(allocation),
-          reserved_cents: allocation
-            ? allocation.reservations.reduce(
-                (sum, row) => sum + row.amountCents,
-                0,
-              )
-            : 0,
-          unallocated_cents: allocation?.leaveUnallocatedCents ?? 0,
-          legacy_held_path: !allocation && (value.heldCents ?? 0) > 0,
+          used_explicit_allocation: true,
+          reserved_cents: allocation.reservations.reduce(
+            (sum, row) => sum + row.amountCents,
+            0,
+          ),
+          unallocated_cents: allocation.leaveUnallocatedCents,
         });
         if (response.isNewCycle) {
           trackFinancialCycleTransition(summary?.cycle?.id, response);

@@ -26,9 +26,13 @@ export type IncomeEventSlice = {
     wants: number;
     savings: number;
   };
-  // P3-4: optional hold. Held cents are a shared pool that can fund any
-  // commitment envelope (needs or wants) before distributionApplied is used.
-  heldCents?: number;
+};
+
+/** Active reservation remaining for a specific commitment (ledger truth). */
+export type ReservationCoverageSlice = {
+  commitmentId: string;
+  activeCents: number;
+  incomeEventId?: string;
 };
 
 export type FundingEvent = {
@@ -114,6 +118,8 @@ export function computeAllCommitmentCoverage(params: {
   now: number;
   coverageBoost?: CoverageBoost;
   excludedCommitmentIds?: ReadonlySet<string>;
+  /** Active reservation cents per commitment (replaces legacy heldCents pool). */
+  reservations?: ReservationCoverageSlice[];
 }): Map<string, CommitmentCoverageResult> {
   const {
     commitments,
@@ -122,6 +128,7 @@ export function computeAllCommitmentCoverage(params: {
     now,
     coverageBoost,
     excludedCommitmentIds,
+    reservations = [],
   } = params;
   const results = new Map<string, CommitmentCoverageResult>();
   const eventsInWindow = filterIncomeEventsInCycle(incomeEvents, cycle);
@@ -140,14 +147,14 @@ export function computeAllCommitmentCoverage(params: {
     }
   }
 
-  // P3-4: shared held pool per event (heldCents can fund any envelope's
-  // commitments). Drained across both envelope loops below.
-  const eventHeldPool = new Map<string, number>();
-  for (const event of eventsInWindow) {
-    const held = event.heldCents ?? 0;
-    if (held > 0) {
-      eventHeldPool.set(event.id, held);
-    }
+  // Drainable active reservation pool per commitment.
+  const reservationPool = new Map<string, number>();
+  for (const row of reservations) {
+    if (row.activeCents <= 0) continue;
+    reservationPool.set(
+      row.commitmentId,
+      (reservationPool.get(row.commitmentId) ?? 0) + row.activeCents,
+    );
   }
 
   for (const envelope of ["needs", "wants"] as const) {
@@ -178,7 +185,20 @@ export function computeAllCommitmentCoverage(params: {
       const fundingEvents: FundingEvent[] = [];
       let need = commitment.amount;
 
-      // First drain per-envelope distributionApplied (+ boost).
+      // First: ledger reservations earmarked for this commitment.
+      const reservedAvailable = reservationPool.get(commitment.id) ?? 0;
+      if (reservedAvailable > 0 && need > 0) {
+        const allocated = Math.min(need, reservedAvailable);
+        covered += allocated;
+        need -= allocated;
+        reservationPool.set(commitment.id, reservedAvailable - allocated);
+        fundingEvents.push({
+          eventId: `__reservation_${commitment.id}__`,
+          amount: allocated,
+        });
+      }
+
+      // Then drain per-envelope distributionApplied (+ boost).
       for (const [eventId, available] of eventRemaining) {
         if (need <= 0) break;
         if (available <= 0) continue;
@@ -188,24 +208,6 @@ export function computeAllCommitmentCoverage(params: {
         need -= allocated;
         eventRemaining.set(eventId, available - allocated);
         fundingEvents.push({ eventId, amount: allocated });
-      }
-
-      // Then drain the shared held pool (ordered by event occurredAt).
-      if (need > 0) {
-        for (const event of eventsInWindow) {
-          if (need <= 0) break;
-          const heldAvailable = eventHeldPool.get(event.id) ?? 0;
-          if (heldAvailable <= 0) continue;
-
-          const allocated = Math.min(need, heldAvailable);
-          covered += allocated;
-          need -= allocated;
-          eventHeldPool.set(event.id, heldAvailable - allocated);
-          fundingEvents.push({
-            eventId: `__held_${event.id}__`,
-            amount: allocated,
-          });
-        }
       }
 
       const remaining = commitment.amount - covered;

@@ -110,7 +110,7 @@ describe("computeCycleSavingsBreakdown", () => {
     expect(result.status).toBe("above_objective");
   });
 
-  it("legacy: set-aside approximates objective contributed without inventing additional", () => {
+  it("without contribution facts, objective contributed is 0 (no set-aside invent)", () => {
     const result = computeCycleSavingsBreakdown({
       incomeEvents: [
         {
@@ -129,9 +129,10 @@ describe("computeCycleSavingsBreakdown", () => {
       },
     });
     expect(result.savingsObjectiveTargetCents).toBe(814_33);
-    expect(result.savingsObjectiveContributedCents).toBe(814_33);
+    expect(result.savingsObjectiveContributedCents).toBe(0);
     expect(result.savingsAdditionalCents).toBe(0);
-    expect(result.savingsCycleContributedCents).toBe(814_33);
+    expect(result.savingsCycleContributedCents).toBe(0);
+    expect(result.status).toBe("below_objective");
   });
 
   it("marks below_objective when contributed is under target", () => {
@@ -147,6 +148,13 @@ describe("computeCycleSavingsBreakdown", () => {
         },
       ],
       surplusContributions: [],
+      allocationLines: [
+        {
+          destination: "savings_contribution",
+          amountCents: 414_33,
+          contributionKind: "objective",
+        },
+      ],
       savingsEnvelope: {
         allocatedAmount: 814_33,
         remainingAmount: 400_00,

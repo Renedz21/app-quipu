@@ -174,12 +174,10 @@ const IncomeRegisteredProperties = z.object({
   cycle_id: z.string(),
   days_remaining_in_cycle: z.number().int().nonnegative().optional(),
   is_first_income: z.boolean().optional(),
-  /** True cuando el cliente envió `allocation` explícita (ledger nuevo). */
+  /** True cuando el cliente envió `allocation` explícita (ledger). */
   used_explicit_allocation: z.boolean().optional(),
   reserved_cents: z.number().int().nonnegative().optional(),
   unallocated_cents: z.number().int().nonnegative().optional(),
-  /** Path viejo: heldCents sin allocation. */
-  legacy_held_path: z.boolean().optional(),
 });
 export type IncomeRegisteredProperties = z.infer<
   typeof IncomeRegisteredProperties

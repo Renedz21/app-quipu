@@ -651,20 +651,25 @@ export const updateIncomeEvent = mutation({
       .query("incomeAllocationLines")
       .withIndex("by_income_event", (q) => q.eq("incomeEventId", args.eventId))
       .collect();
-    const priorReservations = priorLines
-      .filter(
-        (line) =>
-          line.destination === "commitment_reservation" &&
-          line.commitmentId &&
-          line.amountCents > 0,
-      )
-      .map((line) => ({
-        commitmentId: line.commitmentId as Id<"fixedCommitments">,
-        amountCents: line.amountCents,
-      }));
-    const priorUnallocated = priorLines
-      .filter((line) => line.destination === "unallocated")
-      .reduce((sum, line) => sum + line.amountCents, 0);
+    const priorReservations: Array<{
+      commitmentId: Id<"fixedCommitments">;
+      amountCents: number;
+    }> = [];
+    let priorUnallocated = 0;
+    for (const line of priorLines) {
+      if (
+        line.destination === "commitment_reservation" &&
+        line.commitmentId &&
+        line.amountCents > 0
+      ) {
+        priorReservations.push({
+          commitmentId: line.commitmentId,
+          amountCents: line.amountCents,
+        });
+      } else if (line.destination === "unallocated") {
+        priorUnallocated += line.amountCents;
+      }
+    }
 
     // 1) Reverse envelopes from old snapshot.
     const oldDistribution = event.distributionApplied;
@@ -927,18 +932,19 @@ export const deleteIncomeEvent = mutation({
     );
 
     const now = Date.now();
-    const reverse = await reverseIncomeAllocationLedger(ctx, {
-      profileId: profile._id,
-      cycleId: cycle._id,
-      incomeEventId: args.eventId,
-      now,
-      note: "Reverso por eliminación de ingreso",
-    });
-
-    const remainingIncomes = await ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-      .collect();
+    const [reverse, remainingIncomes] = await Promise.all([
+      reverseIncomeAllocationLedger(ctx, {
+        profileId: profile._id,
+        cycleId: cycle._id,
+        incomeEventId: args.eventId,
+        now,
+        note: "Reverso por eliminación de ingreso",
+      }),
+      ctx.db
+        .query("incomeEvents")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+        .collect(),
+    ]);
     const otherIncomes = remainingIncomes.filter(
       (row) => row._id !== args.eventId,
     );

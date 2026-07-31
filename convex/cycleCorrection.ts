@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import {
@@ -136,82 +137,99 @@ export const correctActiveCycleAllocation = mutation({
     const now = Date.now();
 
     // Release previous active reservations (return conceptually into correction pool).
-    for (const reservation of existingReservations) {
-      if (
-        reservation.status === "consumed" ||
-        reservation.status === "released"
-      ) {
-        continue;
-      }
-      await ctx.db.patch(reservation._id, {
-        status: "released",
-        releasedCents: reservation.reservedCents - reservation.consumedCents,
-        updatedAt: now,
-      });
-      await ctx.db.insert("internalTransfers", {
-        profileId: profile._id,
-        cycleId: activeCycle._id,
-        kind: "reservation_release",
-        amountCents: reservation.reservedCents - reservation.consumedCents,
-        from: `reservation:${reservation._id}`,
-        to: "correction:pool",
-        note: args.note,
-        createdAt: now,
-      });
-    }
+    const activeToRelease = existingReservations.filter(
+      (reservation) =>
+        reservation.status !== "consumed" && reservation.status !== "released",
+    );
+    await Promise.all(
+      activeToRelease.map(async (reservation) => {
+        await ctx.db.patch(reservation._id, {
+          status: "released",
+          releasedCents: reservation.reservedCents - reservation.consumedCents,
+          updatedAt: now,
+        });
+        await ctx.db.insert("internalTransfers", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          kind: "reservation_release",
+          amountCents: reservation.reservedCents - reservation.consumedCents,
+          from: `reservation:${reservation._id}`,
+          to: "correction:pool",
+          note: args.note,
+          createdAt: now,
+        });
+      }),
+    );
 
     // Apply envelope remaining targets; adjust allocated so progress stays coherent.
-    for (const type of ["needs", "wants", "savings"] as const) {
-      const envelope = envelopes.find((row) => row.type === type);
-      if (!envelope) continue;
-      const targetRemaining = plan.setEnvelopeRemaining[type];
-      assertNonNegativeCents(targetRemaining, type);
-      const spent = Math.max(
-        0,
-        envelope.allocatedAmount - envelope.remainingAmount,
-      );
-      await ctx.db.patch(envelope._id, {
-        remainingAmount: targetRemaining,
-        allocatedAmount: spent + targetRemaining,
-      });
-    }
+    const envelopeByType = new Map(
+      envelopes.map((envelope) => [envelope.type, envelope] as const),
+    );
+    await Promise.all(
+      (["needs", "wants", "savings"] as const).map(async (type) => {
+        const envelope = envelopeByType.get(type);
+        if (!envelope) return;
+        const targetRemaining = plan.setEnvelopeRemaining[type];
+        assertNonNegativeCents(targetRemaining, type);
+        const spent = Math.max(
+          0,
+          envelope.allocatedAmount - envelope.remainingAmount,
+        );
+        await ctx.db.patch(envelope._id, {
+          remainingAmount: targetRemaining,
+          allocatedAmount: spent + targetRemaining,
+        });
+      }),
+    );
 
     // Create new reservations from plan.
-    let reservedCents = 0;
-    for (const row of args.reserveToCommitments) {
-      if (row.amountCents <= 0) continue;
-      const commitment = await ctx.db.get(row.commitmentId);
-      if (!commitment || commitment.profileId !== profile._id) {
-        throw new ConvexError({
-          code: "NOT_FOUND",
-          message: "Compromiso no encontrado para reservar.",
+    const reserveRows = args.reserveToCommitments.filter(
+      (row) => row.amountCents > 0,
+    );
+    const reservedCents = reserveRows.reduce(
+      (sum, row) => sum + row.amountCents,
+      0,
+    );
+    await Promise.all(
+      reserveRows.map(async (row) => {
+        const commitment = await ctx.db.get(row.commitmentId);
+        if (!commitment || commitment.profileId !== profile._id) {
+          throw new ConvexError({
+            code: "NOT_FOUND",
+            message: "Compromiso no encontrado para reservar.",
+          });
+        }
+        const reservationId = await ctx.db.insert("commitmentReservations", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          commitmentId: row.commitmentId,
+          reservedCents: row.amountCents,
+          status: "active",
+          consumedCents: 0,
+          releasedCents: 0,
+          createdAt: now,
         });
-      }
-      const reservationId = await ctx.db.insert("commitmentReservations", {
-        profileId: profile._id,
-        cycleId: activeCycle._id,
-        commitmentId: row.commitmentId,
-        reservedCents: row.amountCents,
-        status: "active",
-        consumedCents: 0,
-        releasedCents: 0,
-        createdAt: now,
-      });
-      reservedCents += row.amountCents;
-      await ctx.db.insert("internalTransfers", {
-        profileId: profile._id,
-        cycleId: activeCycle._id,
-        kind: "unallocated_to_reservation",
-        amountCents: row.amountCents,
-        from: "correction:pool",
-        to: `reservation:${reservationId}`,
-        note: args.note,
-        createdAt: now,
-      });
-    }
+        await ctx.db.insert("internalTransfers", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          kind: "unallocated_to_reservation",
+          amountCents: row.amountCents,
+          from: "correction:pool",
+          to: `reservation:${reservationId}`,
+          note: args.note,
+          createdAt: now,
+        });
+      }),
+    );
 
     // Confirmed contributions to Fondo/metas.
-    let contributionCents = 0;
+    const contributionRows = args.contributeToSavings.filter(
+      (row) => row.amountCents > 0,
+    );
+    const contributionCents = contributionRows.reduce(
+      (sum, row) => sum + row.amountCents,
+      0,
+    );
     const subEnvelopes = await ctx.db
       .query("subEnvelopes")
       .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
@@ -219,8 +237,7 @@ export const correctActiveCycleAllocation = mutation({
     const defaultFund =
       subEnvelopes.find((row) => row.isSystemDefault) ?? subEnvelopes[0];
 
-    for (const contribution of args.contributeToSavings) {
-      if (contribution.amountCents <= 0) continue;
+    const resolvedContributions = contributionRows.map((contribution) => {
       const targetId = contribution.subEnvelopeId ?? defaultFund?._id;
       if (!targetId) {
         throw new ConvexError({
@@ -228,62 +245,80 @@ export const correctActiveCycleAllocation = mutation({
           message: "No hay Fondo para el aporte.",
         });
       }
-      const sub = await ctx.db.get(targetId);
+      return { contribution, targetId };
+    });
+    const uniqueTargets = [
+      ...new Set(resolvedContributions.map((r) => r.targetId)),
+    ];
+    const targetDocs = await Promise.all(
+      uniqueTargets.map((id) => ctx.db.get(id)),
+    );
+    const targetById = new Map(
+      uniqueTargets.map((id, index) => [id, targetDocs[index]] as const),
+    );
+    for (const { targetId } of resolvedContributions) {
+      const sub = targetById.get(targetId);
       if (!sub || sub.profileId !== profile._id) {
         throw new ConvexError({
           code: "NOT_FOUND",
           message: "Meta de ahorro no encontrada.",
         });
       }
-      await ctx.db.patch(targetId, {
-        currentAmount: sub.currentAmount + contribution.amountCents,
-      });
-      contributionCents += contribution.amountCents;
-      if (contribution.kind === "additional") {
-        await ctx.db.insert("surplusContributions", {
-          profileId: profile._id,
-          cycleId: activeCycle._id,
-          fromEnvelope: "needs",
-          amount: contribution.amountCents,
-          subEnvelopeId: targetId,
-          createdAt: now,
-          contributionKind: "additional",
-        });
-      } else {
-        await ctx.db.insert("surplusContributions", {
-          profileId: profile._id,
-          cycleId: activeCycle._id,
-          fromEnvelope: "needs",
-          amount: contribution.amountCents,
-          subEnvelopeId: targetId,
-          createdAt: now,
-          contributionKind: "objective",
-        });
-      }
-      await ctx.db.insert("internalTransfers", {
-        profileId: profile._id,
-        cycleId: activeCycle._id,
-        kind: "unallocated_to_savings",
-        amountCents: contribution.amountCents,
-        from: "correction:pool",
-        to: `subEnvelope:${targetId}`,
-        note: args.note,
-        createdAt: now,
-      });
     }
+    const totalsByTarget = new Map<Id<"subEnvelopes">, number>();
+    for (const { contribution, targetId } of resolvedContributions) {
+      totalsByTarget.set(
+        targetId,
+        (totalsByTarget.get(targetId) ?? 0) + contribution.amountCents,
+      );
+    }
+    await Promise.all(
+      [...totalsByTarget.entries()].map(([targetId, delta]) => {
+        const sub = targetById.get(targetId);
+        if (!sub) return Promise.resolve();
+        return ctx.db.patch(targetId, {
+          currentAmount: sub.currentAmount + delta,
+        });
+      }),
+    );
+    await Promise.all(
+      resolvedContributions.flatMap(({ contribution, targetId }) => [
+        ctx.db.insert("surplusContributions", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          fromEnvelope: "needs",
+          amount: contribution.amountCents,
+          subEnvelopeId: targetId,
+          createdAt: now,
+          contributionKind: contribution.kind,
+        }),
+        ctx.db.insert("internalTransfers", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          kind: "unallocated_to_savings",
+          amountCents: contribution.amountCents,
+          from: "correction:pool",
+          to: `subEnvelope:${targetId}`,
+          note: args.note,
+          createdAt: now,
+        }),
+      ]),
+    );
 
-    for (const transfer of draft.transfers) {
-      await ctx.db.insert("internalTransfers", {
-        profileId: profile._id,
-        cycleId: activeCycle._id,
-        kind: transfer.kind,
-        amountCents: transfer.amountCents,
-        from: transfer.from,
-        to: transfer.to,
-        note: args.note,
-        createdAt: now,
-      });
-    }
+    await Promise.all(
+      draft.transfers.map((transfer) =>
+        ctx.db.insert("internalTransfers", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          kind: transfer.kind,
+          amountCents: transfer.amountCents,
+          from: transfer.from,
+          to: transfer.to,
+          note: args.note,
+          createdAt: now,
+        }),
+      ),
+    );
 
     await ctx.db.patch(activeCycle._id, {
       unallocatedCents: plan.setUnallocatedCents,

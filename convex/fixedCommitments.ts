@@ -228,13 +228,15 @@ export const markCommitmentAsPaid = mutation({
         status: row.status,
       })),
     });
-    for (const patch of pay.reservationPatches) {
-      await ctx.db.patch(patch.id as (typeof reservations)[0]["_id"], {
-        consumedCents: patch.consumedCents,
-        status: patch.status,
-        updatedAt: paidAt,
-      });
-    }
+    await Promise.all(
+      pay.reservationPatches.map((patch) =>
+        ctx.db.patch(patch.id as (typeof reservations)[0]["_id"], {
+          consumedCents: patch.consumedCents,
+          status: patch.status,
+          updatedAt: paidAt,
+        }),
+      ),
+    );
     if (pay.remainderCents > 0) {
       const envelope = await ctx.db
         .query("envelopes")

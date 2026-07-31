@@ -34,41 +34,43 @@ export async function reverseIncomeAllocationLedger(
     })),
   );
 
-  for (const reservationId of reversePlan.reservationIdsToRelease) {
-    const reservation = await ctx.db.get(reservationId);
-    if (!reservation) continue;
-    const active =
-      reservation.reservedCents -
-      reservation.consumedCents -
-      reservation.releasedCents;
-    await ctx.db.patch(reservationId, {
-      status: "released",
-      releasedCents: reservation.releasedCents + Math.max(0, active),
-      updatedAt: input.now,
-    });
-    await ctx.db.insert("internalTransfers", {
-      profileId: input.profileId,
-      cycleId: input.cycleId,
-      kind: "reservation_release",
-      amountCents: Math.max(0, active),
-      from: `reservation:${reservationId}`,
-      to: "income_rewrite",
-      note: input.note ?? "Reverso de distribución de ingreso",
-      createdAt: input.now,
-    });
-  }
+  await Promise.all(
+    reversePlan.reservationIdsToRelease.map(async (reservationId) => {
+      const reservation = await ctx.db.get(reservationId);
+      if (!reservation) return;
+      const active =
+        reservation.reservedCents -
+        reservation.consumedCents -
+        reservation.releasedCents;
+      await ctx.db.patch(reservationId, {
+        status: "released",
+        releasedCents: reservation.releasedCents + Math.max(0, active),
+        updatedAt: input.now,
+      });
+      await ctx.db.insert("internalTransfers", {
+        profileId: input.profileId,
+        cycleId: input.cycleId,
+        kind: "reservation_release",
+        amountCents: Math.max(0, active),
+        from: `reservation:${reservationId}`,
+        to: "income_rewrite",
+        note: input.note ?? "Reverso de distribución de ingreso",
+        createdAt: input.now,
+      });
+    }),
+  );
 
-  for (const reversal of reversePlan.subEnvelopeReversals) {
-    const sub = await ctx.db.get(reversal.subEnvelopeId);
-    if (!sub) continue;
-    await ctx.db.patch(reversal.subEnvelopeId, {
-      currentAmount: Math.max(0, sub.currentAmount - reversal.amountCents),
-    });
-  }
+  await Promise.all(
+    reversePlan.subEnvelopeReversals.map(async (reversal) => {
+      const sub = await ctx.db.get(reversal.subEnvelopeId);
+      if (!sub) return;
+      await ctx.db.patch(reversal.subEnvelopeId, {
+        currentAmount: Math.max(0, sub.currentAmount - reversal.amountCents),
+      });
+    }),
+  );
 
-  for (const line of allocationLines) {
-    await ctx.db.delete(line._id);
-  }
+  await Promise.all(allocationLines.map((line) => ctx.db.delete(line._id)));
 
   return { unallocatedDeltaCents: reversePlan.unallocatedDeltaCents };
 }

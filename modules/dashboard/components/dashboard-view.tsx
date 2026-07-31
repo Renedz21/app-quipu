@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { AnalyticsEvents, track } from "@/core/analytics";
+import { Suspense, useEffect, useRef } from "react";
+import { AnalyticsEvents, setPersonProperties, track } from "@/core/analytics";
 import { useDashboardSummary } from "../queries";
 import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
@@ -35,14 +35,34 @@ type Props = {
 
 function DashboardContent({ profileName }: Props) {
   const summary = useDashboardSummary();
+  const reviewTrackedForCycle = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!summary?.cycle) return;
+    if (!summary?.cycle || !summary.hero) return;
+    const needsReview = summary.cycle.needsReview === true;
+    const reservedCents = summary.hero.reservedCents ?? 0;
+    const unallocatedCents = summary.cycle.unallocatedCents ?? 0;
     track(AnalyticsEvents.DASHBOARD_VIEWED, {
       cycle_id: summary.cycle.id,
       is_new_cycle: summary.isEarlyCycle ?? false,
       days_remaining: summary.cycle.daysRemaining,
+      needs_review: needsReview,
+      reserved_cents: reservedCents,
+      unallocated_cents: unallocatedCents,
     });
+    if (needsReview && reviewTrackedForCycle.current !== summary.cycle.id) {
+      reviewTrackedForCycle.current = summary.cycle.id;
+      track(AnalyticsEvents.ALLOCATION_REVIEW_SURFACED, {
+        cycle_id: summary.cycle.id,
+        reserved_cents: reservedCents,
+        unallocated_cents: unallocatedCents,
+        spendable_cents: summary.hero.spendableCents ?? 0,
+      });
+      setPersonProperties({
+        allocation_needs_review: true,
+        allocation_needs_review_cycle_id: summary.cycle.id,
+      });
+    }
   }, [summary]);
 
   if (summary === undefined) {

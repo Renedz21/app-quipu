@@ -309,6 +309,10 @@ const cycleSavingsBreakdownValidator = v.object({
   savingsObjectiveCents: v.number(),
   savingsAdditionalCents: v.number(),
   savingsTotalCents: v.number(),
+  savingsObjectiveTargetCents: v.number(),
+  savingsObjectiveContributedCents: v.number(),
+  savingsCycleContributedCents: v.number(),
+  savingsEnvelopeRemainingCents: v.number(),
   savingsSetAsideCents: v.number(),
   savingsRemainingCents: v.number(),
   objectiveProgressPercent: v.number(),
@@ -346,20 +350,25 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
     .unique();
   if (!activeCycle) return null;
 
-  const [incomeEvents, surplusContributions, envelopes] = await Promise.all([
-    ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-      .collect(),
-    ctx.db
-      .query("surplusContributions")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-      .collect(),
-    ctx.db
-      .query("envelopes")
-      .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
-      .collect(),
-  ]);
+  const [incomeEvents, surplusContributions, envelopes, allocationLines] =
+    await Promise.all([
+      ctx.db
+        .query("incomeEvents")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("surplusContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("incomeAllocationLines")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+    ]);
 
   const breakdownEvents = incomeEvents.map((event) => ({
     incomeKind: event.incomeKind,
@@ -377,6 +386,12 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
     incomeEvents: breakdownEvents,
     surplusContributions: surplusContributions.map((row) => ({
       amount: row.amount,
+      contributionKind: row.contributionKind,
+    })),
+    allocationLines: allocationLines.map((row) => ({
+      destination: row.destination,
+      amountCents: row.amountCents,
+      contributionKind: row.contributionKind,
     })),
     savingsEnvelope: savingsEnvelope
       ? {
@@ -392,7 +407,8 @@ async function buildCycleSavingsBreakdown(ctx: QueryCtx) {
 
   const underTargetByCents = Math.max(
     0,
-    numbers.savingsObjectiveCents - numbers.savingsSetAsideCents,
+    numbers.savingsObjectiveTargetCents -
+      numbers.savingsObjectiveContributedCents,
   );
 
   const extraordinarySurplusCents = computeAvailableExtraordinarySavingsForMove(
@@ -908,23 +924,32 @@ export const moveSurplusToSavings = mutation({
       amount: args.amount,
       subEnvelopeId: subEnvelope._id,
       createdAt: Date.now(),
+      contributionKind: "additional",
     });
 
-    const [incomeEvents, surplusContributions, envelopesAfter] =
-      await Promise.all([
-        ctx.db
-          .query("incomeEvents")
-          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-          .collect(),
-        ctx.db
-          .query("surplusContributions")
-          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-          .collect(),
-        ctx.db
-          .query("envelopes")
-          .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
-          .collect(),
-      ]);
+    const [
+      incomeEvents,
+      surplusContributions,
+      envelopesAfter,
+      allocationLines,
+    ] = await Promise.all([
+      ctx.db
+        .query("incomeEvents")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("surplusContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+      ctx.db
+        .query("incomeAllocationLines")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect(),
+    ]);
 
     const breakdownEvents = incomeEvents.map((event) => ({
       incomeKind: event.incomeKind,
@@ -938,6 +963,12 @@ export const moveSurplusToSavings = mutation({
       incomeEvents: breakdownEvents,
       surplusContributions: surplusContributions.map((row) => ({
         amount: row.amount,
+        contributionKind: row.contributionKind,
+      })),
+      allocationLines: allocationLines.map((row) => ({
+        destination: row.destination,
+        amountCents: row.amountCents,
+        contributionKind: row.contributionKind,
       })),
       savingsEnvelope: savingsEnvelopeAfter
         ? {

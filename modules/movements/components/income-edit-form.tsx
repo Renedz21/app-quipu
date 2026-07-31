@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { IncomeAmountField } from "@/modules/income/components/income-amount-field";
@@ -77,6 +78,11 @@ export function IncomeEditForm({
           description,
           occurredAt: value.occurredAt,
           incomeKind: "habitual",
+        });
+        track(AnalyticsEvents.INCOME_EVENT_UPDATED, {
+          amount: value.amountCents,
+          previous_amount: initialAmountCents,
+          income_kind: "habitual",
         });
         onSuccess();
       } catch (error) {

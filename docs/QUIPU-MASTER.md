@@ -716,7 +716,7 @@ pinta sin esperar secciones secundarias. Convención: cada sección expone su `*
 
 ## 5. Backend y dominio (Convex)
 
-### 5.1 Schema real (`convex/schema.ts`, 10 tablas propias)
+### 5.1 Schema real (`convex/schema.ts`, tablas propias)
 
 Las tablas de Better Auth (`user`, `session`, `account`, `passkey`, `verification`) viven en el
 componente `convex/betterAuth/` y no se re-exportan.
@@ -724,21 +724,25 @@ componente `convex/betterAuth/` y no se re-exportan.
 | Tabla | Campos clave | Notas de dominio |
 |---|---|---|
 | `profiles` | userId, name, country, currencyCode/Symbol, `incomeModel` (fixed/variable/mixed), `cycleDurationDays?` (15/30), `mixedFixedAmount?` (céntimos), `variableIncomeSources?`, `payFrequency?` (monthly/biweekly/weekly/variable), `paydays?`, allocationNeeds/Wants/Savings (default 50/30/20), `extraordinaryRules?` (CTS/gratificaciones/bono/utilidades/custom → policy), onboardingComplete, plan (free/premium), polarCustomerId/SubscriptionId?, `appearanceTheme?` (light/tinta), `accentPreset?` (moss/steel/clay), `appIconVariant?` (light/dark), coachCrisisSnoozedUntil? | `incomeModel` required desde P0-3 (2026-07-21); reglas extraordinarias P2-7 |
-| `financialCycles` | profileId, startDate, endDate, status (active/closed), `totalIncomeReceived?` | Snapshot materializado mantenido por `createIncomeEvent` |
+| `financialCycles` | profileId, startDate, endDate, status (active/closed), `totalIncomeReceived?`, **`unallocatedCents?`**, **`needsReview?`** | Snapshot; unallocated = por repartir; needsReview = ciclo legacy sin ledger explícito |
 | `envelopes` | profileId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount, frozenUntil? | Saldo vivo O(1) para el dashboard |
 | `subEnvelopes` | profileId, parentEnvelopeType (**solo "savings"**), label, emoji, currentAmount, targetAmount?, isSystemDefault | Metas de ahorro; `isSystemDefault` = Fondo de Emergencia |
-| `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay` (1–31, Lima), `coveredAt?`, `coveredBy?`, `postponedForCycleId?` (P1-10), **`paidAt?`**, **`paidForCycleId?`** (P3-7) | Cobertura cascada desde ingresos del ciclo; pago confirmado por ciclo (seguimiento, no mueve sobres) |
+| `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay` (1–31, Lima), `coveredAt?`, `coveredBy?`, `postponedForCycleId?` (P1-10), **`paidAt?`**, **`paidForCycleId?`** (P3-7) | Cobertura cascada + pago; reservas explícitas en `commitmentReservations` |
+| `commitmentReservations` | profileId, cycleId, commitmentId, reservedCents, status, consumedCents, releasedCents | Dinero apartado para un compromiso; reduce disponible sin ser gasto |
+| `incomeAllocationLines` | profileId, cycleId, incomeEventId, destination, amountCents, … | Hechos de distribución por ingreso |
+| `internalTransfers` | profileId, cycleId, kind, amountCents, from, to, note? | Correcciones internas (no ingreso ni gasto) |
 | `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp, `updatedAt?` (P3-5) | Gastos del ciclo; editables en ciclo activo (P3-5) |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered, **`closedAtPremium?`** (Plus v1) | "warning" = zona de amortiguación; hechos al cierre; `closedAtPremium` congela si el usuario tenía Plus al cerrar |
-| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}`, `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings), **`heldCents?`** (P3-4; entero céntimos 0..amount; default 0) | Log unificado; `distributionApplied` se calcula sobre `distributable = amount − heldCents`; `totalIncomeReceived` sigue siendo bruto (Σ amount); campos extraordinarios P2-7 |
+| `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}` (snapshot histórico), `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings), **`heldCents?`** (histórico: suma de reservas al crear/editar; la verdad de cobertura es `commitmentReservations`) | Log unificado; create/update **requieren** `allocation` explícita (ledger); `totalIncomeReceived` es bruto (Σ amount); campos extraordinarios P2-7 |
 
 ### 5.2 Funciones por archivo
 
 | Archivo | Funciones |
 |---|---|
-| `convex/incomeEvents.ts` | `createIncomeEvent`, `deleteIncomeEvent`, `updateIncomeEvent` (mutations; P2-7 extraordinarios; P3-4 `heldCents`; P3-5 edición ciclo activo) |
+| `convex/incomeEvents.ts` | `createIncomeEvent` (acepta `allocation` explícita), `deleteIncomeEvent`, `updateIncomeEvent` |
+| `convex/cycleCorrection.ts` | `correctActiveCycleAllocation` — redistribuye ciclo activo vía transferencias internas |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations; P3-5), `getRecentExpenses` (query) |
 | `convex/movements.ts` | `listForActiveCycle` (query; lista unificada ingresos + gastos) |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk`, **`markCommitmentAsPaid`** (mutations; P3-7) |
@@ -771,10 +775,10 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **`incomeModel` reemplazó a `workerType`** (v2.0 → v2.5, migración widen→migrate→narrow ejecutada 2026-07-08). `workerType` y `frequency` ya no existen en el schema ni en el código.
 - **`incomeEvents` unificó** `adHocIncomes` + sueldo. Migración 1:1 con `source: "other"` (trade-off aceptado).
 - **`fixedCommitments.dueDay`** reemplazó `frequency` (first/second/every_payday). Migración de `every_payday` con pérdida aceptada (→ primer payday).
-- **Cobertura de compromisos (Cubierto):** motor de cascada P1-1 (`computeCommitmentCoverage` en `convex/lib/commitmentCoverage.ts`); persiste `coveredAt` / `coveredBy` al financiarse desde `incomeEvents` del ciclo (incl. pool `heldCents` P3-4). Responde: ¿hay dinero reservado para esta obligación?
+- **Cobertura de compromisos (Cubierto):** motor de cascada (`computeCommitmentCoverage`); primero consume `commitmentReservations` activas por compromiso, luego `distributionApplied` del ciclo. Persiste `coveredAt` / `coveredBy`. Responde: ¿hay dinero reservado/asignado para esta obligación?
 - **Pago de compromisos (Pagado — P3-7):** seguimiento independiente de la cobertura. `paidAt` + `paidForCycleId` marcan que el usuario confirmó haber pagado **en el ciclo activo** (`markCommitmentAsPaid`). **No mueve sobres ni re-ejecuta cascada.** Responde: ¿el usuario dice que ya pagó?
 - **Vencido (pago):** pasó `dueDay` (Lima) en el ciclo activo y el compromiso no está Pagado para ese ciclo (`resolveCommitmentPaymentStatus` → `overdue`). Distinto de cobertura parcial o pospuesto (`postponedForCycleId`, P1-10).
-- **Edición de movimientos (P3-5):** `updateExpense` / `updateIncomeEvent` solo en ciclo activo; re-aplican reparto y re-evalúan cobertura. `updateIncomeEvent` preserva `heldCents` si no se envía en args (`args.heldCents ?? event.heldCents ?? 0`). Desde `/movements` no se edita el apartado; solo al registrar ingreso.
+- **Edición de movimientos (P3-5):** `updateExpense` / `updateIncomeEvent` solo en ciclo activo. `updateIncomeEvent` **revierte y reescribe el ledger** (mismo patrón que delete+create); puede recibir `allocation` o reconstruir desde reservas previas + política. Desde `/movements` no se edita el apartado; solo al registrar ingreso.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
 - **Calendario de ciclo en Ajustes:** cambiar `payFrequency`, `paydays` o `cycleDurationDays` en `profiles` **no recalcula** el `financialCycles` activo (fechas, sobres e ingresos del ciclo en curso siguen igual). La nueva configuración aplica cuando se **abra el siguiente ciclo** (p. ej. al registrar un ingreso que cierre el ciclo actual, ver `createIncomeEvent`).
@@ -1216,8 +1220,12 @@ pnpm test                   # Vitest
 
 # Convex
 npx convex dashboard        # UI de Convex
-npx convex deploy --prod    # Deploy a producción
+pnpm deploy:convex          # Deploy Convex (usa CONVEX_DEPLOY_KEY → prod chihuahua)
 npx convex ai-files install # Refrescar bloque managed de AGENTS.md
+
+# Producción (Vercel): `pnpm build` = `convex deploy` + `next build`
+# Requiere CONVEX_DEPLOY_KEY en el entorno de build (deployment patient-chihuahua-640).
+# Local sin deploy: `pnpm build:next`
 ```
 
 ### 9.2 Checklist antes de commit/PR
@@ -1288,9 +1296,9 @@ Implementación snapshot: `convex/ops/appDataSnapshot.ts` + `convex/ops/appDataS
 
 1. Crear proyecto Vercel enlazado al repo; rama de producción `main`.
 2. **Install:** `corepack enable` + `pnpm install` (o dejar que Vercel detecte `pnpm` vía Corepack).
-3. **Build:** `pnpm build`; **Output:** Next.js default.
-4. **Env producción:** copiar desde `.env.local` de referencia — `BETTER_AUTH_SECRET` (prod único, ver D4), `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`, `SITE_URL`, `POLAR_*` según §9.5, passkey `PASSKEY_RP_ID` / `PASSKEY_RP_NAME` al dominio real.
-5. **Preview:** cada PR — mismas `NEXT_PUBLIC_*` apuntando al deployment Convex de preview o dev acordado; rebuild obligatorio al cambiar públicas.
+3. **Build:** `pnpm build` (despliega Convex prod vía `pnpm dlx convex deploy --cmd 'pnpm run build:next'`, luego Next). Local sin Convex: `pnpm build:next`.
+4. **Env producción:** copiar desde `.env.local` de referencia — `BETTER_AUTH_SECRET` (prod único, ver D4), `CONVEX_DEPLOY_KEY` (prod `patient-chihuahua-640`), `NEXT_PUBLIC_CONVEX_URL` (inyectada por `convex deploy --cmd` si usas `--cmd-url-env-var-name`), `NEXT_PUBLIC_CONVEX_SITE_URL`, `SITE_URL`, `POLAR_*` según §9.5, passkey `PASSKEY_RP_ID` / `PASSKEY_RP_NAME` al dominio real.
+5. **Preview:** cada PR — mismas `NEXT_PUBLIC_*` apuntando al deployment Convex de preview o dev acordado; rebuild obligatorio al cambiar públicas. Si el build de preview no debe tocar prod Convex, override Build Command a `pnpm build:next` o usa un deploy key de preview.
 6. Post-deploy: smoke §9.3 + §9.3.1 contra la URL de Vercel; webhook Polar apuntando al **Convex prod** site URL, no al host Next.
 
 ### 9.5 Facturación — Polar.sh (Quipu Plus)
@@ -1356,6 +1364,8 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-07-31 — Cutover: sin path legacy de ingresos.** `createIncomeEvent` exige `allocation`; coverage usa `commitmentReservations` (no pool `heldCents`); `updateIncomeEvent` reescribe ledger; ahorro del ciclo solo por aportes confirmados (sin fallback set-aside). Analytics PostHog de impacto en dashboard «Allocation ledger — impacto y rescate».
+- **2026-07-31 — Allocation ledger (disponible real).** Causa raíz: ingreso auto-repartido 50/30/20 trataba “dinero que tenía” como gastable y “asignado al sobre Ahorro / no gastado” como ahorro adicional. Nuevo modelo: `incomeAllocationLines`, `commitmentReservations`, `internalTransfers`, `financialCycles.unallocatedCents`/`needsReview`; ahorro del ciclo = aportes confirmados; disponible = sobres gastables excluyendo reservado y por repartir; corrección de ciclo en `/cycle/correct` sin inventar ingresos/gastos. Plan: `docs/superpowers/plans/2026-07-31-income-allocation-ledger.md`.
 - **2026-07-29 — Plus v1 Slices 1–2 (reglas auto + predicción).** Slice 1: `extraordinaryRulesAutoApply` en perfil; lib pura `convex/lib/extraordinaryRules.ts` + TDD; `createIncomeEvent`/`updateIncomeEvent` auto-aplican regla premium y persisten `appliedByAutoRule`; toggles «Aplicar automáticamente» en Ajustes → Automatizaciones (free ve `PremiumLockCard` al intentar activar); badge `auto` en movimientos. Slice 2: lib pura `convex/lib/cycleForecast.ts` + TDD (burn rate, días hasta agotar, proyección de cierre); query `forecast.getCycleForecast` gated; card «Predicción» en dashboard entre coach y movimientos (free ve paywall). Plan: `docs/superpowers/plans/2026-07-28-plus-v1.md`.
 - **2026-07-29 — Plus v1 Slices 3–4 (crisis avanzado + recordatorios).** Premium en crisis ve plan numerado transaccional (`convex/lib/crisisPlan.ts` + TDD) con CTA «Resolver en un paso» (`applyCrisisPlan` gated en `coachEngine.ts`; UI `CoachCrisisPlanActions`). Free mantiene acciones sueltas (`CoachCrisisActions`). Recordatorios in-app: query `listUpcomingForBadge` (compromisos sin cubrir que vencen en ≤3 días); badge + lista corta en dashboard (`UpcomingCommitmentsBadge`); free no ve nada. Sin email ni push.
 - **2026-07-29 — CI quality = Biome ci.** El job `quality` corre `pnpm ci:quality` (`biome ci .`) para format + lint; ya no un paso genérico «Lint». React Compiler: handlers async de rescate usan `Promise.finally` (no `try/finally`) para que el compiler pueda memoizar.

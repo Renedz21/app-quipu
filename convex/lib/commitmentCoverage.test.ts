@@ -247,15 +247,13 @@ describe("mapCoverageStatusToDashboard", () => {
   });
 });
 
-describe("heldCents coverage (P3-4)", () => {
-  it("covers a needs commitment using heldCents when distributionApplied is zero", () => {
+describe("reservation coverage (ledger)", () => {
+  it("covers a needs commitment using reservations when distributionApplied is zero", () => {
     const rent = commitment({ id: "rent", amount: 250_000, dueDay: 5 });
     const events = [
       income({
         id: "payroll",
-        // distributionApplied gives nothing to needs; held pool covers the commitment.
         distributionApplied: { needs: 0, wants: 30_000, savings: 20_000 },
-        heldCents: 250_000,
       }),
     ];
 
@@ -264,6 +262,13 @@ describe("heldCents coverage (P3-4)", () => {
       cycle: CYCLE,
       incomeEvents: events,
       now: Date.parse("2026-07-04T12:00:00-05:00"),
+      reservations: [
+        {
+          commitmentId: "rent",
+          activeCents: 250_000,
+          incomeEventId: "payroll",
+        },
+      ],
     });
 
     expect(cascade.get("rent")).toMatchObject({
@@ -273,13 +278,12 @@ describe("heldCents coverage (P3-4)", () => {
     });
   });
 
-  it("partially covers a commitment from held pool when held < commitment", () => {
+  it("partially covers a commitment when reserved < commitment", () => {
     const rent = commitment({ id: "rent", amount: 350_000, dueDay: 5 });
     const events = [
       income({
         id: "payroll",
         distributionApplied: { needs: 0, wants: 0, savings: 0 },
-        heldCents: 250_000,
       }),
     ];
 
@@ -288,6 +292,7 @@ describe("heldCents coverage (P3-4)", () => {
       cycle: CYCLE,
       incomeEvents: events,
       now: Date.parse("2026-07-04T12:00:00-05:00"),
+      reservations: [{ commitmentId: "rent", activeCents: 250_000 }],
     });
 
     expect(cascade.get("rent")).toMatchObject({
@@ -297,7 +302,7 @@ describe("heldCents coverage (P3-4)", () => {
     });
   });
 
-  it("held pool is shared across needs and wants commitments (not doubled)", () => {
+  it("reservations are per-commitment (not a shared held pool)", () => {
     const rent = commitment({
       id: "rent",
       amount: 150_000,
@@ -314,7 +319,6 @@ describe("heldCents coverage (P3-4)", () => {
       income({
         id: "payroll",
         distributionApplied: { needs: 0, wants: 0, savings: 0 },
-        heldCents: 200_000,
       }),
     ];
 
@@ -323,25 +327,28 @@ describe("heldCents coverage (P3-4)", () => {
       cycle: CYCLE,
       incomeEvents: events,
       now: Date.parse("2026-07-04T12:00:00-05:00"),
+      reservations: [
+        { commitmentId: "rent", activeCents: 150_000 },
+        { commitmentId: "spotify", activeCents: 50_000 },
+      ],
     });
 
-    const rentResult = cascade.get("rent")!;
-    const spotifyResult = cascade.get("spotify")!;
-    // Total covered must not exceed heldCents = 200_000.
-    expect(rentResult.covered + spotifyResult.covered).toBeLessThanOrEqual(
-      200_000,
-    );
-    expect(rentResult.covered).toBe(150_000);
-    expect(spotifyResult.covered).toBe(50_000);
+    expect(cascade.get("rent")).toMatchObject({
+      covered: 150_000,
+      remaining: 0,
+    });
+    expect(cascade.get("spotify")).toMatchObject({
+      covered: 50_000,
+      remaining: 100_000,
+    });
   });
 
-  it("held pool supplements distributionApplied when both are present", () => {
+  it("reservations supplement distributionApplied when both are present", () => {
     const rent = commitment({ id: "rent", amount: 300_000, dueDay: 5 });
     const events = [
       income({
         id: "payroll",
         distributionApplied: { needs: 100_000, wants: 30_000, savings: 20_000 },
-        heldCents: 200_000,
       }),
     ];
 
@@ -350,6 +357,7 @@ describe("heldCents coverage (P3-4)", () => {
       cycle: CYCLE,
       incomeEvents: events,
       now: Date.parse("2026-07-04T12:00:00-05:00"),
+      reservations: [{ commitmentId: "rent", activeCents: 200_000 }],
     });
 
     expect(cascade.get("rent")).toMatchObject({
@@ -359,22 +367,9 @@ describe("heldCents coverage (P3-4)", () => {
     });
   });
 
-  it("zero-held event behaves identically to no heldCents field", () => {
+  it("without reservations, coverage uses only distributionApplied", () => {
     const rent = commitment({ id: "rent", amount: 50_000, dueDay: 8 });
-    const withZeroHeld = computeAllCommitmentCoverage({
-      commitments: [rent],
-      cycle: CYCLE,
-      incomeEvents: [
-        income({
-          id: "e1",
-          distributionApplied: { needs: 50_000, wants: 0, savings: 0 },
-          heldCents: 0,
-        }),
-      ],
-      now: Date.parse("2026-07-06T12:00:00-05:00"),
-    });
-
-    const withoutHeld = computeAllCommitmentCoverage({
+    const cascade = computeAllCommitmentCoverage({
       commitments: [rent],
       cycle: CYCLE,
       incomeEvents: [
@@ -386,6 +381,10 @@ describe("heldCents coverage (P3-4)", () => {
       now: Date.parse("2026-07-06T12:00:00-05:00"),
     });
 
-    expect(withZeroHeld.get("rent")).toEqual(withoutHeld.get("rent"));
+    expect(cascade.get("rent")).toMatchObject({
+      covered: 50_000,
+      remaining: 0,
+      status: "covered",
+    });
   });
 });

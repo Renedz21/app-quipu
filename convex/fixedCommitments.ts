@@ -16,6 +16,10 @@ import {
   isCommitmentPaidForCycle,
   resolveCommitmentPaymentStatus,
 } from "./lib/commitmentPayment";
+import {
+  activeReservedCents,
+  applyPayFromReservations,
+} from "./lib/commitmentReservation";
 
 export const listMyCommitments = query({
   args: {},
@@ -207,6 +211,54 @@ export const markCommitmentAsPaid = mutation({
       nextDueAt,
     });
 
+    // Consume active reservations first so reserved money is not spent twice.
+    const reservations = await ctx.db
+      .query("commitmentReservations")
+      .withIndex("by_commitment_cycle", (q) =>
+        q.eq("commitmentId", args.commitmentId).eq("cycleId", activeCycle._id),
+      )
+      .collect();
+    const pay = applyPayFromReservations({
+      dueCents: commitment.amount,
+      reservations: reservations.map((row) => ({
+        id: row._id,
+        reservedCents: row.reservedCents,
+        consumedCents: row.consumedCents,
+        releasedCents: row.releasedCents,
+        status: row.status,
+      })),
+    });
+    await Promise.all(
+      pay.reservationPatches.map((patch) =>
+        ctx.db.patch(patch.id as (typeof reservations)[0]["_id"], {
+          consumedCents: patch.consumedCents,
+          status: patch.status,
+          updatedAt: paidAt,
+        }),
+      ),
+    );
+    if (pay.remainderCents > 0) {
+      const envelope = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", commitment.envelope),
+        )
+        .unique();
+      if (envelope && envelope.remainingAmount >= pay.remainderCents) {
+        await ctx.db.patch(envelope._id, {
+          remainingAmount: envelope.remainingAmount - pay.remainderCents,
+        });
+        await ctx.db.insert("expenses", {
+          profileId: profile._id,
+          cycleId: activeCycle._id,
+          envelopeId: envelope._id,
+          amount: pay.remainderCents,
+          description: `Pago: ${commitment.name}`,
+          timestamp: paidAt,
+        });
+      }
+    }
+
     return { success: true as const, paidAt };
   },
 });
@@ -319,10 +371,16 @@ export const getCommitment = query({
       createdAt: commitment._creationTime,
     });
     if (activeCycle) {
-      const incomeEvents = await ctx.db
-        .query("incomeEvents")
-        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-        .collect();
+      const [incomeEvents, reservationRows] = await Promise.all([
+        ctx.db
+          .query("incomeEvents")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+        ctx.db
+          .query("commitmentReservations")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+      ]);
       const coverageById = computeAllCommitmentCoverage({
         commitments: [
           {
@@ -342,9 +400,13 @@ export const getCommitment = query({
           id: event._id,
           occurredAt: event.occurredAt,
           distributionApplied: event.distributionApplied,
-          heldCents: event.heldCents,
         })),
         now,
+        reservations: reservationRows.map((row) => ({
+          commitmentId: row.commitmentId,
+          activeCents: activeReservedCents(row),
+          incomeEventId: row.incomeEventId,
+        })),
       });
       const cascadeStatus =
         coverageById.get(commitment._id)?.status ?? "not-started";

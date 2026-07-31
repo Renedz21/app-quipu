@@ -11,13 +11,16 @@ import {
 } from "./lib/commitmentCoverage";
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
+import {
+  activeReservedCents,
+  sumActiveReservedCents,
+} from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
   buildEarlyCycleHeroBody,
   buildValidationCopy,
   computeCycleDayMetrics,
-  computeDailyAvailable,
   computeDisplayDailyCents,
   computeEnvelopePercentRemaining,
   computeSurplusProjection,
@@ -27,6 +30,7 @@ import {
   resolveHeroStatusBadge,
   sortCommitmentsByDue,
 } from "./lib/dashboardMath";
+import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
 const ENVELOPE_ORDER = ["needs", "wants", "savings"] as const;
 
@@ -138,10 +142,22 @@ export const getSummary = query({
 
     const compliance = evaluateCycleCompliance(envelopesRaw);
     const wantsEnvelope = envelopeByType.get("wants");
-    const dailyAvailableCents = computeDailyAvailable(
-      wantsEnvelope?.remainingAmount ?? 0,
-      cycleMetrics.daysRemaining,
-    );
+    const needsEnvelope = envelopeByType.get("needs");
+    const savingsEnvelope = envelopeByType.get("savings");
+
+    const reservationsForCycle = await ctx.db
+      .query("commitmentReservations")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+      .collect();
+    const spendable = computeSpendableSnapshot({
+      needsRemainingCents: needsEnvelope?.remainingAmount ?? 0,
+      wantsRemainingCents: wantsEnvelope?.remainingAmount ?? 0,
+      savingsRemainingCents: savingsEnvelope?.remainingAmount ?? 0,
+      unallocatedCents: activeCycle.unallocatedCents ?? 0,
+      activeReservedCents: sumActiveReservedCents(reservationsForCycle),
+      daysRemaining: cycleMetrics.daysRemaining,
+    });
+    const dailyAvailableCents = spendable.dailyAvailableCents;
 
     const [expensesRaw, incomesForCycle] = await Promise.all([
       ctx.db
@@ -207,6 +223,9 @@ export const getSummary = query({
         ? undefined
         : buildValidationCopy(statusBadge),
       statusBadge,
+      spendableCents: spendable.spendableCents,
+      reservedCents: spendable.reservedCents,
+      unallocatedCents: spendable.unallocatedCents,
     };
 
     const envelopes = ENVELOPE_ORDER.map((type) => {
@@ -244,6 +263,11 @@ export const getSummary = query({
       })),
       now,
       coverageBoost: activeCycle.coverageBoost ?? undefined,
+      reservations: reservationsForCycle.map((row) => ({
+        commitmentId: row.commitmentId,
+        activeCents: activeReservedCents(row),
+        incomeEventId: row.incomeEventId,
+      })),
       excludedCommitmentIds: (() => {
         const ids = new Set<Id<"fixedCommitments">>();
         for (const commitment of commitmentsRaw) {
@@ -348,7 +372,6 @@ export const getSummary = query({
       crisisOptions,
     });
 
-    const needsEnvelope = envelopeByType.get("needs");
     const crisisPlan =
       profile.plan === "premium" && coachPresentation.kind === "crisis"
         ? buildCrisisPlan({
@@ -394,9 +417,17 @@ export const getSummary = query({
         id: activeCycle._id,
         startDate: activeCycle.startDate,
         endDate: activeCycle.endDate,
+        needsReview: activeCycle.needsReview ?? false,
+        unallocatedCents: activeCycle.unallocatedCents ?? 0,
         ...cycleMetrics,
       },
       hero,
+      liquidity: {
+        spendableCents: spendable.spendableCents,
+        reservedCents: spendable.reservedCents,
+        unallocatedCents: spendable.unallocatedCents,
+        savingsParkedInEnvelopeCents: spendable.savingsParkedInEnvelopeCents,
+      },
       envelopes,
       commitments,
       coach,

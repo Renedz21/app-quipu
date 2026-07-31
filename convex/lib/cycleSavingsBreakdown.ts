@@ -15,6 +15,13 @@ export type CycleSavingsIncomeEvent = {
 export type SurplusContributionSlice = {
   amount: number;
   fromEnvelope?: "needs" | "wants" | "extraordinary";
+  contributionKind?: "objective" | "additional";
+};
+
+export type AllocationContributionLine = {
+  destination: string;
+  amountCents: number;
+  contributionKind?: "objective" | "additional";
 };
 
 export type SavingsEnvelopeSlice = {
@@ -23,39 +30,88 @@ export type SavingsEnvelopeSlice = {
 };
 
 export type CycleSavingsBreakdownNumbers = {
-  savingsObjectiveCents: number;
+  /** Planned into the cycle savings envelope (target), not yet necessarily in Fondo. */
+  savingsObjectiveTargetCents: number;
+  /** Confirmed contributions toward the cycle objective. */
+  savingsObjectiveContributedCents: number;
+  /** Confirmed additional contributions only (never inferred from unspent). */
   savingsAdditionalCents: number;
+  /** Real money contributed this cycle (objective + additional). */
+  savingsCycleContributedCents: number;
+  /** Still sitting in the cycle savings envelope (not yet moved to Fondo/metas). */
+  savingsEnvelopeRemainingCents: number;
+  /**
+   * Display alias: aportado hacia la meta del ciclo (contributed, not target).
+   * Kept so existing UI can migrate field-by-field.
+   */
+  savingsObjectiveCents: number;
+  /** Display alias for savingsCycleContributedCents. */
   savingsTotalCents: number;
   objectiveBarPercent: number;
   additionalBarPercent: number;
   status: "on_track" | "above_objective" | "below_objective";
+  /** Money moved out of the savings envelope toward Fondo (legacy set-aside). */
   savingsSetAsideCents: number;
   objectiveProgressPercent: number;
 };
 
-/** Eng review: objective = Σ savings from profile_default or habitual (policy absent). */
+/** Planned objective target = Σ savings allocated via profile_default / habitual. */
 export function countsTowardSavingsObjective(
   distributionPolicy: DistributionPolicy | undefined,
 ): boolean {
   return distributionPolicy !== "all_to_savings";
 }
 
-export function sumObjectiveSavingsFromEvents(
+export function sumObjectiveTargetFromEvents(
   incomeEvents: ReadonlyArray<CycleSavingsIncomeEvent>,
 ): number {
   return incomeEvents.reduce((sum, event) => {
-    if (!countsTowardSavingsObjective(event.distributionPolicy)) return sum;
+    // all_to_savings increases the savings envelope as a plan, but it is NOT
+    // "ahorro adicional" until the user confirms a contribution.
     return sum + Math.max(0, event.distributionApplied.savings);
   }, 0);
 }
 
-export function sumAdditionalSavingsFromEvents(
+/** @deprecated Use sumObjectiveTargetFromEvents — name kept for call-site grep. */
+export function sumObjectiveSavingsFromEvents(
   incomeEvents: ReadonlyArray<CycleSavingsIncomeEvent>,
 ): number {
-  return incomeEvents.reduce((sum, event) => {
-    if (event.distributionPolicy !== "all_to_savings") return sum;
-    return sum + Math.max(0, event.distributionApplied.savings);
+  return incomeEvents
+    .filter((event) => countsTowardSavingsObjective(event.distributionPolicy))
+    .reduce(
+      (sum, event) => sum + Math.max(0, event.distributionApplied.savings),
+      0,
+    );
+}
+
+/**
+ * Additional savings are ONLY confirmed surplus/contribution rows.
+ * `all_to_savings` income events no longer inflate "ahorro adicional".
+ */
+export function sumAdditionalSavingsFromContributions(
+  surplusContributions: ReadonlyArray<SurplusContributionSlice>,
+  allocationLines: ReadonlyArray<AllocationContributionLine> = [],
+): number {
+  const fromSurplus = surplusContributions.reduce((sum, row) => {
+    const kind = row.contributionKind ?? "additional";
+    if (kind !== "additional") return sum;
+    return sum + Math.max(0, row.amount);
   }, 0);
+
+  const fromLines = allocationLines.reduce((sum, line) => {
+    if (line.destination !== "savings_contribution") return sum;
+    if (line.contributionKind !== "additional") return sum;
+    return sum + Math.max(0, line.amountCents);
+  }, 0);
+
+  return fromSurplus + fromLines;
+}
+
+/** @deprecated Prefer sumAdditionalSavingsFromContributions. */
+export function sumAdditionalSavingsFromEvents(
+  _incomeEvents: ReadonlyArray<CycleSavingsIncomeEvent>,
+): number {
+  return 0;
 }
 
 export function sumSurplusContributionAmounts(
@@ -65,6 +121,25 @@ export function sumSurplusContributionAmounts(
     (sum, row) => sum + Math.max(0, row.amount),
     0,
   );
+}
+
+export function sumObjectiveContributionLines(
+  allocationLines: ReadonlyArray<AllocationContributionLine>,
+): number {
+  return allocationLines.reduce((sum, line) => {
+    if (line.destination !== "savings_contribution") return sum;
+    if (line.contributionKind !== "objective") return sum;
+    return sum + Math.max(0, line.amountCents);
+  }, 0);
+}
+
+export function sumObjectiveSurplusContributions(
+  surplusContributions: ReadonlyArray<SurplusContributionSlice>,
+): number {
+  return surplusContributions.reduce((sum, row) => {
+    if (row.contributionKind !== "objective") return sum;
+    return sum + Math.max(0, row.amount);
+  }, 0);
 }
 
 /** Moved from cycle savings envelope into sub-envelopes (allocated − remaining). */
@@ -105,29 +180,47 @@ export function computeObjectiveAdditionalBarPercents(
 export function computeCycleSavingsBreakdown(input: {
   incomeEvents: ReadonlyArray<CycleSavingsIncomeEvent>;
   surplusContributions?: ReadonlyArray<SurplusContributionSlice>;
+  allocationLines?: ReadonlyArray<AllocationContributionLine>;
   savingsEnvelope?: SavingsEnvelopeSlice | null;
 }): CycleSavingsBreakdownNumbers {
   const surplusContributions = input.surplusContributions ?? [];
-  const savingsObjectiveCents = sumObjectiveSavingsFromEvents(
+  const allocationLines = input.allocationLines ?? [];
+
+  const savingsObjectiveTargetCents = sumObjectiveTargetFromEvents(
     input.incomeEvents,
   );
-  const savingsAdditionalCents =
-    sumAdditionalSavingsFromEvents(input.incomeEvents) +
-    sumSurplusContributionAmounts(surplusContributions);
-  const savingsTotalCents = savingsObjectiveCents + savingsAdditionalCents;
 
   const savingsSetAsideCents = input.savingsEnvelope
     ? computeSavingsSetAsideCents(input.savingsEnvelope)
     : 0;
+  const savingsEnvelopeRemainingCents = Math.max(
+    0,
+    input.savingsEnvelope?.remainingAmount ?? 0,
+  );
+
+  const savingsObjectiveContributedCents =
+    sumObjectiveContributionLines(allocationLines) +
+    sumObjectiveSurplusContributions(surplusContributions);
+
+  const savingsAdditionalCents = sumAdditionalSavingsFromContributions(
+    surplusContributions,
+    allocationLines,
+  );
+
+  const savingsCycleContributedCents =
+    savingsObjectiveContributedCents + savingsAdditionalCents;
+
+  const savingsObjectiveCents = savingsObjectiveContributedCents;
+  const savingsTotalCents = savingsCycleContributedCents;
+
   const objectiveProgressPercent = computeObjectiveProgressPercent(
-    savingsSetAsideCents,
-    savingsObjectiveCents,
+    savingsObjectiveContributedCents,
+    savingsObjectiveTargetCents,
   );
 
   const isUnderObjective =
-    input.savingsEnvelope != null &&
-    savingsObjectiveCents > 0 &&
-    savingsSetAsideCents < savingsObjectiveCents;
+    savingsObjectiveTargetCents > 0 &&
+    savingsObjectiveContributedCents < savingsObjectiveTargetCents;
 
   let status: CycleSavingsBreakdownNumbers["status"] = "on_track";
   if (savingsAdditionalCents > 0) {
@@ -138,13 +231,17 @@ export function computeCycleSavingsBreakdown(input: {
 
   const { objectiveBarPercent, additionalBarPercent } =
     computeObjectiveAdditionalBarPercents(
-      savingsObjectiveCents,
-      savingsTotalCents,
+      savingsObjectiveContributedCents,
+      savingsCycleContributedCents,
     );
 
   return {
-    savingsObjectiveCents,
+    savingsObjectiveTargetCents,
+    savingsObjectiveContributedCents,
     savingsAdditionalCents,
+    savingsCycleContributedCents,
+    savingsEnvelopeRemainingCents,
+    savingsObjectiveCents,
     savingsTotalCents,
     objectiveBarPercent,
     additionalBarPercent,

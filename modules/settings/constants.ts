@@ -100,6 +100,9 @@ export const SETTINGS_CYCLE_TYPE = "Tipo";
 export const SETTINGS_CYCLE_START = "Inicio";
 export const SETTINGS_CYCLE_PROFILE = "Perfil";
 export const SETTINGS_CHANGE_CYCLE = "Cambiar ciclo";
+export const SETTINGS_CORRECT_CYCLE_LABEL = "Corregir distribución";
+export const SETTINGS_CORRECT_CYCLE_HINT =
+  "Si registraste efectivo o reservas como gastable";
 export const SETTINGS_CYCLE_STUB_TITLE = "Cambiar ciclo";
 export const SETTINGS_CYCLE_STUB_BODY =
   "Ajusta cuándo empieza tu ciclo. Los cambios aplican al próximo ciclo; el ciclo activo no se recalcula.";

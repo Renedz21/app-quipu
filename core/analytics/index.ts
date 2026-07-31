@@ -19,6 +19,7 @@ export {
 export { trackFinancialCycleTransition } from "./cycle-events";
 export type {
   AdditionalSavingsSource,
+  AllocationCorrectCtaSource,
   AllocationMode,
   AnalyticsEvent,
   AnalyticsEventPayloads,
@@ -56,4 +57,10 @@ export {
   mapSurplusSourceToAdditionalSavingsSource,
   toEnvelopeType,
 } from "./properties";
-export { captureException, identify, reset, track } from "./track";
+export {
+  captureException,
+  identify,
+  reset,
+  setPersonProperties,
+  track,
+} from "./track";

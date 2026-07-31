@@ -5,6 +5,7 @@ import {
   computeAllCommitmentCoverage,
   type IncomeEventSlice,
 } from "./commitmentCoverage";
+import { activeReservedCents } from "./commitmentReservation";
 
 export async function clearCommitmentCoverageForProfile(
   ctx: MutationCtx,
@@ -34,13 +35,17 @@ export async function evaluateCommitmentCoverageForCycle(
   const cycle = await ctx.db.get(cycleId);
   if (!cycle) return;
 
-  const [commitments, incomeEvents] = await Promise.all([
+  const [commitments, incomeEvents, reservationRows] = await Promise.all([
     ctx.db
       .query("fixedCommitments")
       .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
       .collect(),
     ctx.db
       .query("incomeEvents")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
+      .collect(),
+    ctx.db
+      .query("commitmentReservations")
       .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
       .collect(),
   ]);
@@ -56,7 +61,6 @@ export async function evaluateCommitmentCoverageForCycle(
     id: event._id,
     occurredAt: event.occurredAt,
     distributionApplied: event.distributionApplied,
-    heldCents: event.heldCents,
   }));
 
   const coverageById = computeAllCommitmentCoverage({
@@ -68,6 +72,11 @@ export async function evaluateCommitmentCoverageForCycle(
     incomeEvents: incomeEventSlices,
     now,
     coverageBoost: cycle.coverageBoost ?? undefined,
+    reservations: reservationRows.map((row) => ({
+      commitmentId: row.commitmentId,
+      activeCents: activeReservedCents(row),
+      incomeEventId: row.incomeEventId,
+    })),
     excludedCommitmentIds: (() => {
       const ids = new Set<Id<"fixedCommitments">>();
       for (const commitment of commitments) {
@@ -90,7 +99,7 @@ export async function evaluateCommitmentCoverageForCycle(
           const eventId = funding.eventId;
           if (
             !eventId.startsWith("__boost_") &&
-            !eventId.startsWith("__held_")
+            !eventId.startsWith("__reservation_")
           ) {
             coveredBy.push(eventId as Id<"incomeEvents">);
           }

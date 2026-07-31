@@ -144,6 +144,10 @@ const DashboardViewedProperties = z.object({
   cycle_id: z.string().optional(),
   is_new_cycle: z.boolean().optional(),
   days_remaining: z.number().int().nonnegative().optional(),
+  /** Ciclo marcado por migración/edición: números posiblemente inflados. */
+  needs_review: z.boolean().optional(),
+  reserved_cents: z.number().int().nonnegative().optional(),
+  unallocated_cents: z.number().int().nonnegative().optional(),
 });
 export type DashboardViewedProperties = z.infer<
   typeof DashboardViewedProperties
@@ -170,9 +174,83 @@ const IncomeRegisteredProperties = z.object({
   cycle_id: z.string(),
   days_remaining_in_cycle: z.number().int().nonnegative().optional(),
   is_first_income: z.boolean().optional(),
+  /** True cuando el cliente envió `allocation` explícita (ledger). */
+  used_explicit_allocation: z.boolean().optional(),
+  reserved_cents: z.number().int().nonnegative().optional(),
+  unallocated_cents: z.number().int().nonnegative().optional(),
 });
 export type IncomeRegisteredProperties = z.infer<
   typeof IncomeRegisteredProperties
+>;
+
+export const AllocationCorrectCtaSourceSchema = z.enum([
+  "dashboard_banner",
+  "dashboard_hint",
+  "settings",
+  "delete_income",
+]);
+export type AllocationCorrectCtaSource = z.infer<
+  typeof AllocationCorrectCtaSourceSchema
+>;
+
+const AllocationReviewSurfacedProperties = z.object({
+  cycle_id: z.string(),
+  reserved_cents: z.number().int().nonnegative().optional(),
+  unallocated_cents: z.number().int().nonnegative().optional(),
+  spendable_cents: z.number().int().nonnegative().optional(),
+});
+export type AllocationReviewSurfacedProperties = z.infer<
+  typeof AllocationReviewSurfacedProperties
+>;
+
+const AllocationCorrectCtaClickedProperties = z.object({
+  source: AllocationCorrectCtaSourceSchema,
+  cycle_id: z.string().optional(),
+  needs_review: z.boolean().optional(),
+});
+export type AllocationCorrectCtaClickedProperties = z.infer<
+  typeof AllocationCorrectCtaClickedProperties
+>;
+
+const AllocationCorrectStartedProperties = z.object({
+  cycle_id: z.string(),
+  needs_review: z.boolean().optional(),
+  reserved_cents: z.number().int().nonnegative().optional(),
+  unallocated_cents: z.number().int().nonnegative().optional(),
+});
+export type AllocationCorrectStartedProperties = z.infer<
+  typeof AllocationCorrectStartedProperties
+>;
+
+const AllocationCorrectCompletedProperties = z.object({
+  cycle_id: z.string(),
+  needs_review_before: z.boolean().optional(),
+  reserved_cents: z.number().int().nonnegative().optional(),
+  unallocated_cents: z.number().int().nonnegative().optional(),
+  contribute_cents: z.number().int().nonnegative().optional(),
+  contribute_kind: z.enum(["objective", "additional"]).optional(),
+});
+export type AllocationCorrectCompletedProperties = z.infer<
+  typeof AllocationCorrectCompletedProperties
+>;
+
+const IncomeEventUpdatedProperties = z.object({
+  cycle_id: z.string().optional(),
+  amount: z.number().int().positive(),
+  previous_amount: z.number().int().positive().optional(),
+  income_kind: IncomeKindSchema.optional(),
+});
+export type IncomeEventUpdatedProperties = z.infer<
+  typeof IncomeEventUpdatedProperties
+>;
+
+const MovementDeletedProperties = z.object({
+  movement_kind: z.enum(["income", "expense"]),
+  amount: z.number().int().positive().optional(),
+  preferred_correct_shown: z.boolean().optional(),
+});
+export type MovementDeletedProperties = z.infer<
+  typeof MovementDeletedProperties
 >;
 
 const ExtraIncomeRegisteredProperties = z.object({
@@ -332,6 +410,14 @@ export const AnalyticsEvents = {
   // Cambios de estrategia
   ALLOCATION_MODIFIED: "allocation_modified",
 
+  // Allocation ledger / rescate de ciclos inflados
+  ALLOCATION_REVIEW_SURFACED: "allocation_review_surfaced",
+  ALLOCATION_CORRECT_CTA_CLICKED: "allocation_correct_cta_clicked",
+  ALLOCATION_CORRECT_STARTED: "allocation_correct_started",
+  ALLOCATION_CORRECT_COMPLETED: "allocation_correct_completed",
+  INCOME_EVENT_UPDATED: "income_event_updated",
+  MOVEMENT_DELETED: "movement_deleted",
+
   // Coach
   COACH_RECOMMENDATION_INTERACTED: "coach_recommendation_interacted",
   CRISIS_RECOMMENDATION_RESOLVED: "crisis_recommendation_resolved",
@@ -385,6 +471,13 @@ export type AnalyticsEventPayloads = {
   [AnalyticsEvents.FIXED_COMMITMENT_CREATED]: FixedCommitmentCreatedProperties;
 
   [AnalyticsEvents.ALLOCATION_MODIFIED]: AllocationModifiedProperties;
+
+  [AnalyticsEvents.ALLOCATION_REVIEW_SURFACED]: AllocationReviewSurfacedProperties;
+  [AnalyticsEvents.ALLOCATION_CORRECT_CTA_CLICKED]: AllocationCorrectCtaClickedProperties;
+  [AnalyticsEvents.ALLOCATION_CORRECT_STARTED]: AllocationCorrectStartedProperties;
+  [AnalyticsEvents.ALLOCATION_CORRECT_COMPLETED]: AllocationCorrectCompletedProperties;
+  [AnalyticsEvents.INCOME_EVENT_UPDATED]: IncomeEventUpdatedProperties;
+  [AnalyticsEvents.MOVEMENT_DELETED]: MovementDeletedProperties;
 
   [AnalyticsEvents.COACH_RECOMMENDATION_INTERACTED]: CoachRecommendationInteractedProperties;
   [AnalyticsEvents.CRISIS_RECOMMENDATION_RESOLVED]: CrisisRecommendationResolvedProperties;

@@ -141,6 +141,10 @@ export const appTables = {
         wants: v.number(),
       }),
     ),
+    // Allocation ledger: money not yet assigned to envelopes/reservations/savings.
+    unallocatedCents: v.optional(v.number()),
+    // Legacy cycles without incomeAllocationLines need user review (not silent invent).
+    needsReview: v.optional(v.boolean()),
   }).index("by_profile_status", ["profileId", "status"]),
 
   // SOBRES CON SALDO VIVO: Resuelve la lentitud del dashboard O(1)
@@ -304,7 +308,8 @@ export const appTables = {
     ),
     appliedByAutoRule: v.optional(v.boolean()),
     // P3-4: optional hold before 50/30/20. Integer cents, 0..amount.
-    // distributable = amount - heldCents. totalIncomeReceived stays gross (sum of amount).
+    // Historical: sum of reservation cents at create/update time (display).
+    // Coverage and spendable use commitmentReservations, not this field.
     heldCents: v.optional(v.number()),
     // P3-5: trazabilidad mínima de edición; _creationTime cubre creación.
     updatedAt: v.optional(v.number()),
@@ -322,6 +327,78 @@ export const appTables = {
     ),
     amount: v.number(),
     subEnvelopeId: v.id("subEnvelopes"),
+    createdAt: v.number(),
+    // Confirmed contribution semantics. Missing on legacy rows → treat as "additional".
+    contributionKind: v.optional(
+      v.union(v.literal("objective"), v.literal("additional")),
+    ),
+  }).index("by_cycle", ["cycleId"]),
+
+  // Explicit money reserved for a fixed commitment before payment.
+  commitmentReservations: defineTable({
+    profileId: v.id("profiles"),
+    cycleId: v.id("financialCycles"),
+    commitmentId: v.id("fixedCommitments"),
+    incomeEventId: v.optional(v.id("incomeEvents")),
+    reservedCents: v.number(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("partially_consumed"),
+      v.literal("consumed"),
+      v.literal("released"),
+    ),
+    consumedCents: v.number(),
+    releasedCents: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_cycle", ["cycleId"])
+    .index("by_commitment_cycle", ["commitmentId", "cycleId"])
+    .index("by_profile_status", ["profileId", "status"]),
+
+  // Immutable distribution facts for each income event (one row per destination slice).
+  incomeAllocationLines: defineTable({
+    profileId: v.id("profiles"),
+    cycleId: v.id("financialCycles"),
+    incomeEventId: v.id("incomeEvents"),
+    destination: v.union(
+      v.literal("envelope_needs"),
+      v.literal("envelope_wants"),
+      v.literal("envelope_savings"),
+      v.literal("commitment_reservation"),
+      v.literal("savings_contribution"),
+      v.literal("unallocated"),
+    ),
+    amountCents: v.number(),
+    commitmentId: v.optional(v.id("fixedCommitments")),
+    reservationId: v.optional(v.id("commitmentReservations")),
+    subEnvelopeId: v.optional(v.id("subEnvelopes")),
+    contributionKind: v.optional(
+      v.union(v.literal("objective"), v.literal("additional")),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_income_event", ["incomeEventId"])
+    .index("by_cycle", ["cycleId"]),
+
+  // Auditable internal money moves (not income, not expense).
+  internalTransfers: defineTable({
+    profileId: v.id("profiles"),
+    cycleId: v.id("financialCycles"),
+    kind: v.union(
+      v.literal("cycle_correction"),
+      v.literal("reservation_release"),
+      v.literal("reservation_from_envelope"),
+      v.literal("envelope_rebalance"),
+      v.literal("unallocated_to_envelope"),
+      v.literal("unallocated_to_reservation"),
+      v.literal("unallocated_to_savings"),
+      v.literal("savings_to_unallocated"),
+    ),
+    amountCents: v.number(),
+    from: v.string(),
+    to: v.string(),
+    note: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_cycle", ["cycleId"]),
 

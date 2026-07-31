@@ -17,7 +17,7 @@ describe("countsTowardSavingsObjective", () => {
     expect(countsTowardSavingsObjective("profile_default")).toBe(true);
   });
 
-  it("excludes all_to_savings from objective", () => {
+  it("excludes all_to_savings from objective policy flag", () => {
     expect(countsTowardSavingsObjective("all_to_savings")).toBe(false);
   });
 });
@@ -29,44 +29,48 @@ describe("computeCycleSavingsBreakdown", () => {
         incomeEvents: [],
         surplusContributions: [],
       }),
-    ).toEqual({
-      savingsObjectiveCents: 0,
+    ).toMatchObject({
+      savingsObjectiveTargetCents: 0,
+      savingsObjectiveContributedCents: 0,
       savingsAdditionalCents: 0,
+      savingsCycleContributedCents: 0,
+      savingsObjectiveCents: 0,
       savingsTotalCents: 0,
-      objectiveBarPercent: 0,
-      additionalBarPercent: 0,
       status: "on_track",
-      savingsSetAsideCents: 0,
-      objectiveProgressPercent: 0,
     });
   });
 
-  it("sums habitual and profile_default savings into objective", () => {
+  it("does not treat envelope remaining or unspent needs as additional", () => {
     const result = computeCycleSavingsBreakdown({
       incomeEvents: [
         {
-          distributionApplied: { needs: 400, wants: 240, savings: 160 },
-        },
-        {
-          distributionApplied: { needs: 500, wants: 300, savings: 200 },
+          distributionApplied: {
+            needs: 100_000,
+            wants: 50_000,
+            savings: 99_080,
+          },
           distributionPolicy: "profile_default",
         },
       ],
       surplusContributions: [],
+      allocationLines: [],
+      savingsEnvelope: {
+        allocatedAmount: 99_080,
+        remainingAmount: 99_080,
+      },
     });
-
-    expect(result.savingsObjectiveCents).toBe(360);
+    expect(result.savingsObjectiveTargetCents).toBe(99_080);
+    expect(result.savingsObjectiveContributedCents).toBe(0);
     expect(result.savingsAdditionalCents).toBe(0);
-    expect(result.savingsTotalCents).toBe(360);
-    expect(result.status).toBe("on_track");
+    expect(result.savingsCycleContributedCents).toBe(0);
   });
 
-  it("routes all_to_savings events and surplus moves to additional", () => {
+  it("does not treat all_to_savings as automatic additional", () => {
     const result = computeCycleSavingsBreakdown({
       incomeEvents: [
         {
           incomeKind: "extraordinary",
-          distributionApplied: { needs: 0, wants: 0, savings: 500_00 },
+          distributionApplied: { needs: 0, wants: 0, savings: 50_000 },
           distributionPolicy: "all_to_savings",
         },
         {
@@ -74,43 +78,39 @@ describe("computeCycleSavingsBreakdown", () => {
           distributionPolicy: "profile_default",
         },
       ],
-      surplusContributions: [{ amount: 18_567 }],
+      surplusContributions: [],
+      savingsEnvelope: {
+        allocatedAmount: 50_160,
+        remainingAmount: 50_160,
+      },
     });
+    expect(result.savingsAdditionalCents).toBe(0);
+    expect(result.savingsObjectiveTargetCents).toBe(50_160);
+    expect(result.savingsCycleContributedCents).toBe(0);
+  });
 
-    expect(result.savingsObjectiveCents).toBe(160);
-    expect(result.savingsAdditionalCents).toBe(500_00 + 18_567);
-    expect(result.savingsTotalCents).toBe(
-      result.savingsObjectiveCents + result.savingsAdditionalCents,
-    );
+  it("counts confirmed additional surplus only when persisted", () => {
+    const result = computeCycleSavingsBreakdown({
+      incomeEvents: [],
+      surplusContributions: [
+        { amount: 68_567, contributionKind: "additional" },
+      ],
+      allocationLines: [
+        {
+          destination: "savings_contribution",
+          amountCents: 50_000,
+          contributionKind: "objective",
+        },
+      ],
+      savingsEnvelope: { allocatedAmount: 50_000, remainingAmount: 0 },
+    });
+    expect(result.savingsObjectiveContributedCents).toBe(50_000);
+    expect(result.savingsAdditionalCents).toBe(68_567);
+    expect(result.savingsCycleContributedCents).toBe(118_567);
     expect(result.status).toBe("above_objective");
   });
 
-  it("derives under-target progress from savings envelope set-aside", () => {
-    const result = computeCycleSavingsBreakdown({
-      incomeEvents: [
-        {
-          distributionApplied: {
-            needs: 3_256_67,
-            wants: 1_954_00,
-            savings: 814_33,
-          },
-          distributionPolicy: "profile_default",
-        },
-      ],
-      surplusContributions: [],
-      savingsEnvelope: {
-        allocatedAmount: 1_500_00,
-        remainingAmount: 685_67,
-      },
-    });
-
-    expect(result.savingsObjectiveCents).toBe(814_33);
-    expect(result.savingsSetAsideCents).toBe(814_33);
-    expect(result.objectiveProgressPercent).toBe(100);
-    expect(result.status).toBe("on_track");
-  });
-
-  it("marks below_objective when set-aside is under objective", () => {
+  it("without contribution facts, objective contributed is 0 (no set-aside invent)", () => {
     const result = computeCycleSavingsBreakdown({
       incomeEvents: [
         {
@@ -125,58 +125,72 @@ describe("computeCycleSavingsBreakdown", () => {
       surplusContributions: [],
       savingsEnvelope: {
         allocatedAmount: 814_33,
-        remainingAmount: 314_33,
+        remainingAmount: 0,
       },
     });
+    expect(result.savingsObjectiveTargetCents).toBe(814_33);
+    expect(result.savingsObjectiveContributedCents).toBe(0);
+    expect(result.savingsAdditionalCents).toBe(0);
+    expect(result.savingsCycleContributedCents).toBe(0);
+    expect(result.status).toBe("below_objective");
+  });
 
-    expect(result.savingsSetAsideCents).toBe(500_00);
-    expect(result.objectiveProgressPercent).toBe(61);
+  it("marks below_objective when contributed is under target", () => {
+    const result = computeCycleSavingsBreakdown({
+      incomeEvents: [
+        {
+          distributionApplied: {
+            needs: 3_256_67,
+            wants: 1_954_00,
+            savings: 814_33,
+          },
+          distributionPolicy: "profile_default",
+        },
+      ],
+      surplusContributions: [],
+      allocationLines: [
+        {
+          destination: "savings_contribution",
+          amountCents: 414_33,
+          contributionKind: "objective",
+        },
+      ],
+      savingsEnvelope: {
+        allocatedAmount: 814_33,
+        remainingAmount: 400_00,
+      },
+    });
+    expect(result.savingsObjectiveContributedCents).toBe(414_33);
     expect(result.status).toBe("below_objective");
   });
 });
 
-describe("computeObjectiveAdditionalBarPercents", () => {
-  it("returns proportional bar segments", () => {
-    expect(computeObjectiveAdditionalBarPercents(814_33, 150_000)).toEqual({
-      objectiveBarPercent: (814_33 / 150_000) * 100,
-      additionalBarPercent: 100 - (814_33 / 150_000) * 100,
-    });
-  });
-});
-
-describe("computeSavingsSetAsideCents", () => {
-  it("never returns negative set-aside", () => {
+describe("helpers", () => {
+  it("computeSavingsSetAsideCents", () => {
     expect(
       computeSavingsSetAsideCents({
         allocatedAmount: 100,
-        remainingAmount: 150,
+        remainingAmount: 40,
       }),
-    ).toBe(0);
-  });
-});
-
-describe("computeObjectiveProgressPercent", () => {
-  it("caps at 100", () => {
-    expect(computeObjectiveProgressPercent(900, 814)).toBe(100);
+    ).toBe(60);
   });
 
-  it("returns 0 when objective is zero", () => {
-    expect(computeObjectiveProgressPercent(500, 0)).toBe(0);
+  it("computeObjectiveProgressPercent caps at 100", () => {
+    expect(computeObjectiveProgressPercent(200, 100)).toBe(100);
+    expect(computeObjectiveProgressPercent(50, 100)).toBe(50);
   });
-});
 
-describe("buildCycleSavingsContextLabel", () => {
-  it("mentions sueldo + gratificación when both kinds exist", () => {
+  it("computeObjectiveAdditionalBarPercents", () => {
+    expect(computeObjectiveAdditionalBarPercents(40, 100)).toEqual({
+      objectiveBarPercent: 40,
+      additionalBarPercent: 60,
+    });
+  });
+
+  it("buildCycleSavingsContextLabel", () => {
     const label = buildCycleSavingsContextLabel(Date.UTC(2026, 6, 1), [
-      {
-        incomeKind: "habitual",
-        distributionApplied: { needs: 0, wants: 0, savings: 1 },
-      },
-      {
-        incomeKind: "extraordinary",
-        distributionApplied: { needs: 0, wants: 0, savings: 1 },
-      },
+      { distributionApplied: { needs: 1, wants: 1, savings: 1 } },
     ]);
-    expect(label).toContain("sueldo + gratificación");
+    expect(label).toMatch(/· sueldo$/);
   });
 });

@@ -58,8 +58,10 @@ export const HERO_LIQUIDITY_SPENDABLE = "En sobres";
 export const HERO_LIQUIDITY_RESERVED = "Reservado";
 export const HERO_LIQUIDITY_UNALLOCATED = "Por repartir";
 export const HERO_NEEDS_REVIEW_BANNER =
-  "Este ciclo necesita una corrección: el dinero registrado no refleja lo que puedes gastar.";
+  "Si registraste cuánto tenías en vez de cuánto puedes usar, los números pueden estar inflados.";
 export const HERO_NEEDS_REVIEW_CTA = "Corregir distribución";
+export const HERO_CORRECT_HINT = "¿Los números no cuadran con tu dinero real?";
+export const HERO_CORRECT_CTA = "Corregir ciclo";
 
 export const ENVELOPE_EARLY_NEEDS_WANTS_SUBCOPY = "completo · aún sin gastos";
 export const ENVELOPE_EARLY_SAVINGS_SUBCOPY =

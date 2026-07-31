@@ -3,6 +3,8 @@ import { formatCents } from "@/shared/lib/money";
 import {
   HERO_AVAILABLE_BODY,
   HERO_AVAILABLE_LABEL,
+  HERO_CORRECT_CTA,
+  HERO_CORRECT_HINT,
   HERO_CYCLE_HEALTH,
   HERO_DAYS_REMAINING,
   HERO_LIQUIDITY_RESERVED,
@@ -51,7 +53,17 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
             {HERO_NEEDS_REVIEW_CTA}
           </Link>
         </div>
-      ) : null}
+      ) : (
+        <p className="mb-3 text-[12px] text-mute md:text-[12.5px]">
+          {HERO_CORRECT_HINT}{" "}
+          <Link
+            href="/cycle/correct"
+            className="font-semibold text-qp-deep underline-offset-2 hover:underline"
+          >
+            {HERO_CORRECT_CTA}
+          </Link>
+        </p>
+      )}
       <div className="flex flex-col md:flex-row md:gap-9">
         <div className="min-w-0 flex-[1.3]">
           <div className="mb-1.5 flex items-center gap-2 md:mb-2">

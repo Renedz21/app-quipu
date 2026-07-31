@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
+import Link from "next/link";
 import { useState } from "react";
 import { Edit, Trash } from "reicon-react";
 import { api } from "@/convex/_generated/api";
@@ -169,10 +170,20 @@ export function MovementDetailSheet({
               ¿Eliminar {isIncome ? "este ingreso" : "este gasto"}?
             </p>
             <p className="mt-1 text-[13px] leading-relaxed text-danger-text">
-              Esta acción no se puede deshacer. Los sobres de tu ciclo se
-              recalcularán automáticamente.
+              {isIncome
+                ? "Eliminar borra el registro del ciclo activo y ajusta sobres. Si el problema es que registraste dinero reservado o ya ahorrado, es mejor corregir la distribución sin borrar historial."
+                : "Esta acción no se puede deshacer. Los sobres de tu ciclo se recalcularán automáticamente."}
             </p>
           </div>
+          {isIncome ? (
+            <Link
+              href="/cycle/correct"
+              className="block rounded-[12px] border border-qp-shield-line bg-qp-panel px-4 py-3 text-[13px] font-semibold text-qp-deep"
+              onClick={() => onOpenChange(false)}
+            >
+              Preferible: corregir distribución del ciclo
+            </Link>
+          ) : null}
           {deleteError ? (
             <p className="text-sm text-danger" role="alert">
               {deleteError}

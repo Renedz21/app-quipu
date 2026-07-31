@@ -1220,8 +1220,12 @@ pnpm test                   # Vitest
 
 # Convex
 npx convex dashboard        # UI de Convex
-npx convex deploy --prod    # Deploy a producción
+pnpm deploy:convex          # Deploy Convex (usa CONVEX_DEPLOY_KEY → prod chihuahua)
 npx convex ai-files install # Refrescar bloque managed de AGENTS.md
+
+# Producción (Vercel): `pnpm build` = `convex deploy` + `next build`
+# Requiere CONVEX_DEPLOY_KEY en el entorno de build (deployment patient-chihuahua-640).
+# Local sin deploy: `pnpm build:next`
 ```
 
 ### 9.2 Checklist antes de commit/PR
@@ -1292,9 +1296,9 @@ Implementación snapshot: `convex/ops/appDataSnapshot.ts` + `convex/ops/appDataS
 
 1. Crear proyecto Vercel enlazado al repo; rama de producción `main`.
 2. **Install:** `corepack enable` + `pnpm install` (o dejar que Vercel detecte `pnpm` vía Corepack).
-3. **Build:** `pnpm build`; **Output:** Next.js default.
-4. **Env producción:** copiar desde `.env.local` de referencia — `BETTER_AUTH_SECRET` (prod único, ver D4), `NEXT_PUBLIC_CONVEX_URL`, `NEXT_PUBLIC_CONVEX_SITE_URL`, `SITE_URL`, `POLAR_*` según §9.5, passkey `PASSKEY_RP_ID` / `PASSKEY_RP_NAME` al dominio real.
-5. **Preview:** cada PR — mismas `NEXT_PUBLIC_*` apuntando al deployment Convex de preview o dev acordado; rebuild obligatorio al cambiar públicas.
+3. **Build:** `pnpm build` (despliega Convex prod vía `pnpm dlx convex deploy --cmd 'pnpm run build:next'`, luego Next). Local sin Convex: `pnpm build:next`.
+4. **Env producción:** copiar desde `.env.local` de referencia — `BETTER_AUTH_SECRET` (prod único, ver D4), `CONVEX_DEPLOY_KEY` (prod `patient-chihuahua-640`), `NEXT_PUBLIC_CONVEX_URL` (inyectada por `convex deploy --cmd` si usas `--cmd-url-env-var-name`), `NEXT_PUBLIC_CONVEX_SITE_URL`, `SITE_URL`, `POLAR_*` según §9.5, passkey `PASSKEY_RP_ID` / `PASSKEY_RP_NAME` al dominio real.
+5. **Preview:** cada PR — mismas `NEXT_PUBLIC_*` apuntando al deployment Convex de preview o dev acordado; rebuild obligatorio al cambiar públicas. Si el build de preview no debe tocar prod Convex, override Build Command a `pnpm build:next` o usa un deploy key de preview.
 6. Post-deploy: smoke §9.3 + §9.3.1 contra la URL de Vercel; webhook Polar apuntando al **Convex prod** site URL, no al host Next.
 
 ### 9.5 Facturación — Polar.sh (Quipu Plus)

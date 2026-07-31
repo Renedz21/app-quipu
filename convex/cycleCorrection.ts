@@ -310,3 +310,45 @@ export const correctActiveCycleAllocation = mutation({
     };
   },
 });
+
+/** Lets an affected user flag their active cycle for redistribution review. */
+export const markActiveCycleNeedsReview = mutation({
+  args: {},
+  returns: v.object({
+    success: v.literal(true),
+    cycleId: v.id("financialCycles"),
+  }),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión con tu Passkey o credencial.",
+      });
+    }
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Perfil no encontrado.",
+      });
+    }
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique();
+    if (!activeCycle) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "Necesitas un ciclo activo.",
+      });
+    }
+    await ctx.db.patch(activeCycle._id, { needsReview: true });
+    return { success: true as const, cycleId: activeCycle._id };
+  },
+});

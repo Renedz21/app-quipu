@@ -25,6 +25,7 @@ import {
 } from "./lib/extraordinaryIncome";
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
+import { planIncomeDeleteLedgerReverse } from "./lib/incomeDeleteReverse";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
 import { computeDistributableCents, validateHeldCents } from "./lib/incomeHold";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
@@ -745,6 +746,8 @@ export const updateIncomeEvent = mutation({
     const amountDelta = args.amount - event.amount;
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: cycle.totalIncomeReceived + amountDelta,
+      // Editing income can leave envelopes inconsistent with real cash; nudge review.
+      needsReview: true,
     });
 
     // Patch the event document.
@@ -839,19 +842,83 @@ export const deleteIncomeEvent = mutation({
       ),
     );
 
-    // Reverse the cycle's total.
+    // Reverse allocation ledger (unallocated, reservations, confirmed contributions).
+    const allocationLines = await ctx.db
+      .query("incomeAllocationLines")
+      .withIndex("by_income_event", (q) => q.eq("incomeEventId", args.eventId))
+      .collect();
+    const reversePlan = planIncomeDeleteLedgerReverse(
+      allocationLines.map((line) => ({
+        destination: line.destination,
+        amountCents: line.amountCents,
+        reservationId: line.reservationId,
+        subEnvelopeId: line.subEnvelopeId,
+        contributionKind: line.contributionKind,
+      })),
+    );
+
+    const now = Date.now();
+    for (const reservationId of reversePlan.reservationIdsToRelease) {
+      const reservation = await ctx.db.get(reservationId);
+      if (!reservation) continue;
+      const active =
+        reservation.reservedCents -
+        reservation.consumedCents -
+        reservation.releasedCents;
+      await ctx.db.patch(reservationId, {
+        status: "released",
+        releasedCents: reservation.releasedCents + Math.max(0, active),
+        updatedAt: now,
+      });
+      await ctx.db.insert("internalTransfers", {
+        profileId: profile._id,
+        cycleId: cycle._id,
+        kind: "reservation_release",
+        amountCents: Math.max(0, active),
+        from: `reservation:${reservationId}`,
+        to: "deleted_income",
+        note: "Reverso por eliminación de ingreso",
+        createdAt: now,
+      });
+    }
+
+    for (const reversal of reversePlan.subEnvelopeReversals) {
+      const sub = await ctx.db.get(reversal.subEnvelopeId);
+      if (!sub) continue;
+      await ctx.db.patch(reversal.subEnvelopeId, {
+        currentAmount: Math.max(0, sub.currentAmount - reversal.amountCents),
+      });
+    }
+
+    for (const line of allocationLines) {
+      await ctx.db.delete(line._id);
+    }
+
+    const remainingIncomes = await ctx.db
+      .query("incomeEvents")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+      .collect();
+    const otherIncomes = remainingIncomes.filter(
+      (row) => row._id !== args.eventId,
+    );
+
+    // Reverse the cycle's total + unallocated from this event.
     await ctx.db.patch(cycle._id, {
-      totalIncomeReceived: cycle.totalIncomeReceived - event.amount,
+      totalIncomeReceived: Math.max(
+        0,
+        cycle.totalIncomeReceived - event.amount,
+      ),
+      unallocatedCents: Math.max(
+        0,
+        (cycle.unallocatedCents ?? 0) - reversePlan.unallocatedDeltaCents,
+      ),
+      // If other incomes remain, ask the user to review; empty cycle is fine.
+      needsReview: otherIncomes.length > 0 ? true : false,
     });
 
     await ctx.db.delete(args.eventId);
 
-    await evaluateCommitmentCoverageForCycle(
-      ctx,
-      profile._id,
-      cycle._id,
-      Date.now(),
-    );
+    await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycle._id, now);
 
     return { success: true };
   },

@@ -5,6 +5,8 @@ import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_COMMITMENTS_LABEL,
+  SETTINGS_CORRECT_CYCLE_HINT,
+  SETTINGS_CORRECT_CYCLE_LABEL,
   SETTINGS_CYCLE_LABEL,
   SETTINGS_EXTRAORDINARY_LABEL,
   SETTINGS_PERCENTAGES_LABEL,
@@ -83,6 +85,20 @@ export function SettingsSystemHubList({
         </span>
         <span className="shrink-0 text-[11.5px] text-faint">
           {cycleDays} días
+        </span>
+        <ListRowChevron />
+      </Link>
+      <Link
+        href="/cycle/correct"
+        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13.5px] text-ink">
+            {SETTINGS_CORRECT_CYCLE_LABEL}
+          </span>
+          <span className="block truncate text-[11px] text-faint">
+            {SETTINGS_CORRECT_CYCLE_HINT}
+          </span>
         </span>
         <ListRowChevron />
       </Link>

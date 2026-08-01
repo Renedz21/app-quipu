@@ -7,6 +7,7 @@ import {
   type CycleCorrectionPlan,
 } from "./lib/cycleCorrection";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
+import { planInferredSavingsAnnulment } from "./lib/inferredSavingsAnnulment";
 import { assertNonNegativeCents } from "./lib/moneyInvariant";
 
 export const correctActiveCycleAllocation = mutation({
@@ -355,16 +356,48 @@ export const correctActiveCycleAllocation = mutation({
           message: "No hay Fondo para anular ahorro inferido.",
         });
       }
-      if (fund.currentAmount < annulInferredSavingsCents) {
+      const cycleSurplus = await ctx.db
+        .query("surplusContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect();
+      const fundSurplus = cycleSurplus.filter(
+        (row) => row.subEnvelopeId === fund._id,
+      );
+      let annulPlan: ReturnType<typeof planInferredSavingsAnnulment>;
+      try {
+        annulPlan = planInferredSavingsAnnulment({
+          annulCents: annulInferredSavingsCents,
+          fundCurrentAmount: fund.currentAmount,
+          surplusRows: fundSurplus.map((row) => ({
+            id: row._id,
+            amount: row.amount,
+            contributionKind: row.contributionKind,
+          })),
+        });
+      } catch (error) {
         throw new ConvexError({
           code: "VALIDATION_ERROR",
           message:
-            "No puedes anular más ahorro inferido del que hay en el Fondo.",
+            error instanceof Error
+              ? error.message
+              : "No se pudo anular el ahorro inferido.",
         });
       }
       await ctx.db.patch(fund._id, {
-        currentAmount: fund.currentAmount - annulInferredSavingsCents,
+        currentAmount: annulPlan.fundAfter,
       });
+      await Promise.all(
+        annulPlan.surplusPatches.map((patch) =>
+          ctx.db.patch(patch.id as Id<"surplusContributions">, {
+            amount: patch.amount,
+          }),
+        ),
+      );
+      await Promise.all(
+        annulPlan.surplusDeletes.map((id) =>
+          ctx.db.delete(id as Id<"surplusContributions">),
+        ),
+      );
       await ctx.db.insert("internalTransfers", {
         profileId: profile._id,
         cycleId: activeCycle._id,

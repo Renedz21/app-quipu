@@ -394,6 +394,10 @@ export const appTables = {
       v.literal("unallocated_to_reservation"),
       v.literal("unallocated_to_savings"),
       v.literal("savings_to_unallocated"),
+      // Bank vs Quipu cash gap — not income, expense, or savings.
+      v.literal("liquidity_reconciliation"),
+      // Write-down of inferred Fondo that never existed as confirmed cash.
+      v.literal("inferred_savings_annulment"),
     ),
     amountCents: v.number(),
     from: v.string(),

@@ -229,6 +229,8 @@ const AllocationCorrectCompletedProperties = z.object({
   unallocated_cents: z.number().int().nonnegative().optional(),
   contribute_cents: z.number().int().nonnegative().optional(),
   contribute_kind: z.enum(["objective", "additional"]).optional(),
+  /** Bank vs Quipu gap absorbed by liquidity_reconciliation (can be negative). */
+  reconciliation_delta_cents: z.number().int().optional(),
 });
 export type AllocationCorrectCompletedProperties = z.infer<
   typeof AllocationCorrectCompletedProperties

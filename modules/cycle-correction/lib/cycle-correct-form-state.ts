@@ -6,6 +6,7 @@ export type CycleCorrectFormState = {
   unallocatedText: string;
   reserveText: string;
   contributeText: string;
+  annulInferredText: string;
   contributeKind: "objective" | "additional";
   selectedCommitmentId: string;
   serverError: string | null;
@@ -20,6 +21,7 @@ export type CycleCorrectFormAction =
       wantsText: string;
       savingsText: string;
       unallocatedText: string;
+      reserveText: string;
       selectedCommitmentId: string;
     }
   | {
@@ -31,6 +33,7 @@ export type CycleCorrectFormAction =
         | "unallocatedText"
         | "reserveText"
         | "contributeText"
+        | "annulInferredText"
         | "selectedCommitmentId";
       value: string;
     }
@@ -46,6 +49,7 @@ export const INITIAL_CYCLE_CORRECT_FORM: CycleCorrectFormState = {
   unallocatedText: "",
   reserveText: "",
   contributeText: "",
+  annulInferredText: "",
   contributeKind: "objective",
   selectedCommitmentId: "",
   serverError: null,
@@ -66,6 +70,7 @@ export function cycleCorrectFormReducer(
         wantsText: action.wantsText,
         savingsText: action.savingsText,
         unallocatedText: action.unallocatedText,
+        reserveText: action.reserveText,
         selectedCommitmentId: action.selectedCommitmentId,
         serverError: null,
       };

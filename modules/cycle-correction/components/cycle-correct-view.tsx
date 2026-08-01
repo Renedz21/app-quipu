@@ -13,9 +13,11 @@ import {
   INITIAL_CYCLE_CORRECT_FORM,
   moneyFromCents,
 } from "../lib/cycle-correct-form-state";
+import { computeCycleCorrectReconciliation } from "../lib/cycle-correct-reconciliation";
 import { CycleCorrectActions } from "./cycle-correct-actions";
 import { CycleCorrectContributeSection } from "./cycle-correct-contribute-section";
 import { CycleCorrectEnvelopeFields } from "./cycle-correct-envelope-fields";
+import { CycleCorrectReconciliationNote } from "./cycle-correct-reconciliation-note";
 import { CycleCorrectReserveSection } from "./cycle-correct-reserve-section";
 
 export function CycleCorrectView() {
@@ -67,6 +69,7 @@ export function CycleCorrectView() {
         wantsText: moneyFromCents(wantsEnv.remainingAmount),
         savingsText: moneyFromCents(savingsEnv.remainingAmount),
         unallocatedText: moneyFromCents(summary.cycle.unallocatedCents ?? 0),
+        reserveText: moneyFromCents(summary.hero?.reservedCents ?? 0),
         selectedCommitmentId: summary.commitments[0]?.id ?? "",
       });
     }
@@ -74,7 +77,48 @@ export function CycleCorrectView() {
 
   const currencyCode = summary.profile.currencyCode;
   const needs = summary.envelopes.find((e) => e.type === "needs");
+  const wants = summary.envelopes.find((e) => e.type === "wants");
+  const savings = summary.envelopes.find((e) => e.type === "savings");
   const activeCycle = summary.cycle;
+
+  const quipuLiquidCents =
+    (needs?.remainingAmount ?? 0) +
+    (wants?.remainingAmount ?? 0) +
+    (savings?.remainingAmount ?? 0) +
+    (summary.cycle.unallocatedCents ?? 0) +
+    (summary.hero?.reservedCents ?? 0);
+
+  const previewNeeds = parseToCents(form.needsText);
+  const previewWants = parseToCents(form.wantsText);
+  const previewSavings = parseToCents(form.savingsText);
+  const previewUnallocated = parseToCents(form.unallocatedText);
+  const previewReserve = form.reserveText.trim()
+    ? parseToCents(form.reserveText)
+    : 0;
+  const previewContribute = form.contributeText.trim()
+    ? parseToCents(form.contributeText)
+    : 0;
+
+  const canPreview = [
+    previewNeeds,
+    previewWants,
+    previewSavings,
+    previewUnallocated,
+    previewReserve,
+    previewContribute,
+  ].every((value) => value !== null && value >= 0);
+
+  const reconciliation = canPreview
+    ? computeCycleCorrectReconciliation({
+        quipuLiquidCents,
+        targetNeedsCents: previewNeeds ?? 0,
+        targetWantsCents: previewWants ?? 0,
+        targetSavingsCents: previewSavings ?? 0,
+        targetUnallocatedCents: previewUnallocated ?? 0,
+        targetReservedCents: previewReserve ?? 0,
+        contributeCents: previewContribute ?? 0,
+      })
+    : null;
 
   function onSubmit() {
     dispatch({ type: "setServerError", message: null });
@@ -88,6 +132,9 @@ export function CycleCorrectView() {
     const contributeCents = form.contributeText.trim()
       ? (parseToCents(form.contributeText) ?? -1)
       : 0;
+    const annulInferredCents = form.annulInferredText.trim()
+      ? (parseToCents(form.annulInferredText) ?? -1)
+      : 0;
 
     if (
       [needsCents, wantsCents, savingsCents, unallocatedCents].some(
@@ -100,10 +147,24 @@ export function CycleCorrectView() {
       });
       return;
     }
-    if (reserveCents < 0 || contributeCents < 0) {
-      dispatch({ type: "setServerError", message: "Revisa reserva y aporte." });
+    if (reserveCents < 0 || contributeCents < 0 || annulInferredCents < 0) {
+      dispatch({
+        type: "setServerError",
+        message: "Revisa reserva, aporte y anulación de ahorro.",
+      });
       return;
     }
+
+    const { declaredLiquidCents, reconciliationDeltaCents } =
+      computeCycleCorrectReconciliation({
+        quipuLiquidCents,
+        targetNeedsCents: needsCents,
+        targetWantsCents: wantsCents,
+        targetSavingsCents: savingsCents,
+        targetUnallocatedCents: unallocatedCents,
+        targetReservedCents: reserveCents,
+        contributeCents,
+      });
 
     const needsReviewBefore = activeCycle.needsReview === true;
     const cycleId = activeCycle.id;
@@ -117,6 +178,9 @@ export function CycleCorrectView() {
         savings: savingsCents,
       },
       setUnallocatedCents: unallocatedCents,
+      declaredLiquidCents,
+      annulInferredSavingsCents:
+        annulInferredCents > 0 ? annulInferredCents : undefined,
       reserveToCommitments:
         reserveCents > 0 && form.selectedCommitmentId
           ? [
@@ -141,6 +205,9 @@ export function CycleCorrectView() {
           unallocated_cents: unallocatedCents,
           contribute_cents: contributeCents,
           ...(contributeCents > 0 ? { contribute_kind: contributeKind } : {}),
+          ...(reconciliationDeltaCents !== 0
+            ? { reconciliation_delta_cents: reconciliationDeltaCents }
+            : {}),
         });
         setPersonProperties({
           allocation_needs_review: false,
@@ -170,8 +237,8 @@ export function CycleCorrectView() {
         </h1>
         <p className="mt-1 text-[13px] text-mute-subtle">
           Indica cuánto puedes gastar, cuánto está reservado para deudas y
-          cuánto ya ahorraste de verdad. No borramos tu historial: solo
-          transferencias internas.
+          cuánto ya ahorraste de verdad. Si el banco no cuadra con Quipu,
+          creamos un ajuste de conciliación (no inventa ingreso ni gasto).
         </p>
       </header>
 
@@ -195,8 +262,17 @@ export function CycleCorrectView() {
         <CycleCorrectContributeSection
           contributeKind={form.contributeKind}
           contributeText={form.contributeText}
+          annulInferredText={form.annulInferredText}
           dispatch={dispatch}
         />
+        {reconciliation ? (
+          <CycleCorrectReconciliationNote
+            quipuLiquidCents={quipuLiquidCents}
+            declaredLiquidCents={reconciliation.declaredLiquidCents}
+            reconciliationDeltaCents={reconciliation.reconciliationDeltaCents}
+            currencyCode={currencyCode}
+          />
+        ) : null}
         <CycleCorrectActions
           saving={form.saving}
           serverError={form.serverError}

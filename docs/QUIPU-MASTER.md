@@ -730,7 +730,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay` (1–31, Lima), `coveredAt?`, `coveredBy?`, `postponedForCycleId?` (P1-10), **`paidAt?`**, **`paidForCycleId?`** (P3-7) | Cobertura cascada + pago; reservas explícitas en `commitmentReservations` |
 | `commitmentReservations` | profileId, cycleId, commitmentId, reservedCents, status, consumedCents, releasedCents | Dinero apartado para un compromiso; reduce disponible sin ser gasto |
 | `incomeAllocationLines` | profileId, cycleId, incomeEventId, destination, amountCents, … | Hechos de distribución por ingreso |
-| `internalTransfers` | profileId, cycleId, kind, amountCents, from, to, note? | Correcciones internas (no ingreso ni gasto) |
+| `internalTransfers` | profileId, cycleId, kind (`cycle_correction` / `liquidity_reconciliation` / `inferred_savings_annulment` / …), amountCents, from, to, note? | Correcciones internas (no ingreso ni gasto). `liquidity_reconciliation` alinea Quipu con saldo bancario; `inferred_savings_annulment` baja Fondo inflado sin mover a otro sobre. |
 | `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp, `updatedAt?` (P3-5) | Gastos del ciclo; editables en ciclo activo (P3-5) |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
@@ -742,7 +742,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 | Archivo | Funciones |
 |---|---|
 | `convex/incomeEvents.ts` | `createIncomeEvent` (acepta `allocation` explícita), `deleteIncomeEvent`, `updateIncomeEvent` |
-| `convex/cycleCorrection.ts` | `correctActiveCycleAllocation` — redistribuye ciclo activo vía transferencias internas |
+| `convex/cycleCorrection.ts` | `correctActiveCycleAllocation` — redistribuye ciclo activo vía transferencias internas; acepta `declaredLiquidCents` (conciliación bancaria) y `annulInferredSavingsCents` |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations; P3-5), `getRecentExpenses` (query) |
 | `convex/movements.ts` | `listForActiveCycle` (query; lista unificada ingresos + gastos) |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk`, **`markCommitmentAsPaid`** (mutations; P3-7) |
@@ -781,6 +781,7 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **Edición de movimientos (P3-5):** `updateExpense` / `updateIncomeEvent` solo en ciclo activo. `updateIncomeEvent` **revierte y reescribe el ledger** (mismo patrón que delete+create); puede recibir `allocation` o reconstruir desde reservas previas + política. Desde `/movements` no se edita el apartado; solo al registrar ingreso.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
 - **Disponibilidad del ciclo es referencia, no regla** (`saldoRestante / díasRestantes`).
+- **Corrección de ciclo + conciliación bancaria:** `/cycle/correct` puede declarar `declaredLiquidCents` (saldo bancario a representar). Si difiere del líquido en Quipu (sobres + reservado + por repartir), se crea `liquidity_reconciliation` — **no** es ingreso, gasto ni ahorro. Anular ahorro inferido (`annulInferredSavingsCents`) baja el Fondo sin transferir a otro sobre. No poner en «Aportar al Fondo ahora» dinero que ya existe como ahorro real.
 - **Calendario de ciclo en Ajustes:** cambiar `payFrequency`, `paydays` o `cycleDurationDays` en `profiles` **no recalcula** el `financialCycles` activo (fechas, sobres e ingresos del ciclo en curso siguen igual). La nueva configuración aplica cuando se **abra el siguiente ciclo** (p. ej. al registrar un ingreso que cierre el ciclo actual, ver `createIncomeEvent`).
 - **Plan Free ilimitado y manual** (`FREE_PLAN_MONTHLY_LIMIT` eliminado); Premium se justifica por automatización, no por más registros.
 - **Dinero en céntimos enteros, siempre** (`shared/lib/money.ts`). **Fechas en `America/Lima`** (`shared/lib/date.ts`).
@@ -1364,6 +1365,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-08-01 — Conciliación en corregir distribución.** El error «La corrección no conserva el dinero líquido» bloqueaba alinear Quipu con el saldo bancario real (p. ej. S/2,005.94 vs ~S/373.98 en sobres). `correctActiveCycleAllocation` acepta `declaredLiquidCents` → transfer `liquidity_reconciliation`; opcional `annulInferredSavingsCents` para bajar Fondo inflado. UI muestra el ajuste. §5.1–5.3.
 - **2026-07-31 — Cutover: sin path legacy de ingresos.** `createIncomeEvent` exige `allocation`; coverage usa `commitmentReservations` (no pool `heldCents`); `updateIncomeEvent` reescribe ledger; ahorro del ciclo solo por aportes confirmados (sin fallback set-aside). Analytics PostHog de impacto en dashboard «Allocation ledger — impacto y rescate».
 - **2026-07-31 — Allocation ledger (disponible real).** Causa raíz: ingreso auto-repartido 50/30/20 trataba “dinero que tenía” como gastable y “asignado al sobre Ahorro / no gastado” como ahorro adicional. Nuevo modelo: `incomeAllocationLines`, `commitmentReservations`, `internalTransfers`, `financialCycles.unallocatedCents`/`needsReview`; ahorro del ciclo = aportes confirmados; disponible = sobres gastables excluyendo reservado y por repartir; corrección de ciclo en `/cycle/correct` sin inventar ingresos/gastos. Plan: `docs/superpowers/plans/2026-07-31-income-allocation-ledger.md`.
 - **2026-07-29 — Plus v1 Slices 1–2 (reglas auto + predicción).** Slice 1: `extraordinaryRulesAutoApply` en perfil; lib pura `convex/lib/extraordinaryRules.ts` + TDD; `createIncomeEvent`/`updateIncomeEvent` auto-aplican regla premium y persisten `appliedByAutoRule`; toggles «Aplicar automáticamente» en Ajustes → Automatizaciones (free ve `PremiumLockCard` al intentar activar); badge `auto` en movimientos. Slice 2: lib pura `convex/lib/cycleForecast.ts` + TDD (burn rate, días hasta agotar, proyección de cierre); query `forecast.getCycleForecast` gated; card «Predicción» en dashboard entre coach y movimientos (free ve paywall). Plan: `docs/superpowers/plans/2026-07-28-plus-v1.md`.

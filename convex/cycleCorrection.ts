@@ -7,6 +7,7 @@ import {
   type CycleCorrectionPlan,
 } from "./lib/cycleCorrection";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
+import { planInferredSavingsAnnulment } from "./lib/inferredSavingsAnnulment";
 import { assertNonNegativeCents } from "./lib/moneyInvariant";
 
 export const correctActiveCycleAllocation = mutation({
@@ -30,12 +31,25 @@ export const correctActiveCycleAllocation = mutation({
       }),
     ),
     setUnallocatedCents: v.number(),
+    /**
+     * Bank cash represented by this correction (sobres + reservado +
+     * por repartir + aportes). When it differs from Quipu liquid, creates
+     * a liquidity_reconciliation transfer (not income/expense/savings).
+     */
+    declaredLiquidCents: v.optional(v.number()),
+    /**
+     * Reduce Fondo by this amount when prior “ahorro adicional” was inferred
+     * and never real. Does not move money into another envelope.
+     */
+    annulInferredSavingsCents: v.optional(v.number()),
     note: v.optional(v.string()),
   },
   returns: v.object({
     success: v.literal(true),
     transferCount: v.number(),
     contributionCents: v.number(),
+    reconciliationDeltaCents: v.number(),
+    annulInferredSavingsCents: v.number(),
     unallocatedCents: v.number(),
     reservedCents: v.number(),
     spendableCents: v.number(),
@@ -85,6 +99,7 @@ export const correctActiveCycleAllocation = mutation({
         subEnvelopeId: row.subEnvelopeId,
       })),
       setUnallocatedCents: args.setUnallocatedCents,
+      declaredLiquidCents: args.declaredLiquidCents,
       note: args.note,
     };
 
@@ -320,6 +335,81 @@ export const correctActiveCycleAllocation = mutation({
       ),
     );
 
+    const annulInferredSavingsCents = Math.max(
+      0,
+      args.annulInferredSavingsCents ?? 0,
+    );
+    if (annulInferredSavingsCents > 0) {
+      assertNonNegativeCents(
+        annulInferredSavingsCents,
+        "annulInferredSavingsCents",
+      );
+      const fundTargets = await ctx.db
+        .query("subEnvelopes")
+        .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+        .collect();
+      const fund =
+        fundTargets.find((row) => row.isSystemDefault) ?? fundTargets[0];
+      if (!fund) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "No hay Fondo para anular ahorro inferido.",
+        });
+      }
+      const cycleSurplus = await ctx.db
+        .query("surplusContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+        .collect();
+      const fundSurplus = cycleSurplus.filter(
+        (row) => row.subEnvelopeId === fund._id,
+      );
+      let annulPlan: ReturnType<typeof planInferredSavingsAnnulment>;
+      try {
+        annulPlan = planInferredSavingsAnnulment({
+          annulCents: annulInferredSavingsCents,
+          fundCurrentAmount: fund.currentAmount,
+          surplusRows: fundSurplus.map((row) => ({
+            id: row._id,
+            amount: row.amount,
+            contributionKind: row.contributionKind,
+          })),
+        });
+      } catch (error) {
+        throw new ConvexError({
+          code: "VALIDATION_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "No se pudo anular el ahorro inferido.",
+        });
+      }
+      await ctx.db.patch(fund._id, {
+        currentAmount: annulPlan.fundAfter,
+      });
+      await Promise.all(
+        annulPlan.surplusPatches.map((patch) =>
+          ctx.db.patch(patch.id as Id<"surplusContributions">, {
+            amount: patch.amount,
+          }),
+        ),
+      );
+      await Promise.all(
+        annulPlan.surplusDeletes.map((id) =>
+          ctx.db.delete(id as Id<"surplusContributions">),
+        ),
+      );
+      await ctx.db.insert("internalTransfers", {
+        profileId: profile._id,
+        cycleId: activeCycle._id,
+        kind: "inferred_savings_annulment",
+        amountCents: annulInferredSavingsCents,
+        from: `subEnvelope:${fund._id}`,
+        to: "correction:annulled",
+        note: args.note,
+        createdAt: now,
+      });
+    }
+
     await ctx.db.patch(activeCycle._id, {
       unallocatedCents: plan.setUnallocatedCents,
       needsReview: false,
@@ -337,8 +427,11 @@ export const correctActiveCycleAllocation = mutation({
 
     return {
       success: true as const,
-      transferCount: draft.transfers.length,
+      transferCount:
+        draft.transfers.length + (annulInferredSavingsCents > 0 ? 1 : 0),
       contributionCents,
+      reconciliationDeltaCents: draft.reconciliationDeltaCents,
+      annulInferredSavingsCents,
       unallocatedCents: plan.setUnallocatedCents,
       reservedCents,
       spendableCents,

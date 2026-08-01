@@ -9,6 +9,12 @@ export type CycleCorrectionPlan = {
     subEnvelopeId?: string;
   }>;
   setUnallocatedCents: number;
+  /**
+   * Bank cash that must be represented by the correction targets
+   * (sobres + reservado + por repartir + aportes que salen del líquido).
+   * When set, a liquidity_reconciliation transfer absorbs the gap vs Quipu.
+   */
+  declaredLiquidCents?: number;
   note?: string;
 };
 
@@ -28,7 +34,8 @@ export type InternalTransferDraft = {
     | "unallocated_to_reservation"
     | "unallocated_to_savings"
     | "envelope_rebalance"
-    | "savings_to_unallocated";
+    | "savings_to_unallocated"
+    | "liquidity_reconciliation";
   amountCents: number;
   from: string;
   to: string;
@@ -55,6 +62,7 @@ export function buildCycleCorrectionTransfers(input: {
   transfers: InternalTransferDraft[];
   after: CycleCorrectionSnapshot;
   contributionCents: number;
+  reconciliationDeltaCents: number;
   conservedLiquidMinusContributions: boolean;
 } {
   for (const key of ["needs", "wants", "savings"] as const) {
@@ -69,6 +77,12 @@ export function buildCycleCorrectionTransfers(input: {
   }
   for (const row of input.plan.contributeToSavings) {
     assertNonNegativeCents(row.amountCents, "contributeToSavings.amountCents");
+  }
+  if (input.plan.declaredLiquidCents !== undefined) {
+    assertNonNegativeCents(
+      input.plan.declaredLiquidCents,
+      "declaredLiquidCents",
+    );
   }
 
   const newReserved = input.plan.reserveToCommitments.reduce(
@@ -90,10 +104,38 @@ export function buildCycleCorrectionTransfers(input: {
 
   const beforeLiquid = computeLiquidTotal(input.before);
   const afterLiquid = computeLiquidTotal(after);
+  const targetLiquidPlusContributions = afterLiquid + contributionCents;
+
+  let reconciliationDeltaCents = 0;
+  if (input.plan.declaredLiquidCents !== undefined) {
+    if (input.plan.declaredLiquidCents !== targetLiquidPlusContributions) {
+      throw new Error(
+        `El saldo bancario declarado (${input.plan.declaredLiquidCents}) debe coincidir con sobres + reservado + por repartir + aportes (${targetLiquidPlusContributions}).`,
+      );
+    }
+    reconciliationDeltaCents = input.plan.declaredLiquidCents - beforeLiquid;
+  }
+
   const conservedLiquidMinusContributions =
-    beforeLiquid === afterLiquid + contributionCents;
+    beforeLiquid + reconciliationDeltaCents === afterLiquid + contributionCents;
 
   const transfers: InternalTransferDraft[] = [];
+
+  if (reconciliationDeltaCents > 0) {
+    transfers.push({
+      kind: "liquidity_reconciliation",
+      amountCents: reconciliationDeltaCents,
+      from: "bank:reconciliation",
+      to: "correction:pool",
+    });
+  } else if (reconciliationDeltaCents < 0) {
+    transfers.push({
+      kind: "liquidity_reconciliation",
+      amountCents: -reconciliationDeltaCents,
+      from: "correction:pool",
+      to: "bank:reconciliation",
+    });
+  }
 
   const pushDelta = (
     account: string,
@@ -158,6 +200,7 @@ export function buildCycleCorrectionTransfers(input: {
     transfers,
     after,
     contributionCents,
+    reconciliationDeltaCents,
     conservedLiquidMinusContributions,
   };
 }

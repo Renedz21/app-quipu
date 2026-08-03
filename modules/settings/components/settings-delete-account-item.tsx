@@ -43,10 +43,11 @@ export function SettingsDeleteAccountItem({ className }: Props) {
   const handleDelete = async () => {
     setIsDeleting(true);
     setHasError(false);
-    const result = await authClient.deleteUser();
+    const result = await authClient.deleteUser().finally(() => {
+      setIsDeleting(false);
+    });
     if (result.error) {
       setHasError(true);
-      setIsDeleting(false);
       return;
     }
     router.push("/");

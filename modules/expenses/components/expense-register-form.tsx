@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight } from "reicon-react";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
@@ -57,6 +57,23 @@ function createInitialEnvelope(
 }
 
 export function ExpenseRegisterForm({
+  variant,
+  preselectedEnvelope,
+  ...props
+}: Props) {
+  const formKey = `${variant}:${preselectedEnvelope ?? "none"}`;
+
+  return (
+    <ExpenseRegisterFormFields
+      key={formKey}
+      variant={variant}
+      preselectedEnvelope={preselectedEnvelope}
+      {...props}
+    />
+  );
+}
+
+function ExpenseRegisterFormFields({
   step,
   setStep,
   variant,
@@ -108,28 +125,9 @@ export function ExpenseRegisterForm({
     },
   });
 
-  useEffect(() => {
-    form.setFieldValue(
-      "envelopeType",
-      createInitialEnvelope(variant, preselectedEnvelope),
-    );
-    setServerError(null);
-  }, [variant, preselectedEnvelope, form]);
-
-  const suggestionForAmount = useCallback(
-    (amountCents: number) => suggestEnvelope(amountCents, recentEnvelopes),
-    [recentEnvelopes],
-  );
-
-  useEffect(() => {
-    if (step === "envelope" && variant === "fab") {
-      const { amountCents } = form.store.state.values;
-      form.setFieldValue(
-        "envelopeType",
-        suggestionForAmount(amountCents).envelopeType,
-      );
-    }
-  }, [step, variant, form, suggestionForAmount]);
+  function suggestionForAmount(amountCents: number) {
+    return suggestEnvelope(amountCents, recentEnvelopes);
+  }
 
   async function handleAmountNextFab() {
     setServerError(null);
@@ -219,12 +217,7 @@ export function ExpenseRegisterForm({
 
   if (step === "amount" && variant === "envelope" && preselectedEnvelope) {
     return (
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleVariantBSubmit();
-        }}
-      >
+      <div>
         <form.Subscribe
           selector={(state) => ({
             amountCents: state.values.amountCents,
@@ -289,18 +282,13 @@ export function ExpenseRegisterForm({
             {serverError}
           </p>
         ) : null}
-      </form>
+      </div>
     );
   }
 
   if (step === "envelope" && variant === "fab") {
     return (
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void form.handleSubmit();
-        }}
-      >
+      <div>
         <form.Subscribe
           selector={(state) => ({
             amountCents: state.values.amountCents,
@@ -336,7 +324,7 @@ export function ExpenseRegisterForm({
             {serverError}
           </p>
         ) : null}
-      </form>
+      </div>
     );
   }
 

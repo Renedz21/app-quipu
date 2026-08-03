@@ -143,14 +143,7 @@ export function MoveSurplusForm({
   if (!defaultSource) return null;
 
   return (
-    <form
-      className="space-y-6 md:mt-6"
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-    >
+    <div className="space-y-6 md:mt-6">
       <form.Subscribe
         selector={(state) => ({
           fromSource: state.values.fromSource,
@@ -336,7 +329,8 @@ export function MoveSurplusForm({
                   {MOVE_SURPLUS_CANCEL_CTA}
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={() => void form.handleSubmit()}
                   className="h-11 rounded-[11px]"
                   disabled={
                     isSubmitting ||
@@ -353,7 +347,7 @@ export function MoveSurplusForm({
           );
         }}
       </form.Subscribe>
-    </form>
+    </div>
   );
 }
 

@@ -8,13 +8,22 @@ export const resetAppTables = internalMutation({
   handler: async (ctx) => {
     const counts: Record<string, number> = {};
 
-    for (const table of APP_DATA_TABLES) {
-      const docs = await ctx.db.query(table).collect();
-      for (const doc of docs) {
-        await ctx.db.delete(doc._id);
-      }
+    const tableDocs = await Promise.all(
+      APP_DATA_TABLES.map(async (table) => ({
+        table,
+        docs: await ctx.db.query(table).collect(),
+      })),
+    );
+
+    for (const { table, docs } of tableDocs) {
       counts[table] = docs.length;
     }
+
+    await Promise.all(
+      tableDocs.flatMap(({ docs }) =>
+        docs.map((doc) => ctx.db.delete(doc._id)),
+      ),
+    );
 
     return { deleted: counts };
   },

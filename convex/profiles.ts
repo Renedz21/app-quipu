@@ -407,23 +407,25 @@ export const deleteAllDataForProfile = internalMutation({
       .collect();
 
     // surplusContributions solo tiene índice por ciclo.
-    for (const cycle of cycles) {
-      const contributions = await ctx.db
-        .query("surplusContributions")
-        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-        .collect();
-      for (const contribution of contributions) {
-        await ctx.db.delete(contribution._id);
-      }
-      await ctx.db.delete(cycle._id);
-    }
+    const contributionsByCycle = await Promise.all(
+      cycles.map((cycle) =>
+        ctx.db
+          .query("surplusContributions")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+          .collect(),
+      ),
+    );
+    await Promise.all(
+      contributionsByCycle.flatMap((contributions) =>
+        contributions.map((contribution) => ctx.db.delete(contribution._id)),
+      ),
+    );
+    await Promise.all(cycles.map((cycle) => ctx.db.delete(cycle._id)));
 
     const deleteByProfile = async (
       docs: ReadonlyArray<{ _id: Parameters<typeof ctx.db.delete>[0] }>,
     ) => {
-      for (const doc of docs) {
-        await ctx.db.delete(doc._id);
-      }
+      await Promise.all(docs.map((doc) => ctx.db.delete(doc._id)));
     };
 
     await deleteByProfile(

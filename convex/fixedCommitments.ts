@@ -1,5 +1,4 @@
 import { ConvexError, v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import {
   computeAllCommitmentCoverage,
@@ -326,21 +325,20 @@ export const createCommitmentsBulk = mutation({
       }
     }
 
-    const ids: Id<"fixedCommitments">[] = [];
     const createdAt = Date.now();
-    for (const c of args.commitments) {
-      const nextDueAt = computeInitialNextDueAt(c.dueDay, createdAt);
-      const id = await ctx.db.insert("fixedCommitments", {
-        profileId: args.profileId,
-        name: c.name.trim(),
-        amount: c.amount,
-        envelope: c.envelope,
-        dueDay: c.dueDay,
-        nextDueAt,
-      });
-      ids.push(id);
-    }
-    return ids;
+    return await Promise.all(
+      args.commitments.map((c) => {
+        const nextDueAt = computeInitialNextDueAt(c.dueDay, createdAt);
+        return ctx.db.insert("fixedCommitments", {
+          profileId: args.profileId,
+          name: c.name.trim(),
+          amount: c.amount,
+          envelope: c.envelope,
+          dueDay: c.dueDay,
+          nextDueAt,
+        });
+      }),
+    );
   },
 });
 
@@ -452,17 +450,18 @@ export const getCommitmentCoverage = query({
       .unique();
     if (!profile) return null;
 
-    const activeCycle = await ctx.db
-      .query("financialCycles")
-      .withIndex("by_profile_status", (q) =>
-        q.eq("profileId", profile._id).eq("status", "active"),
-      )
-      .unique();
-
-    const commitments = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
+    const [activeCycle, commitments] = await Promise.all([
+      ctx.db
+        .query("financialCycles")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("profileId", profile._id).eq("status", "active"),
+        )
+        .unique(),
+      ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+    ]);
 
     const now = Date.now();
 

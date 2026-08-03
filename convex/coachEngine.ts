@@ -524,8 +524,10 @@ export const postponeCommitmentForCycle = mutation({
   },
   handler: async (ctx, { commitmentId }) => {
     const now = Date.now();
-    const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
-    const commitment = await ctx.db.get(commitmentId);
+    const [{ profile, cycle }, commitment] = await Promise.all([
+      getOwnedProfileAndCycle(ctx),
+      ctx.db.get(commitmentId),
+    ]);
 
     if (!commitment || commitment.profileId !== profile._id) {
       throw new ConvexError({

@@ -408,11 +408,17 @@ export const createIncomeEvent = mutation({
 
     await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycleId, now);
 
-    const updatedEnvelopes = await ctx.db
-      .query("envelopes")
-      .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
-      .collect();
-    const updatedCycle = await ctx.db.get(cycleId);
+    const [updatedEnvelopes, updatedCycle, reservations] = await Promise.all([
+      ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
+        .collect(),
+      ctx.db.get(cycleId),
+      ctx.db
+        .query("commitmentReservations")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
+        .collect(),
+    ]);
     if (!updatedCycle) {
       throw new ConvexError({
         code: "NOT_FOUND",
@@ -430,10 +436,6 @@ export const createIncomeEvent = mutation({
     const savingsEnvelope = updatedEnvelopes.find(
       (env) => env.type === "savings",
     );
-    const reservations = await ctx.db
-      .query("commitmentReservations")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-      .collect();
     const spendable = computeSpendableSnapshot({
       needsRemainingCents: needsEnvelope?.remainingAmount ?? 0,
       wantsRemainingCents: wantsEnvelope?.remainingAmount ?? 0,

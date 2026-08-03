@@ -10,15 +10,17 @@ export const scanOpenProfilesForContentFlags = internalMutation({
     flagsCreated: v.number(),
   }),
   handler: async (ctx) => {
-    const profiles = await ctx.db.query("profiles").take(200);
-    const existingOpen = await ctx.db
-      .query("accountReviewFlags")
-      .withIndex("by_status", (q) => q.eq("status", "open"))
-      .collect();
+    const [profiles, existingOpen] = await Promise.all([
+      ctx.db.query("profiles").take(200),
+      ctx.db
+        .query("accountReviewFlags")
+        .withIndex("by_status", (q) => q.eq("status", "open"))
+        .collect(),
+    ]);
     const flaggedProfileIds = new Set(
-      existingOpen
-        .filter((flag) => flag.reason === "content")
-        .map((flag) => flag.profileId),
+      existingOpen.flatMap((flag) =>
+        flag.reason === "content" ? [flag.profileId] : [],
+      ),
     );
 
     const scanResults = await Promise.all(

@@ -102,7 +102,7 @@ export function MovementDetailSheet({
   const updateIncomeEvent = useMutation(api.incomeEvents.updateIncomeEvent);
 
   function handleOpenChange(nextOpen: boolean) {
-    if (nextOpen) {
+    if (!nextOpen) {
       setState("detail");
       setDeleteError(null);
     }
@@ -160,7 +160,7 @@ export function MovementDetailSheet({
           </p>
           <Button
             type="button"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
             className="mt-6 h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
           >
             Cerrar

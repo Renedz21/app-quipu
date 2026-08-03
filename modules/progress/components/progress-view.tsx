@@ -7,7 +7,7 @@ import { Check } from "reicon-react";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";

@@ -4,7 +4,7 @@ import { CheckoutLink } from "@convex-dev/polar/react";
 import { useAction } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_PLAN_ACTIVE_BADGE,

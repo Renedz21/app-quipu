@@ -5,7 +5,8 @@ import { REGISTER_CTA } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
-import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {

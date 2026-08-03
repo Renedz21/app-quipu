@@ -1,4 +1,3 @@
-import { formatCycleDayLine } from "../lib/dashboard-math";
 import { DashboardHeaderActions } from "./dashboard-header-actions";
 
 type Props = {
@@ -31,11 +30,4 @@ export function DashboardHeader({ name, cycleDayLine }: Props) {
       </div>
     </header>
   );
-}
-
-export function buildDashboardCycleDayLine(
-  daysElapsed: number,
-  daysTotal: number,
-): string {
-  return formatCycleDayLine(daysElapsed, daysTotal);
 }

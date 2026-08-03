@@ -16,7 +16,8 @@ import {
   trackFinancialCycleTransition,
 } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
-import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import type { DistributionPolicy } from "@/shared/lib/allocations";
 import { limaStartOfDay } from "@/shared/lib/date";
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";

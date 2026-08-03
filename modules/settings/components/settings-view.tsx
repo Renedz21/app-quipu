@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PLAN_LABELS } from "@/shared/constants/plan";

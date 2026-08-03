@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Calendar, Check } from "reicon-react";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { SectionLink } from "@/shared/components/ui/section-link";
 import { cn } from "@/shared/lib/utils";
 import {

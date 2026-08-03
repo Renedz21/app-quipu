@@ -206,6 +206,12 @@ function VariableSourceInput({
 
   return (
     <div className="flex flex-1 w-full flex-wrap gap-2">
+      <Label
+        htmlFor="variable-income"
+        className="w-full text-xs text-muted-foreground"
+      >
+        Agregar fuente de ingreso variable
+      </Label>
       {sources.map((tag) => (
         <SourcePill key={tag} label={tag} onRemove={() => onRemove(tag)} />
       ))}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/shared/lib/utils";
 
-export function recoverPasswordHref(email?: string) {
+function recoverPasswordHref(email?: string) {
   const trimmed = email?.trim() ?? "";
   return trimmed
     ? `/recuperar?email=${encodeURIComponent(trimmed)}`

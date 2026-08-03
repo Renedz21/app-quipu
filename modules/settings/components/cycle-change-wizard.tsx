@@ -8,7 +8,8 @@ import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
 import { DAY_PILLS } from "@/modules/onboarding/constants";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 import { useUpdateCycleSchedule } from "../actions";
 import {

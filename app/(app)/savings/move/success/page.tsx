@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireOnboardedProfile } from "@/auth/auth-server";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { pageMetadata } from "@/core/seo";
@@ -45,9 +46,9 @@ export default async function MoveSurplusSuccessPage({
     return (
       <div className="mx-auto max-w-lg px-4 py-10 text-sm text-mute">
         No encontramos el detalle de tu movimiento.{" "}
-        <a href="/savings" className="font-medium text-qp-deep underline">
+        <Link href="/savings" className="font-medium text-qp-deep underline">
           Volver a ahorros
-        </a>
+        </Link>
       </div>
     );
   }

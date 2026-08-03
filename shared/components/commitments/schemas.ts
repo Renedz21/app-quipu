@@ -20,50 +20,48 @@ export function parseDueDayInput(input: string): number | null {
 }
 
 export function createAddCommitmentFormSchema() {
-  return z
-    .object({
-      name: z
-        .string()
-        .trim()
-        .min(1, "El nombre del compromiso es obligatorio.")
-        .max(40, "El nombre no puede superar 40 caracteres."),
-      amountInput: z
-        .string()
-        .trim()
-        .min(1, "Ingresa un monto válido.")
-        .superRefine((value, ctx) => {
-          const cents = parseAmountInputToCents(value);
-          if (cents === null) {
-            ctx.addIssue({
-              code: "custom",
-              message: "El monto debe ser un entero de céntimos mayor a cero.",
-            });
-            return;
-          }
-          if (cents > KEYPAD_MAX_CENTS) {
-            ctx.addIssue({
-              code: "custom",
-              message: "El monto supera el máximo permitido.",
-            });
-          }
-        }),
-      dueDayInput: z
-        .string()
-        .trim()
-        .min(1, "Ingresa un día entre 1 y 31.")
-        .superRefine((value, ctx) => {
-          if (parseDueDayInput(value) === null) {
-            ctx.addIssue({
-              code: "custom",
-              message: "El día de vencimiento debe ser un entero entre 1 y 31.",
-            });
-          }
-        }),
-      envelope: z.enum(["needs", "wants"], {
-        error: "Elige un sobre para el compromiso.",
+  return z.strictObject({
+    name: z
+      .string()
+      .trim()
+      .min(1, "El nombre del compromiso es obligatorio.")
+      .max(40, "El nombre no puede superar 40 caracteres."),
+    amountInput: z
+      .string()
+      .trim()
+      .min(1, "Ingresa un monto válido.")
+      .superRefine((value, ctx) => {
+        const cents = parseAmountInputToCents(value);
+        if (cents === null) {
+          ctx.addIssue({
+            code: "custom",
+            message: "El monto debe ser un entero de céntimos mayor a cero.",
+          });
+          return;
+        }
+        if (cents > KEYPAD_MAX_CENTS) {
+          ctx.addIssue({
+            code: "custom",
+            message: "El monto supera el máximo permitido.",
+          });
+        }
       }),
-    })
-    .strict();
+    dueDayInput: z
+      .string()
+      .trim()
+      .min(1, "Ingresa un día entre 1 y 31.")
+      .superRefine((value, ctx) => {
+        if (parseDueDayInput(value) === null) {
+          ctx.addIssue({
+            code: "custom",
+            message: "El día de vencimiento debe ser un entero entre 1 y 31.",
+          });
+        }
+      }),
+    envelope: z.enum(["needs", "wants"], {
+      error: "Elige un sobre para el compromiso.",
+    }),
+  });
 }
 
 export type AddCommitmentFormValues = z.infer<
@@ -85,9 +83,3 @@ export function toCreateFixedCommitmentPayload(value: AddCommitmentFormValues) {
     dueDay,
   };
 }
-
-/** @deprecated Use toCreateFixedCommitmentPayload */
-export const toCreateFixedCommitmentArgs = toCreateFixedCommitmentPayload;
-
-/** @deprecated Use parseAmountInputToCents */
-export const parseCommitmentAmountInput = parseAmountInputToCents;

@@ -7,7 +7,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
 import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
-import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import {
   Dialog,
   DialogContent,

@@ -157,13 +157,3 @@ export function validateAllocationPlan(
   if (!balance.ok) return balance;
   return { ok: true, buckets };
 }
-
-/** Suggest 50/30/20 of a distributable remainder using largest-remainder via caller. */
-export function emptyAllocationPlan(): AllocationPlan {
-  return {
-    reservations: [],
-    envelopes: { needs: 0, wants: 0, savings: 0 },
-    savingsContributions: [],
-    leaveUnallocatedCents: 0,
-  };
-}

@@ -101,7 +101,7 @@ const UserLoggedInProperties = z.object({
 });
 export type UserLoggedInProperties = z.infer<typeof UserLoggedInProperties>;
 
-const PasskeyCreatedProperties = z.object({}).strict();
+const PasskeyCreatedProperties = z.strictObject({});
 export type PasskeyCreatedProperties = z.infer<typeof PasskeyCreatedProperties>;
 
 const OnboardingStepProperties = z.object({

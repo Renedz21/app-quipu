@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { EnvelopeKey } from "@/shared/constants/envelopes";
 import { cn } from "@/shared/lib/utils";
 import { type Allocation, distributeEnvelope } from "../lib/allocation";
@@ -25,13 +25,6 @@ export function AllocationRow({
   dispatch,
 }: Props) {
   const [draft, setDraft] = useState(String(value));
-
-  useEffect(() => {
-    const currentDraft = Number.parseInt(draft, 10);
-    if (currentDraft !== value) {
-      setDraft(String(value));
-    }
-  }, [value, draft]);
 
   function commit(raw: string) {
     const n = Number.parseInt(raw, 10);
@@ -69,6 +62,7 @@ export function AllocationRow({
         <input
           type="number"
           inputMode="numeric"
+          aria-label={`Porcentaje de ${label}`}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={(e) => commit(e.target.value)}

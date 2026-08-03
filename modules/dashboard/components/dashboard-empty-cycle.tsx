@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 import {
   HERO_EMPTY_BODY,

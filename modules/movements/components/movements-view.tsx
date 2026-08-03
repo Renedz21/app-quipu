@@ -6,7 +6,7 @@ import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { IncomeSource } from "@/modules/income/types";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate, formatLimaDateTime } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
@@ -253,7 +253,6 @@ export function MovementsView() {
       </div>
 
       <MovementDetailSheet
-        key={selectedMovement?.id ?? "closed"}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         movement={selectedMovement}

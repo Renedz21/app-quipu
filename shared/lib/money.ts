@@ -9,6 +9,27 @@
 
 import { DEFAULT_CURRENCY } from "@/core/constants";
 
+const CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
+
+function getCentsFormatter(options: {
+  currency: string;
+  locale: string;
+  showSymbol: boolean;
+  minimumFractionDigits: number;
+}): Intl.NumberFormat {
+  const key = `${options.locale}:${options.currency}:${options.showSymbol}:${options.minimumFractionDigits}`;
+  const cached = CENTS_FORMATTER_CACHE.get(key);
+  if (cached) return cached;
+  const formatter = new Intl.NumberFormat(options.locale, {
+    style: options.showSymbol ? "currency" : "decimal",
+    currency: options.currency,
+    minimumFractionDigits: options.minimumFractionDigits,
+    maximumFractionDigits: 2,
+  });
+  CENTS_FORMATTER_CACHE.set(key, formatter);
+  return formatter;
+}
+
 /**
  * Tipo monetario. Siempre céntimos enteros (sin coma flotante).
  */
@@ -37,30 +58,13 @@ export function formatCents(
     minimumFractionDigits = 2,
   } = options ?? {};
 
-  const formatter = new Intl.NumberFormat(locale, {
-    style: showSymbol ? "currency" : "decimal",
+  const formatter = getCentsFormatter({
     currency,
+    locale,
+    showSymbol,
     minimumFractionDigits,
-    maximumFractionDigits: 2,
   });
 
-  return formatter.format(cents / 100);
-}
-
-/**
- * Formatea céntimos a un formato compacto para dashboards/resúmenes.
- *
- * @example
- * formatCentsCompact(1500000) // "S/ 15K"
- * formatCentsCompact(150000) // "S/ 1.5K"
- */
-export function formatCentsCompact(cents: Cents, locale = "es-PE"): string {
-  const formatter = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: DEFAULT_CURRENCY.code,
-    notation: "compact",
-    maximumFractionDigits: 1,
-  });
   return formatter.format(cents / 100);
 }
 
@@ -116,21 +120,4 @@ export function parseToCents(input: string): Cents | null {
   if (!Number.isFinite(num) || num < 0) return null;
 
   return Math.round(num * 100);
-}
-
-/**
- * Valida que un valor sea céntimos válidos (entero no negativo).
- */
-export function isValidCents(value: unknown): value is Cents {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-/**
- * Suma un array de céntimos. Lanza si hay valor inválido.
- */
-export function sumCents(values: Cents[]): Cents {
-  return values.reduce((acc, v) => {
-    if (!isValidCents(v)) throw new Error(`Valor inválido: ${v}`);
-    return acc + v;
-  }, 0);
 }

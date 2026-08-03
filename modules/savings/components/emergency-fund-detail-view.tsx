@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";

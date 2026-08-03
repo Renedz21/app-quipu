@@ -37,17 +37,18 @@ export const listUpcomingForBadge = query({
     const profile = await requirePremiumProfile(ctx);
     const now = Date.now();
 
-    const activeCycle = await ctx.db
-      .query("financialCycles")
-      .withIndex("by_profile_status", (q) =>
-        q.eq("profileId", profile._id).eq("status", "active"),
-      )
-      .unique();
-
-    const commitmentsRaw = await ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-      .collect();
+    const [activeCycle, commitmentsRaw] = await Promise.all([
+      ctx.db
+        .query("financialCycles")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("profileId", profile._id).eq("status", "active"),
+        )
+        .unique(),
+      ctx.db
+        .query("fixedCommitments")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+        .collect(),
+    ]);
 
     const incomeEvents = activeCycle
       ? await ctx.db

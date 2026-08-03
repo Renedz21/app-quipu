@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { AnalyticsEvents, setPersonProperties, track } from "@/core/analytics";
+import { formatCycleDayLine } from "../lib/dashboard-math";
 import { useDashboardSummary } from "../queries";
 import type { DashboardCoach } from "../types";
 import { CoachCard } from "./coach-card";
@@ -9,10 +10,7 @@ import { CommitmentsList } from "./commitments-list";
 import { CycleCloseReportCard } from "./cycle-close-report-card";
 import { DashboardEmptyCycle } from "./dashboard-empty-cycle";
 import { DashboardError } from "./dashboard-error";
-import {
-  buildDashboardCycleDayLine,
-  DashboardHeader,
-} from "./dashboard-header";
+import { DashboardHeader } from "./dashboard-header";
 import { DashboardHero } from "./dashboard-hero";
 import { DashboardHeroSkeleton } from "./dashboard-hero-skeleton";
 import { DashboardSecondaryInsights } from "./dashboard-secondary-insights";
@@ -96,7 +94,7 @@ function DashboardContent({ profileName }: Props) {
     <>
       <DashboardHeader
         name={profileName}
-        cycleDayLine={buildDashboardCycleDayLine(
+        cycleDayLine={formatCycleDayLine(
           summary.cycle.daysElapsed,
           summary.cycle.daysTotal,
         )}

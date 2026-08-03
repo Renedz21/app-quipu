@@ -1,7 +1,4 @@
-import {
-  getIncomeSourceLabel,
-  INCOME_SOURCE_OPTIONS,
-} from "@/modules/income/constants";
+import { getIncomeSourceLabel } from "@/modules/income/constants";
 import type { IncomeSource } from "@/modules/income/types";
 
 /**
@@ -31,6 +28,3 @@ export function hasCustomConcept(
 ): boolean {
   return extractConcept(description, source) !== "";
 }
-
-/** All valid income sources for type safety. */
-export const INCOME_SOURCES = INCOME_SOURCE_OPTIONS.map((o) => o.value);

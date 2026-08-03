@@ -5,10 +5,10 @@ import {
   type DayButton,
   DayPicker,
   getDefaultClassNames,
-  type Locale,
 } from "react-day-picker";
 import { ChevronDown, ChevronLeft, ChevronRight } from "reicon-react";
-import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 
 function Calendar({
@@ -25,6 +25,7 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const localeCode = locale?.code ?? "es-PE";
 
   return (
     <DayPicker
@@ -39,7 +40,10 @@ function Calendar({
       locale={locale}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString(locale?.code, { month: "short" }),
+          date.toLocaleString(localeCode, {
+            month: "short",
+            timeZone: "UTC",
+          }),
         ...formatters,
       }}
       classNames={{
@@ -176,7 +180,7 @@ function Calendar({
           );
         },
         DayButton: ({ ...props }) => (
-          <CalendarDayButton locale={locale} {...props} />
+          <CalendarDayButton localeCode={localeCode} {...props} />
         ),
         WeekNumber: ({ children, ...props }) => {
           return (
@@ -198,9 +202,9 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
-  locale,
+  localeCode,
   ...props
-}: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
+}: React.ComponentProps<typeof DayButton> & { localeCode: string }) {
   const defaultClassNames = getDefaultClassNames();
 
   const ref = React.useRef<HTMLButtonElement>(null);
@@ -212,7 +216,9 @@ function CalendarDayButton({
     <Button
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString(locale?.code)}
+      data-day={day.date.toLocaleDateString(localeCode, {
+        timeZone: "UTC",
+      })}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

@@ -8,7 +8,7 @@ import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitm
 import type { CommitmentCoverageItem } from "@/shared/components/commitments/commitment-coverage-list";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
 import { formatLimaDate } from "@/shared/lib/date";

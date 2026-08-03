@@ -1,5 +1,11 @@
 const LIMA_TIMEZONE = "America/Lima";
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const LIMA_DATE_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: LIMA_TIMEZONE,
+  day: "numeric",
+  month: "numeric",
+  year: "numeric",
+});
 
 type LimaDateParts = {
   year: number;
@@ -8,12 +14,7 @@ type LimaDateParts = {
 };
 
 function getLimaParts(timestamp: number): LimaDateParts {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
-    month: "numeric",
-    year: "numeric",
-  }).formatToParts(new Date(timestamp));
+  const parts = LIMA_DATE_PARTS_FORMATTER.formatToParts(new Date(timestamp));
 
   return {
     day: Number(parts.find((part) => part.type === "day")?.value ?? 1),

@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";

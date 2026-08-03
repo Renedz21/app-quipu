@@ -9,7 +9,6 @@ export const INCOME_PAGE_SUBTITLE =
   "Solo manual. Tú decides qué entra y cuándo.";
 export const INCOME_PAGE_SUBTITLE_KIND =
   "¿Es tu sueldo de siempre o algo extraordinario?";
-export const INCOME_REGISTER_KIND_SUBTITLE = INCOME_PAGE_SUBTITLE_KIND;
 export const INCOME_EXTRAORDINARY_DETAILS_SUBTITLE =
   "Entra una vez. Tú decides a dónde va sin tocar tu sistema.";
 export const INCOME_KIND_HABITUAL = "Ingreso habitual";
@@ -17,28 +16,14 @@ export const INCOME_KIND_EXTRAORDINARY = "Extraordinario";
 export const INCOME_EXTRAORDINARY_PICK_HINT =
   "Tu configuración 50/30/20 no se toca. Esto es solo este ingreso.";
 export const INCOME_EXTRAORDINARY_TYPE_SECTION = "¿Qué recibiste?";
-export const INCOME_EXTRAORDINARY_TYPES_HEADING =
-  INCOME_EXTRAORDINARY_TYPE_SECTION;
-export const INCOME_EXTRAORDINARY_TYPE_PICK_FOOTER =
-  INCOME_EXTRAORDINARY_PICK_HINT;
 export const INCOME_EXTRAORDINARY_CONTINUE_CTA = "Continuar";
 export const INCOME_EXTRAORDINARY_BADGE = "Extraordinario";
 export const INCOME_EXTRAORDINARY_RULE_PREFIX = "Regla activa";
 export const INCOME_EXTRAORDINARY_RULE_CHANGE = "Cambiar";
-export const INCOME_EXTRAORDINARY_KIND_LABEL = "Tipo de ingreso";
-export const INCOME_EXTRAORDINARY_TYPE_LABEL = "¿Qué ingreso es?";
 export const INCOME_DESTINATION_DIALOG_CONFIRM = "Confirmar destino";
 export const INCOME_DESTINATION_DIALOG_BACK = "Atrás";
 export const INCOME_DESTINATION_DIALOG_NOTE =
   "Elijas lo que elijas, tu configuración no cambia. Esta decisión vale solo para este ingreso.";
-export const INCOME_DESTINATION_PROFILE_TITLE = "Mi distribución habitual";
-export const INCOME_DESTINATION_PROFILE_BADGE = "Recomendado";
-export const INCOME_DESTINATION_ALL_SAVINGS_TITLE = "Todo al ahorro";
-export const INCOME_DESTINATION_ALL_SAVINGS_BODY =
-  "completos van a tu Fondo o a una meta";
-export const INCOME_DESTINATION_ALL_EMERGENCY_BODY =
-  "completos van a tu Fondo de emergencia";
-export const INCOME_DESTINATION_CONFIG_NOTE = INCOME_DESTINATION_DIALOG_NOTE;
 export const INCOME_IMPACT_MOVE_SURPLUS =
   "Prefiero ahorrar más de este ingreso";
 export const INCOME_AMOUNT_LABEL = "Monto recibido";
@@ -53,7 +38,6 @@ export const INCOME_NEW_DAILY_LABEL = "Nuevo disponible hoy";
 export const INCOME_CANCEL_CTA = "Cancelar";
 export const INCOME_SUBMIT_CTA = "Registrar ingreso";
 export const INCOME_EXTRAORDINARY_CUSTOM_LABEL = "Descripción";
-export const INCOME_EXTRAORDINARY_DESTINATION_LABEL = "¿A dónde va?";
 export const INCOME_SUCCESS_TITLE = "Ingreso registrado";
 export const INCOME_SUCCESS_BODY_PREFIX = "ya se repartieron.";
 export const INCOME_SUCCESS_BODY_SUFFIX = "Tu ciclo respira mejor.";

@@ -17,8 +17,9 @@ export function PasskeySetup({ onDone }: PassKeyProps) {
   async function handleCreate() {
     setPending(true);
     setMessage(null);
-    const { error } = await authClient.passkey.addPasskey();
-    setPending(false);
+    const { error } = await authClient.passkey.addPasskey().finally(() => {
+      setPending(false);
+    });
     if (error) {
       setMessage("No se completó. Puedes intentarlo de nuevo cuando quieras.");
       return;

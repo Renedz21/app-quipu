@@ -21,18 +21,22 @@ export const resetAll = internalAction({
     const appDeleted: Record<string, number> =
       (appResult as { deleted?: Record<string, number> } | null)?.deleted ?? {};
 
-    const authCounts: Record<string, number> = {};
-
-    for (const model of AUTH_MODELS) {
-      const result = await ctx.runMutation(
-        components.betterAuth.adapter.deleteMany,
-        {
-          input: { model },
-          paginationOpts: { numItems: 999999, cursor: null },
-        },
-      );
-      authCounts[model] = Array.isArray(result) ? result.length : 0;
-    }
+    const authResults = await Promise.all(
+      AUTH_MODELS.map(async (model) => {
+        const result = await ctx.runMutation(
+          components.betterAuth.adapter.deleteMany,
+          {
+            input: { model },
+            paginationOpts: { numItems: 999999, cursor: null },
+          },
+        );
+        return [model, Array.isArray(result) ? result.length : 0] as const;
+      }),
+    );
+    const authCounts = Object.fromEntries(authResults) as Record<
+      string,
+      number
+    >;
 
     return { deleted: { ...appDeleted, ...authCounts } };
   },

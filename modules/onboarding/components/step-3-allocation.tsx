@@ -118,7 +118,7 @@ export function Step3Allocation({
       <div className="flex flex-col gap-3">
         {ENVELOPES.map((env) => (
           <AllocationRow
-            key={env.key}
+            key={`${env.key}-${state[env.key]}`}
             envKey={env.key}
             label={env.label}
             desc={env.desc}

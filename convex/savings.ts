@@ -96,62 +96,57 @@ async function buildSavingsOverview(ctx: QueryCtx) {
     .unique();
   if (!profile) return null;
 
-  const subEnvelopes = await ctx.db
-    .query("subEnvelopes")
-    .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
-    .collect();
-
-  const commitments = await ctx.db
-    .query("fixedCommitments")
-    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-    .collect();
-
-  const activeCycle = await ctx.db
-    .query("financialCycles")
-    .withIndex("by_profile_status", (q) =>
-      q.eq("profileId", profile._id).eq("status", "active"),
-    )
-    .unique();
+  const [subEnvelopes, commitments, activeCycle, streak] = await Promise.all([
+    ctx.db
+      .query("subEnvelopes")
+      .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+      .collect(),
+    ctx.db
+      .query("fixedCommitments")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .collect(),
+    ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique(),
+    ctx.db
+      .query("streaks")
+      .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
+      .unique(),
+  ]);
 
   let savingsEnvelopeRemaining = 0;
   let cycleContributionCents = 0;
+  let needsEnvelopeAllocated = 0;
   if (activeCycle) {
-    const savingsEnvelope = await ctx.db
-      .query("envelopes")
-      .withIndex("by_cycle_type", (q) =>
-        q.eq("cycleId", activeCycle._id).eq("type", "savings"),
-      )
-      .unique();
+    const [savingsEnvelope, needsEnvelope] = await Promise.all([
+      ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", "savings"),
+        )
+        .unique(),
+      ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) =>
+          q.eq("cycleId", activeCycle._id).eq("type", "needs"),
+        )
+        .unique(),
+    ]);
     savingsEnvelopeRemaining = Math.max(
       0,
       savingsEnvelope?.remainingAmount ?? 0,
     );
     cycleContributionCents = Math.max(0, savingsEnvelope?.allocatedAmount ?? 0);
+    needsEnvelopeAllocated = Math.max(0, needsEnvelope?.allocatedAmount ?? 0);
   }
-
-  const needsEnvelopeAllocated = activeCycle
-    ? Math.max(
-        0,
-        (
-          await ctx.db
-            .query("envelopes")
-            .withIndex("by_cycle_type", (q) =>
-              q.eq("cycleId", activeCycle._id).eq("type", "needs"),
-            )
-            .unique()
-        )?.allocatedAmount ?? 0,
-      )
-    : 0;
 
   const monthlyEssentialsCents = computeMonthlyEssentialsCents(
     commitments.filter((commitment) => commitment.envelope === "needs"),
     needsEnvelopeAllocated,
   );
-
-  const streak = await ctx.db
-    .query("streaks")
-    .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-    .unique();
 
   const emergencyFund =
     subEnvelopes.find((subEnvelope) => subEnvelope.isSystemDefault) ??

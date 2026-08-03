@@ -1,14 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
 import { DAY_PILLS } from "@/modules/onboarding/constants";
 import { BackLink } from "@/shared/components/ui/back-link";
-import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 import { useUpdateCycleSchedule } from "../actions";
 import {
@@ -40,10 +41,10 @@ export function CycleChangeWizard() {
   const [paydays, setPaydays] = useState<number[]>([]);
   const [cycleDurationDays, setCycleDurationDays] = useState<15 | 30>(30);
   const [pending, setPending] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
-    if (!profile || hydrated) return;
+    if (!profile || hydratedRef.current) return;
     if (
       profile.payFrequency === "monthly" ||
       profile.payFrequency === "biweekly"
@@ -54,8 +55,8 @@ export function CycleChangeWizard() {
     if (profile.cycleDurationDays === 15 || profile.cycleDurationDays === 30) {
       setCycleDurationDays(profile.cycleDurationDays);
     }
-    setHydrated(true);
-  }, [profile, hydrated]);
+    hydratedRef.current = true;
+  }, [profile]);
 
   if (!profile) {
     return (

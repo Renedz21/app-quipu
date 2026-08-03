@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/shared/components/ui/button";
@@ -27,23 +27,43 @@ type Props = {
 
 export function CoachNudgeActions({
   interactionId,
+  rescueSuggestion,
+  awaitingRescueConfirmation = false,
+  ...props
+}: Props) {
+  const dialogKey = [
+    interactionId,
+    awaitingRescueConfirmation ? "awaiting" : "idle",
+    rescueSuggestion?.transfer ?? "none",
+    rescueSuggestion?.projectedDeficit ?? "none",
+  ].join(":");
+
+  return (
+    <CoachNudgeActionsInner
+      key={dialogKey}
+      interactionId={interactionId}
+      rescueSuggestion={rescueSuggestion}
+      awaitingRescueConfirmation={awaitingRescueConfirmation}
+      {...props}
+    />
+  );
+}
+
+function CoachNudgeActionsInner({
+  interactionId,
   options,
   currencyCode,
   rescueSuggestion,
   awaitingRescueConfirmation = false,
 }: Props) {
   const resolveNudge = useMutation(api.coachEngine.resolveNudgeAction);
-  const [dialogOpen, setDialogOpen] = useState(awaitingRescueConfirmation);
+  const initialSuggestion = awaitingRescueConfirmation
+    ? rescueSuggestion
+    : undefined;
+  const [dialogOpen, setDialogOpen] = useState(Boolean(initialSuggestion));
   const [activeSuggestion, setActiveSuggestion] = useState<
     RescueSuggestion | undefined
-  >(rescueSuggestion);
-
-  useEffect(() => {
-    if (awaitingRescueConfirmation && rescueSuggestion) {
-      setActiveSuggestion(rescueSuggestion);
-      setDialogOpen(true);
-    }
-  }, [awaitingRescueConfirmation, rescueSuggestion]);
+  >(initialSuggestion);
 
   const showOptionButtons = !awaitingRescueConfirmation && !dialogOpen;
 

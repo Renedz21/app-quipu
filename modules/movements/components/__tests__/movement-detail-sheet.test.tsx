@@ -1,6 +1,6 @@
 /**
  * Regresión: cerrar tras un update deja el sheet en detalle (reset en el
- * handler de cierre). Cambiar key remonta limpio para otro movimiento.
+ * handler de cierre), sin remount por key — así Base UI anima la entrada.
  */
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -64,12 +64,10 @@ describe("MovementDetailSheet", () => {
   it("al reabrir el mismo movimiento tras success muestra el detalle", () => {
     const { rerender } = render(
       <MovementDetailSheet
-        key="expense-a"
         open
         onOpenChange={(next) => {
           rerender(
             <MovementDetailSheet
-              key="expense-a"
               open={next}
               onOpenChange={() => undefined}
               movement={expenseA}
@@ -88,7 +86,6 @@ describe("MovementDetailSheet", () => {
 
     rerender(
       <MovementDetailSheet
-        key="expense-a"
         open
         onOpenChange={() => undefined}
         movement={expenseA}
@@ -101,23 +98,29 @@ describe("MovementDetailSheet", () => {
     expect(screen.queryByText("Listo")).toBeNull();
   });
 
-  it("cambiar key a otro movimiento remonta en detalle", () => {
+  it("tras cerrar success, abrir otro movimiento muestra su detalle", () => {
     const { rerender } = render(
       <MovementDetailSheet
-        key="expense-a"
         open
-        onOpenChange={() => undefined}
+        onOpenChange={(next) => {
+          rerender(
+            <MovementDetailSheet
+              open={next}
+              onOpenChange={() => undefined}
+              movement={expenseA}
+            />,
+          );
+        }}
         movement={expenseA}
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Editar" }));
     fireEvent.click(screen.getByRole("button", { name: "Guardar gasto" }));
-    expect(screen.getByText("Listo")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
 
     rerender(
       <MovementDetailSheet
-        key="expense-b"
         open
         onOpenChange={() => undefined}
         movement={expenseB}

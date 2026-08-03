@@ -253,7 +253,6 @@ export function MovementsView() {
       </div>
 
       <MovementDetailSheet
-        key={selectedMovement?.id ?? "closed"}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         movement={selectedMovement}

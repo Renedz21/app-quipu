@@ -112,7 +112,9 @@ describe("computeImpactPreview with heldCents (P3-4)", () => {
     expect(preview).not.toBeNull();
     expect(preview?.heldCents).toBe(250_000);
     expect(preview?.distributableCents).toBe(100_000);
-    const dist = preview!.distribution;
+    expect(preview).toBeTruthy();
+    if (!preview) throw new Error("expected preview");
+    const dist = preview.distribution;
     expect(dist.needs + dist.wants + dist.savings).toBe(100_000);
     expect(dist).toEqual({ needs: 50_000, wants: 30_000, savings: 20_000 });
   });

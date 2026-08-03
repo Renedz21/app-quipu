@@ -960,7 +960,7 @@ export const deleteIncomeEvent = mutation({
         0,
         (cycle.unallocatedCents ?? 0) - reverse.unallocatedDeltaCents,
       ),
-      needsReview: otherIncomes.length > 0 ? true : false,
+      needsReview: otherIncomes.length > 0,
     });
 
     await ctx.db.delete(args.eventId);

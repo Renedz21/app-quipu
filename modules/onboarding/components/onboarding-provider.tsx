@@ -5,7 +5,6 @@ import {
   type ReactNode,
   useContext,
   useEffect,
-  useMemo,
   useReducer,
 } from "react";
 import { ONBOARDING_DEFAULTS, STORAGE_KEY } from "../constants";
@@ -35,7 +34,6 @@ function reducer(
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, ONBOARDING_DEFAULTS);
-  const value = useMemo(() => ({ state, dispatch }), [state]);
 
   // Hydrate from sessionStorage post-mount only — server can't read
   // sessionStorage, so reading in lazy init causes a hydration mismatch.
@@ -59,7 +57,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   return (
-    <OnboardingContext.Provider value={value}>
+    <OnboardingContext.Provider value={{ state, dispatch }}>
       {children}
     </OnboardingContext.Provider>
   );

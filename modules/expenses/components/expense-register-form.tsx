@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowRight } from "reicon-react";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
@@ -14,8 +14,8 @@ import {
 } from "../lib/envelopeSuggestion";
 import { formatKeypadDisplay } from "../lib/keypad";
 import {
-  createExpenseRegisterSchema,
   type ExpenseRegisterFormValues,
+  expenseRegisterSchema,
 } from "../schemas";
 import type {
   ExpenseFlowStep,
@@ -84,7 +84,6 @@ function ExpenseRegisterFormFields({
   onSuccess,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const formSchema = useMemo(() => createExpenseRegisterSchema(), []);
 
   const form = useForm({
     defaultValues: {
@@ -93,8 +92,8 @@ function ExpenseRegisterFormFields({
       description: "",
     } satisfies ExpenseRegisterFormValues,
     validators: {
-      onChange: formSchema,
-      onSubmit: formSchema,
+      onChange: expenseRegisterSchema,
+      onSubmit: expenseRegisterSchema,
     },
     onSubmit: async ({ value }) => {
       setServerError(null);

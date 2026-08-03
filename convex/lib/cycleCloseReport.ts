@@ -3,6 +3,10 @@ import { ENVELOPE_LABELS } from "../../shared/constants/envelopes";
 const LIMA_TIMEZONE = "America/Lima";
 const MS_PER_DAY = 86_400_000;
 const JUST_CLOSED_MAX_DAYS = 7;
+const CYCLE_MONTH_FORMATTER = new Intl.DateTimeFormat("es-PE", {
+  timeZone: LIMA_TIMEZONE,
+  month: "long",
+});
 
 const ENVELOPE_ORDER = ["needs", "wants", "savings"] as const;
 
@@ -40,10 +44,7 @@ export type CycleCloseReportInput = {
 };
 
 export function buildCycleLabel(cycleStartDate: number): string {
-  const month = new Intl.DateTimeFormat("es-PE", {
-    timeZone: LIMA_TIMEZONE,
-    month: "long",
-  }).format(new Date(cycleStartDate));
+  const month = CYCLE_MONTH_FORMATTER.format(new Date(cycleStartDate));
   return month.charAt(0).toUpperCase() + month.slice(1);
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
@@ -41,10 +41,10 @@ export function CycleChangeWizard() {
   const [paydays, setPaydays] = useState<number[]>([]);
   const [cycleDurationDays, setCycleDurationDays] = useState<15 | 30>(30);
   const [pending, setPending] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
-    if (!profile || hydrated) return;
+    if (!profile || hydratedRef.current) return;
     if (
       profile.payFrequency === "monthly" ||
       profile.payFrequency === "biweekly"
@@ -55,8 +55,8 @@ export function CycleChangeWizard() {
     if (profile.cycleDurationDays === 15 || profile.cycleDurationDays === 30) {
       setCycleDurationDays(profile.cycleDurationDays);
     }
-    setHydrated(true);
-  }, [profile, hydrated]);
+    hydratedRef.current = true;
+  }, [profile]);
 
   if (!profile) {
     return (

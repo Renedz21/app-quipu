@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useReducer } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { DEFAULT_CURRENCY } from "@/core/constants";
@@ -17,6 +17,46 @@ type IncomeRegisterFlowProps = {
   currencyCode: string;
 };
 
+type IncomeRegisterFlowState = {
+  step: IncomeFlowStep;
+  result: IncomeRegisterResult | undefined;
+  successVariant: "habitual" | "extraordinary";
+  showMoveSurplusLink: boolean;
+  successDistributionPolicy: DistributionPolicy | undefined;
+};
+
+type IncomeRegisterFlowAction = {
+  type: "success";
+  result: IncomeRegisterResult;
+  incomeKind: "habitual" | "extraordinary";
+  distributionPolicy: DistributionPolicy | undefined;
+};
+
+const initialIncomeRegisterFlowState: IncomeRegisterFlowState = {
+  step: "form",
+  result: undefined,
+  successVariant: "habitual",
+  showMoveSurplusLink: false,
+  successDistributionPolicy: undefined,
+};
+
+function incomeRegisterFlowReducer(
+  state: IncomeRegisterFlowState,
+  action: IncomeRegisterFlowAction,
+): IncomeRegisterFlowState {
+  switch (action.type) {
+    case "success":
+      return {
+        ...state,
+        step: "success",
+        result: action.result,
+        successVariant: action.incomeKind,
+        showMoveSurplusLink: action.incomeKind === "extraordinary",
+        successDistributionPolicy: action.distributionPolicy,
+      };
+  }
+}
+
 export function IncomeRegisterFlow({
   profile,
   currencyCode: serverCurrencyCode,
@@ -24,15 +64,16 @@ export function IncomeRegisterFlow({
   const summary = useDashboardSummary();
   const createIncomeEvent = useMutation(api.incomeEvents.createIncomeEvent);
 
-  const [step, setStep] = useState<IncomeFlowStep>("form");
-  const [result, setResult] = useState<IncomeRegisterResult | undefined>();
-  const [successVariant, setSuccessVariant] = useState<
-    "habitual" | "extraordinary"
-  >("habitual");
-  const [showMoveSurplusLink, setShowMoveSurplusLink] = useState(false);
-  const [successDistributionPolicy, setSuccessDistributionPolicy] = useState<
-    DistributionPolicy | undefined
-  >();
+  const [
+    {
+      step,
+      result,
+      successVariant,
+      showMoveSurplusLink,
+      successDistributionPolicy,
+    },
+    dispatch,
+  ] = useReducer(incomeRegisterFlowReducer, initialIncomeRegisterFlowState);
 
   const currencyCode =
     summary?.profile.currencyCode ??
@@ -62,11 +103,12 @@ export function IncomeRegisterFlow({
       summary={summary}
       createIncomeEvent={createIncomeEvent}
       onSuccess={(response, options) => {
-        setSuccessVariant(options?.incomeKind ?? "habitual");
-        setShowMoveSurplusLink(options?.incomeKind === "extraordinary");
-        setSuccessDistributionPolicy(options?.distributionPolicy);
-        setResult(response);
-        setStep("success");
+        dispatch({
+          type: "success",
+          result: response,
+          incomeKind: options?.incomeKind ?? "habitual",
+          distributionPolicy: options?.distributionPolicy,
+        });
       }}
     />
   );

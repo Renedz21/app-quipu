@@ -7,40 +7,68 @@
 
 import { LIMA_TIMEZONE } from "../constants/timezone";
 
+const LIMA_DAY_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: LIMA_TIMEZONE,
+  day: "numeric",
+});
+const LIMA_MONTH_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: LIMA_TIMEZONE,
+  month: "numeric",
+});
+const LIMA_YEAR_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: LIMA_TIMEZONE,
+  year: "numeric",
+});
+const LIMA_DATE_FORMATTER_CACHE = new Map<string, Intl.DateTimeFormat>();
+const LIMA_DATE_TIME_FORMATTER_CACHE = new Map<string, Intl.DateTimeFormat>();
+
+function getLimaDateFormatter(locale: string): Intl.DateTimeFormat {
+  const cached = LIMA_DATE_FORMATTER_CACHE.get(locale);
+  if (cached) return cached;
+  const formatter = new Intl.DateTimeFormat(locale, {
+    timeZone: LIMA_TIMEZONE,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  LIMA_DATE_FORMATTER_CACHE.set(locale, formatter);
+  return formatter;
+}
+
+function getLimaDateTimeFormatter(locale: string): Intl.DateTimeFormat {
+  const cached = LIMA_DATE_TIME_FORMATTER_CACHE.get(locale);
+  if (cached) return cached;
+  const formatter = new Intl.DateTimeFormat(locale, {
+    timeZone: LIMA_TIMEZONE,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  LIMA_DATE_TIME_FORMATTER_CACHE.set(locale, formatter);
+  return formatter;
+}
+
 /**
  * Día del mes en timezone Lima (1-31).
  */
 export function getLimaDay(timestamp: number = Date.now()): number {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: LIMA_TIMEZONE,
-      day: "numeric",
-    }).format(new Date(timestamp)),
-  );
+  return Number(LIMA_DAY_FORMATTER.format(new Date(timestamp)));
 }
 
 /**
  * Mes en timezone Lima (1-12).
  */
 export function getLimaMonth(timestamp: number = Date.now()): number {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: LIMA_TIMEZONE,
-      month: "numeric",
-    }).format(new Date(timestamp)),
-  );
+  return Number(LIMA_MONTH_FORMATTER.format(new Date(timestamp)));
 }
 
 /**
  * Año en timezone Lima.
  */
 export function getLimaYear(timestamp: number = Date.now()): number {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: LIMA_TIMEZONE,
-      year: "numeric",
-    }).format(new Date(timestamp)),
-  );
+  return Number(LIMA_YEAR_FORMATTER.format(new Date(timestamp)));
 }
 
 /**
@@ -50,12 +78,7 @@ export function getLimaYear(timestamp: number = Date.now()): number {
  * formatLimaDate(1700000000000) // "14 nov 2024"
  */
 export function formatLimaDate(timestamp: number, locale = "es-PE"): string {
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(timestamp));
+  return getLimaDateFormatter(locale).format(new Date(timestamp));
 }
 
 /**
@@ -68,14 +91,7 @@ export function formatLimaDateTime(
   timestamp: number,
   locale = "es-PE",
 ): string {
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(timestamp));
+  return getLimaDateTimeFormatter(locale).format(new Date(timestamp));
 }
 
 /**

@@ -18,6 +18,8 @@ type Props = {
   progress?: ReactNode;
 };
 
+const FLOW_PROGRESS_STEPS = ["amount", "envelope", "success"] as const;
+
 export function ExpenseRegisterShell({
   open,
   onOpenChange,
@@ -65,12 +67,11 @@ export function ExpenseRegisterShell({
 }
 
 function FlowProgress({ step }: { step: "amount" | "envelope" | "success" }) {
-  const steps = ["amount", "envelope", "success"] as const;
-  const activeIndex = steps.indexOf(step);
+  const activeIndex = FLOW_PROGRESS_STEPS.indexOf(step);
 
   return (
     <div className="flex items-center gap-1" aria-hidden>
-      {steps.map((item, index) => (
+      {FLOW_PROGRESS_STEPS.map((item, index) => (
         <span
           key={item}
           className={cn(

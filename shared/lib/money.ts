@@ -9,6 +9,41 @@
 
 import { DEFAULT_CURRENCY } from "@/core/constants";
 
+const CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
+const COMPACT_CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
+
+function getCentsFormatter(options: {
+  currency: string;
+  locale: string;
+  showSymbol: boolean;
+  minimumFractionDigits: number;
+}): Intl.NumberFormat {
+  const key = `${options.locale}:${options.currency}:${options.showSymbol}:${options.minimumFractionDigits}`;
+  const cached = CENTS_FORMATTER_CACHE.get(key);
+  if (cached) return cached;
+  const formatter = new Intl.NumberFormat(options.locale, {
+    style: options.showSymbol ? "currency" : "decimal",
+    currency: options.currency,
+    minimumFractionDigits: options.minimumFractionDigits,
+    maximumFractionDigits: 2,
+  });
+  CENTS_FORMATTER_CACHE.set(key, formatter);
+  return formatter;
+}
+
+function getCompactCentsFormatter(locale: string): Intl.NumberFormat {
+  const cached = COMPACT_CENTS_FORMATTER_CACHE.get(locale);
+  if (cached) return cached;
+  const formatter = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: DEFAULT_CURRENCY.code,
+    notation: "compact",
+    maximumFractionDigits: 1,
+  });
+  COMPACT_CENTS_FORMATTER_CACHE.set(locale, formatter);
+  return formatter;
+}
+
 /**
  * Tipo monetario. Siempre céntimos enteros (sin coma flotante).
  */
@@ -37,11 +72,11 @@ export function formatCents(
     minimumFractionDigits = 2,
   } = options ?? {};
 
-  const formatter = new Intl.NumberFormat(locale, {
-    style: showSymbol ? "currency" : "decimal",
+  const formatter = getCentsFormatter({
     currency,
+    locale,
+    showSymbol,
     minimumFractionDigits,
-    maximumFractionDigits: 2,
   });
 
   return formatter.format(cents / 100);
@@ -55,13 +90,7 @@ export function formatCents(
  * formatCentsCompact(150000) // "S/ 1.5K"
  */
 export function formatCentsCompact(cents: Cents, locale = "es-PE"): string {
-  const formatter = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: DEFAULT_CURRENCY.code,
-    notation: "compact",
-    maximumFractionDigits: 1,
-  });
-  return formatter.format(cents / 100);
+  return getCompactCentsFormatter(locale).format(cents / 100);
 }
 
 /**

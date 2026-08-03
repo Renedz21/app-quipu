@@ -11,6 +11,11 @@ import {
 import type { ExpenseEnvelopeType } from "../lib/envelopeSuggestion";
 import { formatKeypadDisplay } from "../lib/keypad";
 
+const EXPENSE_ENVELOPES = [
+  "needs",
+  "wants",
+] as const satisfies readonly ExpenseEnvelopeType[];
+
 type Props = {
   amountCents: number;
   currencySymbol: string;
@@ -32,8 +37,6 @@ export function ExpenseEnvelopeStep({
   onSelectEnvelope,
   onConfirm,
 }: Props) {
-  const envelopes: ExpenseEnvelopeType[] = ["needs", "wants"];
-
   return (
     <div className="space-y-4">
       <div className="text-center">
@@ -47,7 +50,7 @@ export function ExpenseEnvelopeStep({
       </h3>
 
       <div className="space-y-2">
-        {envelopes.map((type) => {
+        {EXPENSE_ENVELOPES.map((type) => {
           const styles = ENVELOPE_EXPENSE_STYLES[type];
           const isSuggested = type === suggestedEnvelope;
           const isSelected = type === selectedEnvelope;

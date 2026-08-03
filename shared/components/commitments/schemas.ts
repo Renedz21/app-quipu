@@ -83,9 +83,3 @@ export function toCreateFixedCommitmentPayload(value: AddCommitmentFormValues) {
     dueDay,
   };
 }
-
-/** @deprecated Use toCreateFixedCommitmentPayload */
-export const toCreateFixedCommitmentArgs = toCreateFixedCommitmentPayload;
-
-/** @deprecated Use parseAmountInputToCents */
-export const parseCommitmentAmountInput = parseAmountInputToCents;

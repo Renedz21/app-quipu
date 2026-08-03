@@ -15,7 +15,3 @@ export function useCycleSavingsBreakdown() {
 export type MoveSurplusContext = NonNullable<
   FunctionReturnType<typeof api.savings.getMoveSurplusContext>
 >;
-
-export function useMoveSurplusContext() {
-  return useQuery(api.savings.getMoveSurplusContext, {});
-}

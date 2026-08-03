@@ -45,8 +45,6 @@ export function createNewGoalSchema() {
 
 export type NewGoalFormValues = z.infer<ReturnType<typeof createNewGoalSchema>>;
 
-export const newGoalSchema = createNewGoalSchema();
-
 export function newGoalFormToMutationArgs(values: NewGoalFormValues) {
   return {
     label: values.label.trim(),
@@ -61,8 +59,6 @@ export const surplusFromEnvelopeValues = [
 ] as const;
 
 export type SurplusFromEnvelope = (typeof surplusFromEnvelopeValues)[number];
-
-export const moveSurplusFromSources = surplusFromEnvelopeValues;
 
 export const moveSurplusInputSchema = z.object({
   fromEnvelope: z.enum(surplusFromEnvelopeValues),

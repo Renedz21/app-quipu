@@ -114,5 +114,3 @@ export function createIncomeRegisterSchema(now: number = Date.now()) {
 export type IncomeRegisterFormValues = z.infer<
   ReturnType<typeof createIncomeRegisterSchema>
 >;
-
-export const incomeRegisterSchema = createIncomeRegisterSchema();

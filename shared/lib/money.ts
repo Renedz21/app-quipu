@@ -10,7 +10,6 @@
 import { DEFAULT_CURRENCY } from "@/core/constants";
 
 const CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
-const COMPACT_CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
 
 function getCentsFormatter(options: {
   currency: string;
@@ -28,19 +27,6 @@ function getCentsFormatter(options: {
     maximumFractionDigits: 2,
   });
   CENTS_FORMATTER_CACHE.set(key, formatter);
-  return formatter;
-}
-
-function getCompactCentsFormatter(locale: string): Intl.NumberFormat {
-  const cached = COMPACT_CENTS_FORMATTER_CACHE.get(locale);
-  if (cached) return cached;
-  const formatter = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: DEFAULT_CURRENCY.code,
-    notation: "compact",
-    maximumFractionDigits: 1,
-  });
-  COMPACT_CENTS_FORMATTER_CACHE.set(locale, formatter);
   return formatter;
 }
 
@@ -80,17 +66,6 @@ export function formatCents(
   });
 
   return formatter.format(cents / 100);
-}
-
-/**
- * Formatea céntimos a un formato compacto para dashboards/resúmenes.
- *
- * @example
- * formatCentsCompact(1500000) // "S/ 15K"
- * formatCentsCompact(150000) // "S/ 1.5K"
- */
-export function formatCentsCompact(cents: Cents, locale = "es-PE"): string {
-  return getCompactCentsFormatter(locale).format(cents / 100);
 }
 
 /**
@@ -145,21 +120,4 @@ export function parseToCents(input: string): Cents | null {
   if (!Number.isFinite(num) || num < 0) return null;
 
   return Math.round(num * 100);
-}
-
-/**
- * Valida que un valor sea céntimos válidos (entero no negativo).
- */
-export function isValidCents(value: unknown): value is Cents {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-/**
- * Suma un array de céntimos. Lanza si hay valor inválido.
- */
-export function sumCents(values: Cents[]): Cents {
-  return values.reduce((acc, v) => {
-    if (!isValidCents(v)) throw new Error(`Valor inválido: ${v}`);
-    return acc + v;
-  }, 0);
 }

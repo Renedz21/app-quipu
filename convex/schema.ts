@@ -428,7 +428,9 @@ export const appTables = {
       v.literal("actioned"),
     ),
     createdAt: v.number(),
-  }).index("by_status", ["status", "createdAt"]),
+  })
+    .index("by_status", ["status", "createdAt"])
+    .index("by_profileId", ["profileId"]),
 };
 
 const schema = defineSchema(appTables);

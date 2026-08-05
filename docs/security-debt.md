@@ -49,7 +49,11 @@ configurar `RESEND_API_KEY` + `RESEND_FROM` en prod (owner).
 - Better Auth `deleteUser.enabled` + UI «Eliminar cuenta» en Ajustes
   (`modules/settings/components/settings-delete-account-item.tsx`).
 - Trigger `onDelete` en `convex/auth.ts` → `internal.profiles.deleteAllDataForProfile`
-  (cascada por `profileId` en todas las tablas del dominio).
+  (cascada por `profileId` / ciclo en tablas del dominio, incl. ledger
+  `commitmentReservations`, `incomeAllocationLines`, `internalTransfers` y
+  `accountReviewFlags`).
+- UI de borrado: si Better Auth responde `SESSION_EXPIRED` (sesión > freshAge
+  24h sin contraseña), reauth con passkey + campo de contraseña opcional.
 - Exportación JSON portabilidad: `profiles.exportMyData` + botón en Ajustes
   (Ley 29733).
 

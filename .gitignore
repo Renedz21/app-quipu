@@ -47,6 +47,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# tsc emit accidental (solo _generated es fuente de verdad en convex)
+convex/**/*.d.ts
+!convex/_generated/**
+!convex/**/_generated/**
+shared/**/*.d.ts
 
 # AI skills
 .agents/*
@@ -59,3 +64,9 @@ next-env.d.ts
 
 # Convex prod snapshots (datos reales; no commitear)
 /backups/
+
+# Sync local de tipos Convex → app móvil (no commitear)
+/mobile-types-out/
+/scripts/sync-mobile-types/
+/function_spec_*.json
+/types.ts

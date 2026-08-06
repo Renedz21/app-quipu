@@ -1,5 +1,5 @@
 import { components, internal } from "./_generated/api";
-import { internalAction } from "./_generated/server";
+import { internalAction, type ActionCtx } from "./_generated/server";
 
 const AUTH_MODELS = [
   "user",
@@ -9,6 +9,29 @@ const AUTH_MODELS = [
   "jwks",
   "passkey",
 ] as const;
+
+async function deleteAuthModel(
+  ctx: ActionCtx,
+  model: (typeof AUTH_MODELS)[number],
+): Promise<number> {
+  const result = await ctx.runMutation(
+    components.betterAuth.adapter.deleteMany,
+    {
+      input: { model },
+      paginationOpts: { numItems: 999999, cursor: null },
+    },
+  );
+  return Array.isArray(result) ? result.length : 0;
+}
+
+/** Dev only: borra JWKS cuando BETTER_AUTH_SECRET cambió y el descifrado falla. */
+export const resetJwks = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{ deleted: number }> => {
+    const deleted = await deleteAuthModel(ctx, "jwks");
+    return { deleted };
+  },
+});
 
 // Solo para testing contra la BD de desarrollo. internalAction: jamás
 // invocable desde clientes públicos; se ejecuta con `npx convex run` o dashboard.
@@ -24,14 +47,7 @@ export const resetAll = internalAction({
     const authCounts: Record<string, number> = {};
 
     for (const model of AUTH_MODELS) {
-      const result = await ctx.runMutation(
-        components.betterAuth.adapter.deleteMany,
-        {
-          input: { model },
-          paginationOpts: { numItems: 999999, cursor: null },
-        },
-      );
-      authCounts[model] = Array.isArray(result) ? result.length : 0;
+      authCounts[model] = await deleteAuthModel(ctx, model);
     }
 
     return { deleted: { ...appDeleted, ...authCounts } };

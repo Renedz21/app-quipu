@@ -1,6 +1,7 @@
 import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { handler } from "@/auth/auth-server";
+import { isTurnstileEnabled } from "@/lib/turnstile/config";
 import {
   authPathRequiresTurnstile,
   verifyTurnstileToken,
@@ -11,14 +12,18 @@ async function guardAuthPost(
 ): Promise<NextResponse | null> {
   if (request.method !== "POST") return null;
 
-  const botCheck = await checkBotId();
+  const botCheck = await checkBotId({
+    developmentOptions: {
+      bypass: "GOOD-BOT",
+    },
+  });
   if (botCheck.isBot) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
   const pathname = request.nextUrl.pathname;
   if (!authPathRequiresTurnstile(pathname)) return null;
-  if (!process.env.TURNSTILE_SECRET_KEY) return null;
+  if (!isTurnstileEnabled() || !process.env.TURNSTILE_SECRET_KEY) return null;
 
   const token = request.headers.get("x-cf-turnstile-token");
   if (!token) {

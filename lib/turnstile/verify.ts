@@ -1,3 +1,5 @@
+import { isTurnstileEnabled } from "./config";
+
 const TURNSTILE_VERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
@@ -10,11 +12,10 @@ export async function verifyTurnstileToken(
   token: string,
   remoteIp?: string | null,
 ): Promise<boolean> {
+  if (!isTurnstileEnabled()) return true;
+
   const secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) {
-    // Dev/local sin secret: no bloquear el flujo.
-    return true;
-  }
+  if (!secret) return true;
 
   const body = new URLSearchParams({
     secret,

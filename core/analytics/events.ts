@@ -372,6 +372,15 @@ export type FinancialInsightViewedProperties = z.infer<
   typeof FinancialInsightViewedProperties
 >;
 
+const FeedbackSubmittedProperties = z.object({
+  category: z.enum(["problem", "improvement", "question"]),
+  message_length: z.number().int().positive(),
+  has_page_path: z.boolean(),
+});
+export type FeedbackSubmittedProperties = z.infer<
+  typeof FeedbackSubmittedProperties
+>;
+
 // ─── Constantes de eventos ─────────────────────────────────────────────────
 
 export const AnalyticsEvents = {
@@ -430,6 +439,9 @@ export const AnalyticsEvents = {
   WEEKLY_SUMMARY_VIEWED: "weekly_summary_viewed",
   MONTHLY_SUMMARY_VIEWED: "monthly_summary_viewed",
   FINANCIAL_INSIGHT_VIEWED: "financial_insight_viewed",
+
+  // Feedback
+  FEEDBACK_SUBMITTED: "feedback_submitted",
 } as const;
 
 export type AnalyticsEvent =
@@ -489,6 +501,8 @@ export type AnalyticsEventPayloads = {
   [AnalyticsEvents.WEEKLY_SUMMARY_VIEWED]: SummaryViewedProperties;
   [AnalyticsEvents.MONTHLY_SUMMARY_VIEWED]: SummaryViewedProperties;
   [AnalyticsEvents.FINANCIAL_INSIGHT_VIEWED]: FinancialInsightViewedProperties;
+
+  [AnalyticsEvents.FEEDBACK_SUBMITTED]: FeedbackSubmittedProperties;
 };
 
 // Helper de inferencia: dado un evento, devuelve su payload.

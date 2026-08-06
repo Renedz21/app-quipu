@@ -428,9 +428,36 @@ export const appTables = {
       v.literal("actioned"),
     ),
     createdAt: v.number(),
+  }).index("by_status", ["status", "createdAt"]),
+
+  feedbackSubmissions: defineTable({
+    userId: v.string(),
+    profileId: v.id("profiles"),
+    category: v.union(
+      v.literal("problem"),
+      v.literal("improvement"),
+      v.literal("question"),
+    ),
+    message: v.string(),
+    userEmail: v.optional(v.string()),
+    userName: v.string(),
+    plan: v.union(v.literal("free"), v.literal("premium")),
+    pagePath: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    createdAt: v.number(),
+    teamEmailStatus: v.union(
+      v.literal("sent"),
+      v.literal("failed"),
+      v.literal("skipped"),
+    ),
+    userEmailStatus: v.union(
+      v.literal("sent"),
+      v.literal("failed"),
+      v.literal("skipped"),
+    ),
   })
-    .index("by_status", ["status", "createdAt"])
-    .index("by_profileId", ["profileId"]),
+    .index("by_userId", ["userId"])
+    .index("by_profileId_createdAt", ["profileId", "createdAt"]),
 };
 
 const schema = defineSchema(appTables);

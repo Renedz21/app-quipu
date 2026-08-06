@@ -1,3 +1,5 @@
+import { isTurnstileEnabled } from "@/lib/turnstile/config";
+
 export function authFetchOptions(turnstileToken: string | null) {
   if (!turnstileToken) return {};
   return {
@@ -11,6 +13,6 @@ export function requireTurnstileToken(
   turnstileToken: string | null,
   siteKey?: string,
 ): boolean {
-  if (!siteKey) return true;
+  if (!isTurnstileEnabled() || !siteKey) return true;
   return Boolean(turnstileToken);
 }

@@ -8,6 +8,7 @@ export const outboundEmailSchema = z.object({
   subject: z.string().min(1),
   html: z.string().min(1),
   text: z.string().optional(),
+  idempotencyKey: z.string().min(1).max(256).optional(),
 });
 
 export type OutboundEmail = z.infer<typeof outboundEmailSchema>;
@@ -17,7 +18,8 @@ export type OutboundEmail = z.infer<typeof outboundEmailSchema>;
  * Sin RESEND_API_KEY: warning y no-op (dev local).
  */
 export async function sendOutboundEmail(params: OutboundEmail): Promise<void> {
-  const { to, subject, html, text } = outboundEmailSchema.parse(params);
+  const { to, subject, html, text, idempotencyKey } =
+    outboundEmailSchema.parse(params);
   assertEmailAllowed(to);
 
   if (isDevelopmentDeployment()) {
@@ -51,13 +53,16 @@ export async function sendOutboundEmail(params: OutboundEmail): Promise<void> {
   const fromAddress = from ?? "Quipu <onboarding@resend.dev>";
   const resend = new Resend(apiKey);
 
-  const { error } = await resend.emails.send({
-    from: fromAddress,
-    to,
-    subject,
-    html,
-    text,
-  });
+  const { error } = await resend.emails.send(
+    {
+      from: fromAddress,
+      to,
+      subject,
+      html,
+      text,
+    },
+    idempotencyKey ? { idempotencyKey } : undefined,
+  );
 
   if (error) {
     console.error("Resend error:", error);

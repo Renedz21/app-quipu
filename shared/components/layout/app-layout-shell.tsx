@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { ExpenseRegisterProvider } from "@/modules/expenses/components/expense-register-provider";
 import { AppBottomNav } from "./app-bottom-nav";
+import { AppFeedbackLink } from "./app-feedback-link";
 import { AppSidebar } from "./app-sidebar";
 
 type Props = {
@@ -38,7 +39,10 @@ export function AppLayoutShell({ children }: Props) {
             {children}
           </main>
           {!isImmersive && (
-            <AppBottomNav className="fixed inset-x-0 bottom-0 z-40 md:hidden" />
+            <>
+              <AppFeedbackLink variant="mobile" />
+              <AppBottomNav className="fixed inset-x-0 bottom-0 z-40 md:hidden" />
+            </>
           )}
         </div>
       </div>

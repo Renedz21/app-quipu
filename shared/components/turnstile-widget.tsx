@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { clientEnv } from "@/core/env.client";
+import { isTurnstileEnabled } from "@/lib/turnstile/config";
 
 declare global {
   interface Window {
@@ -68,7 +69,7 @@ export function TurnstileWidget({
     };
   }, [onTokenChange, scriptReady]);
 
-  if (!siteKey) return null;
+  if (!isTurnstileEnabled() || !siteKey) return null;
 
   return (
     <>

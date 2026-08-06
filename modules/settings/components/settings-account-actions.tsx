@@ -1,10 +1,15 @@
+"use client";
+
 import { cn } from "@/shared/lib/utils";
 import {
+  SETTINGS_ACCOUNT_ACTIONS_LABEL,
   SETTINGS_DANGER_ZONE_HINT,
   SETTINGS_DANGER_ZONE_LABEL,
 } from "../constants";
-import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
+import { useExportMyData } from "../queries";
+import { downloadProfileExport } from "../lib/downloadProfileExport";
 import { SettingsExportDataItem } from "./settings-export-data-item";
+import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
 import { SettingsSignOutItem } from "./settings-sign-out-item";
 
 type Props = {
@@ -12,25 +17,30 @@ type Props = {
 };
 
 /**
- * Pie de cuenta: acciones habituales apiladas; eliminar cuenta
- * en zona sensible aparte (nunca en la misma fila que cerrar sesión).
+ * Pie de cuenta: lista alineada al canon (filas en card), no botones apilados.
+ * Eliminar cuenta en zona sensible aparte.
  */
 export function SettingsAccountActions({ className }: Props) {
+  const fetchExport = useExportMyData();
+
   return (
-    <footer
-      className={cn(
-        "mt-6 border-t border-line-soft pt-5 md:mt-8 md:pt-6",
-        className,
-      )}
-    >
-      <div className="flex max-w-md flex-col items-stretch gap-2">
-        <SettingsExportDataItem className="w-full" />
-        <SettingsSignOutItem className="w-full" />
+    <footer className={cn("mt-8 md:mt-10", className)}>
+      <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint md:text-[10px]">
+        {SETTINGS_ACCOUNT_ACTIONS_LABEL}
+      </p>
+
+      <div className="rounded-[14px] border border-line bg-card px-4 py-0.5">
+        <div className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5">
+          <SettingsExportDataItem
+            onExport={() => downloadProfileExport(fetchExport)}
+          />
+        </div>
+        <SettingsSignOutItem />
       </div>
 
       <section
         aria-labelledby="settings-danger-zone"
-        className="mt-8 max-w-md border-t border-line-soft pt-5 md:mt-10 md:pt-6"
+        className="mt-8 border-t border-line-soft pt-6 md:mt-10 md:pt-8"
       >
         <h2
           id="settings-danger-zone"
@@ -38,10 +48,12 @@ export function SettingsAccountActions({ className }: Props) {
         >
           {SETTINGS_DANGER_ZONE_LABEL}
         </h2>
-        <p className="mb-3 text-[12.5px] text-mute-subtle">
+        <p className="mb-3 max-w-xl text-[12.5px] text-mute-subtle">
           {SETTINGS_DANGER_ZONE_HINT}
         </p>
-        <SettingsDeleteAccountItem className="w-full" />
+        <div className="max-w-sm">
+          <SettingsDeleteAccountItem className="w-full" />
+        </div>
       </section>
     </footer>
   );

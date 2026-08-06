@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authClient } from "@/auth/auth-client";
+import { usePasskeySupport } from "@/modules/auth/hooks/use-passkey-support";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,15 +13,19 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import {
   SETTINGS_DELETE_ACCOUNT,
   SETTINGS_DELETE_ACCOUNT_BODY,
   SETTINGS_DELETE_ACCOUNT_CANCEL,
   SETTINGS_DELETE_ACCOUNT_CONFIRM,
   SETTINGS_DELETE_ACCOUNT_ERROR,
+  SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL,
+  SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER,
   SETTINGS_DELETE_ACCOUNT_TITLE,
   SETTINGS_DELETE_ACCOUNT_WORKING,
 } from "../constants";
+import { deleteAccount } from "../lib/delete-account";
 import { SettingsAccountActionButton } from "./settings-account-action-button";
 
 type Props = {
@@ -33,20 +37,40 @@ type Props = {
  * terracota, salida siempre visible ("No, volver") y acción destructiva
  * deliberada. El borrado en cascada lo ejecuta el trigger onDelete del
  * backend (convex/auth.ts → profiles.deleteAllDataForProfile).
+ *
+ * Better Auth exige sesión fresh (<24h) o contraseña. Si la sesión es vieja
+ * (común con passkey), reautenticamos con passkey y reintentamos.
  */
 export function SettingsDeleteAccountItem({ className }: Props) {
   const router = useRouter();
+  const passkeySupport = usePasskeySupport();
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const resetLocalState = () => {
+    setPassword("");
+    setErrorMessage(null);
+    setIsDeleting(false);
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) resetLocalState();
+  };
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    setHasError(false);
-    const result = await authClient.deleteUser();
-    if (result.error) {
-      setHasError(true);
+    setErrorMessage(null);
+    const result = await deleteAccount({
+      password,
+      canUsePasskey: passkeySupport.webauthn,
+    }).finally(() => {
       setIsDeleting(false);
+    });
+    if (!result.ok) {
+      setErrorMessage(result.message || SETTINGS_DELETE_ACCOUNT_ERROR);
       return;
     }
     router.push("/");
@@ -63,7 +87,7 @@ export function SettingsDeleteAccountItem({ className }: Props) {
         {SETTINGS_DELETE_ACCOUNT}
       </SettingsAccountActionButton>
 
-      <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialog open={open} onOpenChange={handleOpenChange}>
         <AlertDialogContent className="rounded-[22px] border-t-4 border-t-danger">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-serif">
@@ -73,12 +97,30 @@ export function SettingsDeleteAccountItem({ className }: Props) {
               {SETTINGS_DELETE_ACCOUNT_BODY}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {hasError ? (
+          <div className="space-y-1.5">
+            <label
+              htmlFor="delete-account-password"
+              className="text-[12.5px] text-mute"
+            >
+              {SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL}
+            </label>
+            <Input
+              id="delete-account-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              disabled={isDeleting}
+              placeholder={SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER}
+              onChange={(event) => setPassword(event.target.value)}
+              className="h-11 rounded-[11px]"
+            />
+          </div>
+          {errorMessage ? (
             <p
               className="text-center text-[12.5px] text-danger-ink"
               role="alert"
             >
-              {SETTINGS_DELETE_ACCOUNT_ERROR}
+              {errorMessage}
             </p>
           ) : null}
           <AlertDialogFooter>

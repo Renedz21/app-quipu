@@ -1,9 +1,5 @@
-import type { Doc } from "@/convex/_generated/dataModel";
-import { MODEL_DISPLAY_LABELS } from "@/modules/onboarding/constants";
 import {
   SETTINGS_PLAN_FREE_BODY,
-  SETTINGS_PLAN_PLUS_PRICE,
-  SETTINGS_PLAN_PLUS_PRICE_HINT,
   SETTINGS_PLAN_RENEWAL_AUTOMATIC,
 } from "../constants";
 import type { SettingsOverviewQueryResult } from "../queries";
@@ -57,51 +53,5 @@ export function mapConvexSettingsOverview(
     })),
     sessionsApiReady: data.security.sessions?.apiReady ?? false,
     activeSessionCount: data.security.sessions?.count ?? null,
-  };
-}
-
-/**
- * Fallback when Convex overview is unavailable (tests / offline).
- */
-export function buildSettingsOverviewFromProfile(
-  profile: Doc<"profiles">,
-  account?: { email?: string | null },
-): SettingsOverview {
-  const tags: string[] = [];
-  if (profile.variableIncomeSources?.length) {
-    tags.push(...profile.variableIncomeSources.slice(0, 2));
-  }
-  tags.push(
-    `Perfil ${MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel}`,
-  );
-
-  const isPremium = profile.plan === "premium";
-
-  return {
-    profile: {
-      name: profile.name,
-      email: account?.email ?? null,
-      country: profile.country,
-      incomeModelLabel:
-        MODEL_DISPLAY_LABELS[profile.incomeModel] ?? profile.incomeModel,
-      tags,
-      plan: profile.plan,
-    },
-    subscription: {
-      plan: profile.plan,
-      status: isPremium ? "active" : "free",
-      priceDisplay: isPremium
-        ? SETTINGS_PLAN_PLUS_PRICE
-        : SETTINGS_PLAN_PLUS_PRICE_HINT,
-      renewalSummary: isPremium
-        ? SETTINGS_PLAN_RENEWAL_AUTOMATIC
-        : SETTINGS_PLAN_FREE_BODY,
-      paymentMethodSummary: null,
-      checkoutAvailable: false,
-      premiumProductId: null,
-    },
-    passkeys: [],
-    sessionsApiReady: false,
-    activeSessionCount: null,
   };
 }

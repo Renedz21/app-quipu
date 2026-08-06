@@ -1,6 +1,10 @@
 import type { DistributionPolicy } from "../../shared/lib/allocations";
 
 const LIMA_TIMEZONE = "America/Lima";
+const CYCLE_CONTEXT_MONTH_FORMATTER = new Intl.DateTimeFormat("es-PE", {
+  timeZone: LIMA_TIMEZONE,
+  month: "long",
+});
 
 export type CycleSavingsIncomeEvent = {
   incomeKind?: "habitual" | "extraordinary";
@@ -255,10 +259,7 @@ export function buildCycleSavingsContextLabel(
   cycleStartDate: number,
   events: ReadonlyArray<CycleSavingsIncomeEvent>,
 ): string {
-  const month = new Intl.DateTimeFormat("es-PE", {
-    timeZone: LIMA_TIMEZONE,
-    month: "long",
-  }).format(new Date(cycleStartDate));
+  const month = CYCLE_CONTEXT_MONTH_FORMATTER.format(new Date(cycleStartDate));
   const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
 
   const hasHabitual = events.some(

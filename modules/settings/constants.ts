@@ -1,18 +1,15 @@
 export const SETTINGS_PAGE_TITLE = "Ajustes";
 export const SETTINGS_PAGE_SUBTITLE = "Tu cuenta primero; tu sistema, al lado.";
 export const SETTINGS_MOBILE_ACCOUNT_LABEL = "Cuenta";
-export const SETTINGS_SYSTEM_SLOT_NOTE = "system-column";
 export const SETTINGS_SYSTEM_GO_LINK = "Tu sistema";
 export const SETTINGS_SYSTEM_PAGE_SUBTITLE =
   "Porcentajes, ciclo, compromisos y preferencias.";
-export const SETTINGS_SYSTEM_SHORT = "Sistema";
 export const SETTINGS_THEME_LABEL = "Tema";
 export const SETTINGS_THEME_LIGHT = "Claro";
 export const SETTINGS_THEME_DARK = "Oscuro";
 
 export const SETTINGS_PROFILE_LABEL = "Perfil";
 export const SETTINGS_EDIT_PROFILE = "Editar";
-export const SETTINGS_EDIT_PROFILE_HINT = "Editar nombre";
 
 export const SETTINGS_NAME_SAVE = "Guardar";
 export const SETTINGS_NAME_CANCEL = "Cancelar";
@@ -30,8 +27,6 @@ export {
 export const SETTINGS_PLAN_FREE_BODY =
   "Gratis, sin límite de registros manuales.";
 export const SETTINGS_PLAN_RENEWAL_AUTOMATIC = "Renovación automática";
-export const SETTINGS_PLAN_RENEWAL_PREFIX = "Próxima renovación";
-export const SETTINGS_PLAN_CANCELED_UNTIL = "Cancelado · activo hasta";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
 export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_PREPARING = "Preparando…";
@@ -84,10 +79,16 @@ export const SETTINGS_DELETE_ACCOUNT_CONFIRM = "Eliminar todo";
 export const SETTINGS_DELETE_ACCOUNT_WORKING = "Eliminando…";
 export const SETTINGS_DELETE_ACCOUNT_ERROR =
   "No pudimos eliminar tu cuenta. Intenta de nuevo.";
+export const SETTINGS_DELETE_ACCOUNT_ERROR_REAUTH =
+  "Por seguridad, confirma con passkey o escribe tu contraseña.";
+export const SETTINGS_DELETE_ACCOUNT_ERROR_PASSWORD =
+  "La contraseña no es correcta.";
+export const SETTINGS_DELETE_ACCOUNT_PASSWORD_LABEL =
+  "Contraseña (si usas una)";
+export const SETTINGS_DELETE_ACCOUNT_PASSWORD_PLACEHOLDER =
+  "Opcional si acabas de entrar";
 
 export const SETTINGS_SYSTEM_HEADING = "Tu sistema";
-export const SETTINGS_ACCOUNT_LABEL = "Cuenta";
-export const SETTINGS_SYSTEM_LABEL = "Sistema";
 
 export const SETTINGS_PERCENTAGES_LABEL = "Porcentajes";
 export const SETTINGS_PERCENTAGES_SUM_OK = "Suma 100%";
@@ -109,9 +110,6 @@ export const SETTINGS_CHANGE_CYCLE = "Cambiar ciclo";
 export const SETTINGS_CORRECT_CYCLE_LABEL = "Corregir distribución";
 export const SETTINGS_CORRECT_CYCLE_HINT =
   "Si registraste efectivo o reservas como gastable";
-export const SETTINGS_CYCLE_STUB_TITLE = "Cambiar ciclo";
-export const SETTINGS_CYCLE_STUB_BODY =
-  "Ajusta cuándo empieza tu ciclo. Los cambios aplican al próximo ciclo; el ciclo activo no se recalcula.";
 export const SETTINGS_CYCLE_WIZARD_STEP1_TITLE = "Tu ciclo hoy";
 export const SETTINGS_CYCLE_WIZARD_STEP1_BODY =
   "El ciclo que ya está en curso sigue igual hasta que se cierre. Lo que cambies aquí se usa cuando empiece el siguiente.";
@@ -121,8 +119,6 @@ export const SETTINGS_CYCLE_WIZARD_SAVED = "Calendario actualizado.";
 export const SETTINGS_CYCLE_WIZARD_BACK = "Atrás";
 export const SETTINGS_CYCLE_WIZARD_NEXT = "Continuar";
 
-export const SETTINGS_SESSIONS_REVOKE_CONFIRM =
-  "Se cerrará la sesión en todos los dispositivos, incluido este. Tendrás que volver a entrar.";
 export const SETTINGS_SESSIONS_REVOKE_SUCCESS = "Sesiones cerradas.";
 export const SETTINGS_SESSIONS_REVOKE_ERROR = "No pudimos cerrar las sesiones.";
 export const SETTINGS_SESSIONS_COUNT = (n: number) =>
@@ -130,7 +126,6 @@ export const SETTINGS_SESSIONS_COUNT = (n: number) =>
 
 export const SETTINGS_PREFERENCES_LABEL = "Preferencias";
 export const SETTINGS_EXTRAORDINARY_LABEL = "Automatizaciones";
-export const SETTINGS_EXTRAORDINARY_TAGLINE = "Decide una vez, repite siempre";
 export const SETTINGS_EXTRAORDINARY_DESCRIPTION =
   "Qué hace Quipu con cada ingreso extraordinario.";
 export const SETTINGS_EXTRAORDINARY_FOOTER =
@@ -162,18 +157,10 @@ export const SETTINGS_CYCLE_ALERTS_LABEL = "Alertas de ciclo";
 
 export const SETTINGS_COMMITMENTS_LABEL = "Compromisos fijos";
 export const SETTINGS_COMMITMENTS_TOTAL_SUFFIX = "/ ciclo";
-export const SETTINGS_ADD_COMMITMENT = "+ Agregar compromiso";
-export const SETTINGS_ADD_COMMITMENT_TITLE = "Nuevo compromiso";
-export const SETTINGS_COMMITMENT_NAME_LABEL = "Nombre";
-export const SETTINGS_COMMITMENT_AMOUNT_LABEL = "Monto (S/)";
-export const SETTINGS_COMMITMENT_DUE_LABEL = "Día del mes";
-export const SETTINGS_COMMITMENT_ENVELOPE_LABEL = "Sobre";
-export const SETTINGS_COMMITMENT_CREATED = "Compromiso agregado.";
 export const SETTINGS_COMMITMENTS_EMPTY =
   "Aún no tienes compromisos fijos en tu sistema.";
 
 export const SETTINGS_PROGRESS_LINK = "Tu progreso";
-export const SETTINGS_PROGRESS_HINT = "Racha, logros y recompensas";
 
 export const SETTINGS_ERROR_TITLE = "No pudimos cargar tus ajustes";
 export const SETTINGS_ERROR_BODY =

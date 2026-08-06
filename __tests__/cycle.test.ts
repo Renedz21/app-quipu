@@ -22,12 +22,22 @@ describe("formatCycle", () => {
 
   it("biweekly returns both days joined with y, sorted", () => {
     const result = formatCycle([1, 15], "biweekly");
-    expect(result).toEqual({ kind: "text", value: "1 y 15 jul" });
+    expect(result).toMatchObject({
+      kind: "text",
+      value: expect.stringMatching(
+        /^1 y 15 (ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)$/,
+      ),
+    });
   });
 
   it("biweekly sorts days ascending", () => {
     const result = formatCycle([30, 15], "biweekly");
-    expect(result).toEqual({ kind: "text", value: "15 y 30 jul" });
+    expect(result).toMatchObject({
+      kind: "text",
+      value: expect.stringMatching(
+        /^15 y 30 (ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)$/,
+      ),
+    });
   });
 
   it("biweekly with only one payday falls back to monthly", () => {

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 import { useUpdateNotificationPreferences } from "../actions";
 import {

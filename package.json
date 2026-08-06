@@ -62,7 +62,6 @@
     "react-doctor": "^0.8.3",
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.3",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10"
   }
 }

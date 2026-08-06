@@ -2,6 +2,12 @@ import { evaluateCycleCompliance } from "./budgetMath";
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const LIMA_TIMEZONE = "America/Lima";
+const LIMA_DATE_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: LIMA_TIMEZONE,
+  day: "numeric",
+  month: "numeric",
+  year: "numeric",
+});
 
 export type CycleCompliance = ReturnType<typeof evaluateCycleCompliance>;
 export type StatusBadge = "stable" | "attention" | "risk" | "starting";
@@ -48,12 +54,7 @@ type IncomeSlice = {
 };
 
 function getLimaParts(now: number) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: LIMA_TIMEZONE,
-    day: "numeric",
-    month: "numeric",
-    year: "numeric",
-  }).formatToParts(new Date(now));
+  const parts = LIMA_DATE_PARTS_FORMATTER.formatToParts(new Date(now));
 
   return {
     day: Number(parts.find((p) => p.type === "day")?.value ?? 1),

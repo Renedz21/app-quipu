@@ -65,9 +65,7 @@ describe("cycleCorrection", () => {
     const result = buildCycleCorrectionTransfers({
       before,
       plan: {
-        reserveToCommitments: [
-          { commitmentId: "debt", amountCents: 200_000 },
-        ],
+        reserveToCommitments: [{ commitmentId: "debt", amountCents: 200_000 }],
         setEnvelopeRemaining: { needs: 594, wants: 0, savings: 0 },
         contributeToSavings: [],
         setUnallocatedCents: 0,
@@ -90,9 +88,7 @@ describe("cycleCorrection", () => {
     const result = buildCycleCorrectionTransfers({
       before,
       plan: {
-        reserveToCommitments: [
-          { commitmentId: "debt", amountCents: 200_000 },
-        ],
+        reserveToCommitments: [{ commitmentId: "debt", amountCents: 200_000 }],
         setEnvelopeRemaining: { needs: 594, wants: 0, savings: 0 },
         contributeToSavings: [],
         setUnallocatedCents: 0,

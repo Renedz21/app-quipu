@@ -33,14 +33,6 @@ export function computeIncomeDistribution(
   return computeAllocations(netAvailableCents, weights);
 }
 
-export function computeIncomeDistributionWithPolicy(
-  netAvailableCents: number,
-  weights: AllocationWeights,
-  policy: DistributionPolicy,
-): EnvelopeBalances {
-  return applyDistributionPolicy(netAvailableCents, weights, policy);
-}
-
 export function computeDailyAvailableCents(
   wantsRemainingCents: number,
   daysRemaining: number,

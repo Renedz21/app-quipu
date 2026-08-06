@@ -68,8 +68,9 @@ export function SettingsSecurityCard({
   async function handleAddPasskey() {
     setAddPending(true);
     setAddMessage(null);
-    const { error } = await authClient.passkey.addPasskey();
-    setAddPending(false);
+    const { error } = await authClient.passkey.addPasskey().finally(() => {
+      setAddPending(false);
+    });
     if (error) {
       setAddMessage(SETTINGS_PASSKEY_ERROR);
       return;

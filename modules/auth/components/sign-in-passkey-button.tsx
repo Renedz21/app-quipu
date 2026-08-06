@@ -18,8 +18,9 @@ export function SignInPasskeyButton() {
 
   async function handleClick() {
     setPending(true);
-    const { error } = await authClient.signIn.passkey();
-    setPending(false);
+    const { error } = await authClient.signIn.passkey().finally(() => {
+      setPending(false);
+    });
     if (error) return;
     track(AnalyticsEvents.USER_LOGGED_IN, {
       method: "passkey",

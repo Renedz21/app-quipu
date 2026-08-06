@@ -406,71 +406,96 @@ export const deleteAllDataForProfile = internalMutation({
       .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
       .collect();
 
-    // surplusContributions solo tiene índice por ciclo.
-    for (const cycle of cycles) {
-      const contributions = await ctx.db
-        .query("surplusContributions")
-        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-        .collect();
-      for (const contribution of contributions) {
-        await ctx.db.delete(contribution._id);
-      }
-      await ctx.db.delete(cycle._id);
-    }
-
-    const deleteByProfile = async (
+    const deleteDocs = async (
       docs: ReadonlyArray<{ _id: Parameters<typeof ctx.db.delete>[0] }>,
     ) => {
-      for (const doc of docs) {
-        await ctx.db.delete(doc._id);
-      }
+      await Promise.all(docs.map((doc) => ctx.db.delete(doc._id)));
     };
 
-    await deleteByProfile(
+    // Tablas indexadas solo por ciclo (ledger post-2026-07-31).
+    const docsByCycle = await Promise.all(
+      cycles.map(async (cycle) => {
+        const [contributions, allocationLines, transfers, reservations] =
+          await Promise.all([
+            ctx.db
+              .query("surplusContributions")
+              .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+              .collect(),
+            ctx.db
+              .query("incomeAllocationLines")
+              .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+              .collect(),
+            ctx.db
+              .query("internalTransfers")
+              .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+              .collect(),
+            ctx.db
+              .query("commitmentReservations")
+              .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+              .collect(),
+          ]);
+        return [
+          ...contributions,
+          ...allocationLines,
+          ...transfers,
+          ...reservations,
+        ];
+      }),
+    );
+    await deleteDocs(docsByCycle.flat());
+    await Promise.all(cycles.map((cycle) => ctx.db.delete(cycle._id)));
+
+    await deleteDocs(
       await ctx.db
         .query("envelopes")
         .withIndex("by_profile_type", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("subEnvelopes")
         .withIndex("by_profile", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("fixedCommitments")
         .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("expenses")
         .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("incomeEvents")
         .withIndex("by_profile_time", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("coachInteractions")
         .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("streaks")
         .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
         .collect(),
     );
-    await deleteByProfile(
+    await deleteDocs(
       await ctx.db
         .query("cycleHistory")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteDocs(
+      await ctx.db
+        .query("accountReviewFlags")
         .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
         .collect(),
     );

@@ -1,6 +1,11 @@
 import type { Doc } from "../_generated/dataModel";
 
 const LIMA_TIMEZONE = "America/Lima";
+const LIMA_SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("es-PE", {
+  day: "numeric",
+  month: "short",
+  timeZone: LIMA_TIMEZONE,
+});
 
 export type PlanTier = Doc<"profiles">["plan"];
 
@@ -51,11 +56,7 @@ function formatLimaShortDate(isoOrNull: string | null): string | null {
   if (!isoOrNull) return null;
   const ms = Date.parse(isoOrNull);
   if (Number.isNaN(ms)) return null;
-  return new Intl.DateTimeFormat("es-PE", {
-    day: "numeric",
-    month: "short",
-    timeZone: LIMA_TIMEZONE,
-  }).format(ms);
+  return LIMA_SHORT_DATE_FORMATTER.format(ms);
 }
 
 export function buildRenewalSummary(

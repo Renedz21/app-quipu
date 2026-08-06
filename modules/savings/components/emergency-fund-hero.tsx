@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
-import { buttonVariants } from "@/shared/components/ui/button";
+import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -114,12 +114,10 @@ export function EmergencyFundHero({
         </p>
       </div>
 
-      <div
-        className="mt-5 h-3 rounded-lg bg-qp-track"
-        role="progressbar"
-        aria-valuenow={0}
-        aria-valuemin={0}
-        aria-valuemax={100}
+      <progress
+        className="mt-5 block h-3 w-full overflow-hidden rounded-lg bg-qp-track [&::-moz-progress-bar]:bg-moss [&::-webkit-progress-bar]:bg-qp-track [&::-webkit-progress-value]:bg-moss"
+        value={0}
+        max={100}
         aria-label="Progreso del fondo de emergencia"
       />
 

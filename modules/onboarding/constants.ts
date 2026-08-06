@@ -1,5 +1,4 @@
 export const STEP_LABELS = ["Perfil", "Sistema", "Reparto"] as const;
-export const STEP_COUNT = STEP_LABELS.length;
 
 import type { OnboardingState } from "./types";
 

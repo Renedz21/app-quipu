@@ -50,8 +50,6 @@ export const COMMITMENTS_SECTION_LABEL = "Próximos compromisos";
 export const HERO_AVAILABLE_LABEL = "Puedes gastar hoy";
 export const HERO_AVAILABLE_BODY =
   "Puedes gastar esto hoy sin comprometer tu ciclo.";
-export const HERO_EARLY_CYCLE_BODY =
-  "Tu presupuesto ya está repartido en sobres. Registra tu primer gasto cuando llegue.";
 export const HERO_DAYS_REMAINING = "Días restantes";
 export const HERO_CYCLE_HEALTH = "Salud del ciclo";
 export const HERO_LIQUIDITY_SPENDABLE = "En sobres";
@@ -74,7 +72,6 @@ export const COMMITMENTS_EMPTY_CTA = "+ Añadir compromiso";
 
 export const COACH_EARLY_REGISTER_CTA = "Registrar primer gasto";
 export const COACH_EARLY_VIEW_SYSTEM_CTA = "Ver mi sistema";
-export const COACH_EARLY_CTA_HINT = "Próximamente";
 
 export const MOVEMENTS_EMPTY_BODY =
   "Tu primer movimiento aparecerá aquí. Registrar un gasto toma menos de diez segundos.";
@@ -93,10 +90,6 @@ export const FORECAST_DEFICIT_LINE = (envelopeLabel: string, amount: string) =>
   `Faltan ${amount} en ${envelopeLabel} al cierre`;
 export const FORECAST_ALREADY_DEPLETED = (envelopeLabel: string) =>
   `${envelopeLabel} ya está en cero`;
-export const FORECAST_PAYWALL_TITLE =
-  "Predice cuándo te quedas sin dinero en cada sobre";
-export const FORECAST_PAYWALL_BODY =
-  "Quipu calcula tu ritmo de gasto y te avisa si un sobre se agota antes de cerrar el ciclo.";
 export const FORECAST_PAYWALL_NUDGE = "Predice cuándo se agota cada sobre.";
 
 export const REGISTER_CTA = "Registrar";

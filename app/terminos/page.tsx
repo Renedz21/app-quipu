@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { pageMetadata } from "@/core/seo";
 import { LegalShell } from "@/modules/legal/components/legal-shell";
 
@@ -73,9 +74,9 @@ export default function TerminosPage() {
           Los datos que registras son tuyos. Puedes exportarlos en cualquier
           momento y eliminar tu cuenta — con todos tus datos — desde Ajustes. El
           detalle está en la{" "}
-          <a href="/privacidad" className="underline underline-offset-2">
+          <Link href="/privacidad" className="underline underline-offset-2">
             política de privacidad
-          </a>
+          </Link>
           .
         </p>
       </section>

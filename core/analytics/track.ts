@@ -119,15 +119,4 @@ function payloadSchemaFor(event: AnalyticsEvent): AnyZod | undefined {
   return PAYLOAD_SCHEMAS[event];
 }
 
-/**
- * Registra el schema de un evento. Usado por el dev tooling o los tests
- * para extender la validación. La app real no necesita llamar a esto.
- */
-export function registerPayloadSchema<E extends AnalyticsEvent>(
-  event: E,
-  schema: AnyZod,
-): void {
-  PAYLOAD_SCHEMAS[event] = schema;
-}
-
 export { AnalyticsEvents };

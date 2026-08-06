@@ -14,13 +14,9 @@ export const SAVINGS_PRE_TRACTION_MOBILE_SUBTITLE =
 export const EMERGENCY_FUND_LABEL = "Fondo de emergencia";
 export const EMERGENCY_FUND_PRIORITY_BADGE = "Prioridad";
 export const EMERGENCY_FUND_START_BADGE = "Empieza aquí";
-export const EMERGENCY_FUND_EMPTY_SUBTITLE =
-  "Aquí vivirá tu red de seguridad. Todo empieza con el Fondo.";
-export const EMERGENCY_FUND_EMPTY_MOBILE_SUBTITLE =
-  "Todo empieza con el Fondo.";
-export const EMERGENCY_FUND_EMPTY_BODY =
+const EMERGENCY_FUND_EMPTY_BODY =
   "Quipu apartará tu aporte cada ciclo, antes de que puedas gastarlo. Tú decides cuánto.";
-export const EMERGENCY_FUND_EMPTY_MOBILE_BODY =
+const EMERGENCY_FUND_EMPTY_MOBILE_BODY =
   "Quipu aparta tu aporte cada ciclo, antes de que puedas gastarlo.";
 export const EMERGENCY_FUND_ACTIVATE_AUTO_CTA = "Activar aporte automático";
 export const EMERGENCY_FUND_START_SMALL_CTA = "Empezar con S/ 50 al ciclo";
@@ -61,9 +57,6 @@ export const NEW_GOAL_TARGET_LABEL = "Meta (opcional)";
 export const NEW_GOAL_SUBMIT = "Crear meta";
 export const NEW_GOAL_CANCEL = "Volver";
 
-export const SAVINGS_EMPTY_TITLE = "Tu fondo está listo";
-export const SAVINGS_EMPTY_BODY =
-  "Registra tu primer ingreso para apartar ahorro en cada ciclo y empezar a construir tu fondo.";
 export const SAVINGS_EMPTY_CTA = "Registrar ingreso";
 
 export const SAVINGS_ERROR_TITLE = "No pudimos cargar tus ahorros";
@@ -85,8 +78,6 @@ export const GOAL_CONTRIBUTE_CANCEL = "Volver";
 export const GOAL_CONTRIBUTE_SUCCESS_PREFIX = "Aporte registrado.";
 export const GOAL_CONTRIBUTE_DISABLED_HINT =
   "Se aporta desde el sobre Ahorro del ciclo, no desde el Fondo.";
-export const GOAL_CONTRIBUTE_MOVE_HINT =
-  "Mueve sobrante al ahorro para aportar.";
 
 export const GOAL_PROGRESS_OF = "de";
 export const GOALS_EMPTY_TITLE = "Tus metas vivirán aquí";
@@ -97,7 +88,6 @@ export const GOALS_EMPTY_BODY_MOBILE =
 
 export const CYCLE_SAVINGS_SECTION_TITLE = "Tu ahorro este ciclo";
 export const CYCLE_SAVINGS_OBJECTIVE_LABEL = "Ahorro objetivo";
-export const CYCLE_SAVINGS_OBJECTIVE_HINT = "Lo que ya aportaste a tu meta";
 export const CYCLE_SAVINGS_ADDITIONAL_LABEL = "Ahorro adicional";
 export const CYCLE_SAVINGS_ADDITIONAL_HINT =
   "Solo aportes que confirmaste explícitamente";
@@ -170,9 +160,6 @@ export const MOVE_SURPLUS_DESTINATION_LABEL = "Hacia";
 export const MOVE_SURPLUS_CYCLE_BANNER_EMPHASIS = "Solo por este ciclo.";
 export const MOVE_SURPLUS_CYCLE_BANNER_REST =
   "Tu distribución 50/30/20 sigue igual el próximo mes.";
-export const MOVE_SURPLUS_CYCLE_COPY =
-  "Solo por este ciclo. Tu 50/30/20 sigue igual.";
-export const MOVE_SURPLUS_RECOMMENDED_BADGE = "Recomendado";
 export const MOVE_SURPLUS_DESTINATION_FUND_HINT = "Recomendado · va primero";
 export const MOVE_SURPLUS_DESTINATION_GOAL_HINT = "Viaje, laptop, depa…";
 export const MOVE_SURPLUS_GRATIFICATION_LABEL = "De mi gratificación";
@@ -180,11 +167,6 @@ export const MOVE_SURPLUS_WANTS_SURPLUS_PREFIX = "Sobrante de Gustos";
 export const MOVE_SURPLUS_PILL_ALL_SUFFIX = "Todo el sobrante";
 export const MOVE_SURPLUS_CANCEL_CTA = "Cancelar";
 export const MOVE_SURPLUS_SUBMIT_CTA_PREFIX = "Mover";
-export const MOVE_SURPLUS_REVIEW_TITLE = "Confirma tu traslado";
-export const MOVE_SURPLUS_CONFIRM_CTA = "Confirmar traslado";
-export const MOVE_SURPLUS_BACK_CTA = "Volver";
-export const MOVE_SURPLUS_CONTINUE_CTA = "Continuar";
-export const MOVE_SURPLUS_SUCCESS_PREFIX = "Listo.";
 export const MOVE_SURPLUS_SUCCESS_TITLE_PREFIX = "Guardaste";
 export const MOVE_SURPLUS_SUCCESS_TITLE_SUFFIX = "de más";
 export const MOVE_SURPLUS_SUCCESS_BODY_PREFIX = "Este ciclo cerraste en";

@@ -1,3 +1,10 @@
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+# Versiones ya pinneadas en el lockfile con evidencia de trust más débil
+# que releases anteriores; excluidas para no bloquear installs reproducibles.
+trustPolicyExclude:
+  - semver@6.3.1
+  - undici-types@6.21.0
 allowBuilds:
   '@sentry/cli': false
   core-js: false

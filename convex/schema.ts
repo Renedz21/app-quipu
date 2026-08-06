@@ -428,7 +428,9 @@ export const appTables = {
       v.literal("actioned"),
     ),
     createdAt: v.number(),
-  }).index("by_status", ["status", "createdAt"]),
+  })
+    .index("by_status", ["status", "createdAt"])
+    .index("by_profileId", ["profileId"]),
 
   feedbackSubmissions: defineTable({
     userId: v.string(),

@@ -25,4 +25,9 @@ export const authRateLimiter = new RateLimiter(components.rateLimiter, {
     period: 15 * MINUTE,
     capacity: 1,
   },
+  feedbackSubmit: {
+    kind: "fixed window",
+    rate: 5,
+    period: HOUR,
+  },
 });

@@ -62,6 +62,12 @@ export const SETTINGS_SESSIONS_STUB = "No disponible";
 
 export const SETTINGS_SIGN_OUT = "Cerrar sesión";
 
+export const SETTINGS_ACCOUNT_ACTIONS_LABEL = "Acciones de cuenta";
+
+export const SETTINGS_FEEDBACK_LINK = "Cuéntanos";
+export const SETTINGS_FEEDBACK_LABEL = "Cuéntanos";
+export const SETTINGS_FEEDBACK_HINT = "Problemas, ideas o consultas";
+
 export const SETTINGS_EXPORT_DATA = "Descargar mis datos";
 export const SETTINGS_EXPORT_DATA_PREPARING = "Preparando tu descarga…";
 export const SETTINGS_EXPORT_DATA_ERROR =

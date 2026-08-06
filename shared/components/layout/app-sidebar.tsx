@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { SETTINGS_SIDEBAR_PLUS_LINK } from "@/modules/settings/constants";
+import { AppFeedbackLink } from "@/shared/components/layout/app-feedback-link";
 import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { SIDEBAR_ITEMS } from "@/shared/constants/navigation";
@@ -78,6 +79,7 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
       </nav>
 
       <div className="mt-auto border-t border-line-divider pt-3">
+        <AppFeedbackLink variant="sidebar" />
         <div className="flex items-center gap-3 px-2.5 py-2.5">
           <span className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-qp-soft font-serif text-base text-qp-deep">
             {getInitial(profileName ?? "Quipu")}

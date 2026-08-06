@@ -122,7 +122,7 @@ function MobileAccountList({
       </Link>
       <Link
         href="/settings/account#seguridad"
-        className="flex min-h-11 items-center gap-2 py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_SECURITY_LABEL}

@@ -76,6 +76,22 @@ Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
 - **Alcance de agentes CI/CD-front:** ajustes de CI/CD, estilos y frontend no
   requieren tocar lógica de Convex; para eso basta `pnpm dev` (+ Convex local si
   se necesita datos). Levantar Convex en la nube está fuera de ese alcance.
+- **CSP bloquea el backend Convex local en el navegador (gotcha importante).**
+  `next.config.ts` fija `connect-src` a `*.convex.cloud` / `*.convex.site`
+  (https + wss). El backend local anónimo corre en `ws://127.0.0.1:3210`, que la
+  CSP **no** permite, así que las queries reactivas del cliente (`useQuery`, p. ej.
+  el dashboard `cuánto puedo gastar hoy`) nunca conectan y quedan en skeleton/
+  loading para siempre. No es un bug de tu código ni de tu setup.
+  - **Sí funcionan** los flujos server-side (van por HTTP, no por el websocket del
+    navegador): sign-up, verificación de correo, sign-in y **onboarding**
+    (server actions vía `fetchAuthMutation`) persisten en Convex correctamente.
+    Verificable con `npx convex data profiles`.
+  - Para ejercitar la app **interactiva completa** (dashboard, sobres, gastos en
+    vivo) necesitas un deployment **Convex cloud** cuya URL calce con la CSP
+    (`*.convex.cloud`), lo que requiere cuenta Convex / `CONVEX_DEPLOY_KEY`.
+- **Email en dev es no-op**; el enlace de verificación/reset se **loguea en la
+  consola de `npx convex dev`** (no se envía). Para verificar una cuenta nueva sin
+  cuenta de correo real, saca la URL del log (busca `verify-email`) y ábrela.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph

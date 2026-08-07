@@ -63,7 +63,7 @@ export function planDisplay(
   }
   return {
     tier: "free",
-    label: "Quipu",
+    label: "Plan Quipu",
     priceCopy: plusUpgradePriceHint(currencyCode),
     statusCopy: "Plan gratuito",
   };

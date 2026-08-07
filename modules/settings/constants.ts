@@ -42,7 +42,8 @@ export const SETTINGS_PLAN_VALUE_BULLETS = [
 ] as const;
 export const SETTINGS_CHECKOUT_SUCCESS =
   "Listo. Tu plan se actualizará en unos segundos.";
-export const SETTINGS_SIDEBAR_PLUS_LINK = "Quipu Plus";
+/** CTA de upsell en sidebar (free). No es el nombre del plan activo. */
+export const SETTINGS_SIDEBAR_PLUS_LINK = "Ver Quipu Plus";
 
 export const SETTINGS_SECURITY_LABEL = "Seguridad y passkeys";
 export const SETTINGS_PASSKEY_ADD = "+ Agregar passkey";

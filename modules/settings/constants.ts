@@ -19,26 +19,27 @@ export const SETTINGS_NAME_ERROR = "No pudimos guardar el nombre.";
 export const SETTINGS_PLAN_LABEL = "Plan y suscripción";
 export const SETTINGS_PLAN_PLUS_NAME = "Quipu Plus";
 export const SETTINGS_PLAN_FREE_NAME = "Plan Quipu";
+export const SETTINGS_PLAN_CURRENT_LABEL = "Tu plan actual";
+export const SETTINGS_PLAN_PLUS_OFFER_LABEL = "Quipu Plus";
 export {
   PLUS_CHECKOUT_CTA as SETTINGS_PLAN_UPGRADE,
   PLUS_MONTHLY_PRICE as SETTINGS_PLAN_PLUS_PRICE,
   PLUS_UPGRADE_PRICE_HINT as SETTINGS_PLAN_PLUS_PRICE_HINT,
 } from "@/shared/constants/plan";
-export const SETTINGS_PLAN_FREE_BODY =
-  "Gratis, sin límite de registros manuales.";
+export const SETTINGS_PLAN_FREE_BODY = "Gratis. Registros manuales sin límite.";
 export const SETTINGS_PLAN_RENEWAL_AUTOMATIC = "Renovación automática";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
 export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_PREPARING = "Preparando…";
 export const SETTINGS_PLAN_BILLING_UNAVAILABLE =
   "Facturación no disponible; intenta más tarde.";
-export const SETTINGS_PLAN_VALUE_HEADING = "Qué hace Quipu por ti";
+export const SETTINGS_PLAN_VALUE_HEADING = "Qué incluye Plus";
 export const SETTINGS_PLAN_VALUE_BULLETS = [
-  "Aplica tus reglas de grati y CTS sin confirmar, una sola vez.",
-  "Predice cuándo te quedas sin dinero en cada sobre.",
-  "Recibe un plan de crisis en un paso cuando algo no cuadra.",
-  "Recibe avisos de tus compromisos antes de que venzan.",
-  "Tu informe de cierre, automático al terminar cada ciclo.",
+  "Predice cuándo se agota cada sobre.",
+  "Plan de crisis claro cuando algo no cuadra.",
+  "Avisos antes de que venzan tus compromisos.",
+  "Informe de cierre al terminar cada ciclo.",
+  "Reglas de ingresos extraordinarios que tú defines.",
 ] as const;
 export const SETTINGS_PLAN_TAX_INCLUDED = "Precio con impuestos incluidos.";
 export const SETTINGS_CHECKOUT_SUCCESS =
@@ -135,11 +136,11 @@ export const SETTINGS_EXTRAORDINARY_FOOTER =
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL =
   "Aplicar automáticamente";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_HINT =
-  "Quipu Plus aplica la regla al registrar, sin volver a preguntar.";
+  "Quipu Plus usa la regla que ya definiste al registrar el ingreso.";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE =
-  "La auto-aplicación es parte de Quipu Plus";
+  "Las automatizaciones son parte de Quipu Plus";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY =
-  "Configura una vez y Quipu reparte tus ingresos extraordinarios sin pedir confirmación.";
+  "Define la regla una vez. Plus la aplica al registrar el ingreso, siempre bajo las reglas que tú elegiste.";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT = "Julio y diciembre";
 export const SETTINGS_EXTRAORDINARY_CTS = "CTS";

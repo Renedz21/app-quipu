@@ -96,6 +96,12 @@ comportamientos peligrosos, recomienda acciones, construye hábitos.
   Excel/PDF y detección OCR desde email/PDF son parte del roadmap premium (Fases 2–3, §8.6).
   Sin confeti ni infantilismo.
 
+**Quipu Plus no vende como beneficio comercial:** experimentos/betas, «IA» como feature por sí
+sola, bloqueos agresivos de compras, automatizaciones que tomen decisiones financieras
+importantes sin que el usuario las haya definido, ni integraciones sin necesidad clara.
+El coach sigue sugiriendo; la confirmación es la regla. Una regla de automatización en Ajustes
+cuenta como opt-in del usuario (§2.5 regla 8), no como promesa de «sin confirmar».
+
 **Excepción v2.5 (informe anual):** en `/progress/rewards` la recompensa «Informe anual» es **solo UI**
 (preview / copy gamificado); la generación y descarga PDF queda para **v2.6**. No abre export masivo
 ni contabilidad — alinea con la pregunta filtro si el usuario ya cerró ciclos.

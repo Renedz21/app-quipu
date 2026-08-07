@@ -102,7 +102,7 @@ export function plusPaywallCta(currencyCode?: string): string {
 export const PLUS_MONTHLY_PRICE = plusMonthlyPriceLabel("PEN");
 export const PLUS_MONTHLY_PRICE_INLINE = plusMonthlyPriceInline("PEN");
 export const PLUS_UPGRADE_PRICE_HINT = plusUpgradePriceHint("PEN");
-export const PLUS_CHECKOUT_CTA = "Automatizar mi dinero";
+export const PLUS_CHECKOUT_CTA = "Pasar a Quipu Plus";
 export const PLUS_PAYWALL_CTA = plusPaywallCta("PEN");
 export const PLUS_UPSELL_LINK = "Quipu Plus";
 

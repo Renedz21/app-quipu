@@ -9,6 +9,14 @@ export function isEnvelopeFrozen(
   return frozenUntil != null && now < frozenUntil;
 }
 
+/** I2 — congelar bloquea salidas (gastos nuevos, aumentos, transferencias salientes). */
+export function allowsOutboundTransfer(
+  frozenUntil: number | undefined,
+  now: number,
+): boolean {
+  return !isEnvelopeFrozen(frozenUntil, now);
+}
+
 export function canReverseEnvelopeAllocation(input: {
   remainingAmount: number;
   reverseCents: number;

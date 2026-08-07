@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  allowsOutboundTransfer,
   canReverseDistributionApplied,
   canReverseEnvelopeAllocation,
   isEnvelopeFrozen,
@@ -17,6 +18,17 @@ describe("isEnvelopeFrozen", () => {
   it("is false once freeze expires", () => {
     expect(isEnvelopeFrozen(2_000, 2_000)).toBe(false);
     expect(isEnvelopeFrozen(2_000, 2_001)).toBe(false);
+  });
+});
+
+describe("allowsOutboundTransfer", () => {
+  it("blocks outbound while frozen", () => {
+    expect(allowsOutboundTransfer(5_000, 1_000)).toBe(false);
+  });
+
+  it("allows outbound when not frozen", () => {
+    expect(allowsOutboundTransfer(undefined, 1_000)).toBe(true);
+    expect(allowsOutboundTransfer(1_000, 1_000)).toBe(true);
   });
 });
 

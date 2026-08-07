@@ -17,9 +17,9 @@ export function assertAccountActive(profile: Doc<"profiles">): void {
 }
 
 /**
- * Auth + profile for user APIs (mutations that throw on missing auth).
+ * I6 — puerta canónica: autenticado + perfil + cuenta no suspendida.
  */
-export async function requireAuthenticatedProfile(
+export async function requireActiveAccount(
   ctx: QueryCtx,
 ): Promise<Doc<"profiles">> {
   const identity = await ctx.auth.getUserIdentity();
@@ -45,6 +45,13 @@ export async function requireAuthenticatedProfile(
   return profile;
 }
 
+/** @deprecated Prefer `requireActiveAccount` (I6). */
+export async function requireAuthenticatedProfile(
+  ctx: QueryCtx,
+): Promise<Doc<"profiles">> {
+  return requireActiveAccount(ctx);
+}
+
 /**
  * Gate premium (Fase 0 — entitlements).
  *
@@ -60,7 +67,7 @@ export async function requireAuthenticatedProfile(
 export async function requirePremiumProfile(
   ctx: QueryCtx,
 ): Promise<Doc<"profiles">> {
-  const profile = await requireAuthenticatedProfile(ctx);
+  const profile = await requireActiveAccount(ctx);
 
   if (profile.plan !== "premium") {
     throw new ConvexError({

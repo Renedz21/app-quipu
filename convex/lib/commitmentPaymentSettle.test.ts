@@ -1,55 +1,82 @@
 import { describe, expect, it } from "vitest";
-import { applyPayFromReservations } from "./commitmentReservation";
+import {
+  activeReservedCents,
+  applyReleaseReservation,
+  buildPaidSignalReservationPatches,
+} from "./commitmentReservation";
 
 /**
- * Glue contract for markCommitmentAsPaid fail-closed:
- * remainder after reservations must be checkable before marking Pagado.
+ * I1 — Pagado es solo señal: libera reservas, no inventa gasto ni debita sobres.
  */
-describe("markCommitmentAsPaid settlement precheck", () => {
-  it("reports remainder when reservations do not cover the due amount", () => {
-    const pay = applyPayFromReservations({
-      dueCents: 250_000,
-      reservations: [
-        {
-          id: "r1",
-          reservedCents: 100_000,
-          consumedCents: 0,
-          releasedCents: 0,
-          status: "active",
-        },
-      ],
-    });
+describe("buildPaidSignalReservationPatches", () => {
+  it("releases every active reservation without inventing envelope debit", () => {
+    const patches = buildPaidSignalReservationPatches([
+      {
+        id: "r1",
+        reservedCents: 200_000,
+        consumedCents: 0,
+        releasedCents: 0,
+        status: "active",
+      },
+      {
+        id: "r2",
+        reservedCents: 80_000,
+        consumedCents: 20_000,
+        releasedCents: 0,
+        status: "partially_consumed",
+      },
+      {
+        id: "r3",
+        reservedCents: 50_000,
+        consumedCents: 50_000,
+        releasedCents: 0,
+        status: "consumed",
+      },
+    ]);
 
-    expect(pay.fromReserveCents).toBe(100_000);
-    expect(pay.remainderCents).toBe(150_000);
+    expect(patches).toEqual([
+      {
+        id: "r1",
+        releasedCents: 200_000,
+        status: "released",
+        returnedCents: 200_000,
+      },
+      {
+        id: "r2",
+        releasedCents: 60_000,
+        status: "released",
+        returnedCents: 60_000,
+      },
+    ]);
+    expect(patches.every((p) => p.status === "released")).toBe(true);
   });
 
-  it("has zero remainder when reservations fully cover the due amount", () => {
-    const pay = applyPayFromReservations({
-      dueCents: 250_000,
-      reservations: [
+  it("returns empty patches when nothing is active", () => {
+    expect(
+      buildPaidSignalReservationPatches([
         {
-          id: "r1",
-          reservedCents: 250_000,
-          consumedCents: 0,
+          id: "done",
+          reservedCents: 10,
+          consumedCents: 10,
           releasedCents: 0,
-          status: "active",
+          status: "consumed",
         },
-      ],
-    });
-
-    expect(pay.remainderCents).toBe(0);
+      ]),
+    ).toEqual([]);
   });
 
-  it("treats insufficient envelope as fail-closed when remainder exceeds remaining", () => {
-    const pay = applyPayFromReservations({
-      dueCents: 250_000,
-      reservations: [],
-    });
-    const envelopeRemaining = 100_000;
-    const canSettle =
-      pay.remainderCents === 0 || envelopeRemaining >= pay.remainderCents;
-
-    expect(canSettle).toBe(false);
+  it("matches applyReleaseReservation per row", () => {
+    const row = {
+      id: "r1",
+      reservedCents: 100_000,
+      consumedCents: 25_000,
+      releasedCents: 0,
+      status: "active" as const,
+    };
+    const [patch] = buildPaidSignalReservationPatches([row]);
+    const released = applyReleaseReservation({ row });
+    expect(patch?.releasedCents).toBe(released.releasedCents);
+    expect(patch?.returnedCents).toBe(released.returnedToUnallocatedCents);
+    expect(activeReservedCents({ ...row, ...released })).toBe(0);
   });
 });

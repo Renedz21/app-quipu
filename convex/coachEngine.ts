@@ -9,7 +9,11 @@ import {
 } from "./lib/coachState";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
-import { assertAccountActive, requirePremiumProfile } from "./lib/entitlements";
+import {
+  requireActiveAccount,
+  requirePremiumProfile,
+} from "./lib/entitlements";
+import { allowsOutboundTransfer } from "./lib/envelopeGuards";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import { loadCycleCoverageById } from "./lib/loadCycleCoverageContext";
 import {
@@ -26,13 +30,7 @@ async function getOwnedPendingInteraction(
   ctx: MutationCtx,
   interactionId: Id<"coachInteractions">,
 ) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "Debes iniciar sesión con tu Passkey o credencial.",
-    });
-  }
+  const profile = await requireActiveAccount(ctx);
 
   const interaction = await ctx.db.get(interactionId);
   if (interaction?.status !== "pending") {
@@ -42,14 +40,12 @@ async function getOwnedPendingInteraction(
     });
   }
 
-  const profile = await ctx.db.get(interaction.profileId);
-  if (!profile || profile.userId !== identity.subject) {
+  if (interaction.profileId !== profile._id) {
     throw new ConvexError({
       code: "FORBIDDEN",
       message: "No tienes permisos para modificar este registro.",
     });
   }
-  assertAccountActive(profile);
 
   return { interaction, profile };
 }
@@ -77,25 +73,7 @@ async function getCycleEnvelopes(
 }
 
 async function getOwnedProfileAndCycle(ctx: MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "Debes iniciar sesión con tu Passkey o credencial.",
-    });
-  }
-
-  const profile = await ctx.db
-    .query("profiles")
-    .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-    .unique();
-  if (!profile) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "No encontramos tu perfil.",
-    });
-  }
-  assertAccountActive(profile);
+  const profile = await requireActiveAccount(ctx);
 
   const cycle = await ctx.db
     .query("financialCycles")
@@ -303,8 +281,7 @@ export const applyRescueTransfer = mutation({
     interactionId: v.id("coachInteractions"),
   },
   handler: async (ctx, { interactionId }) => {
-    await requirePremiumProfile(ctx);
-
+    // I3 — rescate manual es operación básica (gratis).
     const { interaction } = await getOwnedPendingInteraction(
       ctx,
       interactionId,
@@ -354,6 +331,15 @@ export const applyRescueTransfer = mutation({
             ? "INSUFFICIENT_FUNDS"
             : "VALIDATION_ERROR",
         message: messageByReason[validation.reason],
+      });
+    }
+
+    const now = Date.now();
+    if (!allowsOutboundTransfer(savings.frozenUntil, now)) {
+      throw new ConvexError({
+        code: "ENVELOPE_FROZEN",
+        message:
+          "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
       });
     }
 
@@ -416,6 +402,8 @@ export const dismissRescueSuggestion = mutation({
 export const applyCoverFromCycleSavings = mutation({
   args: {},
   handler: async (ctx) => {
+    // I3 — cubrir desde ahorro del ciclo es Plus.
+    await requirePremiumProfile(ctx);
     const now = Date.now();
     const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
     const context = await getCycleCoverageContext(
@@ -454,6 +442,14 @@ export const applyCoverFromCycleSavings = mutation({
       throw new ConvexError({
         code: "VALIDATION_ERROR",
         message: "Ya no hay saldo en Ahorro del ciclo para cubrir compromisos.",
+      });
+    }
+
+    if (!allowsOutboundTransfer(context.savingsEnvelope.frozenUntil, now)) {
+      throw new ConvexError({
+        code: "ENVELOPE_FROZEN",
+        message:
+          "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
       });
     }
 
@@ -639,6 +635,13 @@ export const applyCrisisPlan = mutation({
         step.wantsBoost != null
       ) {
         if (step.transferTotal <= 0) continue;
+        if (!allowsOutboundTransfer(savingsEnvelope.frozenUntil, now)) {
+          throw new ConvexError({
+            code: "ENVELOPE_FROZEN",
+            message:
+              "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
+          });
+        }
         if (savingsEnvelope.remainingAmount < step.transferTotal) {
           throw new ConvexError({
             code: "VALIDATION_ERROR",
@@ -679,6 +682,13 @@ export const applyCrisisPlan = mutation({
 
       if (step.kind === "rescue_transfer" && step.rescueTransfer != null) {
         if (step.rescueTransfer <= 0) continue;
+        if (!allowsOutboundTransfer(savingsEnvelope.frozenUntil, now)) {
+          throw new ConvexError({
+            code: "ENVELOPE_FROZEN",
+            message:
+              "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
+          });
+        }
         if (savingsEnvelope.remainingAmount < step.rescueTransfer) {
           throw new ConvexError({
             code: "VALIDATION_ERROR",

@@ -11,7 +11,7 @@ import {
   computeDisplayDailyCents,
 } from "./lib/dashboardMath";
 import { buildDefaultAllocationPlan } from "./lib/defaultAllocationPlan";
-import { assertAccountActive } from "./lib/entitlements";
+import { requireActiveAccount } from "./lib/entitlements";
 import { canReverseDistributionApplied } from "./lib/envelopeGuards";
 import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
 import {
@@ -26,6 +26,7 @@ import {
 import { resolveExtraordinaryIncomePolicy } from "./lib/extraordinaryRules";
 import type { AllocationPlan } from "./lib/incomeAllocation";
 import { resolveCycleForEvent } from "./lib/incomeEventLogic";
+import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 import { reverseIncomeAllocationLedger } from "./lib/reverseIncomeAllocationLedger";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
@@ -92,13 +93,7 @@ export const createIncomeEvent = mutation({
     allocation: allocationPlanValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profile = await requireActiveAccount(ctx);
     if (!Number.isInteger(args.amount) || args.amount <= 0) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -139,18 +134,6 @@ export const createIncomeEvent = mutation({
       explicitAllocation.envelopes.needs +
       explicitAllocation.envelopes.wants +
       explicitAllocation.envelopes.savings;
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Perfil no encontrado.",
-      });
-    }
-    assertAccountActive(profile);
 
     const incomeKind = args.incomeKind ?? "habitual";
     let resolvedSource = args.source;
@@ -406,7 +389,6 @@ export const createIncomeEvent = mutation({
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: cycle.totalIncomeReceived + args.amount,
       unallocatedCents: (cycle.unallocatedCents ?? 0) + addedUnallocated,
-      ...(addedUnallocated > 0 ? { needsReview: true } : {}),
     });
 
     await evaluateCommitmentCoverageForCycle(ctx, profile._id, cycleId, now);
@@ -447,6 +429,11 @@ export const createIncomeEvent = mutation({
       activeReservedCents: sumActiveReservedCents(reservations),
       daysRemaining: cycleMetrics.daysRemaining,
     });
+
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [
+      resolvedDescription,
+      extraordinaryLabel,
+    ]);
 
     return {
       eventId,
@@ -501,13 +488,7 @@ export const updateIncomeEvent = mutation({
     allocation: v.optional(allocationPlanValidator),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profileGate = await requireActiveAccount(ctx);
     if (!Number.isInteger(args.amount) || args.amount <= 0) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -588,17 +569,13 @@ export const updateIncomeEvent = mutation({
       });
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || event.profileId !== profile._id) {
+    const profile = profileGate;
+    if (event.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para editar este registro.",
       });
     }
-    assertAccountActive(profile);
 
     if (incomeKind === "extraordinary" && extraordinaryType) {
       const resolved = resolveExtraordinaryIncomePolicy({
@@ -841,7 +818,6 @@ export const updateIncomeEvent = mutation({
       0,
     );
     const amountDelta = args.amount - event.amount;
-    const needsReview = addedUnallocated > 0;
 
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: cycle.totalIncomeReceived + amountDelta,
@@ -851,7 +827,6 @@ export const updateIncomeEvent = mutation({
           reverse.unallocatedDeltaCents +
           addedUnallocated,
       ),
-      needsReview,
     });
 
     await ctx.db.patch(args.eventId, {
@@ -887,6 +862,11 @@ export const updateIncomeEvent = mutation({
       now,
     );
 
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [
+      resolvedDescription,
+      extraordinaryLabel,
+    ]);
+
     return { success: true };
   },
 });
@@ -894,13 +874,7 @@ export const updateIncomeEvent = mutation({
 export const deleteIncomeEvent = mutation({
   args: { eventId: v.id("incomeEvents") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profileGate = await requireActiveAccount(ctx);
 
     const event = await ctx.db.get(args.eventId);
     if (!event) {
@@ -910,17 +884,13 @@ export const deleteIncomeEvent = mutation({
       });
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || event.profileId !== profile._id) {
+    const profile = profileGate;
+    if (event.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para eliminar este registro.",
       });
     }
-    assertAccountActive(profile);
 
     const cycle = await ctx.db.get(event.cycleId);
     if (cycle?.status !== "active") {
@@ -953,22 +923,13 @@ export const deleteIncomeEvent = mutation({
     );
 
     const now = Date.now();
-    const [reverse, remainingIncomes] = await Promise.all([
-      reverseIncomeAllocationLedger(ctx, {
-        profileId: profile._id,
-        cycleId: cycle._id,
-        incomeEventId: args.eventId,
-        now,
-        note: "Reverso por eliminación de ingreso",
-      }),
-      ctx.db
-        .query("incomeEvents")
-        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-        .collect(),
-    ]);
-    const otherIncomes = remainingIncomes.filter(
-      (row) => row._id !== args.eventId,
-    );
+    const reverse = await reverseIncomeAllocationLedger(ctx, {
+      profileId: profile._id,
+      cycleId: cycle._id,
+      incomeEventId: args.eventId,
+      now,
+      note: "Reverso por eliminación de ingreso",
+    });
 
     await ctx.db.patch(cycle._id, {
       totalIncomeReceived: Math.max(
@@ -979,7 +940,6 @@ export const deleteIncomeEvent = mutation({
         0,
         (cycle.unallocatedCents ?? 0) - reverse.unallocatedDeltaCents,
       ),
-      needsReview: otherIncomes.length > 0,
     });
 
     await ctx.db.delete(args.eventId);

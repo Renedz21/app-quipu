@@ -16,18 +16,18 @@
 - Diff mínimo: no refactor cosmético de god-files salvo lo necesario para las puertas de auth.
 - Verificar con `pnpm exec vitest run convex/lib` antes de afirmar éxito.
 
-## Mapa de violaciones (estado al escribir el plan)
+## Mapa de violaciones (estado post-alineación 2026-08-07)
 
 | Inv. | Estado en código | Archivos |
 |---|---|---|
-| I1 | **Viola** — `markCommitmentAsPaid` consume reservas, debita sobre, inserta gasto, puede fallar por fondos | `convex/fixedCommitments.ts`; test `commitmentPaymentSettle.test.ts` codifica el contrato equivocado |
-| I2 | **Parcial** — gastos create/aumentar OK; falta bloquear transferencias salientes (rescate, corrección, cover) | `expenses.ts` OK; `coachEngine` rescate/cover; `cycleCorrection` |
-| I3 | **Viola** — rescate exige Plus; cubrir desde ahorro **no** exige Plus (al revés) | `coachEngine.applyRescueTransfer`, `applyCoverFromCycleSavings`, `applyCrisisPlan` |
-| I4 | **Viola** — create/update/delete setean `needsReview` por unallocated u «quedan ingresos» | `incomeEvents.ts`; migración legacy OK |
-| I5 | **Viola** — admin público con secreto en args | `admin/suspension.ts`, `admin/investigation.ts` |
-| I6 | **Parcial** — `assertAccountActive` / `requireAuthenticatedProfile` existen; no son la puerta única | `lib/entitlements.ts` + mutaciones sueltas |
-| I7 | **OK reciente** — export/delete/APP_DATA_TABLES ampliados; confirmar `emailSendLog` (no es dato del usuario exportable típico) | `profiles.ts`, `appDataTables.ts` |
-| I8 | **Viola** — cron `take(200)` sobre perfiles sin bandera de candidato | `crons/contentReviewScan.ts` |
+| I1 | **Cumple** — `markCommitmentAsPaid` solo señal + libera reservas | `fixedCommitments.ts`, `commitmentReservation.ts` |
+| I2 | **Cumple** — gastos + salidas (rescate/cover/corrección) respetan freeze | `expenses.ts`, `coachEngine`, `cycleCorrection`, `envelopeGuards` |
+| I3 | **Cumple** — rescate gratis; cover/crisis plan Plus | `coachEngine.ts` |
+| I4 | **Cumple** — income create/update/delete no setean `needsReview` por unallocated | `incomeEvents.ts` |
+| I5 | **Cumple** — admin `internal*`; runbook sin `adminSecret` | `admin/*`, `docs/abuse-response-runbook.md` |
+| I6 | **Cumple (parcial migrado)** — `requireActiveAccount` en dinero/coach; queries soft-auth OK | `lib/entitlements.ts` + mutaciones |
+| I7 | **OK** — export/delete/APP_DATA_TABLES | `profiles.ts`, `appDataTables.ts` |
+| I8 | **Cumple** — cron por `needsContentReview`; marcado al escribir texto | `schema`, `contentReviewScan`, `markNeedsContentReview` |
 
 ---
 

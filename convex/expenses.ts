@@ -5,8 +5,9 @@ import {
   buildWantsOverflowNudge,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
-import { assertAccountActive } from "./lib/entitlements";
+import { requireActiveAccount } from "./lib/entitlements";
 import { isEnvelopeFrozen } from "./lib/envelopeGuards";
+import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 
 const RECENT_EXPENSES_LIMIT = 5;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -18,13 +19,7 @@ export const registerExpense = mutation({
     envelopeType: v.union(v.literal("needs"), v.literal("wants")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profile = await requireActiveAccount(ctx);
     if (!Number.isInteger(args.amount) || args.amount <= 0) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -32,18 +27,6 @@ export const registerExpense = mutation({
         data: { field: "amount" },
       });
     }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Perfil no encontrado.",
-      });
-    }
-    assertAccountActive(profile);
 
     const activeCycle = await ctx.db
       .query("financialCycles")
@@ -96,6 +79,10 @@ export const registerExpense = mutation({
       description: args.description,
       timestamp: now,
     });
+
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [
+      args.description,
+    ]);
 
     if (
       args.envelopeType === "wants" &&
@@ -201,13 +188,7 @@ export const updateExpense = mutation({
     envelopeType: v.union(v.literal("needs"), v.literal("wants")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profileGate = await requireActiveAccount(ctx);
     if (!Number.isInteger(args.amount) || args.amount <= 0) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -231,17 +212,13 @@ export const updateExpense = mutation({
       });
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || expense.profileId !== profile._id) {
+    const profile = profileGate;
+    if (expense.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para editar este registro.",
       });
     }
-    assertAccountActive(profile);
 
     const cycle = await ctx.db.get(expense.cycleId);
     if (cycle?.status !== "active") {
@@ -366,6 +343,10 @@ export const updateExpense = mutation({
       }
     }
 
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [
+      args.description,
+    ]);
+
     return { success: true };
   },
 });
@@ -373,13 +354,7 @@ export const updateExpense = mutation({
 export const deleteExpense = mutation({
   args: { expenseId: v.id("expenses") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profileGate = await requireActiveAccount(ctx);
 
     const expense = await ctx.db.get(args.expenseId);
     if (!expense) {
@@ -389,17 +364,13 @@ export const deleteExpense = mutation({
       });
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || expense.profileId !== profile._id) {
+    const profile = profileGate;
+    if (expense.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para eliminar este registro.",
       });
     }
-    assertAccountActive(profile);
 
     // Solo el ciclo activo: revertir un ciclo cerrado corrompe el historial ya evaluado.
     const cycle = await ctx.db.get(expense.cycleId);

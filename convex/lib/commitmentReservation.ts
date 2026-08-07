@@ -101,3 +101,37 @@ export function applyReleaseReservation(input: {
     returnedToUnallocatedCents: releaseCents,
   };
 }
+
+/**
+ * I1 — Pagado es solo señal: libera reservas activas del compromiso.
+ * No consume sobres ni inventa gastos; el gasto real es otro movimiento.
+ */
+export function buildPaidSignalReservationPatches(
+  reservations: Array<ReservationLedgerRow & { id: string }>,
+): Array<{
+  id: string;
+  releasedCents: number;
+  status: ReservationLedgerRow["status"];
+  returnedCents: number;
+}> {
+  const patches: Array<{
+    id: string;
+    releasedCents: number;
+    status: ReservationLedgerRow["status"];
+    returnedCents: number;
+  }> = [];
+
+  for (const row of reservations) {
+    if (row.status === "released" || row.status === "consumed") continue;
+    if (activeReservedCents(row) <= 0) continue;
+    const released = applyReleaseReservation({ row });
+    patches.push({
+      id: row.id,
+      releasedCents: released.releasedCents,
+      status: released.status,
+      returnedCents: released.returnedToUnallocatedCents,
+    });
+  }
+
+  return patches;
+}

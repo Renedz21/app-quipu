@@ -15,12 +15,13 @@ import {
   isCommitmentPaidForCycle,
   resolveCommitmentPaymentStatus,
 } from "./lib/commitmentPayment";
-import { applyPayFromReservations } from "./lib/commitmentReservation";
-import { assertAccountActive } from "./lib/entitlements";
+import { buildPaidSignalReservationPatches } from "./lib/commitmentReservation";
+import { requireActiveAccount } from "./lib/entitlements";
 import {
   buildCoverageByIdFromCycleDocs,
   loadCycleCoverageById,
 } from "./lib/loadCycleCoverageContext";
+import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 
 export const listMyCommitments = query({
   args: {},
@@ -49,25 +50,7 @@ export const createFixedCommitment = mutation({
     dueDay: v.number(), // 1-31
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Perfil no encontrado.",
-      });
-    }
-    assertAccountActive(profile);
+    const profile = await requireActiveAccount(ctx);
 
     const name = args.name.trim();
     if (!name) {
@@ -95,7 +78,7 @@ export const createFixedCommitment = mutation({
     const createdAt = Date.now();
     const nextDueAt = computeInitialNextDueAt(args.dueDay, createdAt);
 
-    return await ctx.db.insert("fixedCommitments", {
+    const commitmentId = await ctx.db.insert("fixedCommitments", {
       profileId: profile._id,
       name,
       amount: args.amount,
@@ -103,19 +86,15 @@ export const createFixedCommitment = mutation({
       dueDay: args.dueDay,
       nextDueAt,
     });
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [name]);
+    return commitmentId;
   },
 });
 
 export const deleteFixedCommitment = mutation({
   args: { commitmentId: v.id("fixedCommitments") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profile = await requireActiveAccount(ctx);
 
     const commitment = await ctx.db.get(args.commitmentId);
     if (!commitment) {
@@ -125,14 +104,12 @@ export const deleteFixedCommitment = mutation({
       });
     }
 
-    const profile = await ctx.db.get(commitment.profileId);
-    if (!profile || profile.userId !== identity.subject) {
+    if (commitment.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para eliminar este registro.",
       });
     }
-    assertAccountActive(profile);
 
     await ctx.db.delete(args.commitmentId);
     return { success: true };
@@ -143,13 +120,7 @@ export const markCommitmentAsPaid = mutation({
   args: { commitmentId: v.id("fixedCommitments") },
   returns: v.object({ success: v.literal(true), paidAt: v.number() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profile = await requireActiveAccount(ctx);
 
     const commitment = await ctx.db.get(args.commitmentId);
     if (!commitment) {
@@ -159,14 +130,12 @@ export const markCommitmentAsPaid = mutation({
       });
     }
 
-    const profile = await ctx.db.get(commitment.profileId);
-    if (!profile || profile.userId !== identity.subject) {
+    if (commitment.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para actualizar este registro.",
       });
     }
-    assertAccountActive(profile);
 
     const activeCycle = await ctx.db
       .query("financialCycles")
@@ -209,69 +178,44 @@ export const markCommitmentAsPaid = mutation({
       now: paidAt,
     });
 
-    // Consume active reservations first so reserved money is not spent twice.
-    // Fail closed: never mark Pagado unless remainder can be settled from the envelope.
+    // I1 — Pagado es solo señal: libera reservas; no inventa gasto ni debita sobres.
     const reservations = await ctx.db
       .query("commitmentReservations")
       .withIndex("by_commitment_cycle", (q) =>
         q.eq("commitmentId", args.commitmentId).eq("cycleId", activeCycle._id),
       )
       .collect();
-    const pay = applyPayFromReservations({
-      dueCents: commitment.amount,
-      reservations: reservations.map((row) => ({
+    const releasePatches = buildPaidSignalReservationPatches(
+      reservations.map((row) => ({
         id: row._id,
         reservedCents: row.reservedCents,
         consumedCents: row.consumedCents,
         releasedCents: row.releasedCents,
         status: row.status,
       })),
-    });
-
-    const envelope =
-      pay.remainderCents > 0
-        ? await ctx.db
-            .query("envelopes")
-            .withIndex("by_cycle_type", (q) =>
-              q.eq("cycleId", activeCycle._id).eq("type", commitment.envelope),
-            )
-            .unique()
-        : null;
-
-    if (
-      pay.remainderCents > 0 &&
-      (!envelope || envelope.remainingAmount < pay.remainderCents)
-    ) {
-      throw new ConvexError({
-        code: "INSUFFICIENT_FUNDS",
-        message:
-          "No hay saldo suficiente en el sobre para marcar este compromiso como pagado.",
-      });
-    }
-
-    await Promise.all(
-      pay.reservationPatches.map((patch) =>
-        ctx.db.patch(patch.id as Id<"commitmentReservations">, {
-          consumedCents: patch.consumedCents,
-          status: patch.status,
-          updatedAt: paidAt,
-        }),
-      ),
     );
 
-    if (pay.remainderCents > 0 && envelope) {
-      await ctx.db.patch(envelope._id, {
-        remainingAmount: envelope.remainingAmount - pay.remainderCents,
-      });
-      await ctx.db.insert("expenses", {
-        profileId: profile._id,
-        cycleId: activeCycle._id,
-        envelopeId: envelope._id,
-        amount: pay.remainderCents,
-        description: `Pago: ${commitment.name}`,
-        timestamp: paidAt,
-      });
-    }
+    await Promise.all(
+      releasePatches.map(async (patch) => {
+        await ctx.db.patch(patch.id as Id<"commitmentReservations">, {
+          releasedCents: patch.releasedCents,
+          status: patch.status,
+          updatedAt: paidAt,
+        });
+        if (patch.returnedCents > 0) {
+          await ctx.db.insert("internalTransfers", {
+            profileId: profile._id,
+            cycleId: activeCycle._id,
+            kind: "reservation_release",
+            amountCents: patch.returnedCents,
+            from: `reservation:${patch.id}`,
+            to: "paid_signal",
+            note: `Liberación por marcado Pagado: ${commitment.name}`,
+            createdAt: paidAt,
+          });
+        }
+      }),
+    );
 
     await ctx.db.patch(args.commitmentId, {
       paidAt,
@@ -305,22 +249,13 @@ export const createCommitmentsBulk = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
-
-    const profile = await ctx.db.get(args.profileId);
-    if (!profile || profile.userId !== identity.subject) {
+    const profile = await requireActiveAccount(ctx);
+    if (args.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "Perfil no encontrado o no autorizado.",
       });
     }
-    assertAccountActive(profile);
 
     // Valida todos antes de insertar (atomicidad).
     for (const [i, c] of args.commitments.entries()) {
@@ -348,7 +283,7 @@ export const createCommitmentsBulk = mutation({
     }
 
     const createdAt = Date.now();
-    return await Promise.all(
+    const ids = await Promise.all(
       args.commitments.map((c) => {
         const nextDueAt = computeInitialNextDueAt(c.dueDay, createdAt);
         return ctx.db.insert("fixedCommitments", {
@@ -361,6 +296,12 @@ export const createCommitmentsBulk = mutation({
         });
       }),
     );
+    await markNeedsContentReviewIfSuspicious(
+      ctx,
+      profile._id,
+      args.commitments.map((c) => c.name),
+    );
+    return ids;
   },
 });
 

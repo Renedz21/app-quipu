@@ -3,6 +3,12 @@ import { internalMutation } from "../_generated/server";
 import { maybeFlagProfileFromTexts } from "../admin/investigation";
 import { highestSeverity, scanTextsForContentFlags } from "../lib/contentFlags";
 
+const CANDIDATE_BATCH = 50;
+
+/**
+ * I8 — procesa solo perfiles marcados como candidatos (`needsContentReview`).
+ * El marcado ocurre al escribir textos de usuario (p. ej. ingresos).
+ */
 export const scanOpenProfilesForContentFlags = internalMutation({
   args: {},
   returns: v.object({
@@ -10,8 +16,13 @@ export const scanOpenProfilesForContentFlags = internalMutation({
     flagsCreated: v.number(),
   }),
   handler: async (ctx) => {
-    const [profiles, existingOpen] = await Promise.all([
-      ctx.db.query("profiles").take(200),
+    const [candidates, existingOpen] = await Promise.all([
+      ctx.db
+        .query("profiles")
+        .withIndex("by_needsContentReview", (q) =>
+          q.eq("needsContentReview", true),
+        )
+        .take(CANDIDATE_BATCH),
       ctx.db
         .query("accountReviewFlags")
         .withIndex("by_status", (q) => q.eq("status", "open"))
@@ -24,15 +35,23 @@ export const scanOpenProfilesForContentFlags = internalMutation({
     );
 
     const scanResults = await Promise.all(
-      profiles.map(async (profile) => {
-        const incomeEvents = await ctx.db
-          .query("incomeEvents")
-          .withIndex("by_profile_time", (q) => q.eq("profileId", profile._id))
-          .order("desc")
-          .take(10);
+      candidates.map(async (profile) => {
+        const [incomeEvents, expenses] = await Promise.all([
+          ctx.db
+            .query("incomeEvents")
+            .withIndex("by_profile_time", (q) => q.eq("profileId", profile._id))
+            .order("desc")
+            .take(10),
+          ctx.db
+            .query("expenses")
+            .withIndex("by_profile_time", (q) => q.eq("profileId", profile._id))
+            .order("desc")
+            .take(10),
+        ]);
 
         const texts = [
           ...incomeEvents.map((event) => event.description),
+          ...expenses.map((expense) => expense.description),
           ...(profile.variableIncomeSources ?? []),
         ];
         const matches = scanTextsForContentFlags(texts);
@@ -52,8 +71,15 @@ export const scanOpenProfilesForContentFlags = internalMutation({
       ),
     );
 
+    // Clear candidate flag after processing this batch (whether flagged or clean).
+    await Promise.all(
+      candidates.map((profile) =>
+        ctx.db.patch(profile._id, { needsContentReview: false }),
+      ),
+    );
+
     return {
-      profilesScanned: profiles.length,
+      profilesScanned: candidates.length,
       flagsCreated: toFlag.length,
     };
   },

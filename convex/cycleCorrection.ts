@@ -6,6 +6,7 @@ import {
   buildCycleCorrectionTransfers,
   type CycleCorrectionPlan,
 } from "./lib/cycleCorrection";
+import { allowsOutboundTransfer } from "./lib/envelopeGuards";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
 import { planInferredSavingsAnnulment } from "./lib/inferredSavingsAnnulment";
 import { assertNonNegativeCents } from "./lib/moneyInvariant";
@@ -186,6 +187,15 @@ export const correctActiveCycleAllocation = mutation({
         if (!envelope) return;
         const targetRemaining = plan.setEnvelopeRemaining[type];
         assertNonNegativeCents(targetRemaining, type);
+        if (
+          targetRemaining < envelope.remainingAmount &&
+          !allowsOutboundTransfer(envelope.frozenUntil, now)
+        ) {
+          throw new ConvexError({
+            code: "ENVELOPE_FROZEN",
+            message: `El sobre ${type} está congelado. No puedes reducir su saldo todavía.`,
+          });
+        }
         const spent = Math.max(
           0,
           envelope.allocatedAmount - envelope.remainingAmount,

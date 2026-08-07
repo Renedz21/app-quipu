@@ -76,22 +76,34 @@ Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
 - **Alcance de agentes CI/CD-front:** ajustes de CI/CD, estilos y frontend no
   requieren tocar lógica de Convex; para eso basta `pnpm dev` (+ Convex local si
   se necesita datos). Levantar Convex en la nube está fuera de ese alcance.
-- **CSP bloquea el backend Convex local en el navegador (gotcha importante).**
+- **Backend recomendado: Convex cloud vía `CONVEX_DEPLOY_KEY` (secret).** Con ese
+  secret disponible, `npx convex dev --typecheck disable` se conecta al deployment
+  dev en la nube (URL `*.convex.cloud`) y **escribe `CONVEX_DEPLOYMENT` +
+  `NEXT_PUBLIC_CONVEX_URL` + `NEXT_PUBLIC_CONVEX_SITE_URL` en `.env.local`**. Con
+  esta URL la app corre **completa**, incluido el dashboard reactivo (`useQuery`).
+  Ese deployment ya trae `BETTER_AUTH_SECRET`, `SITE_URL`, `POLAR_*`, Resend y
+  Turnstile en su propio env (`npx convex env list`), así que no hace falta
+  volver a setearlos. **Sí** agrega a mano a `.env.local`
+  `NEXT_PUBLIC_APP_URL=http://localhost:3000` (lo exige `core/env.client.ts`).
+  - **Gotcha:** shells nuevos de `tmux`/login **no** heredan el secret
+    `CONVEX_DEPLOY_KEY`; corre `npx convex dev` desde un shell que sí lo tenga en
+    el env (o expórtalo antes). Si no, el CLI cae al prompt "login/local".
+  - Tras cambiar `.env.local`, **reinicia `pnpm dev`** para que tome la URL nueva.
+- **CSP bloquea el backend Convex *local anónimo* en el navegador.**
   `next.config.ts` fija `connect-src` a `*.convex.cloud` / `*.convex.site`
-  (https + wss). El backend local anónimo corre en `ws://127.0.0.1:3210`, que la
-  CSP **no** permite, así que las queries reactivas del cliente (`useQuery`, p. ej.
-  el dashboard `cuánto puedo gastar hoy`) nunca conectan y quedan en skeleton/
-  loading para siempre. No es un bug de tu código ni de tu setup.
-  - **Sí funcionan** los flujos server-side (van por HTTP, no por el websocket del
-    navegador): sign-up, verificación de correo, sign-in y **onboarding**
-    (server actions vía `fetchAuthMutation`) persisten en Convex correctamente.
-    Verificable con `npx convex data profiles`.
-  - Para ejercitar la app **interactiva completa** (dashboard, sobres, gastos en
-    vivo) necesitas un deployment **Convex cloud** cuya URL calce con la CSP
-    (`*.convex.cloud`), lo que requiere cuenta Convex / `CONVEX_DEPLOY_KEY`.
+  (https + wss). El backend local anónimo (`CONVEX_AGENT_MODE=anonymous npx convex
+  dev`) corre en `ws://127.0.0.1:3210`, que la CSP **no** permite: las queries
+  reactivas del cliente (`useQuery`, p. ej. el dashboard) quedan en skeleton para
+  siempre. Los flujos **server-side** (sign-up, verificación, sign-in, onboarding
+  vía `fetchAuthMutation`) sí funcionan igual porque van por HTTP. Usa el local
+  anónimo solo si no tienes `CONVEX_DEPLOY_KEY` y no necesitas el dashboard.
 - **Email en dev es no-op**; el enlace de verificación/reset se **loguea en la
-  consola de `npx convex dev`** (no se envía). Para verificar una cuenta nueva sin
-  cuenta de correo real, saca la URL del log (busca `verify-email`) y ábrela.
+  consola de `npx convex dev`** (no se envía, porque `SITE_URL` es localhost).
+  Para verificar una cuenta nueva sin correo real, saca la URL del log
+  (busca `verify-email`) y ábrela.
+- **Turnstile (CAPTCHA) está desactivado en dev** (`isTurnstileEnabled()` es
+  `NODE_ENV !== "development"`), así que con `pnpm dev` no bloquea auth aunque el
+  deployment tenga llaves de Turnstile.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph

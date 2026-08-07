@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "reicon-react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
@@ -9,6 +9,7 @@ import { PremiumLockPrompt } from "@/shared/components/premium-lock-prompt";
 import {
   type ExtraordinaryProfileRule,
   type ExtraordinaryRules,
+  type ExtraordinaryRulesAutoApply,
   extraordinaryProfileRuleLabel,
   mergeExtraordinaryRules,
   mergeExtraordinaryRulesAutoApply,
@@ -34,6 +35,11 @@ import {
   SETTINGS_EXTRAORDINARY_PROFIT,
   SETTINGS_EXTRAORDINARY_PROFIT_HINT,
 } from "../constants";
+import {
+  decideAutoApplyToggle,
+  optimisticAutoApplySettled,
+  patchAutoApply,
+} from "../lib/autoApplyToggle";
 import { SettingsToggle } from "./settings-toggle";
 
 const RULE_OPTIONS: ExtraordinaryProfileRule[] = [
@@ -127,13 +133,33 @@ export function SettingsExtraordinarySection({
   const profile = useMyProfile();
   const updateRules = useUpdateExtraordinaryRules();
   const [showAutoApplyPaywall, setShowAutoApplyPaywall] = useState(false);
+  const [optimisticAutoApply, setOptimisticAutoApply] =
+    useState<Partial<ExtraordinaryRulesAutoApply> | null>(null);
+  const [pendingKey, setPendingKey] = useState<
+    keyof ExtraordinaryRulesAutoApply | null
+  >(null);
+
+  const serverAutoApply = mergeExtraordinaryRulesAutoApply(
+    profile?.extraordinaryRulesAutoApply,
+  );
+
+  useEffect(() => {
+    if (!optimisticAutoApply) return;
+    const server = mergeExtraordinaryRulesAutoApply(
+      profile?.extraordinaryRulesAutoApply,
+    );
+    if (optimisticAutoApplySettled(server, optimisticAutoApply)) {
+      setOptimisticAutoApply(null);
+    }
+  }, [profile?.extraordinaryRulesAutoApply, optimisticAutoApply]);
 
   if (!profile) return null;
 
   const rules = mergeExtraordinaryRules(profile.extraordinaryRules);
-  const autoApply = mergeExtraordinaryRulesAutoApply(
-    profile.extraordinaryRulesAutoApply,
-  );
+  const autoApply = {
+    ...serverAutoApply,
+    ...optimisticAutoApply,
+  };
   const isPremium = profile.plan === "premium";
 
   async function onRuleChange(
@@ -145,31 +171,51 @@ export function SettingsExtraordinarySection({
       const nextAutoApply = { ...autoApply };
       if (value === "ask_each_time") {
         nextAutoApply[key] = false;
+        setOptimisticAutoApply((prev) => ({ ...prev, [key]: false }));
       }
       await updateRules({
         extraordinaryRules: nextRules,
-        extraordinaryRulesAutoApply: nextAutoApply,
+        ...(isPremium ? { extraordinaryRulesAutoApply: nextAutoApply } : {}),
       });
     } catch (error) {
+      setOptimisticAutoApply(null);
       toast.error(fromConvexError(error).message);
     }
   }
 
   async function onAutoApplyChange(
-    key: keyof ExtraordinaryRules,
+    key: keyof ExtraordinaryRulesAutoApply,
     checked: boolean,
   ) {
-    if (!isPremium) {
+    const decision = decideAutoApplyToggle({
+      isPremium,
+      pending: pendingKey === key,
+      currentChecked: Boolean(autoApply[key]),
+      nextChecked: checked,
+    });
+    if (decision === "paywall") {
       setShowAutoApplyPaywall(true);
       return;
     }
+    if (decision === "skip") return;
+
+    const nextAutoApply = patchAutoApply(autoApply, key, checked);
+    setOptimisticAutoApply((prev) => ({ ...prev, [key]: checked }));
+    setPendingKey(key);
     try {
       await updateRules({
         extraordinaryRules: rules,
-        extraordinaryRulesAutoApply: { ...autoApply, [key]: checked },
+        extraordinaryRulesAutoApply: nextAutoApply,
       });
     } catch (error) {
+      setOptimisticAutoApply((prev) => {
+        if (!prev) return null;
+        const { [key]: _removed, ...rest } = prev;
+        return Object.keys(rest).length > 0 ? rest : null;
+      });
       toast.error(fromConvexError(error).message);
+    } finally {
+      setPendingKey((current) => (current === key ? null : current));
     }
   }
 
@@ -195,6 +241,7 @@ export function SettingsExtraordinarySection({
           const savingsRule =
             current === "all_to_savings" || current === "all_to_emergency_fund";
           const canAutoApply = current !== "ask_each_time";
+          const toggleChecked = isPremium && autoApply[row.key];
           return (
             <li
               key={row.key}
@@ -253,7 +300,8 @@ export function SettingsExtraordinarySection({
                   </div>
                   <SettingsToggle
                     label={`${SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL} — ${row.label}`}
-                    checked={isPremium && autoApply[row.key]}
+                    checked={toggleChecked}
+                    disabled={pendingKey === row.key}
                     onCheckedChange={(checked) =>
                       void onAutoApplyChange(row.key, checked)
                     }

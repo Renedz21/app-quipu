@@ -160,7 +160,7 @@ export const getSettingsOverview = query({
         yearly: polarProductIds.plusYearly,
       },
       {
-        freeBody: "Gratis, sin límite de registros manuales.",
+        freeBody: "Gratis. Registros manuales sin límite.",
         renewalPrefix: "Próxima renovación",
         renewalAutomatic: "Renovación automática",
         canceledUntil: "Cancelado · activo hasta",
@@ -466,6 +466,22 @@ export const updateExtraordinaryRules = mutation({
         code: "NOT_FOUND",
         message: "Perfil no encontrado.",
       });
+    }
+
+    // Auto-aplicación es Plus: free no puede activar flags en true.
+    if (
+      args.extraordinaryRulesAutoApply !== undefined &&
+      profile.plan !== "premium"
+    ) {
+      const enabling = Object.values(args.extraordinaryRulesAutoApply).some(
+        (value) => value === true,
+      );
+      if (enabling) {
+        throw new ConvexError({
+          code: "PLAN_REQUIRED",
+          message: "La auto-aplicación es parte de Quipu Plus.",
+        });
+      }
     }
 
     await ctx.db.patch(profile._id, {

@@ -33,12 +33,12 @@ export function SettingsAccountViewSkeleton() {
     >
       <Skeleton className="h-4 w-20 rounded" />
       <Skeleton className="mt-4 h-[30px] w-[150px] rounded-lg" />
-      <div className="mt-6 flex flex-col gap-3.5 md:flex-row">
+      <div className="mt-6 flex flex-col gap-3.5 lg:flex-row">
         <div className="flex flex-1 flex-col gap-3.5">
           <Skeleton className="h-[150px] rounded-2xl" />
           <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
         </div>
-        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] md:self-start" />
+        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] lg:self-start" />
       </div>
     </div>
   );
@@ -107,7 +107,7 @@ export function SettingsAccountView() {
         </p>
       </header>
 
-      <div className="flex min-w-0 flex-col gap-3.5 md:flex-row md:gap-3.5">
+      <div className="flex min-w-0 flex-col gap-3.5 lg:flex-row lg:gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
           <SettingsProfileCard id="perfil" profile={overview.profile} />
           <div id="plan" className="min-w-0 scroll-mt-6">
@@ -122,7 +122,7 @@ export function SettingsAccountView() {
             ) : null}
           </div>
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 w-full lg:max-w-md lg:flex-1">
           <SettingsSecurityCard
             id="seguridad"
             sessionsApiReady={overview.sessionsApiReady}

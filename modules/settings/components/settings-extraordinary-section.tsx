@@ -270,6 +270,7 @@ export function SettingsExtraordinarySection({
           <PremiumLockCard
             title={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE}
             body={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY}
+            currencyCode={profile.currencyCode}
           />
         </div>
       ) : null}

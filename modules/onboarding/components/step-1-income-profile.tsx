@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ArrowRight, Briefcase, ChartTrend, Layers } from "reicon-react";
+import { SUPPORTED_MARKETS, type SupportedMarket } from "@/core/constants";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { INCOME_MODEL_OPTIONS } from "../constants";
@@ -17,6 +18,18 @@ type Props = {
 
 export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
   const { state, dispatch } = useOnboarding();
+
+  function selectMarket(market: SupportedMarket) {
+    dispatch({
+      type: "UPDATE",
+      payload: {
+        marketId: market.id,
+        country: market.country,
+        currencyCode: market.currencyCode,
+        currencySymbol: market.currencySymbol,
+      },
+    });
+  }
 
   function select(value: IncomeModel) {
     dispatch({
@@ -42,8 +55,8 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
     <OnboardingShell
       currentStep={1}
       title="¿Cómo recibes tu dinero?"
-      subtitle="Con esto Quipu arma tu ciclo. Podrás cambiarlo después."
-      hint="Puedes cambiarlo cuando quieras"
+      subtitle="Elige tu país y cómo cobras. La moneda queda fija después."
+      hint="Puedes cambiar el tipo de ingreso después"
       cta={
         <Button onClick={handleNext} disabled={!state.incomeModel} size="lg">
           Continuar
@@ -51,6 +64,44 @@ export function Step1IncomeProfile({ onNext, onStepCompleted }: Props) {
         </Button>
       }
     >
+      <div className="mb-5">
+        <p className="mb-2 text-sm font-medium text-ink">País y moneda</p>
+        <div className="flex flex-col gap-2">
+          {SUPPORTED_MARKETS.map((market) => {
+            const selected = state.marketId === market.id;
+            return (
+              <button
+                key={market.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => selectMarket(market)}
+                className={cn(
+                  "flex items-center justify-between rounded-[12px] px-4 py-3 text-left transition-colors",
+                  selected
+                    ? "border-[1.5px] border-primary bg-primary-soft"
+                    : "border border-line-strong bg-surface hover:border-primary/50",
+                )}
+              >
+                <span>
+                  <span className="font-semibold text-ink">{market.label}</span>
+                  <span className="mt-0.5 block text-sm text-muted-foreground">
+                    {market.currencyLabel} · {market.currencySymbol}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full",
+                    selected ? "bg-primary" : "border-2 border-border",
+                  )}
+                >
+                  {selected ? <CheckMark size={12} /> : null}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3">
         {INCOME_MODEL_OPTIONS.map((opt) => {
           const selected = state.incomeModel === opt.value;

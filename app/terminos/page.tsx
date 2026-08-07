@@ -42,12 +42,14 @@ export default function TerminosPage() {
         <h2 className={SECTION_HEADING}>3. Planes y pagos</h2>
         <p className={SECTION_BODY}>
           El plan gratuito es completo y sin límite de registros manuales. Quipu
-          Plus (US$ 4.99 por mes) agrega automatización y se cobra por
-          adelantado a través de Polar.sh, nuestro procesador de pagos; no
-          almacenamos los datos de tu tarjeta. La suscripción se renueva
-          automáticamente y puedes cancelarla en cualquier momento desde
-          Ajustes: conservas Plus hasta el final del periodo ya pagado. No hay
-          reembolsos parciales, salvo que la ley peruana diga lo contrario.
+          Plus (mensual o anual; precios según mercado — p. ej. S/ 14.90/mes o
+          S/ 119.90/año en Perú; equivalentes en EUR y USD) agrega
+          automatización y se cobra por adelantado a través de Polar.sh, nuestro
+          procesador de pagos; no almacenamos los datos de tu tarjeta. La
+          suscripción se renueva automáticamente y puedes cancelarla en
+          cualquier momento desde Ajustes: conservas Plus hasta el final del
+          periodo ya pagado. No hay reembolsos parciales, salvo que la ley
+          aplicable diga lo contrario.
         </p>
       </section>
 

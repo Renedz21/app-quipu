@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PLUS_MONTHLY_PRICE, PLUS_PAYWALL_CTA } from "@/shared/constants/plan";
+import { plusMonthlyPriceLabel, plusPaywallCta } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
   body: string;
   className?: string;
   ctaLabel?: string;
+  currencyCode?: string;
 };
 
 /**
@@ -21,8 +22,11 @@ export function PremiumLockCard({
   title,
   body,
   className,
-  ctaLabel = PLUS_PAYWALL_CTA,
+  currencyCode,
+  ctaLabel,
 }: Props) {
+  const priceLabel = plusMonthlyPriceLabel(currencyCode);
+  const resolvedCta = ctaLabel ?? plusPaywallCta(currencyCode);
   return (
     <section
       className={cn(
@@ -35,7 +39,7 @@ export function PremiumLockCard({
           Quipu Plus
         </span>
         <span className="font-mono text-[10px] tracking-wide text-faint">
-          {PLUS_MONTHLY_PRICE}
+          {priceLabel}
         </span>
       </div>
       <h3 className="mt-2 font-serif text-[19px] font-medium text-ink">
@@ -46,7 +50,7 @@ export function PremiumLockCard({
         href="/settings#plan"
         className="mt-4 inline-flex rounded-[11px] bg-ink px-4 py-2.5 text-[13.5px] font-semibold text-canvas transition-colors hover:bg-ink/90"
       >
-        {ctaLabel}
+        {resolvedCta}
       </Link>
     </section>
   );

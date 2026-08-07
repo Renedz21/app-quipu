@@ -53,7 +53,7 @@ Inspirado en los quipus incas: divide el dinero **antes** de gastarlo, no despu�
 
 - **Tagline producto:** "Tu sueldo, con disciplina."
 - **Tagline landing:** "Sabe si puedes gastar, en segundos."
-- **Moneda:** PEN (S/) único. **Idioma:** español peruano único.
+- **Moneda:** mercados PEN / EUR / USD elegidos en onboarding (fija después). **Idioma:** español.
 
 La promesa: **dar claridad sobre cuánto dinero puedes usar sin poner en riesgo tu
 estabilidad.** Quipu no registra gastos para hacer gráficos; existe para responder:
@@ -90,9 +90,11 @@ comportamientos peligrosos, recomienda acciones, construye hábitos.
   son parte del roadmap premium (Fases 2–4, §8.6). No hace contabilidad, no invierte, no calcula
   impuestos, no gestiona tarjetas.
 - Sin chat (el coach es declarativo, nunca conversacional), sin OCR en v2.5, sin push en v2.5,
-  sin OAuth social, sin multi-moneda, sin multi-idioma, sin ML opaco (el coach sigue declarativo,
-  §2.5 regla 8), sin leaderboards. Export Excel/PDF y detección OCR desde email/PDF son parte
-  del roadmap premium (Fases 2–3, §8.6). Sin confeti ni infantilismo.
+  sin OAuth social, sin multi-idioma, sin ML opaco (el coach sigue declarativo,
+  §2.5 regla 8), sin leaderboards. Moneda del ledger: un mercado (PEN/EUR/USD) elegido en
+  onboarding y fija después — no conversión FX ni multi-moneda en el mismo ledger. Export
+  Excel/PDF y detección OCR desde email/PDF son parte del roadmap premium (Fases 2–3, §8.6).
+  Sin confeti ni infantilismo.
 
 **Excepción v2.5 (informe anual):** en `/progress/rewards` la recompensa «Informe anual» es **solo UI**
 (preview / copy gamificado); la generación y descarga PDF queda para **v2.6**. No abre export masivo
@@ -165,7 +167,7 @@ Debe sentirse cercano, maduro, claro, tranquilo y humano. La emoción objetivo e
 | Estados del Coach | tranquilo · advertencia · sugerencia · crisis |
 | Orden de implementación | Web primero → su equivalente móvil, bloque por bloque |
 | Personalización | Desbloqueable por constancia en ciclos, no por compra |
-| Plan comercial | Quipu Plus (S/ 14.90/mes). **Polar (2026-07-22):** checkout redirect + portal, webhooks → `profiles.plan`, tarjeta plan y enlace sidebar en Ajustes. Valor Plus en producto (automatización gastos) sigue en roadmap, no en este cierre. |
+| Plan comercial | Quipu Plus mensual/anual (precios por mercado; Polar multi-currency). Checkout + portal; webhooks → `profiles.plan`. |
 
 **Tres cosas que este sistema nunca es:** un juego (sin confeti/trofeos), un chat
 (coach declarativo), un extractor (sin sync bancaria; registro manual).
@@ -497,10 +499,10 @@ XP, niveles ni badges de monto.
 Cuenta y sistema en **rutas separadas** (canon web `/settings` + `/settings/system`; móvil hub en
 `/settings` con listas Cuenta/Sistema):
 Cuenta = perfil (avatar, nombre, tags) + **plan y suscripción siempre visibles** (Quipu Plus
-S/ 14.90/mes, estado, renovación) + seguridad (passkeys por dispositivo, "+ Agregar passkey",
+Quipu Plus según mercado — p. ej. S/ 14.90/mes o S/ 119.90/año en Perú —, estado, renovación) + seguridad (passkeys por dispositivo, "+ Agregar passkey",
 sesiones activas, "Cerrar todas"). Sistema = porcentajes (preview + "Ajustar reparto") + ciclo
 (tipo/inicio/perfil + "Cambiar ciclo") + compromisos fijos (lista + total por ciclo + "+ Agregar")
-+ preferencias (moneda PEN / idioma ES read-only, **tema claro/oscuro**, toggles de resumen diario
++ preferencias (moneda del perfil PEN/EUR/USD read-only · idioma ES, **tema claro/oscuro**, toggles de resumen diario
 y alertas) + **automatizaciones** (reglas de ingresos extraordinarios).
 "Cerrar sesión" es un item de lista (acción deliberada). **No hay "Eliminar cuenta" en v2.5.**
 
@@ -669,7 +671,7 @@ export async function completeOnboardingAction(input: unknown) {
 | `reactCompiler: true` | Activado | Confiar en él; no `memo`/`useMemo`/`useCallback` manual salvo profiler |
 | `loading.tsx` global | **No usar** | Bloquea LCP. `<Suspense>` con skeleton por sección |
 | Server Actions | Solo cuando Convex no resuelva | Default: mutation Convex desde cliente. Server Action solo si se necesita redirect nativo, cookie write o progressive enhancement |
-| Multi-moneda | No | PEN hardcoded en `core/constants.ts` |
+| Multi-moneda ledger | Parcial | Onboarding: PEN/EUR/USD fijos; Polar cobro multi-currency en 2 productos |
 | Tipos duplicados | Prohibido | Derivar de `dataModel` |
 
 **Árbol de decisión por componente:** ¿estado/efectos/eventos/APIs browser? → `'use client'`.
@@ -1332,27 +1334,29 @@ Variables en el **deployment de Convex** (no en el bundle Next). `convex/polar.t
 |---|---|
 | `POLAR_ORGANIZATION_TOKEN` | Token de organización Polar (API del componente). |
 | `POLAR_WEBHOOK_SECRET` | Verificación de firma del webhook. |
-| `POLAR_PRODUCT_ID_PREMIUM` | ID del producto Quipu Plus; clave lógica `premium` en `polar.ts`. |
+| `POLAR_PRODUCT_ID_PLUS_MONTHLY` | Quipu Pro mensual (`74df94ea-2082-4c27-99e1-e88fefd89fb8`); clave `plusMonthly`. |
+| `POLAR_PRODUCT_ID_PLUS_YEARLY` | Quipu Pro Anual (`cccae83e-d343-4359-a460-7b873474fc59`); clave `plusYearly`. |
+| `POLAR_PRODUCT_ID_PREMIUM` | **Legacy** — fallback de monthly si aún no está `PLUS_MONTHLY`. |
 | `POLAR_SERVER` | `sandbox` o `production`. |
+
+Polar productos: **2** (mensual + anual) con precios multi-currency PEN/EUR/USD. El ledger de la app usa la moneda elegida en onboarding; el cobro lo resuelve Polar.
 
 En dashboard Polar: URL del webhook **`https://<deployment>.convex.site/webhook/polar`** (no el default `/polar/events` del README). Habilitar al menos: `product.created`, `product.updated`, `subscription.created`, `subscription.updated`.
 
 **Setup tras deploy del componente:**
 
-1. `npx convex env ls` — comprobar las cuatro variables anteriores.
+1. `npx convex env ls` — comprobar token, secret, monthly, yearly, server.
 2. Registrar webhook + secret en Polar apuntando a la URL anterior.
-3. Sincronizar catálogo de productos (una vez si el producto existía antes del componente): `npx convex run billing:syncProducts` (`convex/billing.ts` → `polar.syncProducts`).
-4. Sandbox: checkout de prueba → logs webhook → `profiles.plan` = `premium` → sidebar + coach rescue (premium).
-
-`core/env.ts` (Next/build) valida `POLAR_PRODUCT_ID_PREMIUM`, `POLAR_SERVER` y opcionalmente `POLAR_ORGANIZATION_TOKEN` / `POLAR_WEBHOOK_SECRET` (el token org y el secret del webhook viven sobre todo en Convex).
+3. Sincronizar catálogo: `npx convex run billing:syncProducts`.
+4. Sandbox: checkout mensual y anual → logs webhook → `profiles.plan` = `premium`.
 
 **Checklist release Polar producción (owner — P2-8):**
 
-1. En Convex **prod:** `POLAR_ORGANIZATION_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_PRODUCT_ID_PREMIUM`, `POLAR_SERVER=production` (`npx convex env ls` en prod).
+1. En Convex **prod:** `POLAR_ORGANIZATION_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_PRODUCT_ID_PLUS_MONTHLY`, `POLAR_PRODUCT_ID_PLUS_YEARLY`, `POLAR_SERVER=production`.
 2. Dashboard Polar → webhook `https://<prod-deployment>.convex.site/webhook/polar` + eventos §9.5.
-3. Una vez: `npx convex run billing:syncProducts --prod` (o equivalente en deployment prod).
-4. Smoke manual: checkout Plus → webhook en logs → `profiles.plan` = `premium` → coach rescue premium (`convex/coachEngine.ts`; no usar `convex/testing.ts` en prod).
-5. **D4:** rotar `BETTER_AUTH_SECRET` prod antes o justo después del primer tráfico real — ver `docs/security-debt.md`.
+3. Una vez: `npx convex run billing:syncProducts --prod`.
+4. Smoke: checkout Plus mensual/anual → webhook → `profiles.plan` = `premium`.
+5. **D4:** rotar `BETTER_AUTH_SECRET` prod — ver `docs/security-debt.md`.
 
 ---
 
@@ -1388,6 +1392,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-08-07 — Multi-mercado + Plus mensual/anual.** Mercados PEN/EUR/USD en onboarding (moneda fija después). Quipu Plus: 2 productos Polar (`plusMonthly` / `plusYearly`) con multi-currency; card de plan con toggle Mensual/Anual y copy por `currencyCode` del perfil. Env: `POLAR_PRODUCT_ID_PLUS_MONTHLY` / `PLUS_YEARLY` (§9.5).
 - **2026-08-07 — Rescate free unificado (I3 UI).** Quitado atajo `free_advice`/upsell: free y Plus usan el mismo flujo de sugerir → confirmar → transferir. Sin paywall de rescate en coach.
 - **2026-08-07 — Alineación código I1–I8.** Backend cumple invariantes §5.5: Pagado señal-only; freeze en salidas; crisis Plus matriz; `needsReview`≠unallocated; admin `internal*`; `requireActiveAccount` en mutaciones de dinero/coach; cron contenido por `needsContentReview` + marcado al escribir. Plan: `docs/superpowers/plans/2026-08-07-alinear-backend-invariantes.md`.
 - **2026-08-07 — Invariantes de dominio §5.5 (auditoría Convex).** Ocho decisiones cerradas: Pagado=solo señal (libera reservas, no inventa gasto); congelar bloquea salidas; crisis gratis vs Plus; `needsReview`≠unallocated; admin solo internal/dashboard; auth por primitiva común; export/borrado libro completo; cron de contenido solo candidatos. ADR: `docs/adr/2026-08-07-invariantes-financieros-backend.md`. Ajuste §5.3 Pagado/congelar/needsReview/Plus.

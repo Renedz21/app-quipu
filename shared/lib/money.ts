@@ -2,12 +2,12 @@
  * Utilidades de dinero para Quipu.
  *
  * Regla de oro: el backend trabaja en **céntimos enteros** (números).
- * La UI formatea a soles para mostrar, parsea a céntimos para enviar.
- * Este módulo es la única puerta de entrada — nunca formatees soles a mano
+ * La UI formatea con la moneda del perfil; parsea a céntimos para enviar.
+ * Este módulo es la única puerta de entrada — nunca formatees montos a mano
  * en un componente.
  */
 
-import { DEFAULT_CURRENCY } from "@/core/constants";
+import { DEFAULT_CURRENCY, localeForCurrency } from "@/core/constants";
 
 const CENTS_FORMATTER_CACHE = new Map<string, Intl.NumberFormat>();
 
@@ -39,8 +39,8 @@ export type Cents = number;
  * Formatea céntimos a string monetario localizado.
  *
  * @example
- * formatCents(123456) // "S/ 1,234.56" (con locale es-PE)
- * formatCents(0) // "S/ 0.00"
+ * formatCents(123456, { currency: "PEN" }) // "S/ 1,234.56"
+ * formatCents(0, { currency: "EUR" }) // "0,00 €" (locale es-ES)
  */
 export function formatCents(
   cents: Cents,
@@ -51,9 +51,9 @@ export function formatCents(
     minimumFractionDigits?: number;
   },
 ): string {
+  const currency = options?.currency ?? DEFAULT_CURRENCY.code;
   const {
-    currency = DEFAULT_CURRENCY.code,
-    locale = "es-PE",
+    locale = localeForCurrency(currency),
     showSymbol = true,
     minimumFractionDigits = 2,
   } = options ?? {};

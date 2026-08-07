@@ -1,10 +1,15 @@
+export {
+  type CurrencyCode,
+  currencyReadOnlyLabel,
+  currencySymbolForCode,
+  DEFAULT_CURRENCY,
+  DEFAULT_MARKET,
+  isSupportedCurrencyCode,
+  localeForCurrency,
+  marketFromCurrencyCode,
+  marketFromId,
+  resolveMarketTriplet,
+  SUPPORTED_MARKETS,
+  type SupportedMarket,
+} from "@/shared/constants/markets";
 export { LIMA_TIMEZONE } from "@/shared/constants/timezone";
-
-/**
- * Moneda por defecto. Multi-moneda se manejará cuando se implemente.
- */
-export const DEFAULT_CURRENCY = {
-  code: "PEN",
-  symbol: "S/",
-  label: "Sol peruano",
-} as const;

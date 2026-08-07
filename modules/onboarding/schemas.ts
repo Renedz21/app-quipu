@@ -1,11 +1,18 @@
 import { z } from "zod";
+import { DEFAULT_MARKET, SUPPORTED_MARKETS } from "@/core/constants";
+
+const currencyCodes = SUPPORTED_MARKETS.map((m) => m.currencyCode) as [
+  "PEN",
+  "EUR",
+  "USD",
+];
 
 export const finalPayloadSchema = z
   .object({
     name: z.string().optional(),
-    country: z.string().default("Perú"),
-    currencyCode: z.string().default("PEN"),
-    currencySymbol: z.string().default("S/"),
+    country: z.string().default(DEFAULT_MARKET.country),
+    currencyCode: z.enum(currencyCodes).default(DEFAULT_MARKET.currencyCode),
+    currencySymbol: z.string().default(DEFAULT_MARKET.currencySymbol),
     incomeModel: z.enum(["fixed", "variable", "mixed"]),
     payFrequency: z.enum(["monthly", "biweekly"]).optional(),
     paydays: z.array(z.number().int().min(1).max(31)).optional(),

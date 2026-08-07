@@ -42,7 +42,8 @@ export const SETTINGS_PLAN_VALUE_BULLETS = [
 ] as const;
 export const SETTINGS_CHECKOUT_SUCCESS =
   "Listo. Tu plan se actualizará en unos segundos.";
-export const SETTINGS_SIDEBAR_PLUS_LINK = "Quipu Plus";
+/** CTA de upsell en sidebar (free). No es el nombre del plan activo. */
+export const SETTINGS_SIDEBAR_PLUS_LINK = "Ver Quipu Plus";
 
 export const SETTINGS_SECURITY_LABEL = "Seguridad y passkeys";
 export const SETTINGS_PASSKEY_ADD = "+ Agregar passkey";
@@ -149,7 +150,6 @@ export const SETTINGS_EXTRAORDINARY_PROFIT_HINT = "Reparto anual";
 export const SETTINGS_EXTRAORDINARY_CUSTOM = "Otros extraordinarios";
 export const SETTINGS_EXTRAORDINARY_CUSTOM_HINT = "Cualquier otro ingreso";
 export const SETTINGS_CURRENCY_LABEL = "Moneda";
-export const SETTINGS_CURRENCY_VALUE = "Sol peruano · S/";
 export const SETTINGS_LANGUAGE_LABEL = "Idioma";
 export const SETTINGS_LANGUAGE_VALUE = "Español";
 export const SETTINGS_DAILY_SUMMARY_LABEL = "Resumen diario";

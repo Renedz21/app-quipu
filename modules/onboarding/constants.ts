@@ -1,6 +1,7 @@
-export const STEP_LABELS = ["Perfil", "Sistema", "Reparto"] as const;
-
+import { DEFAULT_MARKET } from "@/core/constants";
 import type { OnboardingState } from "./types";
+
+export const STEP_LABELS = ["Perfil", "Sistema", "Reparto"] as const;
 
 export const ONBOARDING_DEFAULTS: OnboardingState = {
   currentStep: 1,
@@ -13,9 +14,10 @@ export const ONBOARDING_DEFAULTS: OnboardingState = {
   allocationNeeds: 50,
   allocationWants: 30,
   allocationSavings: 20,
-  country: "Perú",
-  currencyCode: "PEN",
-  currencySymbol: "S/",
+  marketId: DEFAULT_MARKET.id,
+  country: DEFAULT_MARKET.country,
+  currencyCode: DEFAULT_MARKET.currencyCode,
+  currencySymbol: DEFAULT_MARKET.currencySymbol,
 };
 
 export const STORAGE_KEY = "quipu-onboarding-state";

@@ -94,7 +94,7 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
             {plan === "free" ? (
               <Link
                 href="/settings#plan"
-                className="mt-0.5 inline-block text-[11px] text-faint transition-colors hover:text-mute"
+                className="mt-0.5 inline-block text-[11px] font-medium text-qp-deep transition-colors hover:underline"
               >
                 {SETTINGS_SIDEBAR_PLUS_LINK}
               </Link>

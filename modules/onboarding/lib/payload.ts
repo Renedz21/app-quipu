@@ -1,3 +1,4 @@
+import { marketFromCurrencyCode, marketFromId } from "@/core/constants";
 import { ONBOARDING_DEFAULTS } from "../constants";
 import { finalPayloadSchema } from "../schemas";
 
@@ -43,6 +44,20 @@ export function buildOnboardingPayload(input: unknown) {
     ...ONBOARDING_DEFAULTS,
     ...raw,
   };
+
+  const market =
+    (typeof merged.marketId === "string"
+      ? marketFromId(merged.marketId as "pe" | "es" | "us")
+      : undefined) ??
+    (typeof merged.currencyCode === "string"
+      ? marketFromCurrencyCode(merged.currencyCode)
+      : undefined);
+
+  if (market) {
+    merged.country = market.country;
+    merged.currencyCode = market.currencyCode;
+    merged.currencySymbol = market.currencySymbol;
+  }
 
   const picked: Record<string, unknown> = {};
   for (const key of PROFILE_PAYLOAD_KEYS) {

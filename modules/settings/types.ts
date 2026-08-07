@@ -31,7 +31,13 @@ export type SettingsSubscriptionOverview = {
   renewalSummary: string | null;
   paymentMethodSummary: string | null;
   checkoutAvailable: boolean;
+  /** @deprecated Prefer plusProductIds.monthly */
   premiumProductId: string | null;
+  plusProductIds: {
+    monthly: string | null;
+    yearly: string | null;
+  };
+  currencyCode: string;
 };
 
 export type SettingsPasskeyOverview = {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import type { CommitmentCoverageItem } from "@/shared/components/commitments/commitment-coverage-list";
@@ -43,10 +43,27 @@ export function CommitmentsViewSkeleton() {
 export function CommitmentsView() {
   const data = useQuery(api.fixedCommitments.getCommitmentCoverage, {});
   const searchParams = useSearchParams();
-  const [addOpen, setAddOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const urlWantsAdd = searchParams.get("add") === "1";
+  const [manualAddOpen, setManualAddOpen] = useState(false);
+  const addOpen = urlWantsAdd || manualAddOpen;
   const [selectedCommitment, setSelectedCommitment] =
     useState<CommitmentForDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  function setAddOpen(open: boolean) {
+    if (open) {
+      setManualAddOpen(true);
+      return;
+    }
+    setManualAddOpen(false);
+    if (!urlWantsAdd) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("add");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   function openCommitmentDetail(commitment: CommitmentCoverageItem) {
     if (!commitment.nextDueAt) return;
@@ -63,12 +80,6 @@ export function CommitmentsView() {
     });
     setDetailOpen(true);
   }
-
-  useEffect(() => {
-    if (searchParams.get("add") === "1") {
-      setAddOpen(true);
-    }
-  }, [searchParams]);
 
   if (data === undefined) {
     return <CommitmentsViewSkeleton />;

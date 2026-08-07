@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -25,22 +25,56 @@ type Props = {
 type CloseReport = NonNullable<CycleCloseReportQueryResult>["report"];
 type EnvelopeSpendRow = CloseReport["spendByEnvelope"][number];
 
+const dismissListeners = new Set<() => void>();
+
 function dismissStorageKey(closedCycleId: string) {
   return `${CYCLE_CLOSE_REPORT_DISMISS_KEY}:${closedCycleId}`;
 }
 
+function subscribeDismissStore(onStoreChange: () => void) {
+  dismissListeners.add(onStoreChange);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key?.startsWith(`${CYCLE_CLOSE_REPORT_DISMISS_KEY}:`)) {
+      onStoreChange();
+    }
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    dismissListeners.delete(onStoreChange);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function notifyDismissStore() {
+  for (const listener of dismissListeners) {
+    listener();
+  }
+}
+
+function isDismissedInStorage(closedCycleId: string) {
+  return window.localStorage.getItem(dismissStorageKey(closedCycleId)) === "1";
+}
+
+function persistDismiss(closedCycleId: string) {
+  window.localStorage.setItem(dismissStorageKey(closedCycleId), "1");
+  notifyDismissStore();
+}
+
 export function CycleCloseReportCard({ currencyCode }: Props) {
   const data = useLatestCloseReport();
-  const [dismissed, setDismissed] = useState(true);
+  const closedCycleId =
+    data?.justClosed && data.report ? data.report.closedCycleId : null;
 
-  useEffect(() => {
-    if (!data?.report || !data.justClosed) {
-      setDismissed(true);
-      return;
-    }
-    const key = dismissStorageKey(data.report.closedCycleId);
-    setDismissed(window.localStorage.getItem(key) === "1");
-  }, [data]);
+  const getSnapshot = useCallback(
+    () => (closedCycleId ? isDismissedInStorage(closedCycleId) : true),
+    [closedCycleId],
+  );
+
+  const dismissed = useSyncExternalStore(
+    subscribeDismissStore,
+    getSnapshot,
+    () => true,
+  );
 
   if (!data?.report || !data.justClosed || dismissed) {
     return null;
@@ -50,12 +84,6 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
   const spendLines = report.spendByEnvelope.filter(
     (row: EnvelopeSpendRow) => row.type !== "savings" && row.spentCents > 0,
   );
-
-  function handleDismiss() {
-    const key = dismissStorageKey(report.closedCycleId);
-    window.localStorage.setItem(key, "1");
-    setDismissed(true);
-  }
 
   return (
     <section
@@ -135,7 +163,7 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
         type="button"
         variant="outline"
         className="mt-4 w-full sm:w-auto"
-        onClick={handleDismiss}
+        onClick={() => persistDismiss(report.closedCycleId)}
       >
         {CYCLE_CLOSE_REPORT_DISMISS}
       </Button>

@@ -2,7 +2,6 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -73,11 +72,12 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
     },
   });
 
-  useEffect(() => {
-    if (!open) {
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
       form.reset();
     }
-  }, [open, form]);
+    onOpenChange(nextOpen);
+  }
 
   const formBody = (
     <form
@@ -222,7 +222,7 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent
           side="bottom"
           className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-0 pt-3"
@@ -240,7 +240,7 @@ export function AddCommitmentDialog({ open, onOpenChange }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[400px] gap-0 rounded-[22px] p-0">
         <DialogTitle className="px-5 pt-5 text-[15px] font-semibold text-ink">
           {ADD_COMMITMENT_TITLE}

@@ -14,6 +14,8 @@ type ExpenseRegisterContextValue = {
   open: (options?: ExpenseRegisterOpenOptions) => void;
   close: () => void;
   isOpen: boolean;
+  /** Increments on each `open()` so consumers can remount fresh session state. */
+  openNonce: number;
   options: ExpenseRegisterOpenOptions;
 };
 
@@ -26,12 +28,14 @@ export function ExpenseRegisterContextProvider({
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openNonce, setOpenNonce] = useState(0);
   const [options, setOptions] = useState<ExpenseRegisterOpenOptions>({
     variant: "fab",
   });
 
   const open = useCallback((nextOptions?: ExpenseRegisterOpenOptions) => {
     setOptions(nextOptions ?? { variant: "fab" });
+    setOpenNonce((nonce) => nonce + 1);
     setIsOpen(true);
   }, []);
 
@@ -40,8 +44,8 @@ export function ExpenseRegisterContextProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ open, close, isOpen, options }),
-    [open, close, isOpen, options],
+    () => ({ open, close, isOpen, openNonce, options }),
+    [open, close, isOpen, openNonce, options],
   );
 
   return (

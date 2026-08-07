@@ -13,7 +13,7 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
-import { plusMonthlyPriceLabel, plusPaywallCta } from "@/shared/constants/plan";
+import { plusPaywallCta } from "@/shared/constants/plan";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib/utils";
 
@@ -42,24 +42,14 @@ export function PremiumLockPrompt({
   href = "/settings/account#plan",
 }: Props) {
   const isMobile = useIsMobile();
-  const priceLabel = plusMonthlyPriceLabel(currencyCode);
   const resolvedCta = ctaLabel ?? plusPaywallCta(currencyCode);
 
   const bodyContent = (
     <div className="relative">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 w-0.5 rounded-full bg-qp"
-      />
-      <div className="pl-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-qp-deep">
-            Quipu Plus
-          </span>
-          <span className="font-mono text-[10px] tracking-wide text-faint">
-            {priceLabel}
-          </span>
-        </div>
+      <div>
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-qp-deep">
+          Quipu Plus
+        </span>
         {isMobile ? (
           <SheetTitle className="mt-3 font-serif text-[22px] font-medium leading-snug text-ink">
             {title}

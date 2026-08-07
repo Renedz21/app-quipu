@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { formatCents } from "@/shared/lib/money";
 import {
@@ -65,10 +65,8 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
   const closedCycleId =
     data?.justClosed && data.report ? data.report.closedCycleId : null;
 
-  const getSnapshot = useCallback(
-    () => (closedCycleId ? isDismissedInStorage(closedCycleId) : true),
-    [closedCycleId],
-  );
+  const getSnapshot = () =>
+    closedCycleId ? isDismissedInStorage(closedCycleId) : true;
 
   const dismissed = useSyncExternalStore(
     subscribeDismissStore,

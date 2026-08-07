@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { currencySymbolForCode, DEFAULT_CURRENCY } from "@/core/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
@@ -48,9 +48,8 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
   const preselectedEnvelope = options.preselectedEnvelope;
   const hasActiveCycle = Boolean(summary?.cycle);
 
-  const recentEnvelopes = useMemo(
-    () => extractRecentExpenseEnvelopes(summary?.movements ?? []),
-    [summary?.movements],
+  const recentEnvelopes = extractRecentExpenseEnvelopes(
+    summary?.movements ?? [],
   );
 
   function handleOpenChange(nextOpen: boolean) {

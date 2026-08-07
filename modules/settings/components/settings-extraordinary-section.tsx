@@ -210,9 +210,8 @@ export function SettingsExtraordinarySection({
     } catch (error) {
       setOptimisticAutoApply((prev) => dropOptimisticKey(prev, key));
       toast.error(fromConvexError(error).message);
-    } finally {
-      setPendingKey((current) => (current === key ? null : current));
     }
+    setPendingKey((current) => (current === key ? null : current));
   }
 
   return (

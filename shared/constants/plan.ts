@@ -3,7 +3,7 @@
  * IDs Polar: mensual + anual (multi-currency en el mismo producto).
  */
 
-import type { CurrencyCode } from "@/shared/constants/markets";
+import type { CurrencyCode } from "./markets";
 
 export const PLAN_LABELS = {
   free: "Plan Quipu",

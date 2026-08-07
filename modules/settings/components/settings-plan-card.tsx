@@ -130,11 +130,6 @@ export function SettingsPlanCard({ subscription, className }: Props) {
 
       {!isPremium ? (
         <div className="relative px-5 py-5 md:px-6 md:py-6">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-5 left-0 w-[3px] rounded-r-full bg-qp md:inset-y-6"
-          />
-
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-qp-deep">

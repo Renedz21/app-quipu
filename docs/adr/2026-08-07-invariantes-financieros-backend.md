@@ -30,7 +30,7 @@ Un sobre congelado no admite crear gasto, aumentar gasto ni transferencias salie
 
 ### I3 — Plus vende inteligencia, no candados básicos
 
-Gratis: rescate manual entre sobres, posponer compromiso, posponer aviso de crisis.  
+Gratis: rescate manual entre sobres (mismo flujo sugerir → confirmar → transferir que Plus), posponer compromiso, posponer aviso de crisis.  
 Plus: cubrir desde ahorro del ciclo, plan de crisis completo.
 
 Detectar un problema financiero y exigir suscripción para reorganizar el propio dinero es inaceptable.

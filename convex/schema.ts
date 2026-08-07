@@ -100,7 +100,7 @@ export const appTables = {
     polarCustomerId: v.optional(v.string()),
     polarSubscriptionId: v.optional(v.string()),
     coachCrisisSnoozedUntil: v.optional(v.number()),
-    // Free rescue upsell: triggered when user elige suggest_rescue sin Plus.
+    // Legacy (I3): rescate ya no usa upsell; campos opcionales sin escritura nueva.
     coachRescueUpsellAt: v.optional(v.number()),
     coachRescueUpsellDismissedAt: v.optional(v.number()),
     appearanceTheme: v.optional(

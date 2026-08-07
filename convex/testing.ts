@@ -47,14 +47,8 @@ export const setMyPlan = mutation({
 });
 
 /**
- * SOLO DEBUG: devuelve el estado del coach del usuario autenticado.
- *
- * Para diagnosticar por qué el upsell no aparece tras click en "Activar rescate
- * preventivo" en plan free. Expone: plan del perfil, últimas 3 interacciones
- * del coach con su `initialNudge` (clave para saber si el backend las cerró
- * como free_advice), y la presentación actual del coach.
- *
- * Guard de deployment igual que setMyPlan.
+ * SOLO DEBUG: estado del coach del usuario autenticado (plan, interacciones
+ * recientes, presentación). Guard de deployment igual que setMyPlan.
  */
 export const debugMyCoachState = query({
   args: {},

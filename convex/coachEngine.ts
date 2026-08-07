@@ -200,20 +200,7 @@ export const resolveNudgeAction = mutation({
       });
     }
 
-    if (optionId === "suggest_rescue" && profile.plan === "free") {
-      const now = Date.now();
-      await ctx.db.patch(interactionId, {
-        selectedOptionId: optionId,
-        status: "resolved",
-        initialNudge:
-          "[Plan Free] El Coach te aconseja: reduce S/ 15 diarios en tus consumos de Gustos por 4 días para equilibrar el sobre sin tocar tus ahorros.",
-      });
-      await ctx.db.patch(profile._id, {
-        coachRescueUpsellAt: now,
-      });
-      return { success: true, mode: "free_advice" as const };
-    }
-
+    // I3 — rescate manual es gratis: mismo flujo para free y Plus.
     if (optionId === "suggest_rescue") {
       const { savings, wants } = await getCycleEnvelopes(
         ctx,
@@ -732,35 +719,5 @@ export const applyCrisisPlan = mutation({
       projectedCushionCents: plan.projectedCushionCents,
       canFullyResolve: plan.canFullyResolve,
     };
-  },
-});
-
-export const dismissRescueUpsell = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "No encontramos tu perfil.",
-      });
-    }
-
-    await ctx.db.patch(profile._id, {
-      coachRescueUpsellDismissedAt: Date.now(),
-    });
-
-    return { success: true };
   },
 });

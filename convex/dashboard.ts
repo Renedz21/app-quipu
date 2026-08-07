@@ -1,6 +1,5 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { isRescueUpsellAvailable } from "./lib/coachRescueUpsell";
 import { resolveCoachPresentation } from "./lib/coachState";
 import {
   computeCoverageProgressPercent,
@@ -375,7 +374,6 @@ export const getSummary = query({
       awaitingRescueConfirmation:
         pendingCoach?.selectedOptionId === "suggest_rescue" &&
         pendingCoach?.rescueSuggestion != null,
-      rescueUpsellAvailable: isRescueUpsellAvailable(profile),
     };
 
     return {

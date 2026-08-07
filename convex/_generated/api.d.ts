@@ -30,7 +30,6 @@ import type * as lib_applyIncomeAllocation from "../lib/applyIncomeAllocation.js
 import type * as lib_authRateLimit from "../lib/authRateLimit.js";
 import type * as lib_billingSync from "../lib/billingSync.js";
 import type * as lib_budgetMath from "../lib/budgetMath.js";
-import type * as lib_coachRescueUpsell from "../lib/coachRescueUpsell.js";
 import type * as lib_coachState from "../lib/coachState.js";
 import type * as lib_commitmentCoverage from "../lib/commitmentCoverage.js";
 import type * as lib_commitmentDueDate from "../lib/commitmentDueDate.js";
@@ -117,7 +116,6 @@ declare const fullApi: ApiFromModules<{
   "lib/authRateLimit": typeof lib_authRateLimit;
   "lib/billingSync": typeof lib_billingSync;
   "lib/budgetMath": typeof lib_budgetMath;
-  "lib/coachRescueUpsell": typeof lib_coachRescueUpsell;
   "lib/coachState": typeof lib_coachState;
   "lib/commitmentCoverage": typeof lib_commitmentCoverage;
   "lib/commitmentDueDate": typeof lib_commitmentDueDate;

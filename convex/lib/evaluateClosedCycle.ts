@@ -1,12 +1,8 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { evaluateCycleCompliance } from "./budgetMath";
-import {
-  type CommitmentSlice,
-  computeAllCommitmentCoverage,
-  type IncomeEventSlice,
-} from "./commitmentCoverage";
 import { computeNextStreak } from "./gamificationMath";
+import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
 export async function evaluateClosedCycle(
   ctx: MutationCtx,
@@ -44,55 +40,21 @@ export async function evaluateClosedCycle(
   const wantsEnvelope = envelopes.find((env) => env.type === "wants");
   const wantsWithinBudget = (wantsEnvelope?.remainingAmount ?? 0) >= 0;
 
-  const [commitments, incomeEvents] = await Promise.all([
-    ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
-      .collect(),
-    ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-      .collect(),
-  ]);
-
-  const commitmentSlices: CommitmentSlice[] = commitments.map((commitment) => ({
-    id: commitment._id,
-    amount: commitment.amount,
-    envelope: commitment.envelope,
-    dueDay: commitment.dueDay,
-  }));
-
-  const incomeEventSlices: IncomeEventSlice[] = incomeEvents.map((event) => ({
-    id: event._id,
-    occurredAt: event.occurredAt,
-    distributionApplied: event.distributionApplied,
-  }));
-
-  const coverageById = computeAllCommitmentCoverage({
-    commitments: commitmentSlices,
-    cycle: {
-      startDate: cycle.startDate,
-      endDate: cycle.endDate,
-    },
-    incomeEvents: incomeEventSlices,
+  const coverageContext = await loadCycleCoverageById(
+    ctx,
+    profileId,
+    cycleId,
     now,
-    coverageBoost: cycle.coverageBoost ?? undefined,
-    excludedCommitmentIds: (() => {
-      const ids = new Set<Id<"fixedCommitments">>();
-      for (const commitment of commitments) {
-        if (commitment.postponedForCycleId === cycleId) {
-          ids.add(commitment._id);
-        }
-      }
-      return ids;
-    })(),
-  });
+  );
+  const commitments = coverageContext?.commitments ?? [];
+  const coverageById = coverageContext?.coverageById ?? new Map();
 
   const allCommitmentsCovered =
-    commitmentSlices.length === 0
+    commitments.length === 0
       ? true
-      : commitmentSlices.every(
-          (commitment) => coverageById.get(commitment.id)?.status === "covered",
+      : commitments.every(
+          (commitment) =>
+            coverageById.get(commitment._id)?.status === "covered",
         );
 
   await ctx.db.insert("cycleHistory", {

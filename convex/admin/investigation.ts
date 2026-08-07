@@ -5,10 +5,8 @@ import {
   internalMutation,
   internalQuery,
   type MutationCtx,
-  mutation,
   type QueryCtx,
 } from "../_generated/server";
-import { assertAdminSecret } from "../lib/adminAuth";
 import { highestSeverity, scanTextsForContentFlags } from "../lib/contentFlags";
 import {
   extractEmailDomain,
@@ -173,21 +171,16 @@ export const buildInvestigationBundle = internalQuery({
     buildInvestigationBundleForProfile(ctx, args.profileId),
 });
 
-export const getProfileInvestigationBundle = mutation({
-  args: {
-    profileId: v.id("profiles"),
-    adminSecret: v.string(),
-  },
+/** @deprecated Prefer `buildInvestigationBundle` (I5 — internal only). */
+export const getProfileInvestigationBundle = internalQuery({
+  args: { profileId: v.id("profiles") },
   returns: investigationBundleValidator,
-  handler: async (ctx, args) => {
-    assertAdminSecret(args.adminSecret);
-    return buildInvestigationBundleForProfile(ctx, args.profileId);
-  },
+  handler: async (ctx, args) =>
+    buildInvestigationBundleForProfile(ctx, args.profileId),
 });
 
 export const enqueueManualReviewFlag = internalMutation({
   args: {
-    adminSecret: v.string(),
     profileId: v.id("profiles"),
     reason: v.union(
       v.literal("content"),
@@ -200,7 +193,6 @@ export const enqueueManualReviewFlag = internalMutation({
   },
   returns: v.id("accountReviewFlags"),
   handler: async (ctx, args) => {
-    assertAdminSecret(args.adminSecret);
     return await ctx.db.insert("accountReviewFlags", {
       profileId: args.profileId,
       reason: args.reason,

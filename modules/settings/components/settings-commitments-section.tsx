@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { DEFAULT_CURRENCY } from "@/core/constants";
+import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
@@ -25,7 +27,9 @@ export function SettingsCommitmentsSection({
   id?: string;
 }) {
   const commitments = useSettingsCommitments();
+  const profile = useMyProfile();
   const [addOpen, setAddOpen] = useState(false);
+  const currencyCode = profile?.currencyCode ?? DEFAULT_CURRENCY.code;
 
   if (commitments === undefined) {
     return (
@@ -55,7 +59,8 @@ export function SettingsCommitmentsSection({
         </span>
         {commitments.length > 0 ? (
           <span className="text-xs text-mute">
-            {formatCents(totalCents)} {SETTINGS_COMMITMENTS_TOTAL_SUFFIX}
+            {formatCents(totalCents, { currency: currencyCode })}{" "}
+            {SETTINGS_COMMITMENTS_TOTAL_SUFFIX}
           </span>
         ) : null}
       </div>
@@ -87,7 +92,7 @@ export function SettingsCommitmentsSection({
                 </div>
               </div>
               <span className="font-serif text-[15px] text-ink">
-                {formatCents(commitment.amount)}
+                {formatCents(commitment.amount, { currency: currencyCode })}
               </span>
             </li>
           ))}

@@ -100,7 +100,7 @@ export const appTables = {
     polarCustomerId: v.optional(v.string()),
     polarSubscriptionId: v.optional(v.string()),
     coachCrisisSnoozedUntil: v.optional(v.number()),
-    // Free rescue upsell: triggered when user elige suggest_rescue sin Plus.
+    // Legacy (I3): rescate ya no usa upsell; campos opcionales sin escritura nueva.
     coachRescueUpsellAt: v.optional(v.number()),
     coachRescueUpsellDismissedAt: v.optional(v.number()),
     appearanceTheme: v.optional(
@@ -121,10 +121,13 @@ export const appTables = {
         v.literal("under_review"),
       ),
     ),
+    // I8 — candidato a revisión de contenido (no barrer todos los perfiles).
+    needsContentReview: v.optional(v.boolean()),
   })
     .index("by_userId", ["userId"])
     .index("by_polarCustomerId", ["polarCustomerId"])
-    .index("by_polarSubscriptionId", ["polarSubscriptionId"]),
+    .index("by_polarSubscriptionId", ["polarSubscriptionId"])
+    .index("by_needsContentReview", ["needsContentReview"]),
 
   // Ciclos de Flujo de Caja reales (Payday-to-Payday)
   financialCycles: defineTable({

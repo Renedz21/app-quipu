@@ -41,6 +41,44 @@ function mixedWizardState(
   };
 }
 
+describe("buildOnboardingPayload — mercado", () => {
+  it("normaliza España → EUR desde marketId", () => {
+    const payload = buildOnboardingPayload(
+      independentWizardState({ marketId: "es" }),
+    );
+    expect(payload).toMatchObject({
+      country: "España",
+      currencyCode: "EUR",
+      currencySymbol: "€",
+    });
+  });
+
+  it("normaliza Estados Unidos → USD desde marketId", () => {
+    const payload = buildOnboardingPayload(
+      independentWizardState({ marketId: "us" }),
+    );
+    expect(payload).toMatchObject({
+      country: "Estados Unidos",
+      currencyCode: "USD",
+      currencySymbol: "$",
+    });
+  });
+
+  it("acepta currencyCode EUR aunque country venga residual", () => {
+    const payload = buildOnboardingPayload(
+      independentWizardState({
+        marketId: "es",
+        country: "Perú",
+        currencyCode: "EUR",
+        currencySymbol: "S/",
+      }),
+    );
+    expect(payload.currencyCode).toBe("EUR");
+    expect(payload.currencySymbol).toBe("€");
+    expect(payload.country).toBe("España");
+  });
+});
+
 describe("buildOnboardingPayload — independiente (variable)", () => {
   it("acepta el estado real del wizard sin payFrequency (regresión QUIPU-APP-1)", () => {
     const payload = buildOnboardingPayload(independentWizardState());

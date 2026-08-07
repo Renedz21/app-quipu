@@ -1,11 +1,6 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import {
-  type CommitmentSlice,
-  computeAllCommitmentCoverage,
-  type IncomeEventSlice,
-} from "./commitmentCoverage";
-import { activeReservedCents } from "./commitmentReservation";
+import { loadCycleCoverageById } from "./loadCycleCoverageContext";
 
 export async function clearCommitmentCoverageForProfile(
   ctx: MutationCtx,
@@ -32,61 +27,15 @@ export async function evaluateCommitmentCoverageForCycle(
   cycleId: Id<"financialCycles">,
   now: number,
 ) {
-  const cycle = await ctx.db.get(cycleId);
-  if (!cycle) return;
-
-  const [commitments, incomeEvents, reservationRows] = await Promise.all([
-    ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
-      .collect(),
-    ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-      .collect(),
-    ctx.db
-      .query("commitmentReservations")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-      .collect(),
-  ]);
-
-  const commitmentSlices: CommitmentSlice[] = commitments.map((commitment) => ({
-    id: commitment._id,
-    amount: commitment.amount,
-    envelope: commitment.envelope,
-    dueDay: commitment.dueDay,
-  }));
-
-  const incomeEventSlices: IncomeEventSlice[] = incomeEvents.map((event) => ({
-    id: event._id,
-    occurredAt: event.occurredAt,
-    distributionApplied: event.distributionApplied,
-  }));
-
-  const coverageById = computeAllCommitmentCoverage({
-    commitments: commitmentSlices,
-    cycle: {
-      startDate: cycle.startDate,
-      endDate: cycle.endDate,
-    },
-    incomeEvents: incomeEventSlices,
+  const coverageContext = await loadCycleCoverageById(
+    ctx,
+    profileId,
+    cycleId,
     now,
-    coverageBoost: cycle.coverageBoost ?? undefined,
-    reservations: reservationRows.map((row) => ({
-      commitmentId: row.commitmentId,
-      activeCents: activeReservedCents(row),
-      incomeEventId: row.incomeEventId,
-    })),
-    excludedCommitmentIds: (() => {
-      const ids = new Set<Id<"fixedCommitments">>();
-      for (const commitment of commitments) {
-        if (commitment.postponedForCycleId === cycleId) {
-          ids.add(commitment._id);
-        }
-      }
-      return ids;
-    })(),
-  });
+  );
+  if (!coverageContext) return;
+
+  const { commitments, coverageById } = coverageContext;
 
   await Promise.all(
     commitments.map((commitment) => {

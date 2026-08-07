@@ -30,7 +30,7 @@ export function SettingsSystemViewSkeleton() {
         variant="line"
         className="mt-2 h-[13px] w-[240px] max-w-full rounded-[5px]"
       />
-      <div className="mt-6 flex flex-col gap-3.5 md:flex-row md:items-start">
+      <div className="mt-6 flex flex-col gap-3.5 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
           <Skeleton className="h-[180px] rounded-2xl" />
           <Skeleton className="h-[140px] rounded-2xl [animation-delay:150ms]" />
@@ -90,13 +90,13 @@ export function SettingsSystemView() {
         </p>
       </header>
 
-      <div className="flex flex-col gap-3.5 md:flex-row md:items-start">
-        <div className="flex min-w-0 flex-col gap-3.5 md:flex-[1.1]">
+      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start lg:gap-4">
+        <div className="flex min-w-0 flex-col gap-3.5 lg:flex-[1.15]">
           <SettingsSystemSection />
         </div>
         <SettingsCommitmentsSection
           id="compromisos"
-          className="flex min-w-0 flex-col md:flex-1"
+          className="flex min-w-0 flex-col lg:flex-1"
         />
       </div>
 

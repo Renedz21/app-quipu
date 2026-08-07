@@ -1,12 +1,10 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import {
-  computeAllCommitmentCoverage,
-  daysUntilNextDue,
-} from "./lib/commitmentCoverage";
+import { daysUntilNextDue } from "./lib/commitmentCoverage";
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { requirePremiumProfile } from "./lib/entitlements";
+import { loadCycleCoverageById } from "./lib/loadCycleCoverageContext";
 import {
   buildUpcomingBadgeLabel,
   filterUpcomingCommitments,
@@ -37,59 +35,28 @@ export const listUpcomingForBadge = query({
     const profile = await requirePremiumProfile(ctx);
     const now = Date.now();
 
-    const [activeCycle, commitmentsRaw] = await Promise.all([
-      ctx.db
-        .query("financialCycles")
-        .withIndex("by_profile_status", (q) =>
-          q.eq("profileId", profile._id).eq("status", "active"),
-        )
-        .unique(),
-      ctx.db
-        .query("fixedCommitments")
-        .withIndex("by_profileId", (q) => q.eq("profileId", profile._id))
-        .collect(),
-    ]);
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique();
 
-    const incomeEvents = activeCycle
-      ? await ctx.db
-          .query("incomeEvents")
-          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-          .collect()
-      : [];
-
-    const excludedCommitmentIds = new Set<string>();
-    if (activeCycle) {
-      for (const commitment of commitmentsRaw) {
-        if (commitment.postponedForCycleId === activeCycle._id) {
-          excludedCommitmentIds.add(commitment._id);
-        }
-      }
+    if (!activeCycle) {
+      return { badgeLabel: null, items: [] };
     }
 
-    const coverageById = activeCycle
-      ? computeAllCommitmentCoverage({
-          commitments: commitmentsRaw.map((commitment) => ({
-            id: commitment._id,
-            amount: commitment.amount,
-            envelope: commitment.envelope,
-            dueDay: commitment.dueDay,
-            nextDueAt: commitment.nextDueAt,
-            createdAt: commitment._creationTime,
-          })),
-          cycle: {
-            startDate: activeCycle.startDate,
-            endDate: activeCycle.endDate,
-          },
-          incomeEvents: incomeEvents.map((event) => ({
-            id: event._id,
-            occurredAt: event.occurredAt,
-            distributionApplied: event.distributionApplied,
-          })),
-          now,
-          coverageBoost: activeCycle.coverageBoost ?? undefined,
-          excludedCommitmentIds,
-        })
-      : new Map();
+    const coverageContext = await loadCycleCoverageById(
+      ctx,
+      profile._id,
+      activeCycle._id,
+      now,
+    );
+    if (!coverageContext) {
+      return { badgeLabel: null, items: [] };
+    }
+
+    const { commitments: commitmentsRaw, coverageById } = coverageContext;
 
     const slices = commitmentsRaw.map((commitment) => {
       const nextDueAt = resolveCommitmentNextDueAt({

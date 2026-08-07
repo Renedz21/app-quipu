@@ -12,7 +12,7 @@ import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { PLAN_LABELS } from "@/shared/constants/plan";
+import { PLAN_LABELS, plusMonthlyPriceLabel } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_CHECKOUT_SUCCESS,
@@ -24,7 +24,6 @@ import {
   SETTINGS_PAGE_TITLE,
   SETTINGS_PLAN_ACTIVE_BADGE,
   SETTINGS_PLAN_LABEL,
-  SETTINGS_PLAN_PLUS_PRICE,
   SETTINGS_PROFILE_LABEL,
   SETTINGS_SECURITY_LABEL,
   SETTINGS_SIGN_OUT,
@@ -52,12 +51,12 @@ export function SettingsViewSkeleton() {
         variant="line"
         className="mt-2 h-[13px] w-[280px] max-w-full rounded-[5px]"
       />
-      <div className="mt-6 flex flex-col gap-3.5 md:flex-row">
+      <div className="mt-6 flex flex-col gap-3.5 lg:flex-row">
         <div className="flex flex-1 flex-col gap-3.5">
           <Skeleton className="h-[150px] rounded-2xl" />
           <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
         </div>
-        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] md:self-start" />
+        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] lg:self-start" />
       </div>
     </div>
   );
@@ -66,13 +65,15 @@ export function SettingsViewSkeleton() {
 function MobileAccountSummary({
   name,
   plan,
+  currencyCode,
 }: {
   name: string;
   plan: "free" | "premium";
+  currencyCode: string;
 }) {
   const planLine =
     plan === "premium"
-      ? `${PLAN_LABELS.premium} · ${SETTINGS_PLAN_PLUS_PRICE}`
+      ? `${PLAN_LABELS.premium} · ${plusMonthlyPriceLabel(currencyCode)}`
       : PLAN_LABELS.free;
 
   return (
@@ -219,6 +220,7 @@ export function SettingsView() {
         <MobileAccountSummary
           name={overview.profile.name}
           plan={overview.profile.plan}
+          currencyCode={overview.subscription.currencyCode}
         />
 
         <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">
@@ -260,7 +262,7 @@ export function SettingsView() {
 
         <SettingsSystemGoCard className="mb-5" />
 
-        <div className="flex min-w-0 flex-col gap-3.5 md:flex-row md:gap-3.5">
+        <div className="flex min-w-0 flex-col gap-3.5 lg:flex-row lg:gap-4">
           <div className="flex min-w-0 flex-1 flex-col gap-3.5">
             <SettingsProfileCard id="perfil" profile={overview.profile} />
             <div id="plan" className="min-w-0 scroll-mt-6">
@@ -275,7 +277,7 @@ export function SettingsView() {
               ) : null}
             </div>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 w-full lg:max-w-md lg:flex-1">
             <SettingsSecurityCard
               id="seguridad"
               sessionsApiReady={overview.sessionsApiReady}

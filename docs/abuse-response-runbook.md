@@ -72,14 +72,17 @@ App (ya en código):
 
 Configurar en Convex prod:
 
-- `ADMIN_SECRET` — secreto largo aleatorio (solo owner).
 - `TURNSTILE_SECRET_KEY` — validación server-side.
+
+Las operaciones de admin son **solo internal** (I5): se ejecutan desde el dashboard
+Convex o `npx convex run` con deploy key de owner. **No** hay API pública ni
+`adminSecret` en args.
 
 **Caso piloto** — profileId `jn71tmp13b8x5pfpv7z92xhp5h8b7rhn`:
 
 ```bash
-npx convex run admin/investigation:getProfileInvestigationBundle --prod \
-  '{"profileId":"jn71tmp13b8x5pfpv7z92xhp5h8b7rhn","adminSecret":"<ADMIN_SECRET>"}'
+npx convex run admin/investigation:buildInvestigationBundle --prod \
+  '{"profileId":"jn71tmp13b8x5pfpv7z92xhp5h8b7rhn"}'
 ```
 
 El bundle incluye: resumen del perfil, email auth, stats de ingresos, descripciones recientes, flags de contenido, dominio bloqueado.
@@ -88,17 +91,19 @@ El bundle incluye: resumen del perfil, email auth, stats de ingresos, descripcio
 
 ```bash
 npx convex run admin/suspension:setAccountStatus --prod \
-  '{"profileId":"<ID>","accountStatus":"suspended","adminSecret":"<ADMIN_SECRET>"}'
+  '{"profileId":"<ID>","accountStatus":"suspended"}'
 ```
 
 **Descartar flag:**
 
 ```bash
 npx convex run admin/suspension:dismissReviewFlag --prod \
-  '{"flagId":"<FLAG_ID>","adminSecret":"<ADMIN_SECRET>"}'
+  '{"flagId":"<FLAG_ID>"}'
 ```
 
-Cron interno: cada 6 h escanea perfiles y crea flags en `accountReviewFlags` (no suspende automáticamente).
+Cron interno (I8): cada 6 h procesa perfiles con `needsContentReview: true`
+(candidatos marcados al escribir texto sospechoso) y crea flags en
+`accountReviewFlags`. No suspende automáticamente.
 
 ---
 

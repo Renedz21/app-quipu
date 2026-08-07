@@ -5,6 +5,9 @@ import {
   buildWantsOverflowNudge,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
+import { requireActiveAccount } from "./lib/entitlements";
+import { isEnvelopeFrozen } from "./lib/envelopeGuards";
+import { markNeedsContentReviewIfSuspicious } from "./lib/markNeedsContentReview";
 
 const RECENT_EXPENSES_LIMIT = 5;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -16,29 +19,12 @@ export const registerExpense = mutation({
     envelopeType: v.union(v.literal("needs"), v.literal("wants")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profile = await requireActiveAccount(ctx);
     if (!Number.isInteger(args.amount) || args.amount <= 0) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
         message: "El monto debe ser un entero de céntimos mayor a cero",
         data: { field: "amount" },
-      });
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Perfil no encontrado.",
       });
     }
 
@@ -73,6 +59,15 @@ export const registerExpense = mutation({
     }
 
     const now = Date.now();
+    if (isEnvelopeFrozen(envelope.frozenUntil, now)) {
+      throw new ConvexError({
+        code: "ENVELOPE_FROZEN",
+        message:
+          "Este sobre está congelado temporalmente. Espera a que termine el congelamiento o elige otro sobre.",
+        data: { field: "envelopeType" },
+      });
+    }
+
     const newRemainingAmount = envelope.remainingAmount - args.amount;
     await ctx.db.patch(envelope._id, { remainingAmount: newRemainingAmount });
 
@@ -84,6 +79,10 @@ export const registerExpense = mutation({
       description: args.description,
       timestamp: now,
     });
+
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [
+      args.description,
+    ]);
 
     if (
       args.envelopeType === "wants" &&
@@ -189,13 +188,7 @@ export const updateExpense = mutation({
     envelopeType: v.union(v.literal("needs"), v.literal("wants")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profileGate = await requireActiveAccount(ctx);
     if (!Number.isInteger(args.amount) || args.amount <= 0) {
       throw new ConvexError({
         code: "VALIDATION_ERROR",
@@ -219,11 +212,8 @@ export const updateExpense = mutation({
       });
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || expense.profileId !== profile._id) {
+    const profile = profileGate;
+    if (expense.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para editar este registro.",
@@ -252,6 +242,14 @@ export const updateExpense = mutation({
     if (oldEnvelope.type === args.envelopeType) {
       // Same envelope: delta-patch remaining amount.
       const delta = args.amount - expense.amount;
+      if (delta > 0 && isEnvelopeFrozen(oldEnvelope.frozenUntil, now)) {
+        throw new ConvexError({
+          code: "ENVELOPE_FROZEN",
+          message:
+            "Este sobre está congelado temporalmente. No puedes aumentar el gasto aquí todavía.",
+          data: { field: "envelopeType" },
+        });
+      }
       await ctx.db.patch(oldEnvelope._id, {
         remainingAmount: oldEnvelope.remainingAmount - delta,
       });
@@ -271,6 +269,14 @@ export const updateExpense = mutation({
         throw new ConvexError({
           code: "NOT_FOUND",
           message: "El sobre destino no existe en el ciclo actual.",
+        });
+      }
+      if (isEnvelopeFrozen(newEnvelope.frozenUntil, now)) {
+        throw new ConvexError({
+          code: "ENVELOPE_FROZEN",
+          message:
+            "El sobre destino está congelado temporalmente. Elige otro sobre.",
+          data: { field: "envelopeType" },
         });
       }
       await ctx.db.patch(newEnvelope._id, {
@@ -337,6 +343,10 @@ export const updateExpense = mutation({
       }
     }
 
+    await markNeedsContentReviewIfSuspicious(ctx, profile._id, [
+      args.description,
+    ]);
+
     return { success: true };
   },
 });
@@ -344,13 +354,7 @@ export const updateExpense = mutation({
 export const deleteExpense = mutation({
   args: { expenseId: v.id("expenses") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
+    const profileGate = await requireActiveAccount(ctx);
 
     const expense = await ctx.db.get(args.expenseId);
     if (!expense) {
@@ -360,11 +364,8 @@ export const deleteExpense = mutation({
       });
     }
 
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile || expense.profileId !== profile._id) {
+    const profile = profileGate;
+    if (expense.profileId !== profile._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "No tienes permisos para eliminar este registro.",

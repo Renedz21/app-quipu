@@ -8,7 +8,6 @@ export type RescueApplyResult =
       savingsRemaining: number;
       wantsRemaining: number;
     }
-  | { kind: "paywall_required" }
   | { kind: "error"; code: string; message: string };
 
 type ApplyRescueFn = (args: {
@@ -36,9 +35,6 @@ export async function handleRescueApply(args: {
     };
   } catch (err) {
     const appError = fromConvexError(err);
-    if (appError.code === "PLAN_REQUIRED") {
-      return { kind: "paywall_required" };
-    }
     return { kind: "error", code: appError.code, message: appError.message };
   }
 }

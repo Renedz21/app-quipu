@@ -1,18 +1,20 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { isDevelopmentDeployment } from "./lib/deployment";
+import { assertAccountActive } from "./lib/entitlements";
 
 /**
  * SOLO E2E: eleva/degrada el plan del usuario autenticado.
  *
  * Existe porque los smoke tests del rescate premium (`smoke.p0.spec.ts`) no
  * pueden pasar por el flujo real de facturación (Polar, pendiente). El guard
- * de deployment la hace inejecutable en producción: `CONVEX_DEPLOYMENT` lo
- * fija Convex y en prod siempre empieza con "prod:". Nunca quitar ese guard.
+ * de deployment la hace inejecutable en producción. Acepta `dev:` y
+ * `anonymous:` (Cloud Agent) vía `isDevelopmentDeployment()`.
  */
 export const setMyPlan = mutation({
   args: { plan: v.union(v.literal("free"), v.literal("premium")) },
   handler: async (ctx, args) => {
-    if (!process.env.CONVEX_DEPLOYMENT?.startsWith("dev:")) {
+    if (!isDevelopmentDeployment()) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "Solo disponible en entornos de desarrollo.",
@@ -37,6 +39,7 @@ export const setMyPlan = mutation({
         message: "Perfil no encontrado.",
       });
     }
+    assertAccountActive(profile);
 
     await ctx.db.patch(profile._id, { plan: args.plan });
     return { success: true };
@@ -44,19 +47,13 @@ export const setMyPlan = mutation({
 });
 
 /**
- * SOLO DEBUG: devuelve el estado del coach del usuario autenticado.
- *
- * Para diagnosticar por qué el upsell no aparece tras click en "Activar rescate
- * preventivo" en plan free. Expone: plan del perfil, últimas 3 interacciones
- * del coach con su `initialNudge` (clave para saber si el backend las cerró
- * como free_advice), y la presentación actual del coach.
- *
- * Guard de deployment igual que setMyPlan.
+ * SOLO DEBUG: estado del coach del usuario autenticado (plan, interacciones
+ * recientes, presentación). Guard de deployment igual que setMyPlan.
  */
 export const debugMyCoachState = query({
   args: {},
   handler: async (ctx) => {
-    if (!process.env.CONVEX_DEPLOYMENT?.startsWith("dev:")) {
+    if (!isDevelopmentDeployment()) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "Solo disponible en entornos de desarrollo.",
@@ -81,6 +78,7 @@ export const debugMyCoachState = query({
         message: "Perfil no encontrado.",
       });
     }
+    assertAccountActive(profile);
 
     const recentInteractions = await ctx.db
       .query("coachInteractions")

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
@@ -30,39 +30,54 @@ import {
 
 type Step = 1 | 2 | 3;
 
+type Profile = NonNullable<ReturnType<typeof useMyProfile>>;
+
+function initialPayFrequency(profile: Profile): "monthly" | "biweekly" {
+  if (
+    profile.payFrequency === "monthly" ||
+    profile.payFrequency === "biweekly"
+  ) {
+    return profile.payFrequency;
+  }
+  return "monthly";
+}
+
+function initialPaydays(profile: Profile): number[] {
+  return profile.paydays?.length ? [...profile.paydays] : [];
+}
+
+function initialCycleDurationDays(profile: Profile): 15 | 30 {
+  return profile.cycleDurationDays === 15 || profile.cycleDurationDays === 30
+    ? profile.cycleDurationDays
+    : 30;
+}
+
 export function CycleChangeWizard() {
   const profile = useMyProfile();
-  const router = useRouter();
-  const updateCycle = useUpdateCycleSchedule();
-  const [step, setStep] = useState<Step>(1);
-  const [payFrequency, setPayFrequency] = useState<"monthly" | "biweekly">(
-    "monthly",
-  );
-  const [paydays, setPaydays] = useState<number[]>([]);
-  const [cycleDurationDays, setCycleDurationDays] = useState<15 | 30>(30);
-  const [pending, setPending] = useState(false);
-  const hydratedRef = useRef(false);
-
-  useEffect(() => {
-    if (!profile || hydratedRef.current) return;
-    if (
-      profile.payFrequency === "monthly" ||
-      profile.payFrequency === "biweekly"
-    ) {
-      setPayFrequency(profile.payFrequency);
-    }
-    if (profile.paydays?.length) setPaydays([...profile.paydays]);
-    if (profile.cycleDurationDays === 15 || profile.cycleDurationDays === 30) {
-      setCycleDurationDays(profile.cycleDurationDays);
-    }
-    hydratedRef.current = true;
-  }, [profile]);
 
   if (!profile) {
     return (
       <div className="mx-auto h-40 max-w-lg animate-pulse rounded-2xl bg-surface" />
     );
   }
+
+  return <CycleChangeWizardForm profile={profile} />;
+}
+
+function CycleChangeWizardForm({ profile }: { profile: Profile }) {
+  const router = useRouter();
+  const updateCycle = useUpdateCycleSchedule();
+  const [step, setStep] = useState<Step>(1);
+  const [payFrequency, setPayFrequency] = useState<"monthly" | "biweekly">(() =>
+    initialPayFrequency(profile),
+  );
+  const [paydays, setPaydays] = useState<number[]>(() =>
+    initialPaydays(profile),
+  );
+  const [cycleDurationDays, setCycleDurationDays] = useState<15 | 30>(() =>
+    initialCycleDurationDays(profile),
+  );
+  const [pending, setPending] = useState(false);
 
   const isVariable = profile.incomeModel === "variable";
   const isBiweekly = payFrequency === "biweekly";

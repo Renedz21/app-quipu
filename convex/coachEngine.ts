@@ -7,11 +7,15 @@ import {
   resolveCoachPresentation,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
-import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
-import { requirePremiumProfile } from "./lib/entitlements";
+import {
+  requireActiveAccount,
+  requirePremiumProfile,
+} from "./lib/entitlements";
+import { allowsOutboundTransfer } from "./lib/envelopeGuards";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
+import { loadCycleCoverageById } from "./lib/loadCycleCoverageContext";
 import {
   computeRescueEnvelopePatches,
   validateRescueTransferApply,
@@ -26,13 +30,7 @@ async function getOwnedPendingInteraction(
   ctx: MutationCtx,
   interactionId: Id<"coachInteractions">,
 ) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "Debes iniciar sesión con tu Passkey o credencial.",
-    });
-  }
+  const profile = await requireActiveAccount(ctx);
 
   const interaction = await ctx.db.get(interactionId);
   if (interaction?.status !== "pending") {
@@ -42,8 +40,7 @@ async function getOwnedPendingInteraction(
     });
   }
 
-  const profile = await ctx.db.get(interaction.profileId);
-  if (!profile || profile.userId !== identity.subject) {
+  if (interaction.profileId !== profile._id) {
     throw new ConvexError({
       code: "FORBIDDEN",
       message: "No tienes permisos para modificar este registro.",
@@ -76,24 +73,7 @@ async function getCycleEnvelopes(
 }
 
 async function getOwnedProfileAndCycle(ctx: MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "Debes iniciar sesión con tu Passkey o credencial.",
-    });
-  }
-
-  const profile = await ctx.db
-    .query("profiles")
-    .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-    .unique();
-  if (!profile) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "No encontramos tu perfil.",
-    });
-  }
+  const profile = await requireActiveAccount(ctx);
 
   const cycle = await ctx.db
     .query("financialCycles")
@@ -117,56 +97,22 @@ async function getCycleCoverageContext(
   cycleId: Id<"financialCycles">,
   now: number,
 ) {
-  const cycle = await ctx.db.get(cycleId);
-  if (!cycle) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "No encontramos el ciclo activo.",
-    });
-  }
-
-  const [commitmentsRaw, incomeEvents, envelopesRaw] = await Promise.all([
-    ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
-      .collect(),
-    ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-      .collect(),
+  const [coverageContext, envelopesRaw] = await Promise.all([
+    loadCycleCoverageById(ctx, profileId, cycleId, now),
     ctx.db
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
       .collect(),
   ]);
 
-  const excludedCommitmentIds = new Set<Id<"fixedCommitments">>();
-  for (const commitment of commitmentsRaw) {
-    if (commitment.postponedForCycleId === cycleId) {
-      excludedCommitmentIds.add(commitment._id);
-    }
+  if (!coverageContext) {
+    throw new ConvexError({
+      code: "NOT_FOUND",
+      message: "No encontramos el ciclo activo.",
+    });
   }
 
-  const coverageById = computeAllCommitmentCoverage({
-    commitments: commitmentsRaw.map((commitment) => ({
-      id: commitment._id,
-      amount: commitment.amount,
-      envelope: commitment.envelope,
-      dueDay: commitment.dueDay,
-    })),
-    cycle: {
-      startDate: cycle.startDate,
-      endDate: cycle.endDate,
-    },
-    incomeEvents: incomeEvents.map((event) => ({
-      id: event._id,
-      occurredAt: event.occurredAt,
-      distributionApplied: event.distributionApplied,
-    })),
-    now,
-    coverageBoost: cycle.coverageBoost ?? undefined,
-    excludedCommitmentIds,
-  });
+  const { cycle, commitments: commitmentsRaw, coverageById } = coverageContext;
 
   const commitments = commitmentsRaw.map((commitment) => {
     const coverage = coverageById.get(commitment._id);
@@ -254,20 +200,7 @@ export const resolveNudgeAction = mutation({
       });
     }
 
-    if (optionId === "suggest_rescue" && profile.plan === "free") {
-      const now = Date.now();
-      await ctx.db.patch(interactionId, {
-        selectedOptionId: optionId,
-        status: "resolved",
-        initialNudge:
-          "[Plan Free] El Coach te aconseja: reduce S/ 15 diarios en tus consumos de Gustos por 4 días para equilibrar el sobre sin tocar tus ahorros.",
-      });
-      await ctx.db.patch(profile._id, {
-        coachRescueUpsellAt: now,
-      });
-      return { success: true, mode: "free_advice" as const };
-    }
-
+    // I3 — rescate manual es gratis: mismo flujo para free y Plus.
     if (optionId === "suggest_rescue") {
       const { savings, wants } = await getCycleEnvelopes(
         ctx,
@@ -335,8 +268,7 @@ export const applyRescueTransfer = mutation({
     interactionId: v.id("coachInteractions"),
   },
   handler: async (ctx, { interactionId }) => {
-    await requirePremiumProfile(ctx);
-
+    // I3 — rescate manual es operación básica (gratis).
     const { interaction } = await getOwnedPendingInteraction(
       ctx,
       interactionId,
@@ -386,6 +318,15 @@ export const applyRescueTransfer = mutation({
             ? "INSUFFICIENT_FUNDS"
             : "VALIDATION_ERROR",
         message: messageByReason[validation.reason],
+      });
+    }
+
+    const now = Date.now();
+    if (!allowsOutboundTransfer(savings.frozenUntil, now)) {
+      throw new ConvexError({
+        code: "ENVELOPE_FROZEN",
+        message:
+          "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
       });
     }
 
@@ -448,6 +389,8 @@ export const dismissRescueSuggestion = mutation({
 export const applyCoverFromCycleSavings = mutation({
   args: {},
   handler: async (ctx) => {
+    // I3 — cubrir desde ahorro del ciclo es Plus.
+    await requirePremiumProfile(ctx);
     const now = Date.now();
     const { profile, cycle } = await getOwnedProfileAndCycle(ctx);
     const context = await getCycleCoverageContext(
@@ -486,6 +429,14 @@ export const applyCoverFromCycleSavings = mutation({
       throw new ConvexError({
         code: "VALIDATION_ERROR",
         message: "Ya no hay saldo en Ahorro del ciclo para cubrir compromisos.",
+      });
+    }
+
+    if (!allowsOutboundTransfer(context.savingsEnvelope.frozenUntil, now)) {
+      throw new ConvexError({
+        code: "ENVELOPE_FROZEN",
+        message:
+          "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
       });
     }
 
@@ -671,6 +622,13 @@ export const applyCrisisPlan = mutation({
         step.wantsBoost != null
       ) {
         if (step.transferTotal <= 0) continue;
+        if (!allowsOutboundTransfer(savingsEnvelope.frozenUntil, now)) {
+          throw new ConvexError({
+            code: "ENVELOPE_FROZEN",
+            message:
+              "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
+          });
+        }
         if (savingsEnvelope.remainingAmount < step.transferTotal) {
           throw new ConvexError({
             code: "VALIDATION_ERROR",
@@ -711,6 +669,13 @@ export const applyCrisisPlan = mutation({
 
       if (step.kind === "rescue_transfer" && step.rescueTransfer != null) {
         if (step.rescueTransfer <= 0) continue;
+        if (!allowsOutboundTransfer(savingsEnvelope.frozenUntil, now)) {
+          throw new ConvexError({
+            code: "ENVELOPE_FROZEN",
+            message:
+              "El sobre de Ahorro está congelado. No puedes sacar dinero de él todavía.",
+          });
+        }
         if (savingsEnvelope.remainingAmount < step.rescueTransfer) {
           throw new ConvexError({
             code: "VALIDATION_ERROR",
@@ -754,35 +719,5 @@ export const applyCrisisPlan = mutation({
       projectedCushionCents: plan.projectedCushionCents,
       canFullyResolve: plan.canFullyResolve,
     };
-  },
-});
-
-export const dismissRescueUpsell = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "Debes iniciar sesión con tu Passkey o credencial.",
-      });
-    }
-
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .unique();
-    if (!profile) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "No encontramos tu perfil.",
-      });
-    }
-
-    await ctx.db.patch(profile._id, {
-      coachRescueUpsellDismissedAt: Date.now(),
-    });
-
-    return { success: true };
   },
 });

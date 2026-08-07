@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { api } from "@/convex/_generated/api";
-import { DEFAULT_CURRENCY } from "@/core/constants";
+import { currencySymbolForCode, DEFAULT_CURRENCY } from "@/core/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
@@ -18,35 +18,38 @@ import { ExpenseRegisterForm } from "./expense-register-form";
 import { ExpenseRegisterShell, FlowProgress } from "./expense-register-shell";
 
 export function ExpenseRegisterFlow() {
-  const { isOpen, close, options } = useExpenseRegister();
+  const { isOpen, close, options, openNonce } = useExpenseRegister();
+
+  return (
+    <ExpenseRegisterFlowSession
+      key={openNonce}
+      isOpen={isOpen}
+      close={close}
+      options={options}
+    />
+  );
+}
+
+type SessionProps = {
+  isOpen: boolean;
+  close: () => void;
+  options: ReturnType<typeof useExpenseRegister>["options"];
+};
+
+function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
   const summary = useDashboardSummary();
   const registerExpense = useMutation(api.expenses.registerExpense);
 
   const [step, setStep] = useState<ExpenseFlowStep>("amount");
-  const [startedAt, setStartedAt] = useState(Date.now());
+  const [startedAt] = useState(() => Date.now());
   const [result, setResult] = useState<ExpenseRegisterResult | undefined>();
-  const [resetToken, setResetToken] = useState(0);
 
   const variant = options.variant ?? "fab";
   const preselectedEnvelope = options.preselectedEnvelope;
   const hasActiveCycle = Boolean(summary?.cycle);
 
-  const resetFlow = useCallback(() => {
-    setStep("amount");
-    setStartedAt(Date.now());
-    setResult(undefined);
-    setResetToken((token) => token + 1);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      resetFlow();
-    }
-  }, [isOpen, resetFlow]);
-
-  const recentEnvelopes = useMemo(
-    () => extractRecentExpenseEnvelopes(summary?.movements ?? []),
-    [summary?.movements],
+  const recentEnvelopes = extractRecentExpenseEnvelopes(
+    summary?.movements ?? [],
   );
 
   function handleOpenChange(nextOpen: boolean) {
@@ -56,6 +59,7 @@ export function ExpenseRegisterFlow() {
   }
 
   const currencyCode = summary?.profile.currencyCode ?? DEFAULT_CURRENCY.code;
+  const currencySymbol = currencySymbolForCode(currencyCode);
 
   const title =
     variant === "envelope" && preselectedEnvelope
@@ -71,13 +75,12 @@ export function ExpenseRegisterFlow() {
     >
       {step !== "success" ? (
         <ExpenseRegisterForm
-          key={resetToken}
           step={step}
           setStep={setStep}
           variant={variant}
           preselectedEnvelope={preselectedEnvelope}
           recentEnvelopes={recentEnvelopes}
-          currencySymbol={DEFAULT_CURRENCY.symbol}
+          currencySymbol={currencySymbol}
           registerExpense={registerExpense}
           onSuccess={(response) => {
             setResult(response);

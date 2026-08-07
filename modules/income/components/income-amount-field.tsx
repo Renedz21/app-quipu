@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
 import { formatCents, parseToCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
@@ -29,14 +29,9 @@ export function IncomeAmountField({
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState("");
 
-  useEffect(() => {
-    if (focused) return;
-    setDraft(
-      amountCents > 0
-        ? formatCents(amountCents, { currency: currencyCode })
-        : "",
-    );
-  }, [amountCents, currencyCode, focused]);
+  const formatted =
+    amountCents > 0 ? formatCents(amountCents, { currency: currencyCode }) : "";
+  const display = focused ? draft : formatted;
 
   const commit = () => {
     const trimmed = draft.trim();
@@ -76,8 +71,11 @@ export function IncomeAmountField({
             ? "border-[1.5px] border-extraordinary-border bg-extraordinary-surface/40 focus:border-extraordinary-a"
             : "border border-line bg-card focus:border-qp",
         )}
-        value={draft}
-        onFocus={() => setFocused(true)}
+        value={display}
+        onFocus={() => {
+          setDraft(formatted);
+          setFocused(true);
+        }}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => {
           setFocused(false);

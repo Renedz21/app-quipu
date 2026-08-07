@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { toast } from "sonner";
+import { currencyReadOnlyLabel } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
@@ -12,7 +13,6 @@ import {
   SETTINGS_ADJUST_ALLOCATIONS,
   SETTINGS_CHANGE_CYCLE,
   SETTINGS_CURRENCY_LABEL,
-  SETTINGS_CURRENCY_VALUE,
   SETTINGS_CYCLE_ALERTS_LABEL,
   SETTINGS_CYCLE_LABEL,
   SETTINGS_CYCLE_PROFILE,
@@ -164,7 +164,10 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           <div className="flex items-center justify-between gap-3 py-2.5">
             <span className="text-sm text-ink">{SETTINGS_CURRENCY_LABEL}</span>
             <span className="text-[13.5px] text-mute">
-              {SETTINGS_CURRENCY_VALUE}
+              {currencyReadOnlyLabel(
+                profile.currencyCode,
+                profile.currencySymbol,
+              )}
             </span>
           </div>
           <div className="flex items-center justify-between gap-3 py-2.5">

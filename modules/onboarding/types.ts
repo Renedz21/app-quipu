@@ -1,3 +1,5 @@
+import type { SupportedMarket } from "@/core/constants";
+
 export type IncomeModel = "fixed" | "variable" | "mixed";
 export type PayFrequency = "monthly" | "biweekly";
 export type CycleDuration = 15 | 30;
@@ -13,6 +15,7 @@ export type OnboardingState = {
   allocationNeeds: number;
   allocationWants: number;
   allocationSavings: number;
+  marketId: SupportedMarket["id"];
   country: string;
   currencyCode: string;
   currencySymbol: string;

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { SETTINGS_SIDEBAR_PLUS_LINK } from "@/modules/settings/constants";
-import { AppFeedbackLink } from "@/shared/components/layout/app-feedback-link";
 import { AppNavIcon } from "@/shared/components/app-nav-icon";
+import { AppFeedbackLink } from "@/shared/components/layout/app-feedback-link";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { SIDEBAR_ITEMS } from "@/shared/constants/navigation";
 import { PLAN_LABELS } from "@/shared/constants/plan";
@@ -94,7 +94,7 @@ export function AppSidebar({ profileName, plan = "free", className }: Props) {
             {plan === "free" ? (
               <Link
                 href="/settings#plan"
-                className="mt-0.5 inline-block text-[11px] text-faint transition-colors hover:text-mute"
+                className="mt-0.5 inline-block text-[11px] font-medium text-qp-deep transition-colors hover:underline"
               >
                 {SETTINGS_SIDEBAR_PLUS_LINK}
               </Link>

@@ -1,9 +1,7 @@
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { isRescueUpsellAvailable } from "./lib/coachRescueUpsell";
 import { resolveCoachPresentation } from "./lib/coachState";
 import {
-  computeAllCommitmentCoverage,
   computeCoverageProgressPercent,
   computeUncoveredCommitmentRemainingCents,
   daysUntilNextDue,
@@ -11,10 +9,7 @@ import {
 } from "./lib/commitmentCoverage";
 import { resolveCommitmentNextDueAt } from "./lib/commitmentDueDate";
 import { resolveCommitmentPaymentStatus } from "./lib/commitmentPayment";
-import {
-  activeReservedCents,
-  sumActiveReservedCents,
-} from "./lib/commitmentReservation";
+import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { buildCrisisCoachOptions } from "./lib/crisisResolution";
 import {
@@ -30,6 +25,7 @@ import {
   resolveHeroStatusBadge,
   sortCommitmentsByDue,
 } from "./lib/dashboardMath";
+import { buildCoverageByIdFromCycleDocs } from "./lib/loadCycleCoverageContext";
 import { computeSpendableSnapshot } from "./lib/spendableBalance";
 
 const ENVELOPE_ORDER = ["needs", "wants", "savings"] as const;
@@ -243,41 +239,15 @@ export const getSummary = query({
       };
     });
 
-    const commitmentCoverageById = computeAllCommitmentCoverage({
-      commitments: commitmentsRaw.map((commitment) => ({
-        id: commitment._id,
-        amount: commitment.amount,
-        envelope: commitment.envelope,
-        dueDay: commitment.dueDay,
-        nextDueAt: commitment.nextDueAt,
-        createdAt: commitment._creationTime,
-      })),
-      cycle: {
-        startDate: activeCycle.startDate,
-        endDate: activeCycle.endDate,
+    const commitmentCoverageById = buildCoverageByIdFromCycleDocs(
+      {
+        cycle: activeCycle,
+        commitments: commitmentsRaw,
+        incomeEvents: incomesForCycle,
+        reservationRows: reservationsForCycle,
       },
-      incomeEvents: incomesForCycle.map((income) => ({
-        id: income._id,
-        occurredAt: income.occurredAt,
-        distributionApplied: income.distributionApplied,
-      })),
       now,
-      coverageBoost: activeCycle.coverageBoost ?? undefined,
-      reservations: reservationsForCycle.map((row) => ({
-        commitmentId: row.commitmentId,
-        activeCents: activeReservedCents(row),
-        incomeEventId: row.incomeEventId,
-      })),
-      excludedCommitmentIds: (() => {
-        const ids = new Set<Id<"fixedCommitments">>();
-        for (const commitment of commitmentsRaw) {
-          if (commitment.postponedForCycleId === activeCycle._id) {
-            ids.add(commitment._id);
-          }
-        }
-        return ids;
-      })(),
-    });
+    );
 
     const commitments = sortCommitmentsByDue(
       commitmentsRaw.map((commitment) => {
@@ -404,7 +374,6 @@ export const getSummary = query({
       awaitingRescueConfirmation:
         pendingCoach?.selectedOptionId === "suggest_rescue" &&
         pendingCoach?.rescueSuggestion != null,
-      rescueUpsellAvailable: isRescueUpsellAvailable(profile),
     };
 
     return {

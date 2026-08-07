@@ -9,10 +9,10 @@ import {
   polarSubscriptionFromWebhook,
   resolvePlanTier,
 } from "./lib/billingSync";
-import { polar } from "./polar";
+import { listPlusProductIds, polar } from "./polar";
 
-function premiumProductId(): string {
-  return process.env.POLAR_PRODUCT_ID_PREMIUM ?? "";
+function plusProductIdList(): string[] {
+  return listPlusProductIds();
 }
 
 function snapshotFromPolarSubscription(
@@ -69,7 +69,7 @@ export const applyProfilePlanFromPolar = internalMutation({
       cancelAtPeriodEnd: args.cancelAtPeriodEnd,
     });
 
-    const plan = resolvePlanTier(snapshot, premiumProductId());
+    const plan = resolvePlanTier(snapshot, plusProductIdList());
     const patch: {
       plan: typeof plan;
       polarCustomerId: string;
@@ -116,7 +116,7 @@ export const reconcileMyPlan = mutation({
       userId: identity.subject,
     });
     const snapshot = snapshotFromPolarSubscription(subscription);
-    const plan = resolvePlanTier(snapshot, premiumProductId());
+    const plan = resolvePlanTier(snapshot, plusProductIdList());
 
     const patch: {
       plan: typeof plan;

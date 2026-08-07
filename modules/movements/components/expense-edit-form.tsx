@@ -2,7 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import { DEFAULT_CURRENCY } from "@/core/constants";
+import { currencySymbolForCode, DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { ExpenseKeypad } from "@/modules/expenses/components/expense-keypad";
 import {
@@ -42,12 +42,13 @@ export function ExpenseEditForm({
   initialAmountCents,
   initialDescription,
   initialEnvelopeType,
+  currencyCode = DEFAULT_CURRENCY.code,
   updateExpense,
   onSuccess,
   onCancel,
 }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
-  const currencySymbol = DEFAULT_CURRENCY.symbol;
+  const currencySymbol = currencySymbolForCode(currencyCode);
 
   const form = useForm({
     defaultValues: {

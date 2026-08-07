@@ -1,21 +1,14 @@
 "use client";
 
-import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ChatDots } from "reicon-react";
-import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachCrisisPlanActions } from "@/modules/coach/components/coach-crisis-plan-actions";
 import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-actions";
-import {
-  RESCUE_PAYWALL_CLOSE,
-  RESCUE_PAYWALL_NUDGE,
-} from "@/modules/coach/constants";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
-import { PremiumUpsellNudge } from "@/shared/components/premium-upsell-nudge";
 import { Button } from "@/shared/components/ui/button";
 import {
   COACH_EARLY_REGISTER_CTA,
@@ -106,8 +99,6 @@ export function CoachCard({
 }: Props) {
   const router = useRouter();
   const { open } = useExpenseRegister();
-  const dismissRescueUpsell = useMutation(api.coachEngine.dismissRescueUpsell);
-  const [isDismissingUpsell, setIsDismissingUpsell] = useState(false);
   const isContigo = coach.kind === "contigo";
   const isTranquil = coach.kind === "tranquil";
   const isWarning = coach.kind === "warning";
@@ -119,17 +110,6 @@ export function CoachCard({
       insight_type: INSIGHT_TYPE_BY_KIND[coach.kind],
     });
   }, [coach.kind]);
-
-  async function handleDismissRescueUpsell() {
-    setIsDismissingUpsell(true);
-    await dismissRescueUpsell({})
-      .catch(() => {
-        // Convex mutation errors surface via toast elsewhere; keep UI dismissible.
-      })
-      .finally(() => {
-        setIsDismissingUpsell(false);
-      });
-  }
 
   return (
     <section
@@ -236,22 +216,6 @@ export function CoachCard({
           rescueSuggestion={coach.rescueSuggestion}
           awaitingRescueConfirmation={coach.awaitingRescueConfirmation}
         />
-      ) : null}
-
-      {coach.rescueUpsellAvailable ? (
-        <div className="mt-3 space-y-2">
-          <PremiumUpsellNudge message={RESCUE_PAYWALL_NUDGE} />
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={isDismissingUpsell}
-            onClick={() => void handleDismissRescueUpsell()}
-            className="h-auto px-0 text-[12px] text-faint hover:bg-transparent hover:text-mute"
-          >
-            {RESCUE_PAYWALL_CLOSE}
-          </Button>
-        </div>
       ) : null}
 
       {isCrisis ? (

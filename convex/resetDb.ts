@@ -1,5 +1,5 @@
 import { components, internal } from "./_generated/api";
-import { internalAction, type ActionCtx } from "./_generated/server";
+import { type ActionCtx, internalAction } from "./_generated/server";
 
 const AUTH_MODELS = [
   "user",

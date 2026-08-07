@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { AnalyticsEvents, track } from "@/core/analytics";
+import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
@@ -54,6 +55,7 @@ export function SettingsAllocationsEditor({
         sum + env.allocatedAmount,
       0,
     ) ?? 0;
+  const currencyCode = summary?.profile?.currencyCode ?? DEFAULT_CURRENCY.code;
 
   function perCycleCents(pct: number) {
     if (cycleIncome <= 0) return null;
@@ -121,7 +123,9 @@ export function SettingsAllocationsEditor({
                 envKey={env.key}
                 label={env.label}
                 desc={
-                  cents != null ? `${formatCents(cents)} por ciclo` : env.desc
+                  cents != null
+                    ? `${formatCents(cents, { currency: currencyCode })} por ciclo`
+                    : env.desc
                 }
                 barColor={env.barColor}
                 value={pct}

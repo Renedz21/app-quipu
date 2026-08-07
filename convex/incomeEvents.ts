@@ -11,6 +11,8 @@ import {
   computeDisplayDailyCents,
 } from "./lib/dashboardMath";
 import { buildDefaultAllocationPlan } from "./lib/defaultAllocationPlan";
+import { assertAccountActive } from "./lib/entitlements";
+import { canReverseDistributionApplied } from "./lib/envelopeGuards";
 import { evaluateClosedCycle } from "./lib/evaluateClosedCycle";
 import {
   clearCommitmentCoverageForProfile,
@@ -148,6 +150,7 @@ export const createIncomeEvent = mutation({
         message: "Perfil no encontrado.",
       });
     }
+    assertAccountActive(profile);
 
     const incomeKind = args.incomeKind ?? "habitual";
     let resolvedSource = args.source;
@@ -595,6 +598,7 @@ export const updateIncomeEvent = mutation({
         message: "No tienes permisos para editar este registro.",
       });
     }
+    assertAccountActive(profile);
 
     if (incomeKind === "extraordinary" && extraordinaryType) {
       const resolved = resolveExtraordinaryIncomePolicy({
@@ -679,6 +683,13 @@ export const updateIncomeEvent = mutation({
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", event.cycleId))
       .collect();
+    if (!canReverseDistributionApplied(envelopes, oldDistribution)) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "No puedes editar este ingreso: parte del dinero ya se gastó o movió de los sobres.",
+      });
+    }
     await Promise.all(
       envelopes.map((env) =>
         ctx.db.patch(env._id, {
@@ -909,6 +920,7 @@ export const deleteIncomeEvent = mutation({
         message: "No tienes permisos para eliminar este registro.",
       });
     }
+    assertAccountActive(profile);
 
     const cycle = await ctx.db.get(event.cycleId);
     if (cycle?.status !== "active") {
@@ -922,6 +934,13 @@ export const deleteIncomeEvent = mutation({
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycle._id))
       .collect();
+    if (!canReverseDistributionApplied(envelopes, event.distributionApplied)) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "No puedes eliminar este ingreso: parte del dinero ya se gastó o movió de los sobres.",
+      });
+    }
     await Promise.all(
       envelopes.map((env) =>
         ctx.db.patch(env._id, {

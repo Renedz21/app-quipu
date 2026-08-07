@@ -14,9 +14,15 @@ export const APP_DATA_TABLES = [
   "cycleHistory",
   "incomeEvents",
   "surplusContributions",
+  "commitmentReservations",
+  "incomeAllocationLines",
+  "internalTransfers",
+  "emailSendLog",
+  "accountReviewFlags",
+  "feedbackSubmissions",
 ] as const;
 
 export type AppDataTableName = (typeof APP_DATA_TABLES)[number];
 
 /** Versión del JSON de snapshot; subir si cambia la forma del export. */
-export const APP_DATA_SNAPSHOT_FORMAT = "quipu-app-snapshot-1" as const;
+export const APP_DATA_SNAPSHOT_FORMAT = "quipu-app-snapshot-2" as const;

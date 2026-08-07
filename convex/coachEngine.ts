@@ -7,11 +7,11 @@ import {
   resolveCoachPresentation,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
-import { computeAllCommitmentCoverage } from "./lib/commitmentCoverage";
 import { buildCrisisPlan } from "./lib/crisisPlan";
 import { computeCoverFromSavingsSplit } from "./lib/crisisResolution";
-import { requirePremiumProfile } from "./lib/entitlements";
+import { assertAccountActive, requirePremiumProfile } from "./lib/entitlements";
 import { evaluateCommitmentCoverageForCycle } from "./lib/evaluateCommitmentCoverage";
+import { loadCycleCoverageById } from "./lib/loadCycleCoverageContext";
 import {
   computeRescueEnvelopePatches,
   validateRescueTransferApply,
@@ -49,6 +49,7 @@ async function getOwnedPendingInteraction(
       message: "No tienes permisos para modificar este registro.",
     });
   }
+  assertAccountActive(profile);
 
   return { interaction, profile };
 }
@@ -94,6 +95,7 @@ async function getOwnedProfileAndCycle(ctx: MutationCtx) {
       message: "No encontramos tu perfil.",
     });
   }
+  assertAccountActive(profile);
 
   const cycle = await ctx.db
     .query("financialCycles")
@@ -117,56 +119,22 @@ async function getCycleCoverageContext(
   cycleId: Id<"financialCycles">,
   now: number,
 ) {
-  const cycle = await ctx.db.get(cycleId);
-  if (!cycle) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "No encontramos el ciclo activo.",
-    });
-  }
-
-  const [commitmentsRaw, incomeEvents, envelopesRaw] = await Promise.all([
-    ctx.db
-      .query("fixedCommitments")
-      .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
-      .collect(),
-    ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
-      .collect(),
+  const [coverageContext, envelopesRaw] = await Promise.all([
+    loadCycleCoverageById(ctx, profileId, cycleId, now),
     ctx.db
       .query("envelopes")
       .withIndex("by_cycle_type", (q) => q.eq("cycleId", cycleId))
       .collect(),
   ]);
 
-  const excludedCommitmentIds = new Set<Id<"fixedCommitments">>();
-  for (const commitment of commitmentsRaw) {
-    if (commitment.postponedForCycleId === cycleId) {
-      excludedCommitmentIds.add(commitment._id);
-    }
+  if (!coverageContext) {
+    throw new ConvexError({
+      code: "NOT_FOUND",
+      message: "No encontramos el ciclo activo.",
+    });
   }
 
-  const coverageById = computeAllCommitmentCoverage({
-    commitments: commitmentsRaw.map((commitment) => ({
-      id: commitment._id,
-      amount: commitment.amount,
-      envelope: commitment.envelope,
-      dueDay: commitment.dueDay,
-    })),
-    cycle: {
-      startDate: cycle.startDate,
-      endDate: cycle.endDate,
-    },
-    incomeEvents: incomeEvents.map((event) => ({
-      id: event._id,
-      occurredAt: event.occurredAt,
-      distributionApplied: event.distributionApplied,
-    })),
-    now,
-    coverageBoost: cycle.coverageBoost ?? undefined,
-    excludedCommitmentIds,
-  });
+  const { cycle, commitments: commitmentsRaw, coverageById } = coverageContext;
 
   const commitments = commitmentsRaw.map((commitment) => {
     const coverage = coverageById.get(commitment._id);

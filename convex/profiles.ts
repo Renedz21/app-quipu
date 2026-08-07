@@ -318,17 +318,52 @@ export const exportMyData = query({
       .withIndex("by_profile_status", (q) => q.eq("profileId", profileId))
       .collect();
 
-    // surplusContributions solo tiene índice por ciclo.
-    const surplusContributions = (
-      await Promise.all(
-        financialCycles.map((cycle) =>
+    // Tablas indexadas solo por ciclo.
+    const docsByCycle = await Promise.all(
+      financialCycles.map(async (cycle) => {
+        const [
+          surplusContributions,
+          incomeAllocationLines,
+          internalTransfers,
+          commitmentReservations,
+        ] = await Promise.all([
           ctx.db
             .query("surplusContributions")
             .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
             .collect(),
-        ),
-      )
-    ).flat();
+          ctx.db
+            .query("incomeAllocationLines")
+            .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+            .collect(),
+          ctx.db
+            .query("internalTransfers")
+            .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+            .collect(),
+          ctx.db
+            .query("commitmentReservations")
+            .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+            .collect(),
+        ]);
+        return {
+          surplusContributions,
+          incomeAllocationLines,
+          internalTransfers,
+          commitmentReservations,
+        };
+      }),
+    );
+    const surplusContributions = docsByCycle.flatMap(
+      (row) => row.surplusContributions,
+    );
+    const incomeAllocationLines = docsByCycle.flatMap(
+      (row) => row.incomeAllocationLines,
+    );
+    const internalTransfers = docsByCycle.flatMap(
+      (row) => row.internalTransfers,
+    );
+    const commitmentReservations = docsByCycle.flatMap(
+      (row) => row.commitmentReservations,
+    );
 
     const [
       envelopes,
@@ -339,6 +374,8 @@ export const exportMyData = query({
       coachInteractions,
       streaks,
       cycleHistory,
+      accountReviewFlags,
+      feedbackSubmissions,
     ] = await Promise.all([
       ctx.db
         .query("envelopes")
@@ -372,6 +409,16 @@ export const exportMyData = query({
         .query("cycleHistory")
         .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
         .collect(),
+      ctx.db
+        .query("accountReviewFlags")
+        .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("feedbackSubmissions")
+        .withIndex("by_profileId_createdAt", (q) =>
+          q.eq("profileId", profileId),
+        )
+        .collect(),
     ]);
 
     return {
@@ -384,9 +431,14 @@ export const exportMyData = query({
       expenses,
       incomeEvents,
       surplusContributions,
+      incomeAllocationLines,
+      internalTransfers,
+      commitmentReservations,
       coachInteractions,
       streaks,
       cycleHistory,
+      accountReviewFlags,
+      feedbackSubmissions,
     };
   },
 });
@@ -497,6 +549,14 @@ export const deleteAllDataForProfile = internalMutation({
       await ctx.db
         .query("accountReviewFlags")
         .withIndex("by_profileId", (q) => q.eq("profileId", profileId))
+        .collect(),
+    );
+    await deleteDocs(
+      await ctx.db
+        .query("feedbackSubmissions")
+        .withIndex("by_profileId_createdAt", (q) =>
+          q.eq("profileId", profileId),
+        )
         .collect(),
     );
 

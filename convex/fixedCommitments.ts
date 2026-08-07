@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import {
-  computeAllCommitmentCoverage,
   computeCoverageProgressPercent,
   daysUntilNextDue,
   mapCoverageStatusToDashboard,
@@ -15,10 +15,12 @@ import {
   isCommitmentPaidForCycle,
   resolveCommitmentPaymentStatus,
 } from "./lib/commitmentPayment";
+import { applyPayFromReservations } from "./lib/commitmentReservation";
+import { assertAccountActive } from "./lib/entitlements";
 import {
-  activeReservedCents,
-  applyPayFromReservations,
-} from "./lib/commitmentReservation";
+  buildCoverageByIdFromCycleDocs,
+  loadCycleCoverageById,
+} from "./lib/loadCycleCoverageContext";
 
 export const listMyCommitments = query({
   args: {},
@@ -65,6 +67,7 @@ export const createFixedCommitment = mutation({
         message: "Perfil no encontrado.",
       });
     }
+    assertAccountActive(profile);
 
     const name = args.name.trim();
     if (!name) {
@@ -129,6 +132,7 @@ export const deleteFixedCommitment = mutation({
         message: "No tienes permisos para eliminar este registro.",
       });
     }
+    assertAccountActive(profile);
 
     await ctx.db.delete(args.commitmentId);
     return { success: true };
@@ -162,6 +166,7 @@ export const markCommitmentAsPaid = mutation({
         message: "No tienes permisos para actualizar este registro.",
       });
     }
+    assertAccountActive(profile);
 
     const activeCycle = await ctx.db
       .query("financialCycles")
@@ -204,13 +209,8 @@ export const markCommitmentAsPaid = mutation({
       now: paidAt,
     });
 
-    await ctx.db.patch(args.commitmentId, {
-      paidAt,
-      paidForCycleId: activeCycle._id,
-      nextDueAt,
-    });
-
     // Consume active reservations first so reserved money is not spent twice.
+    // Fail closed: never mark Pagado unless remainder can be settled from the envelope.
     const reservations = await ctx.db
       .query("commitmentReservations")
       .withIndex("by_commitment_cycle", (q) =>
@@ -227,36 +227,57 @@ export const markCommitmentAsPaid = mutation({
         status: row.status,
       })),
     });
+
+    const envelope =
+      pay.remainderCents > 0
+        ? await ctx.db
+            .query("envelopes")
+            .withIndex("by_cycle_type", (q) =>
+              q.eq("cycleId", activeCycle._id).eq("type", commitment.envelope),
+            )
+            .unique()
+        : null;
+
+    if (
+      pay.remainderCents > 0 &&
+      (!envelope || envelope.remainingAmount < pay.remainderCents)
+    ) {
+      throw new ConvexError({
+        code: "INSUFFICIENT_FUNDS",
+        message:
+          "No hay saldo suficiente en el sobre para marcar este compromiso como pagado.",
+      });
+    }
+
     await Promise.all(
       pay.reservationPatches.map((patch) =>
-        ctx.db.patch(patch.id as (typeof reservations)[0]["_id"], {
+        ctx.db.patch(patch.id as Id<"commitmentReservations">, {
           consumedCents: patch.consumedCents,
           status: patch.status,
           updatedAt: paidAt,
         }),
       ),
     );
-    if (pay.remainderCents > 0) {
-      const envelope = await ctx.db
-        .query("envelopes")
-        .withIndex("by_cycle_type", (q) =>
-          q.eq("cycleId", activeCycle._id).eq("type", commitment.envelope),
-        )
-        .unique();
-      if (envelope && envelope.remainingAmount >= pay.remainderCents) {
-        await ctx.db.patch(envelope._id, {
-          remainingAmount: envelope.remainingAmount - pay.remainderCents,
-        });
-        await ctx.db.insert("expenses", {
-          profileId: profile._id,
-          cycleId: activeCycle._id,
-          envelopeId: envelope._id,
-          amount: pay.remainderCents,
-          description: `Pago: ${commitment.name}`,
-          timestamp: paidAt,
-        });
-      }
+
+    if (pay.remainderCents > 0 && envelope) {
+      await ctx.db.patch(envelope._id, {
+        remainingAmount: envelope.remainingAmount - pay.remainderCents,
+      });
+      await ctx.db.insert("expenses", {
+        profileId: profile._id,
+        cycleId: activeCycle._id,
+        envelopeId: envelope._id,
+        amount: pay.remainderCents,
+        description: `Pago: ${commitment.name}`,
+        timestamp: paidAt,
+      });
     }
+
+    await ctx.db.patch(args.commitmentId, {
+      paidAt,
+      paidForCycleId: activeCycle._id,
+      nextDueAt,
+    });
 
     return { success: true as const, paidAt };
   },
@@ -299,6 +320,7 @@ export const createCommitmentsBulk = mutation({
         message: "Perfil no encontrado o no autorizado.",
       });
     }
+    assertAccountActive(profile);
 
     // Valida todos antes de insertar (atomicidad).
     for (const [i, c] of args.commitments.entries()) {
@@ -379,33 +401,15 @@ export const getCommitment = query({
           .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
           .collect(),
       ]);
-      const coverageById = computeAllCommitmentCoverage({
-        commitments: [
-          {
-            id: commitment._id,
-            amount: commitment.amount,
-            envelope: commitment.envelope,
-            dueDay: commitment.dueDay,
-            nextDueAt: commitment.nextDueAt,
-            createdAt: commitment._creationTime,
-          },
-        ],
-        cycle: {
-          startDate: activeCycle.startDate,
-          endDate: activeCycle.endDate,
+      const coverageById = buildCoverageByIdFromCycleDocs(
+        {
+          cycle: activeCycle,
+          commitments: [commitment],
+          incomeEvents,
+          reservationRows,
         },
-        incomeEvents: incomeEvents.map((event) => ({
-          id: event._id,
-          occurredAt: event.occurredAt,
-          distributionApplied: event.distributionApplied,
-        })),
         now,
-        reservations: reservationRows.map((row) => ({
-          commitmentId: row.commitmentId,
-          activeCents: activeReservedCents(row),
-          incomeEventId: row.incomeEventId,
-        })),
-      });
+      );
       const cascadeStatus =
         coverageById.get(commitment._id)?.status ?? "not-started";
       coverageStatus = mapCoverageStatusToDashboard(cascadeStatus);
@@ -506,33 +510,16 @@ export const getCommitmentCoverage = query({
       };
     }
 
-    const incomeEvents = await ctx.db
-      .query("incomeEvents")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
-      .collect();
-
-    const coverageById = computeAllCommitmentCoverage({
-      commitments: commitments.map((commitment) => ({
-        id: commitment._id,
-        amount: commitment.amount,
-        envelope: commitment.envelope,
-        dueDay: commitment.dueDay,
-        nextDueAt: commitment.nextDueAt,
-        createdAt: commitment._creationTime,
-      })),
-      cycle: {
-        startDate: activeCycle.startDate,
-        endDate: activeCycle.endDate,
-      },
-      incomeEvents: incomeEvents.map((event) => ({
-        id: event._id,
-        occurredAt: event.occurredAt,
-        distributionApplied: event.distributionApplied,
-      })),
+    const coverageContext = await loadCycleCoverageById(
+      ctx,
+      profile._id,
+      activeCycle._id,
       now,
-    });
+    );
+    const coverageById = coverageContext?.coverageById ?? new Map();
+    const coveredCommitments = coverageContext?.commitments ?? commitments;
 
-    const totalCents = commitments.reduce((sum, c) => sum + c.amount, 0);
+    const totalCents = coveredCommitments.reduce((sum, c) => sum + c.amount, 0);
 
     return {
       currencyCode: profile.currencyCode,
@@ -542,7 +529,7 @@ export const getCommitmentCoverage = query({
       },
       cycleId: activeCycle._id,
       totalCents,
-      commitments: commitments
+      commitments: coveredCommitments
         .map((commitment) => {
           const nextDueAt = resolveCommitmentNextDueAt({
             dueDay: commitment.dueDay,

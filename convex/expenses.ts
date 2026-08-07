@@ -5,6 +5,8 @@ import {
   buildWantsOverflowNudge,
   WANTS_OVERFLOW_EVENT,
 } from "./lib/coachState";
+import { assertAccountActive } from "./lib/entitlements";
+import { isEnvelopeFrozen } from "./lib/envelopeGuards";
 
 const RECENT_EXPENSES_LIMIT = 5;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -41,6 +43,7 @@ export const registerExpense = mutation({
         message: "Perfil no encontrado.",
       });
     }
+    assertAccountActive(profile);
 
     const activeCycle = await ctx.db
       .query("financialCycles")
@@ -73,6 +76,15 @@ export const registerExpense = mutation({
     }
 
     const now = Date.now();
+    if (isEnvelopeFrozen(envelope.frozenUntil, now)) {
+      throw new ConvexError({
+        code: "ENVELOPE_FROZEN",
+        message:
+          "Este sobre está congelado temporalmente. Espera a que termine el congelamiento o elige otro sobre.",
+        data: { field: "envelopeType" },
+      });
+    }
+
     const newRemainingAmount = envelope.remainingAmount - args.amount;
     await ctx.db.patch(envelope._id, { remainingAmount: newRemainingAmount });
 
@@ -229,6 +241,7 @@ export const updateExpense = mutation({
         message: "No tienes permisos para editar este registro.",
       });
     }
+    assertAccountActive(profile);
 
     const cycle = await ctx.db.get(expense.cycleId);
     if (cycle?.status !== "active") {
@@ -252,6 +265,14 @@ export const updateExpense = mutation({
     if (oldEnvelope.type === args.envelopeType) {
       // Same envelope: delta-patch remaining amount.
       const delta = args.amount - expense.amount;
+      if (delta > 0 && isEnvelopeFrozen(oldEnvelope.frozenUntil, now)) {
+        throw new ConvexError({
+          code: "ENVELOPE_FROZEN",
+          message:
+            "Este sobre está congelado temporalmente. No puedes aumentar el gasto aquí todavía.",
+          data: { field: "envelopeType" },
+        });
+      }
       await ctx.db.patch(oldEnvelope._id, {
         remainingAmount: oldEnvelope.remainingAmount - delta,
       });
@@ -271,6 +292,14 @@ export const updateExpense = mutation({
         throw new ConvexError({
           code: "NOT_FOUND",
           message: "El sobre destino no existe en el ciclo actual.",
+        });
+      }
+      if (isEnvelopeFrozen(newEnvelope.frozenUntil, now)) {
+        throw new ConvexError({
+          code: "ENVELOPE_FROZEN",
+          message:
+            "El sobre destino está congelado temporalmente. Elige otro sobre.",
+          data: { field: "envelopeType" },
         });
       }
       await ctx.db.patch(newEnvelope._id, {
@@ -370,6 +399,7 @@ export const deleteExpense = mutation({
         message: "No tienes permisos para eliminar este registro.",
       });
     }
+    assertAccountActive(profile);
 
     // Solo el ciclo activo: revertir un ciclo cerrado corrompe el historial ya evaluado.
     const cycle = await ctx.db.get(expense.cycleId);

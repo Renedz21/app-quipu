@@ -12,7 +12,7 @@ import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { ListRowChevron } from "@/shared/components/ui/list-row-chevron";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { PLAN_LABELS } from "@/shared/constants/plan";
+import { PLAN_LABELS, plusMonthlyPriceLabel } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_CHECKOUT_SUCCESS,
@@ -24,7 +24,6 @@ import {
   SETTINGS_PAGE_TITLE,
   SETTINGS_PLAN_ACTIVE_BADGE,
   SETTINGS_PLAN_LABEL,
-  SETTINGS_PLAN_PLUS_PRICE,
   SETTINGS_PROFILE_LABEL,
   SETTINGS_SECURITY_LABEL,
   SETTINGS_SIGN_OUT,
@@ -66,13 +65,15 @@ export function SettingsViewSkeleton() {
 function MobileAccountSummary({
   name,
   plan,
+  currencyCode,
 }: {
   name: string;
   plan: "free" | "premium";
+  currencyCode: string;
 }) {
   const planLine =
     plan === "premium"
-      ? `${PLAN_LABELS.premium} · ${SETTINGS_PLAN_PLUS_PRICE}`
+      ? `${PLAN_LABELS.premium} · ${plusMonthlyPriceLabel(currencyCode)}`
       : PLAN_LABELS.free;
 
   return (
@@ -219,6 +220,7 @@ export function SettingsView() {
         <MobileAccountSummary
           name={overview.profile.name}
           plan={overview.profile.plan}
+          currencyCode={overview.subscription.currencyCode}
         />
 
         <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">

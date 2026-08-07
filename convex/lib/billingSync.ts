@@ -25,19 +25,31 @@ export type BillingOverview = {
   renewalSummary: string | null;
   cancelAtPeriodEnd: boolean;
   checkoutAvailable: boolean;
+  /** @deprecated Prefer plusProductIds.monthly */
   premiumProductId: string | null;
+  plusProductIds: {
+    monthly: string | null;
+    yearly: string | null;
+  };
 };
 
 const ACTIVE_STATUSES = new Set(["active", "trialing"]);
+const PREMIUM_PRODUCT_KEYS = new Set(["premium", "plusMonthly", "plusYearly"]);
 
 export function isPremiumPolarSubscription(
   subscription: PolarSubscriptionSnapshot | null,
-  premiumProductId: string,
+  premiumProductIds: string | readonly string[],
 ): boolean {
-  if (!subscription || !premiumProductId) return false;
+  if (!subscription) return false;
+  const ids = (
+    Array.isArray(premiumProductIds) ? premiumProductIds : [premiumProductIds]
+  ).filter((id) => id.length > 0);
+  if (ids.length === 0) return false;
+
   const matchesProduct =
-    subscription.productId === premiumProductId ||
-    subscription.productKey === "premium";
+    ids.includes(subscription.productId) ||
+    (subscription.productKey != null &&
+      PREMIUM_PRODUCT_KEYS.has(subscription.productKey));
   if (!matchesProduct) return false;
   if (!ACTIVE_STATUSES.has(subscription.status)) return false;
   return true;
@@ -45,9 +57,9 @@ export function isPremiumPolarSubscription(
 
 export function resolvePlanTier(
   subscription: PolarSubscriptionSnapshot | null,
-  premiumProductId: string,
+  premiumProductIds: string | readonly string[],
 ): PlanTier {
-  return isPremiumPolarSubscription(subscription, premiumProductId)
+  return isPremiumPolarSubscription(subscription, premiumProductIds)
     ? "premium"
     : "free";
 }
@@ -61,7 +73,7 @@ function formatLimaShortDate(isoOrNull: string | null): string | null {
 
 export function buildRenewalSummary(
   subscription: PolarSubscriptionSnapshot | null,
-  premiumProductId: string,
+  premiumProductIds: string | readonly string[],
   copy: {
     freeBody: string;
     renewalPrefix: string;
@@ -69,7 +81,7 @@ export function buildRenewalSummary(
     canceledUntil: string;
   },
 ): string | null {
-  if (!isPremiumPolarSubscription(subscription, premiumProductId)) {
+  if (!isPremiumPolarSubscription(subscription, premiumProductIds)) {
     return copy.freeBody;
   }
   const endLabel = formatLimaShortDate(subscription?.currentPeriodEnd ?? null);
@@ -84,7 +96,10 @@ export function buildRenewalSummary(
 
 export function buildBillingOverview(
   subscription: PolarSubscriptionSnapshot | null,
-  premiumProductId: string,
+  productIds: {
+    monthly: string;
+    yearly: string;
+  },
   copy: {
     freeBody: string;
     renewalPrefix: string;
@@ -92,11 +107,16 @@ export function buildBillingOverview(
     canceledUntil: string;
   },
 ): BillingOverview {
-  const tier = resolvePlanTier(subscription, premiumProductId);
+  const allIds = [productIds.monthly, productIds.yearly].filter(
+    (id) => id.length > 0,
+  );
+  const tier = resolvePlanTier(subscription, allIds);
   const isPremium = tier === "premium";
   const cancelAtPeriodEnd = Boolean(
     isPremium && subscription?.cancelAtPeriodEnd,
   );
+  const monthly = productIds.monthly || null;
+  const yearly = productIds.yearly || null;
 
   return {
     tier,
@@ -105,10 +125,11 @@ export function buildBillingOverview(
       : cancelAtPeriodEnd
         ? "canceled_at_period_end"
         : "active",
-    renewalSummary: buildRenewalSummary(subscription, premiumProductId, copy),
+    renewalSummary: buildRenewalSummary(subscription, allIds, copy),
     cancelAtPeriodEnd,
-    checkoutAvailable: premiumProductId.length > 0,
-    premiumProductId: premiumProductId || null,
+    checkoutAvailable: Boolean(monthly || yearly),
+    premiumProductId: monthly,
+    plusProductIds: { monthly, yearly },
   };
 }
 

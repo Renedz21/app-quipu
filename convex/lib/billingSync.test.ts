@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildRenewalSummary,
-  extractUserIdFromPolarCustomerMetadata,
+  buildBillingOverview,
   isPremiumPolarSubscription,
   resolvePlanTier,
 } from "./billingSync";
 
-const PREMIUM_ID = "prod_premium";
+const MONTHLY = "prod_monthly";
+const YEARLY = "prod_yearly";
 const copy = {
   freeBody: "Gratis",
   renewalPrefix: "Próxima renovación",
@@ -15,18 +15,35 @@ const copy = {
 };
 
 describe("isPremiumPolarSubscription", () => {
-  it("returns true for active premium product", () => {
+  it("accepts monthly or yearly product ids", () => {
     expect(
       isPremiumPolarSubscription(
         {
           id: "sub_1",
           customerId: "cus_1",
-          productId: PREMIUM_ID,
+          productId: YEARLY,
           status: "active",
-          currentPeriodEnd: "2026-08-01T00:00:00.000Z",
+          currentPeriodEnd: null,
           cancelAtPeriodEnd: false,
         },
-        PREMIUM_ID,
+        [MONTHLY, YEARLY],
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts plus product keys", () => {
+    expect(
+      isPremiumPolarSubscription(
+        {
+          id: "sub_1",
+          customerId: "cus_1",
+          productId: "other",
+          status: "active",
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false,
+          productKey: "plusYearly",
+        },
+        [MONTHLY, YEARLY],
       ),
     ).toBe(true);
   });
@@ -37,12 +54,12 @@ describe("isPremiumPolarSubscription", () => {
         {
           id: "sub_1",
           customerId: "cus_1",
-          productId: PREMIUM_ID,
+          productId: MONTHLY,
           status: "canceled",
           currentPeriodEnd: null,
           cancelAtPeriodEnd: false,
         },
-        PREMIUM_ID,
+        [MONTHLY, YEARLY],
       ),
     ).toBe(false);
   });
@@ -55,45 +72,33 @@ describe("resolvePlanTier", () => {
         {
           id: "sub_1",
           customerId: "cus_1",
-          productId: PREMIUM_ID,
+          productId: MONTHLY,
           status: "trialing",
           currentPeriodEnd: null,
           cancelAtPeriodEnd: false,
-          productKey: "premium",
         },
-        PREMIUM_ID,
+        [MONTHLY, YEARLY],
       ),
     ).toBe("premium");
   });
 
   it("defaults to free without subscription", () => {
-    expect(resolvePlanTier(null, PREMIUM_ID)).toBe("free");
+    expect(resolvePlanTier(null, [MONTHLY, YEARLY])).toBe("free");
   });
 });
 
-describe("buildRenewalSummary", () => {
-  it("uses cancel copy when cancel at period end", () => {
-    const summary = buildRenewalSummary(
-      {
-        id: "sub_1",
-        customerId: "cus_1",
-        productId: PREMIUM_ID,
-        status: "active",
-        currentPeriodEnd: "2026-08-15T12:00:00.000Z",
-        cancelAtPeriodEnd: true,
-      },
-      PREMIUM_ID,
+describe("buildBillingOverview", () => {
+  it("exposes monthly and yearly product ids", () => {
+    const overview = buildBillingOverview(
+      null,
+      { monthly: MONTHLY, yearly: YEARLY },
       copy,
     );
-    expect(summary).toContain("Cancelado");
-    expect(summary).toContain("ago");
-  });
-});
-
-describe("extractUserIdFromPolarCustomerMetadata", () => {
-  it("reads userId from metadata", () => {
-    expect(
-      extractUserIdFromPolarCustomerMetadata({ userId: "user_abc" }, null),
-    ).toBe("user_abc");
+    expect(overview.plusProductIds).toEqual({
+      monthly: MONTHLY,
+      yearly: YEARLY,
+    });
+    expect(overview.premiumProductId).toBe(MONTHLY);
+    expect(overview.checkoutAvailable).toBe(true);
   });
 });

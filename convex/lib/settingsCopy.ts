@@ -1,6 +1,6 @@
 import {
-  PLUS_MONTHLY_PRICE,
-  PLUS_UPGRADE_PRICE_HINT,
+  plusMonthlyPriceLabel,
+  plusUpgradePriceHint,
 } from "../../shared/constants/plan";
 import type { Doc } from "../_generated/dataModel";
 import { CYCLE_DAYS, type PayFrequency } from "./budgetMath";
@@ -44,7 +44,10 @@ export function resolveCycleAlertsEnabled(
   return profile.cycleAlertsEnabled ?? DEFAULT_CYCLE_ALERTS_ENABLED;
 }
 
-export function planDisplay(plan: PlanTier): {
+export function planDisplay(
+  plan: PlanTier,
+  currencyCode?: string,
+): {
   tier: PlanTier;
   label: string;
   priceCopy: string | null;
@@ -54,14 +57,14 @@ export function planDisplay(plan: PlanTier): {
     return {
       tier: "premium",
       label: "Quipu Plus",
-      priceCopy: PLUS_MONTHLY_PRICE,
+      priceCopy: plusMonthlyPriceLabel(currencyCode),
       statusCopy: "Activo",
     };
   }
   return {
     tier: "free",
     label: "Quipu",
-    priceCopy: PLUS_UPGRADE_PRICE_HINT,
+    priceCopy: plusUpgradePriceHint(currencyCode),
     statusCopy: "Plan gratuito",
   };
 }

@@ -127,7 +127,11 @@ export function CoachRescueConfirmDialog({
         </DialogHeader>
         {paywall ? (
           <div className="mt-4">
-            <PremiumLockCard title={paywall.title} body={paywall.body} />
+            <PremiumLockCard
+              title={paywall.title}
+              body={paywall.body}
+              currencyCode={currencyCode}
+            />
           </div>
         ) : null}
         <DialogFooter className="mt-4 gap-2 sm:justify-stretch">

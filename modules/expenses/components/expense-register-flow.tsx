@@ -3,7 +3,7 @@
 import { useMutation } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
-import { DEFAULT_CURRENCY } from "@/core/constants";
+import { currencySymbolForCode, DEFAULT_CURRENCY } from "@/core/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
@@ -56,6 +56,7 @@ export function ExpenseRegisterFlow() {
   }
 
   const currencyCode = summary?.profile.currencyCode ?? DEFAULT_CURRENCY.code;
+  const currencySymbol = currencySymbolForCode(currencyCode);
 
   const title =
     variant === "envelope" && preselectedEnvelope
@@ -77,7 +78,7 @@ export function ExpenseRegisterFlow() {
           variant={variant}
           preselectedEnvelope={preselectedEnvelope}
           recentEnvelopes={recentEnvelopes}
-          currencySymbol={DEFAULT_CURRENCY.symbol}
+          currencySymbol={currencySymbol}
           registerExpense={registerExpense}
           onSuccess={(response) => {
             setResult(response);

@@ -44,7 +44,14 @@ export function mapConvexSettingsOverview(
         (isPremium ? SETTINGS_PLAN_RENEWAL_AUTOMATIC : SETTINGS_PLAN_FREE_BODY),
       paymentMethodSummary: null,
       checkoutAvailable: billing?.checkoutAvailable ?? false,
-      premiumProductId: billing?.premiumProductId ?? null,
+      premiumProductId:
+        billing?.plusProductIds?.monthly ?? billing?.premiumProductId ?? null,
+      plusProductIds: {
+        monthly:
+          billing?.plusProductIds?.monthly ?? billing?.premiumProductId ?? null,
+        yearly: billing?.plusProductIds?.yearly ?? null,
+      },
+      currencyCode: data.account.currencyCode,
     },
     passkeys: data.security.passkeys.map((pk) => ({
       id: pk.id,

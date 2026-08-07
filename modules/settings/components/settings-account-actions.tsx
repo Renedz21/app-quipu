@@ -6,10 +6,10 @@ import {
   SETTINGS_DANGER_ZONE_HINT,
   SETTINGS_DANGER_ZONE_LABEL,
 } from "../constants";
-import { useExportMyData } from "../queries";
 import { downloadProfileExport } from "../lib/downloadProfileExport";
-import { SettingsExportDataItem } from "./settings-export-data-item";
+import { useExportMyData } from "../queries";
 import { SettingsDeleteAccountItem } from "./settings-delete-account-item";
+import { SettingsExportDataItem } from "./settings-export-data-item";
 import { SettingsSignOutItem } from "./settings-sign-out-item";
 
 type Props = {

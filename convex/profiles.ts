@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { marketFromCurrencyCode } from "../shared/constants/markets";
 import type { Doc } from "./_generated/dataModel";
 import {
   internalMutation,
@@ -93,6 +94,16 @@ export const createProfile = mutation({
       });
     }
 
+    const market = marketFromCurrencyCode(args.currencyCode);
+    if (!market) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message:
+          "Elige un país y moneda soportados (Perú, España o Estados Unidos).",
+        data: { field: "currencyCode" },
+      });
+    }
+
     if (
       (args.incomeModel === "fixed" || args.incomeModel === "mixed") &&
       (!args.payFrequency || !args.paydays || args.paydays.length === 0)
@@ -140,9 +151,9 @@ export const createProfile = mutation({
     const profileId = await ctx.db.insert("profiles", {
       userId: identity.subject,
       name,
-      country: args.country,
-      currencyCode: args.currencyCode,
-      currencySymbol: args.currencySymbol,
+      country: market.country,
+      currencyCode: market.currencyCode,
+      currencySymbol: market.currencySymbol,
       incomeModel: args.incomeModel,
       payFrequency: args.payFrequency,
       paydays: args.paydays,

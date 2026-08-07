@@ -149,7 +149,6 @@ export const SETTINGS_EXTRAORDINARY_PROFIT_HINT = "Reparto anual";
 export const SETTINGS_EXTRAORDINARY_CUSTOM = "Otros extraordinarios";
 export const SETTINGS_EXTRAORDINARY_CUSTOM_HINT = "Cualquier otro ingreso";
 export const SETTINGS_CURRENCY_LABEL = "Moneda";
-export const SETTINGS_CURRENCY_VALUE = "Sol peruano · S/";
 export const SETTINGS_LANGUAGE_LABEL = "Idioma";
 export const SETTINGS_LANGUAGE_VALUE = "Español";
 export const SETTINGS_DAILY_SUMMARY_LABEL = "Resumen diario";

@@ -1,4 +1,6 @@
 import { ConvexError, v } from "convex/values";
+import { currencyReadOnlyLabel } from "../shared/constants/markets";
+import { plusMonthlyPriceLabel } from "../shared/constants/plan";
 import { components } from "./_generated/api";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
@@ -13,6 +15,7 @@ import {
   resolveCycleAlertsEnabled,
   resolveDailySummaryEnabled,
 } from "./lib/settingsCopy";
+import { polarProductIds } from "./polar";
 
 type PasskeyRecord = {
   id: string;
@@ -146,18 +149,24 @@ export const getSettingsOverview = query({
 
     const totalCents = commitments.reduce((sum, c) => sum + c.amount, 0);
 
-    const premiumProductId = process.env.POLAR_PRODUCT_ID_PREMIUM ?? "";
     const polarSnapshot = await loadPolarSubscriptionForUser(
       ctx,
       identity.subject,
     );
-    const billing = buildBillingOverview(polarSnapshot, premiumProductId, {
-      freeBody: "Gratis, sin límite de registros manuales.",
-      renewalPrefix: "Próxima renovación",
-      renewalAutomatic: "Renovación automática",
-      canceledUntil: "Cancelado · activo hasta",
-    });
-    const displayPlan = planDisplay(billing.tier);
+    const billing = buildBillingOverview(
+      polarSnapshot,
+      {
+        monthly: polarProductIds.plusMonthly,
+        yearly: polarProductIds.plusYearly,
+      },
+      {
+        freeBody: "Gratis, sin límite de registros manuales.",
+        renewalPrefix: "Próxima renovación",
+        renewalAutomatic: "Renovación automática",
+        canceledUntil: "Cancelado · activo hasta",
+      },
+    );
+    const displayPlan = planDisplay(billing.tier, profile.currencyCode);
 
     return {
       account: {
@@ -179,6 +188,8 @@ export const getSettingsOverview = query({
         cancelAtPeriodEnd: billing.cancelAtPeriodEnd,
         checkoutAvailable: billing.checkoutAvailable,
         premiumProductId: billing.premiumProductId,
+        plusProductIds: billing.plusProductIds,
+        monthlyPriceLabel: plusMonthlyPriceLabel(profile.currencyCode),
       },
       allocations: {
         needs: profile.allocationNeeds,
@@ -207,7 +218,10 @@ export const getSettingsOverview = query({
       preferences: {
         dailySummaryEnabled: resolveDailySummaryEnabled(profile),
         cycleAlertsEnabled: resolveCycleAlertsEnabled(profile),
-        currencyReadOnly: `Sol peruano · ${profile.currencySymbol}`,
+        currencyReadOnly: currencyReadOnlyLabel(
+          profile.currencyCode,
+          profile.currencySymbol,
+        ),
         localeReadOnly: "Español",
       },
       security: {

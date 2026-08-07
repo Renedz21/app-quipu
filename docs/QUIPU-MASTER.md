@@ -776,7 +776,10 @@ componente `convex/betterAuth/` y no se re-exportan.
 - **`incomeEvents` unificó** `adHocIncomes` + sueldo. Migración 1:1 con `source: "other"` (trade-off aceptado).
 - **`fixedCommitments.dueDay`** reemplazó `frequency` (first/second/every_payday). Migración de `every_payday` con pérdida aceptada (→ primer payday).
 - **Cobertura de compromisos (Cubierto):** motor de cascada (`computeCommitmentCoverage`); primero consume `commitmentReservations` activas por compromiso, luego `distributionApplied` del ciclo. Persiste `coveredAt` / `coveredBy`. Responde: ¿hay dinero reservado/asignado para esta obligación?
-- **Pago de compromisos (Pagado — P3-7):** seguimiento independiente de la cobertura. `paidAt` + `paidForCycleId` marcan que el usuario confirmó haber pagado **en el ciclo activo** (`markCommitmentAsPaid`). **No mueve sobres ni re-ejecuta cascada.** Responde: ¿el usuario dice que ya pagó?
+- **Pago de compromisos (Pagado — P3-7):** seguimiento independiente de la cobertura. `paidAt` + `paidForCycleId` marcan que el usuario confirmó haber pagado **en el ciclo activo** (`markCommitmentAsPaid`). **Solo señal:** Quipu no ejecuta el pago, no inventa un gasto y **no debita sobres**. Las reservas activas del compromiso en el ciclo se **liberan** (dejan de reducir disponible) sin crear movimiento de gasto; el gasto real, si debe reflejarse, es un registro aparte o una reconciliación explícita. **No re-ejecuta cascada.** Responde: ¿el usuario dice que ya pagó? (Invariantes §5.5.)
+- **Congelar sobre:** `envelopes.frozenUntil` bloquea **crear gasto**, **aumentar gasto** y **transferencias salientes** del sobre; permite consultar, reducir/corregir gasto, recibir dinero y descongelar. (Invariantes §5.5.)
+- **`needsReview`:** solo anomalía / migración / estado contable no reconstruible con las invariantes actuales (p. ej. ciclo legacy sin ledger). **No** significa «hay dinero sin repartir» — eso es `unallocatedCents > 0` (hecho o derivado). (Invariantes §5.5.)
+- **Crisis y Quipu Plus:** gratis = rescate manual entre sobres, posponer compromiso, posponer aviso de crisis; Plus = cubrir desde ahorro del ciclo, plan de crisis completo. Plus vende inteligencia/automatización, no bloquea operaciones financieras básicas. (Invariantes §5.5.)
 - **Vencido (pago):** pasó `dueDay` (Lima) en el ciclo activo y el compromiso no está Pagado para ese ciclo (`resolveCommitmentPaymentStatus` → `overdue`). Distinto de cobertura parcial o pospuesto (`postponedForCycleId`, P1-10).
 - **Edición de movimientos (P3-5):** `updateExpense` / `updateIncomeEvent` solo en ciclo activo. `updateIncomeEvent` **revierte y reescribe el ledger** (mismo patrón que delete+create); puede recibir `allocation` o reconstruir desde reservas previas + política. Desde `/movements` no se edita el apartado; solo al registrar ingreso.
 - **`HORIZON_DAYS = 15`** hardcoded para `variable` (configurable diferido: P2-2).
@@ -815,6 +818,25 @@ componente `convex/betterAuth/` y no se re-exportan.
   `docs/security-debt.md`.
 - `USER_ALREADY_EXISTS` en sign-up → redirect `/sign-in?email=X&reason=exists` con banner "Ya tienes cuenta".
 - `passkeyClient()` y `convexClient()` en `auth/auth-client.ts` son obligatorios (sin ellos Better Auth no conecta con Convex).
+
+### 5.5 Invariantes de dominio (cerrados 2026-08-07)
+
+> Decisiones de producto tras la auditoría del backend Convex. Fuente canónica aquí;
+> ADR narrativo: `docs/adr/2026-08-07-invariantes-financieros-backend.md`.
+> Cualquier mutación o query de `convex/` se evalúa contra estas invariantes.
+
+| # | Invariante | Verdad en Quipu |
+|---|---|---|
+| I1 | **Pagado ≠ gasto** | «Marcar como pagado» = confirmación del usuario en el mundo real. No crea gasto, no debita sobres, no falla por «saldo insuficiente». Libera reservas del compromiso en el ciclo sin inventar movimiento. |
+| I2 | **Congelar es literal** | Sobre congelado: no nuevos gastos, no aumentos, no salidas. Sí: consulta, reducir/corregir gasto, entradas, descongelar. |
+| I3 | **Plus = inteligencia, no candado básico** | Gratis: rescate manual, posponer compromiso, snooze crisis. Plus: cubrir desde ahorro del ciclo, plan de crisis completo. |
+| I4 | **`needsReview` es anomalía** | Solo estado contable no reconstruible / legacy. Dinero sin repartir = `unallocatedCents`, nunca reutilizar `needsReview`. |
+| I5 | **Admin fuera de la app** | Operaciones admin = dashboard Convex / scripts / `internalMutation`·`internalAction`. Sin UI admin en el producto de usuario. |
+| I6 | **Auth en primitiva común** | APIs públicas de dominio parten de pocas puertas: cuenta autenticada activa (+ pertenencia). No copiar checks a mano en cada función. |
+| I7 | **Export/borrado = libro completo** | Incluye reservas, líneas de asignación, transferencias internas, feedback y el resto del dominio personal. |
+| I8 | **Revisión de contenido por candidatos** | Cron procesa perfiles ya marcados como sospechosos (o muestreo acotado). No barrido completo de todos los usuarios cada ciclo. |
+
+**Tríada financiera (I1):** compromiso (obligación) ≠ reserva (dinero apartado que afecta disponibilidad) ≠ gasto real (hecho observado). Mezclarlas en una sola mutación es un bug de dominio.
 
 ---
 
@@ -1345,6 +1367,7 @@ En dashboard Polar: URL del webhook **`https://<deployment>.convex.site/webhook/
 | `docs/superpowers/plans/` · `specs/` | Histórico de planes y specs ejecutados (migración v2.5, auth, onboarding v3). Consulta, no edición. |
 | `docs/migrations/2026-07-07-v25-migration.md` | Runbook de la migración de datos v2.0→v2.5. |
 | `docs/security-debt.md` | Deuda de seguridad (D1–D4) con planes de resolución. Origen: auditoría 2026-07-22. |
+| `docs/adr/2026-08-07-invariantes-financieros-backend.md` | ADR de invariantes I1–I8 (auditoría backend 2026-08-07); canon en §5.5. |
 | `quipu-2.html` (raíz) | Canvas visual oficial del diseño: los 9 bloques renderizados en web y móvil + theme switcher. Fuente de §3. |
 | `convex/_generated/ai/guidelines.md` | Guías de la API de Convex (leer antes de tocar `convex/`). Se regenera con `npx convex ai-files install`. |
 
@@ -1365,6 +1388,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-08-07 — Invariantes de dominio §5.5 (auditoría Convex).** Ocho decisiones cerradas: Pagado=solo señal (libera reservas, no inventa gasto); congelar bloquea salidas; crisis gratis vs Plus; `needsReview`≠unallocated; admin solo internal/dashboard; auth por primitiva común; export/borrado libro completo; cron de contenido solo candidatos. ADR: `docs/adr/2026-08-07-invariantes-financieros-backend.md`. Ajuste §5.3 Pagado/congelar/needsReview/Plus.
 - **2026-08-05 — Fix D3 eliminar cuenta (SESSION_EXPIRED).** Better Auth exige sesión fresh (menos de 24h) o contraseña en `/delete-user`; sin eso falla en el HTTP de auth (no en mutaciones Convex). UI: contraseña opcional + reauth passkey y reintento; cascada `deleteAllDataForProfile` incluye ledger (`commitmentReservations`, `incomeAllocationLines`, `internalTransfers`) y `accountReviewFlags`.
 - **2026-08-01 — Conciliación en corregir distribución.** El error «La corrección no conserva el dinero líquido» bloqueaba alinear Quipu con el saldo bancario real (p. ej. S/2,005.94 vs ~S/373.98 en sobres). `correctActiveCycleAllocation` acepta `declaredLiquidCents` → transfer `liquidity_reconciliation`; opcional `annulInferredSavingsCents` para bajar Fondo inflado. UI muestra el ajuste. §5.1–5.3.
 - **2026-07-31 — Cutover: sin path legacy de ingresos.** `createIncomeEvent` exige `allocation`; coverage usa `commitmentReservations` (no pool `heldCents`); `updateIncomeEvent` reescribe ledger; ahorro del ciclo solo por aportes confirmados (sin fallback set-aside). Analytics PostHog de impacto en dashboard «Allocation ledger — impacto y rescate».

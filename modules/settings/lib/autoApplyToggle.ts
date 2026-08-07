@@ -26,12 +26,32 @@ export function patchAutoApply(
   return { ...current, [key]: checked };
 }
 
-/** ¿El servidor ya alcanzó el override optimista? */
-export function optimisticAutoApplySettled(
+/**
+ * Solo aplica overrides que aún difieren del servidor (derivado en render,
+ * sin useEffect para “limpiar” estado).
+ */
+export function activeOptimisticAutoApply(
   server: ExtraordinaryRulesAutoApply,
-  optimistic: Partial<ExtraordinaryRulesAutoApply>,
-): boolean {
-  return (
-    Object.keys(optimistic) as Array<keyof ExtraordinaryRulesAutoApply>
-  ).every((key) => server[key] === optimistic[key]);
+  optimistic: Partial<ExtraordinaryRulesAutoApply> | null,
+): Partial<ExtraordinaryRulesAutoApply> | null {
+  if (!optimistic) return null;
+  const active: Partial<ExtraordinaryRulesAutoApply> = {};
+  for (const key of Object.keys(optimistic) as Array<
+    keyof ExtraordinaryRulesAutoApply
+  >) {
+    const value = optimistic[key];
+    if (value !== undefined && value !== server[key]) {
+      active[key] = value;
+    }
+  }
+  return Object.keys(active).length > 0 ? active : null;
+}
+
+export function dropOptimisticKey(
+  optimistic: Partial<ExtraordinaryRulesAutoApply> | null,
+  key: keyof ExtraordinaryRulesAutoApply,
+): Partial<ExtraordinaryRulesAutoApply> | null {
+  if (!optimistic || !(key in optimistic)) return optimistic;
+  const { [key]: _removed, ...rest } = optimistic;
+  return Object.keys(rest).length > 0 ? rest : null;
 }

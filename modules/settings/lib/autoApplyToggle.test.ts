@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  activeOptimisticAutoApply,
   decideAutoApplyToggle,
-  optimisticAutoApplySettled,
+  dropOptimisticKey,
   patchAutoApply,
 } from "./autoApplyToggle";
+
+const ALL_OFF = {
+  cts: false,
+  gratifications: false,
+  corporate_bonus: false,
+  profit_sharing: false,
+  custom: false,
+} as const;
 
 describe("decideAutoApplyToggle", () => {
   it("opens paywall for free users", () => {
@@ -53,50 +62,31 @@ describe("decideAutoApplyToggle", () => {
 
 describe("patchAutoApply", () => {
   it("returns a new map with one key flipped", () => {
-    const next = patchAutoApply(
-      {
-        cts: false,
-        gratifications: false,
-        corporate_bonus: false,
-        profit_sharing: false,
-        custom: false,
-      },
-      "cts",
-      true,
-    );
+    const next = patchAutoApply({ ...ALL_OFF }, "cts", true);
     expect(next.cts).toBe(true);
     expect(next.gratifications).toBe(false);
   });
 });
 
-describe("optimisticAutoApplySettled", () => {
-  it("is true when server matches optimistic keys", () => {
-    expect(
-      optimisticAutoApplySettled(
-        {
-          cts: true,
-          gratifications: false,
-          corporate_bonus: false,
-          profit_sharing: false,
-          custom: false,
-        },
-        { cts: true },
-      ),
-    ).toBe(true);
+describe("activeOptimisticAutoApply", () => {
+  it("keeps overrides that still differ from server", () => {
+    expect(activeOptimisticAutoApply({ ...ALL_OFF }, { cts: true })).toEqual({
+      cts: true,
+    });
   });
 
-  it("is false while server lags", () => {
+  it("drops overrides once server caught up (no effect needed)", () => {
     expect(
-      optimisticAutoApplySettled(
-        {
-          cts: false,
-          gratifications: false,
-          corporate_bonus: false,
-          profit_sharing: false,
-          custom: false,
-        },
-        { cts: true },
-      ),
-    ).toBe(false);
+      activeOptimisticAutoApply({ ...ALL_OFF, cts: true }, { cts: true }),
+    ).toBeNull();
+  });
+});
+
+describe("dropOptimisticKey", () => {
+  it("removes one key and nulls when empty", () => {
+    expect(dropOptimisticKey({ cts: true }, "cts")).toBeNull();
+    expect(dropOptimisticKey({ cts: true, custom: false }, "cts")).toEqual({
+      custom: false,
+    });
   });
 });

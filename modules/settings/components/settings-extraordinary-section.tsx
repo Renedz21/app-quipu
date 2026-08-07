@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "reicon-react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
@@ -36,8 +36,9 @@ import {
   SETTINGS_EXTRAORDINARY_PROFIT_HINT,
 } from "../constants";
 import {
+  activeOptimisticAutoApply,
   decideAutoApplyToggle,
-  optimisticAutoApplySettled,
+  dropOptimisticKey,
   patchAutoApply,
 } from "../lib/autoApplyToggle";
 import { SettingsToggle } from "./settings-toggle";
@@ -142,23 +143,18 @@ export function SettingsExtraordinarySection({
   const serverAutoApply = mergeExtraordinaryRulesAutoApply(
     profile?.extraordinaryRulesAutoApply,
   );
-
-  useEffect(() => {
-    if (!optimisticAutoApply) return;
-    const server = mergeExtraordinaryRulesAutoApply(
-      profile?.extraordinaryRulesAutoApply,
-    );
-    if (optimisticAutoApplySettled(server, optimisticAutoApply)) {
-      setOptimisticAutoApply(null);
-    }
-  }, [profile?.extraordinaryRulesAutoApply, optimisticAutoApply]);
+  // Derive: ignore optimistic keys already reflected by the server (no effect).
+  const optimisticOverride = activeOptimisticAutoApply(
+    serverAutoApply,
+    optimisticAutoApply,
+  );
 
   if (!profile) return null;
 
   const rules = mergeExtraordinaryRules(profile.extraordinaryRules);
   const autoApply = {
     ...serverAutoApply,
-    ...optimisticAutoApply,
+    ...optimisticOverride,
   };
   const isPremium = profile.plan === "premium";
 
@@ -177,6 +173,9 @@ export function SettingsExtraordinarySection({
         extraordinaryRules: nextRules,
         ...(isPremium ? { extraordinaryRulesAutoApply: nextAutoApply } : {}),
       });
+      if (value === "ask_each_time") {
+        setOptimisticAutoApply((prev) => dropOptimisticKey(prev, key));
+      }
     } catch (error) {
       setOptimisticAutoApply(null);
       toast.error(fromConvexError(error).message);
@@ -207,12 +206,9 @@ export function SettingsExtraordinarySection({
         extraordinaryRules: rules,
         extraordinaryRulesAutoApply: nextAutoApply,
       });
+      setOptimisticAutoApply((prev) => dropOptimisticKey(prev, key));
     } catch (error) {
-      setOptimisticAutoApply((prev) => {
-        if (!prev) return null;
-        const { [key]: _removed, ...rest } = prev;
-        return Object.keys(rest).length > 0 ? rest : null;
-      });
+      setOptimisticAutoApply((prev) => dropOptimisticKey(prev, key));
       toast.error(fromConvexError(error).message);
     } finally {
       setPendingKey((current) => (current === key ? null : current));

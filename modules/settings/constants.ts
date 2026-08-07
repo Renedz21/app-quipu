@@ -40,6 +40,7 @@ export const SETTINGS_PLAN_VALUE_BULLETS = [
   "Recibe avisos de tus compromisos antes de que venzan.",
   "Tu informe de cierre, automático al terminar cada ciclo.",
 ] as const;
+export const SETTINGS_PLAN_TAX_INCLUDED = "Precio con impuestos incluidos.";
 export const SETTINGS_CHECKOUT_SUCCESS =
   "Listo. Tu plan se actualizará en unos segundos.";
 /** CTA de upsell en sidebar (free). No es el nombre del plan activo. */

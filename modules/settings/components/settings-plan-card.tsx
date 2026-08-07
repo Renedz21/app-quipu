@@ -21,6 +21,7 @@ import {
   SETTINGS_PLAN_MANAGE,
   SETTINGS_PLAN_PLUS_NAME,
   SETTINGS_PLAN_PREPARING,
+  SETTINGS_PLAN_TAX_INCLUDED,
   SETTINGS_PLAN_VALUE_BULLETS,
   SETTINGS_PLAN_VALUE_HEADING,
 } from "../constants";
@@ -152,6 +153,10 @@ export function SettingsPlanCard({ subscription, className }: Props) {
           {quote.priceLabel} · {quote.billingCadence}
         </p>
       ) : null}
+
+      <p className="mt-1 text-[11.5px] leading-snug text-faint">
+        {SETTINGS_PLAN_TAX_INCLUDED}
+      </p>
 
       {subscription.renewalSummary ? (
         <p className="mt-1.5 max-w-prose text-[12.5px] leading-snug text-mute-subtle md:text-[13px]">

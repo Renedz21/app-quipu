@@ -5,7 +5,7 @@ import { ChevronDown } from "reicon-react";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
-import { PremiumLockCard } from "@/shared/components/premium-lock-card";
+import { PremiumLockPrompt } from "@/shared/components/premium-lock-prompt";
 import {
   type ExtraordinaryProfileRule,
   type ExtraordinaryRules,
@@ -265,15 +265,13 @@ export function SettingsExtraordinarySection({
         })}
       </ul>
 
-      {showAutoApplyPaywall ? (
-        <div className="mt-4">
-          <PremiumLockCard
-            title={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE}
-            body={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY}
-            currencyCode={profile.currencyCode}
-          />
-        </div>
-      ) : null}
+      <PremiumLockPrompt
+        open={showAutoApplyPaywall}
+        onOpenChange={setShowAutoApplyPaywall}
+        title={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE}
+        body={SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY}
+        currencyCode={profile.currencyCode}
+      />
 
       <p className="mt-3 text-[12.5px] leading-snug text-mute">
         {SETTINGS_EXTRAORDINARY_FOOTER}

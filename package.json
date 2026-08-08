@@ -14,7 +14,10 @@
     "format:check": "biome format --check .",
     "ci:quality": "biome ci .",
     "test": "vitest",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "codegraph:sync": "codegraph sync",
+    "codegraph:sync:convex": "codegraph sync convex",
+    "codegraph:status": "codegraph status && codegraph status convex"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

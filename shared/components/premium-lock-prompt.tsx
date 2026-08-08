@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
+import { AnalyticsEvents, track } from "@/core/analytics";
+import type { PremiumLockCopy } from "@/shared/components/premium-lock-card";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +20,9 @@ import { plusPaywallCta } from "@/shared/constants/plan";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib/utils";
 
-type Props = {
+type Props = PremiumLockCopy & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  body: string;
   currencyCode?: string;
   ctaLabel?: string;
   /** Destino del CTA (por defecto Ajustes → plan). */
@@ -31,6 +32,7 @@ type Props = {
 /**
  * Paywall de Plus: modal en desktop, bottom sheet en móvil.
  * Misma promesa que PremiumLockCard, sin ocupar el flujo en línea.
+ * Copy: trabajo concreto que Plus hace hoy; sin roadmap ni sobrepromesa.
  */
 export function PremiumLockPrompt({
   open,
@@ -43,6 +45,20 @@ export function PremiumLockPrompt({
 }: Props) {
   const isMobile = useIsMobile();
   const resolvedCta = ctaLabel ?? plusPaywallCta(currencyCode);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (!open) {
+      trackedOpen.current = false;
+      return;
+    }
+    if (trackedOpen.current) return;
+    trackedOpen.current = true;
+    track(AnalyticsEvents.PLUS_PAYWALL_VIEWED, {
+      surface: "premium_lock_prompt",
+      plan: "free",
+    });
+  }, [open]);
 
   const bodyContent = (
     <div className="relative">

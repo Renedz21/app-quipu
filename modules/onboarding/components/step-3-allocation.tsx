@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { Button } from "@/shared/components/ui/button";
 import { ENVELOPES } from "@/shared/constants/envelopes";

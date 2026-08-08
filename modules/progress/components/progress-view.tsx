@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { Check } from "reicon-react";
+import { Check } from "reicon-react/icons/Check";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { BackLink } from "@/shared/components/ui/back-link";
@@ -44,10 +44,10 @@ function AchievementCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-[14px] px-[18px] py-4 md:gap-[13px]",
+        "flex items-center gap-3 rounded-xl border px-4 py-4 md:gap-3.5 md:px-5",
         isDone
-          ? "border border-line bg-surface"
-          : "border border-dashed border-[#D8D3CB] bg-[#FAF8F5] opacity-75",
+          ? "border-line/70 bg-card"
+          : "border-dashed border-line/70 bg-surface-soft opacity-75",
       )}
     >
       <span
@@ -55,7 +55,7 @@ function AchievementCard({
           "flex size-[34px] shrink-0 items-center justify-center rounded-full md:size-[42px]",
           isDone
             ? "border border-qp-border bg-qp-tint"
-            : "border border-dashed border-[#C9C3BA]",
+            : "border border-dashed border-line/70",
         )}
         aria-hidden
       >
@@ -105,18 +105,18 @@ function ProgressOverviewSkeleton() {
         variant="line"
         className="mt-2 h-[13px] w-[300px] max-w-full rounded-[5px]"
       />
-      <Skeleton className="mt-6 h-[130px] w-full rounded-[18px] [animation-delay:150ms]" />
+      <Skeleton className="mt-6 h-[130px] w-full rounded-xl [animation-delay:150ms]" />
       <Skeleton
         variant="line"
         className="mt-5 h-[11px] w-[70px] rounded-[5px]"
       />
       <div className="mt-3.5 grid gap-2 md:grid-cols-3 md:gap-3">
-        <Skeleton className="h-[74px] rounded-[14px]" />
-        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:150ms]" />
-        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:300ms]" />
-        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:150ms]" />
-        <Skeleton className="h-[74px] rounded-[14px] [animation-delay:300ms]" />
-        <Skeleton className="h-[74px] rounded-[14px]" />
+        <Skeleton className="h-[74px] rounded-xl" />
+        <Skeleton className="h-[74px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[74px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-[74px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[74px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-[74px] rounded-xl" />
       </div>
     </div>
   );
@@ -139,7 +139,7 @@ export function ProgressView() {
 
   if (overview === null) {
     return (
-      <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+      <section className="rounded-xl border border-danger-line bg-danger-bg p-5 md:p-6">
         <h2 className="text-base font-semibold text-danger-ink">
           {PROGRESS_ERROR_TITLE}
         </h2>
@@ -176,9 +176,9 @@ export function ProgressView() {
         </p>
       </header>
 
-      <section className="mb-5 flex flex-col gap-5 rounded-[18px] border border-line bg-gradient-to-br from-[#FBFAF7] to-[#F6F4F0] p-[17px] md:mb-6 md:flex-row md:items-center md:gap-9 md:p-7">
+      <section className="mb-5 grid gap-5 rounded-xl border border-line/70 bg-gradient-to-br from-canvas to-surface-soft p-4 md:mb-6 md:grid-cols-[auto_1fr] md:items-center md:gap-9 md:p-7">
         <div>
-          <div className="mb-1.5 font-mono text-[9.5px] tracking-[0.1em] text-[#A6836A] uppercase md:mb-2 md:text-[10.5px]">
+          <div className="mb-1.5 text-[12.5px] font-medium text-ink-secondary md:mb-2">
             {PROGRESS_STREAK_LABEL}
           </div>
           <div className="flex items-baseline gap-2 md:gap-2.5">
@@ -196,8 +196,8 @@ export function ProgressView() {
           </div>
         </div>
 
-        <div className="flex-1 md:border-l md:border-line-divider md:pl-9">
-          <div className="mb-2 text-[12px] text-ink-secondary md:mb-3 md:text-[12.5px]">
+        <div className="md:border-l md:border-line/50 md:pl-9">
+          <div className="mb-2 text-[12.5px] font-medium text-ink-secondary md:mb-3">
             {PROGRESS_CHART_LABEL}
           </div>
           <ProgressStreakChart
@@ -210,10 +210,10 @@ export function ProgressView() {
       </section>
 
       <div className="mb-3.5 flex items-center gap-2">
-        <span className="font-mono text-[9.5px] tracking-[0.1em] text-mute-subtle uppercase md:text-[10.5px]">
+        <span className="text-[12.5px] font-medium text-ink-secondary">
           {PROGRESS_ACHIEVEMENTS_LABEL}
         </span>
-        <span className="h-px flex-1 bg-line-divider" />
+        <span className="h-px flex-1 bg-line/50" />
         <span className="text-[12px] text-mute-subtle">
           {overview.achievementsDoneCount} de {overview.achievementsTotal}
         </span>

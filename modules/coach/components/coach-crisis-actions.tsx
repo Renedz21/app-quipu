@@ -2,7 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { useState } from "react";
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, X } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
+import { X } from "reicon-react/icons/X";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";

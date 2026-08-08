@@ -1,6 +1,6 @@
 "use client";
 
-import { Add } from "reicon-react";
+import { Add } from "reicon-react/icons/Add";
 import { REGISTER_CTA } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";

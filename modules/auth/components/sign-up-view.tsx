@@ -1,5 +1,6 @@
 "use client";
 import { useForm } from "@tanstack/react-form";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,7 +9,6 @@ import { authClient } from "@/auth/auth-client";
 import { AnalyticsEvents, getAuthSignupContext, track } from "@/core/analytics";
 import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
-import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -22,13 +22,29 @@ import {
   authFetchOptions,
   requireTurnstileToken,
 } from "../lib/auth-fetch-options";
+import {
+  appendAuthReturnTo,
+  resolveAuthDestination,
+} from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { signUpSchema } from "../schemas";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
-import { PasskeySetup } from "./passkey-setup";
 import { SuccessStep } from "./sign-up-success-step";
 import { VerifyEmailPromptStep } from "./verify-email-prompt-step";
+
+const TurnstileWidget = dynamic(
+  () =>
+    import("@/shared/components/turnstile-widget").then(
+      (mod) => mod.TurnstileWidget,
+    ),
+  { ssr: false },
+);
+
+const PasskeySetup = dynamic(
+  () => import("./passkey-setup").then((mod) => mod.PasskeySetup),
+  { ssr: false },
+);
 
 type Step = "form" | "verify-email" | "passkey" | "success";
 
@@ -61,7 +77,13 @@ const stepLabel: Record<Step, string> = {
   success: "Cuenta lista",
 };
 
-export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
+export function SignUpView({
+  initialEmail = "",
+  returnTo,
+}: {
+  initialEmail?: string;
+  returnTo?: string;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("form");
   const [serverError, setServerError] = useState(false);
@@ -88,6 +110,7 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
           email: value.email,
           password: value.password,
           name: value.name,
+          callbackURL: appendAuthReturnTo("/sign-in", returnTo),
         },
         authFetchOptions(turnstileToken),
       );
@@ -274,7 +297,7 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
       )}
 
       {step === "verify-email" && (
-        <VerifyEmailPromptStep email={registeredEmail} />
+        <VerifyEmailPromptStep email={registeredEmail} returnTo={returnTo} />
       )}
 
       {step === "passkey" && <PasskeySetup onDone={() => setStep("success")} />}
@@ -282,7 +305,7 @@ export function SignUpView({ initialEmail = "" }: { initialEmail?: string }) {
       {step === "success" && (
         <SuccessStep
           onContinue={() => {
-            navigateAfterAuth("/onboarding");
+            navigateAfterAuth(resolveAuthDestination(returnTo, "/onboarding"));
           }}
         />
       )}

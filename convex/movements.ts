@@ -1,5 +1,8 @@
+import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { getActiveSpaceCycle, requireSpaceMember } from "./lib/spaceAuth";
+import { buildSpaceMovements } from "./spaceMovements";
 
 const MOVEMENTS_LIST_LIMIT = 500;
 
@@ -148,3 +151,173 @@ function buildMovements(
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, limit);
 }
+
+const contextValidator = v.union(
+  v.literal("personal"),
+  v.object({
+    type: v.literal("space"),
+    spaceId: v.id("financialSpaces"),
+  }),
+);
+
+export const listForContext = query({
+  args: { context: contextValidator },
+  returns: v.union(
+    v.null(),
+    v.object({
+      currencyCode: v.string(),
+      contextLabel: v.string(),
+      cycle: v.union(
+        v.null(),
+        v.object({
+          startDate: v.number(),
+          endDate: v.number(),
+        }),
+      ),
+      movements: v.array(
+        v.object({
+          id: v.string(),
+          kind: v.union(
+            v.literal("expense"),
+            v.literal("income"),
+            v.literal("contribution"),
+          ),
+          label: v.string(),
+          envelopeLabel: v.optional(v.string()),
+          amount: v.number(),
+          timestamp: v.number(),
+          fundingSource: v.optional(
+            v.union(v.literal("space_budget"), v.literal("personal_pocket")),
+          ),
+          isExtraordinaryIncome: v.optional(v.boolean()),
+        }),
+      ),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) return null;
+
+    if (args.context === "personal") {
+      const activeCycle = await ctx.db
+        .query("financialCycles")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("profileId", profile._id).eq("status", "active"),
+        )
+        .unique();
+
+      if (!activeCycle) {
+        return {
+          currencyCode: profile.currencyCode,
+          contextLabel: "Personal",
+          cycle: null,
+          movements: [],
+        };
+      }
+
+      const envelopesRaw = await ctx.db
+        .query("envelopes")
+        .withIndex("by_cycle_type", (q) => q.eq("cycleId", activeCycle._id))
+        .collect();
+
+      const envelopeTypeById = new Map<
+        Id<"envelopes">,
+        Doc<"envelopes">["type"]
+      >(envelopesRaw.map((envelope) => [envelope._id, envelope.type]));
+
+      const [expensesRaw, incomesRaw] = await Promise.all([
+        ctx.db
+          .query("expenses")
+          .withIndex("by_cycle_envelope_time", (q) =>
+            q.eq("cycleId", activeCycle._id),
+          )
+          .order("desc")
+          .collect(),
+        ctx.db
+          .query("incomeEvents")
+          .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+          .collect(),
+      ]);
+
+      const movements = buildMovements(
+        expensesRaw,
+        incomesRaw,
+        envelopeTypeById,
+        MOVEMENTS_LIST_LIMIT,
+      ).map((movement) => {
+        if (movement.kind === "income") {
+          return {
+            id: movement.id,
+            kind: movement.kind,
+            label: movement.label,
+            amount: movement.amount,
+            timestamp: movement.timestamp,
+            isExtraordinaryIncome: movement.isExtraordinaryIncome,
+          };
+        }
+        if (movement.kind === "expense") {
+          return {
+            id: movement.id,
+            kind: movement.kind,
+            label: movement.label,
+            envelopeLabel: movement.envelopeLabel,
+            amount: movement.amount,
+            timestamp: movement.timestamp,
+          };
+        }
+        return movement;
+      });
+
+      return {
+        currencyCode: profile.currencyCode,
+        contextLabel: "Personal",
+        cycle: {
+          startDate: activeCycle.startDate,
+          endDate: activeCycle.endDate,
+        },
+        movements,
+      };
+    }
+
+    const { space } = await requireSpaceMember(ctx, args.context.spaceId);
+    const cycle = await getActiveSpaceCycle(ctx, space._id);
+    if (!cycle) {
+      return {
+        currencyCode: space.currencyCode,
+        contextLabel: space.name,
+        cycle: null,
+        movements: [],
+      };
+    }
+
+    const [expenses, contributions] = await Promise.all([
+      ctx.db
+        .query("spaceExpenses")
+        .withIndex("by_space_cycle_time", (q) =>
+          q.eq("spaceId", space._id).eq("cycleId", cycle._id),
+        )
+        .order("desc")
+        .collect(),
+      ctx.db
+        .query("spaceContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+        .collect(),
+    ]);
+
+    return {
+      currencyCode: space.currencyCode,
+      contextLabel: space.name,
+      cycle: {
+        startDate: cycle.startDate,
+        endDate: cycle.endDate,
+      },
+      movements: buildSpaceMovements(expenses, contributions),
+    };
+  },
+});

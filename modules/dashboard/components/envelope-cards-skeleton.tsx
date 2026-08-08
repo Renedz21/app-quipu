@@ -13,14 +13,14 @@ export function EnvelopeCardsSkeleton() {
     >
       <Skeleton variant="line" className="h-2.75 w-22.5 rounded-[5px]" />
       <div className="grid gap-2 md:grid-cols-3 md:gap-3">
-        <Skeleton className="h-24 rounded-[14px] md:h-26" />
-        <Skeleton className="h-24 rounded-[14px] [animation-delay:150ms] md:h-26" />
-        <Skeleton className="h-24 rounded-[14px] [animation-delay:300ms] md:h-26" />
+        <Skeleton className="h-24 rounded-xl md:h-26" />
+        <Skeleton className="h-24 rounded-xl [animation-delay:150ms] md:h-26" />
+        <Skeleton className="h-24 rounded-xl [animation-delay:300ms] md:h-26" />
       </div>
-      <Skeleton className="h-32 rounded-[14px] [animation-delay:150ms] md:h-37.5" />
+      <Skeleton className="h-32 rounded-xl [animation-delay:150ms] md:h-37.5" />
       <div className="grid gap-3 md:gap-4 lg:grid-cols-[1.25fr_1fr]">
-        <Skeleton className="h-32 rounded-[14px] [animation-delay:150ms] md:h-37.5" />
-        <Skeleton className="h-32 rounded-[14px] [animation-delay:300ms] md:h-37.5" />
+        <Skeleton className="h-32 rounded-xl [animation-delay:150ms] md:h-37.5" />
+        <Skeleton className="h-32 rounded-xl [animation-delay:300ms] md:h-37.5" />
       </div>
     </section>
   );
@@ -29,7 +29,7 @@ export function EnvelopeCardsSkeleton() {
 export function EnvelopeSectionLabel() {
   return (
     <div className="mb-2 flex items-center gap-2 md:mb-3">
-      <span className="font-mono text-[10.5px] uppercase tracking-widest text-mute">
+      <span className="text-[12.5px] font-medium text-ink-secondary">
         {ENVELOPES_SECTION_LABEL}
       </span>
       <div className="h-px flex-1 bg-line-divider" />

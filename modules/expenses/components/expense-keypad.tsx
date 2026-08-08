@@ -1,6 +1,6 @@
 "use client";
 
-import { Backspace } from "reicon-react";
+import { Backspace } from "reicon-react/icons/Backspace";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { appendKeypadDigit, backspaceKeypad } from "../lib/keypad";

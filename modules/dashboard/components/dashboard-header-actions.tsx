@@ -7,6 +7,7 @@ import {
   INCOME_MOBILE_CTA,
 } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";
 import { DashboardRegisterButton } from "./dashboard-register-button";
@@ -17,8 +18,24 @@ type Props = {
 
 export function DashboardHeaderActions({ layout }: Props) {
   const summary = useDashboardSummary();
-  const hasActiveCycle = Boolean(summary?.cycle);
   const isMobile = layout === "mobile";
+
+  if (summary === undefined) {
+    return (
+      <Skeleton
+        className={cn(
+          "rounded-[11px] [animation-delay:150ms]",
+          isMobile ? "h-10 w-full" : "h-9 w-44",
+        )}
+      />
+    );
+  }
+
+  if (summary === null) {
+    return null;
+  }
+
+  const hasActiveCycle = Boolean(summary.cycle);
 
   if (hasActiveCycle) {
     return (

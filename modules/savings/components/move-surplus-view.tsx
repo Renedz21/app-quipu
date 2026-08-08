@@ -192,7 +192,7 @@ function MoveSurplusSkeleton() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <Skeleton variant="line" className="h-4 w-24" />
       <Skeleton className="mt-4 h-8 w-56 rounded-lg" />
-      <Skeleton className="mt-6 h-48 w-full rounded-[14px] [animation-delay:150ms]" />
+      <Skeleton className="mt-6 h-48 w-full rounded-xl [animation-delay:150ms]" />
     </div>
   );
 }

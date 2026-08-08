@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "reicon-react";
+import { ArrowLeft } from "reicon-react/icons/ArrowLeft";
 import { INCOME_PAGE_TITLE } from "../constants";
 
 export function IncomeRegisterMobileHeader() {

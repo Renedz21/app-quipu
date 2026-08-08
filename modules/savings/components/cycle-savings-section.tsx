@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { InfoCircle } from "reicon-react";
+import { InfoCircle } from "reicon-react/icons/InfoCircle";
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -96,7 +96,7 @@ export function CycleSavingsSection({ breakdown }: Props) {
 
       {/* Canon overview: solo el Fondo lleva el shield verde. El ciclo es
           flujo (cuánto entró), no un segundo hero del mismo color. */}
-      <article className="relative overflow-hidden rounded-[20px] border border-line bg-card p-5 md:p-7">
+      <article className="relative overflow-hidden rounded-xl border border-line/70 bg-card p-5 md:p-7">
         {breakdown.showAboveTargetCelebration &&
         breakdown.aboveTargetByCents > 0 ? (
           <div className="relative mb-4 inline-flex items-center gap-2 rounded-full border border-qp-shield-line bg-qp-panel px-3 py-1.5 md:px-[13px] md:py-1.5">
@@ -217,7 +217,7 @@ export function CycleSavingsSection({ breakdown }: Props) {
       </div>
 
       {hasAnySurplus ? (
-        <div className="mt-4 flex flex-col gap-4 rounded-[14px] border border-qp-shield-line bg-card p-4 md:flex-row md:items-center md:justify-between md:p-5">
+        <div className="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-line/70 bg-card p-4 md:grid-cols-[1fr_auto] md:items-center md:p-5">
           <div className="flex items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-qp-panel text-qp-deep">
               <span className="relative block size-4">
@@ -257,14 +257,14 @@ export function CycleSavingsSectionSkeleton() {
       <Skeleton variant="line" className="h-4 w-40" />
       <Skeleton className="h-48 w-full rounded-[20px] [animation-delay:150ms]" />
       <div className="flex flex-col gap-2 md:hidden">
-        <Skeleton className="h-[46px] rounded-xl" />
-        <Skeleton className="h-[46px] rounded-xl [animation-delay:150ms]" />
-        <Skeleton className="h-[46px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-11.5 rounded-xl" />
+        <Skeleton className="h-11.5 rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-11.5 rounded-xl [animation-delay:300ms]" />
       </div>
       <div className="hidden gap-3 md:grid md:grid-cols-3">
-        <Skeleton className="h-28 rounded-[14px]" />
-        <Skeleton className="h-28 rounded-[14px] [animation-delay:150ms]" />
-        <Skeleton className="h-28 rounded-[14px] [animation-delay:300ms]" />
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-28 rounded-xl [animation-delay:300ms]" />
       </div>
     </section>
   );
@@ -330,7 +330,7 @@ function SectionHeader({
           {breakdown.cycleContextLabel}
         </p>
       </div>
-      <span className="hidden rounded-lg border border-line bg-card px-3 py-2 font-mono text-[11px] text-mute md:inline">
+      <span className="hidden rounded-xl border border-line/70 bg-card px-3 py-2 text-[12.5px] font-medium text-ink-secondary md:inline">
         {CYCLE_SAVINGS_BADGE_LABEL} · {format(breakdown.savingsTotalCents)}
       </span>
     </div>
@@ -384,7 +384,7 @@ function BelowObjectivePanel({
         </p>
       </div>
 
-      <article className="rounded-2xl border border-line bg-card p-5 md:p-6">
+      <article className="rounded-xl border border-line/70 bg-card p-5 md:p-6">
         <div className="mb-3.5 flex items-end justify-between">
           <span className="text-[13px] text-mute">
             {CYCLE_SAVINGS_BELOW_PROGRESS_LABEL}
@@ -395,7 +395,7 @@ function BelowObjectivePanel({
         </div>
         <div className="relative h-3.5 overflow-hidden rounded-lg bg-qp-track">
           <div
-            className="h-full rounded-lg bg-gradient-to-r from-moss-soft to-moss"
+            className="h-full rounded-lg bg-linear-to-r from-moss-soft to-moss"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -411,8 +411,8 @@ function BelowObjectivePanel({
         </div>
       </article>
 
-      <div className="flex items-start gap-3 rounded-[13px] border border-qp-shield-line bg-qp-success px-4 py-3.5">
-        <InfoCircle size={64} weight="Filled" color="var(--color-qp)" />
+      <div className="flex items-start gap-3 rounded-xl border border-qp-shield-line bg-qp-success px-4 py-3.5">
+        <InfoCircle size={24} weight="Filled" color="var(--color-qp)" />
         <p className="text-[13.5px] leading-relaxed text-qp-deep">
           <strong className="font-semibold">
             {CYCLE_SAVINGS_BELOW_REASSURANCE_TITLE}
@@ -549,10 +549,10 @@ function MetricCard({
   return (
     <article
       className={cn(
-        "rounded-[14px] border p-4 md:p-[17px]",
+        "rounded-xl border p-4 md:p-[17px]",
         isTotal
           ? "border-[1.5px] border-qp-shield-line bg-qp-selected"
-          : "border-line bg-card",
+          : "border-line/70 bg-card",
       )}
     >
       <div

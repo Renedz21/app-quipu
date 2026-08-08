@@ -2,7 +2,7 @@
 
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import type * as React from "react";
-import { X } from "reicon-react";
+import { X } from "reicon-react/icons/X";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 

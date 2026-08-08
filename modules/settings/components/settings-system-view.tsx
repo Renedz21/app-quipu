@@ -30,13 +30,9 @@ export function SettingsSystemViewSkeleton() {
         variant="line"
         className="mt-2 h-[13px] w-[240px] max-w-full rounded-[5px]"
       />
-      <div className="mt-6 flex flex-col gap-3.5 lg:flex-row lg:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-          <Skeleton className="h-[180px] rounded-2xl" />
-          <Skeleton className="h-[140px] rounded-2xl [animation-delay:150ms]" />
-          <Skeleton className="h-[200px] rounded-2xl [animation-delay:300ms]" />
-        </div>
-        <Skeleton className="h-[280px] flex-1 rounded-2xl [animation-delay:200ms]" />
+      <div className="mt-6 grid grid-cols-1 gap-3.5 lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-4">
+        <Skeleton className="h-[180px] rounded-xl" />
+        <Skeleton className="h-[280px] rounded-xl [animation-delay:150ms]" />
       </div>
     </div>
   );
@@ -90,14 +86,9 @@ export function SettingsSystemView() {
         </p>
       </header>
 
-      <div className="flex flex-col gap-3.5 lg:flex-row lg:items-start lg:gap-4">
-        <div className="flex min-w-0 flex-col gap-3.5 lg:flex-[1.15]">
-          <SettingsSystemSection />
-        </div>
-        <SettingsCommitmentsSection
-          id="compromisos"
-          className="flex min-w-0 flex-col lg:flex-1"
-        />
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-4">
+        <SettingsSystemSection />
+        <SettingsCommitmentsSection id="compromisos" />
       </div>
 
       <section id="automatizaciones" className="mt-3.5 scroll-mt-6 md:mt-4">

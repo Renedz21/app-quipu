@@ -2,8 +2,9 @@
 
 import { useMutation } from "convex/react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -50,6 +51,7 @@ export function SettingsAccountView() {
   const checkoutSuccess = searchParams.get("checkout") === "success";
   const [showCheckoutBanner] = useState(checkoutSuccess);
   const reconcileMyPlan = useMutation(api.billing.reconcileMyPlan);
+  const checkoutTracked = useRef(false);
 
   const shouldReconcileCheckout =
     checkoutSuccess && settingsData !== undefined && settingsData !== null;
@@ -58,7 +60,18 @@ export function SettingsAccountView() {
     if (!shouldReconcileCheckout) return;
     void reconcileMyPlan({});
     window.history.replaceState(null, "", `${window.location.pathname}#plan`);
-  }, [shouldReconcileCheckout, reconcileMyPlan]);
+    if (checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    const overview =
+      settingsData !== undefined && settingsData !== null
+        ? mapConvexSettingsOverview(settingsData)
+        : null;
+    if (overview) {
+      track(AnalyticsEvents.PLUS_CHECKOUT_COMPLETED, {
+        currency: overview.subscription.currencyCode,
+      });
+    }
+  }, [shouldReconcileCheckout, reconcileMyPlan, settingsData]);
 
   if (settingsData === undefined) {
     return <SettingsAccountViewSkeleton />;
@@ -107,8 +120,8 @@ export function SettingsAccountView() {
         </p>
       </header>
 
-      <div className="flex min-w-0 flex-col gap-3.5 lg:flex-row lg:gap-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+      <div className="mt-6 grid min-w-0 grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1fr)_min(28rem,100%)] lg:gap-4">
+        <div className="flex min-w-0 flex-col gap-3.5">
           <SettingsProfileCard id="perfil" profile={overview.profile} />
           <div id="plan" className="min-w-0 scroll-mt-6">
             <SettingsPlanCard subscription={overview.subscription} />
@@ -122,7 +135,7 @@ export function SettingsAccountView() {
             ) : null}
           </div>
         </div>
-        <div className="min-w-0 w-full lg:max-w-md lg:flex-1">
+        <div className="min-w-0">
           <SettingsSecurityCard
             id="seguridad"
             sessionsApiReady={overview.sessionsApiReady}

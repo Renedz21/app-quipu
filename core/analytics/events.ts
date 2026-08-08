@@ -381,6 +381,151 @@ export type FeedbackSubmittedProperties = z.infer<
   typeof FeedbackSubmittedProperties
 >;
 
+export const PlusPaywallSurfaceSchema = z.enum([
+  "settings_plan",
+  "premium_lock_card",
+  "premium_lock_prompt",
+  "coach",
+  "forecast",
+  "auto_apply",
+]);
+export type PlusPaywallSurface = z.infer<typeof PlusPaywallSurfaceSchema>;
+
+export const EspaciosPremiumPaywallSurfaceSchema = z.enum([
+  "hub",
+  "readonly",
+  "create",
+]);
+export type EspaciosPremiumPaywallSurface = z.infer<
+  typeof EspaciosPremiumPaywallSurfaceSchema
+>;
+
+export const BillingIntervalSchema = z.enum(["monthly", "yearly"]);
+export type BillingInterval = z.infer<typeof BillingIntervalSchema>;
+
+export const SpaceStatusSchema = z.enum(["active", "readonly", "closed"]);
+export type SpaceStatus = z.infer<typeof SpaceStatusSchema>;
+
+export const SpaceProposalKindSchema = z.enum([
+  "allocation",
+  "cycle_duration",
+  "expected_contribution",
+]);
+export type SpaceProposalKindAnalytics = z.infer<
+  typeof SpaceProposalKindSchema
+>;
+
+export const SpaceEnvelopeTypeSchema = z.enum(["needs", "wants", "savings"]);
+export type SpaceEnvelopeTypeAnalytics = z.infer<
+  typeof SpaceEnvelopeTypeSchema
+>;
+
+const PlusPaywallViewedProperties = z.object({
+  surface: PlusPaywallSurfaceSchema,
+  plan: z.enum(["free", "premium"]),
+});
+export type PlusPaywallViewedProperties = z.infer<
+  typeof PlusPaywallViewedProperties
+>;
+
+const PlusCheckoutStartedProperties = z.object({
+  interval: BillingIntervalSchema,
+  currency: z.string().min(3).max(3),
+});
+export type PlusCheckoutStartedProperties = z.infer<
+  typeof PlusCheckoutStartedProperties
+>;
+
+const PlusCheckoutCompletedProperties = z.object({
+  interval: BillingIntervalSchema.optional(),
+  currency: z.string().min(3).max(3),
+});
+export type PlusCheckoutCompletedProperties = z.infer<
+  typeof PlusCheckoutCompletedProperties
+>;
+
+const PlusPortalOpenedProperties = z.strictObject({});
+export type PlusPortalOpenedProperties = z.infer<
+  typeof PlusPortalOpenedProperties
+>;
+
+const EspaciosHubViewedProperties = z.object({
+  has_space: z.boolean(),
+  is_premium: z.boolean(),
+  space_count: z.number().int().nonnegative(),
+});
+export type EspaciosHubViewedProperties = z.infer<
+  typeof EspaciosHubViewedProperties
+>;
+
+const EspaciosPremiumPaywallViewedProperties = z.object({
+  surface: EspaciosPremiumPaywallSurfaceSchema,
+});
+export type EspaciosPremiumPaywallViewedProperties = z.infer<
+  typeof EspaciosPremiumPaywallViewedProperties
+>;
+
+const SpaceCreatedProperties = z.object({
+  space_id: z.string(),
+});
+export type SpaceCreatedProperties = z.infer<typeof SpaceCreatedProperties>;
+
+const SpaceInviteAcceptedProperties = z.object({
+  space_id: z.string(),
+});
+export type SpaceInviteAcceptedProperties = z.infer<
+  typeof SpaceInviteAcceptedProperties
+>;
+
+const SpaceDashboardViewedProperties = z.object({
+  space_id: z.string(),
+  status: SpaceStatusSchema,
+  member_count: z.number().int().positive(),
+});
+export type SpaceDashboardViewedProperties = z.infer<
+  typeof SpaceDashboardViewedProperties
+>;
+
+const SpaceExpenseRegisteredProperties = z.object({
+  space_id: z.string(),
+  amount: z.number().int().positive(),
+  envelope: SpaceEnvelopeTypeSchema,
+  funding_source: z.enum(["space_budget", "personal_pocket"]),
+});
+export type SpaceExpenseRegisteredProperties = z.infer<
+  typeof SpaceExpenseRegisteredProperties
+>;
+
+const SpaceContributionCompletedProperties = z.object({
+  space_id: z.string(),
+  amount: z.number().int().positive(),
+  personal_envelope: SpaceEnvelopeTypeSchema,
+  space_envelope: SpaceEnvelopeTypeSchema,
+});
+export type SpaceContributionCompletedProperties = z.infer<
+  typeof SpaceContributionCompletedProperties
+>;
+
+const SpaceProposalEventProperties = z.object({
+  space_id: z.string(),
+  proposal_kind: SpaceProposalKindSchema,
+});
+export type SpaceProposalEventProperties = z.infer<
+  typeof SpaceProposalEventProperties
+>;
+
+const SpaceLifecycleProperties = z.object({
+  space_id: z.string(),
+});
+export type SpaceLifecycleProperties = z.infer<typeof SpaceLifecycleProperties>;
+
+const FeedbackEntryClickedProperties = z.object({
+  variant: z.enum(["sidebar", "drawer", "mobile"]),
+});
+export type FeedbackEntryClickedProperties = z.infer<
+  typeof FeedbackEntryClickedProperties
+>;
+
 // ─── Constantes de eventos ─────────────────────────────────────────────────
 
 export const AnalyticsEvents = {
@@ -442,6 +587,27 @@ export const AnalyticsEvents = {
 
   // Feedback
   FEEDBACK_SUBMITTED: "feedback_submitted",
+  FEEDBACK_ENTRY_CLICKED: "feedback_entry_clicked",
+
+  // Billing / Plus
+  PLUS_PAYWALL_VIEWED: "plus_paywall_viewed",
+  PLUS_CHECKOUT_STARTED: "plus_checkout_started",
+  PLUS_CHECKOUT_COMPLETED: "plus_checkout_completed",
+  PLUS_PORTAL_OPENED: "plus_portal_opened",
+
+  // Espacios compartidos
+  ESPACIOS_HUB_VIEWED: "espacios_hub_viewed",
+  ESPACIOS_PREMIUM_PAYWALL_VIEWED: "espacios_premium_paywall_viewed",
+  SPACE_CREATED: "space_created",
+  SPACE_INVITE_ACCEPTED: "space_invite_accepted",
+  SPACE_DASHBOARD_VIEWED: "space_dashboard_viewed",
+  SPACE_EXPENSE_REGISTERED: "space_expense_registered",
+  SPACE_CONTRIBUTION_COMPLETED: "space_contribution_completed",
+  SPACE_PROPOSAL_CREATED: "space_proposal_created",
+  SPACE_PROPOSAL_CONFIRMED: "space_proposal_confirmed",
+  SPACE_PROPOSAL_REJECTED: "space_proposal_rejected",
+  SPACE_ENTERED_READONLY: "space_entered_readonly",
+  SPACE_REACTIVATED: "space_reactivated",
 } as const;
 
 export type AnalyticsEvent =
@@ -503,6 +669,25 @@ export type AnalyticsEventPayloads = {
   [AnalyticsEvents.FINANCIAL_INSIGHT_VIEWED]: FinancialInsightViewedProperties;
 
   [AnalyticsEvents.FEEDBACK_SUBMITTED]: FeedbackSubmittedProperties;
+  [AnalyticsEvents.FEEDBACK_ENTRY_CLICKED]: FeedbackEntryClickedProperties;
+
+  [AnalyticsEvents.PLUS_PAYWALL_VIEWED]: PlusPaywallViewedProperties;
+  [AnalyticsEvents.PLUS_CHECKOUT_STARTED]: PlusCheckoutStartedProperties;
+  [AnalyticsEvents.PLUS_CHECKOUT_COMPLETED]: PlusCheckoutCompletedProperties;
+  [AnalyticsEvents.PLUS_PORTAL_OPENED]: PlusPortalOpenedProperties;
+
+  [AnalyticsEvents.ESPACIOS_HUB_VIEWED]: EspaciosHubViewedProperties;
+  [AnalyticsEvents.ESPACIOS_PREMIUM_PAYWALL_VIEWED]: EspaciosPremiumPaywallViewedProperties;
+  [AnalyticsEvents.SPACE_CREATED]: SpaceCreatedProperties;
+  [AnalyticsEvents.SPACE_INVITE_ACCEPTED]: SpaceInviteAcceptedProperties;
+  [AnalyticsEvents.SPACE_DASHBOARD_VIEWED]: SpaceDashboardViewedProperties;
+  [AnalyticsEvents.SPACE_EXPENSE_REGISTERED]: SpaceExpenseRegisteredProperties;
+  [AnalyticsEvents.SPACE_CONTRIBUTION_COMPLETED]: SpaceContributionCompletedProperties;
+  [AnalyticsEvents.SPACE_PROPOSAL_CREATED]: SpaceProposalEventProperties;
+  [AnalyticsEvents.SPACE_PROPOSAL_CONFIRMED]: SpaceProposalEventProperties;
+  [AnalyticsEvents.SPACE_PROPOSAL_REJECTED]: SpaceProposalEventProperties;
+  [AnalyticsEvents.SPACE_ENTERED_READONLY]: SpaceLifecycleProperties;
+  [AnalyticsEvents.SPACE_REACTIVATED]: SpaceLifecycleProperties;
 };
 
 // Helper de inferencia: dado un evento, devuelve su payload.

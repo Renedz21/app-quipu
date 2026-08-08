@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ChatDots } from "reicon-react";
+import { ChatDots } from "reicon-react/icons/ChatDots";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachCrisisPlanActions } from "@/modules/coach/components/coach-crisis-plan-actions";
@@ -114,7 +114,7 @@ export function CoachCard({
   return (
     <section
       aria-labelledby="dashboard-coach"
-      className={`flex flex-col rounded-[14px] border p-3 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
+      className={`flex flex-col rounded-xl border p-3 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
     >
       <div className="mb-2 flex items-center gap-2 md:mb-3">
         <span

@@ -1,7 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRight, Briefcase, ChartTrend, Layers } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
+import { Briefcase } from "reicon-react/icons/Briefcase";
+import { ChartTrend } from "reicon-react/icons/ChartTrend";
+import { Layers } from "reicon-react/icons/Layers";
 import { SUPPORTED_MARKETS, type SupportedMarket } from "@/core/constants";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";

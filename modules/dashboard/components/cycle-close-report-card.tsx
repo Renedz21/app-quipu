@@ -86,7 +86,7 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
   return (
     <section
       aria-labelledby="cycle-close-report-title"
-      className="mb-3 md:mb-5 rounded-[14px] border border-qp-border/60 bg-card p-4 md:p-5 shadow-[inset_3px_0_0_0_var(--qp)]"
+      className="mb-3 rounded-xl border border-qp-border/60 bg-card p-4 shadow-[inset_3px_0_0_0_var(--qp)] md:mb-5 md:p-5"
     >
       <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-qp-deep">
         {CYCLE_CLOSE_REPORT_EYEBROW}
@@ -106,7 +106,7 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
 
       <dl className="mt-4 space-y-3">
         <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-[13px] text-ink-secondary">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
             {CYCLE_CLOSE_REPORT_INCOME}
           </dt>
           <dd className="font-serif text-[17px] text-ink">
@@ -116,7 +116,7 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
 
         {spendLines.length > 0 ? (
           <div>
-            <dt className="text-[13px] text-ink-secondary">
+            <dt className="text-[12.5px] font-medium text-ink-secondary">
               {CYCLE_CLOSE_REPORT_SPEND}
             </dt>
             <dd className="mt-1.5 space-y-1">
@@ -136,7 +136,7 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
         ) : null}
 
         <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-[13px] text-ink-secondary">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
             {CYCLE_CLOSE_REPORT_SAVINGS}
           </dt>
           <dd className="font-serif text-[17px] text-ink">
@@ -145,7 +145,7 @@ export function CycleCloseReportCard({ currencyCode }: Props) {
         </div>
 
         <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3">
-          <dt className="text-[13px] text-ink-secondary">
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
             {CYCLE_CLOSE_REPORT_STREAK}
           </dt>
           <dd className="text-[13px] font-semibold text-qp-deep">

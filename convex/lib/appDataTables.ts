@@ -20,9 +20,19 @@ export const APP_DATA_TABLES = [
   "emailSendLog",
   "accountReviewFlags",
   "feedbackSubmissions",
+  "financialSpaces",
+  "spaceMembers",
+  "spaceInvitations",
+  "spaceCycles",
+  "spaceEnvelopes",
+  "spaceGoals",
+  "spaceContributions",
+  "spaceExpenses",
+  "spaceCommitments",
+  "spaceChangeProposals",
 ] as const;
 
 export type AppDataTableName = (typeof APP_DATA_TABLES)[number];
 
 /** Versión del JSON de snapshot; subir si cambia la forma del export. */
-export const APP_DATA_SNAPSHOT_FORMAT = "quipu-app-snapshot-2" as const;
+export const APP_DATA_SNAPSHOT_FORMAT = "quipu-app-snapshot-3" as const;

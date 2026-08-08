@@ -53,7 +53,7 @@ export function SavingsView() {
 
   if (overview === null) {
     return (
-      <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+      <section className="rounded-xl border border-danger-line bg-danger-bg p-5 md:p-6">
         <h2 className="text-base font-semibold text-danger-ink">
           {SAVINGS_ERROR_TITLE}
         </h2>
@@ -133,7 +133,7 @@ export function SavingsView() {
             {headerSubtitle}
           </p>
         </div>
-        <span className="hidden rounded-lg border border-line bg-card px-3 py-2 font-mono text-[11px] text-mute md:inline">
+        <span className="hidden rounded-xl border border-line/70 bg-card px-3 py-2 text-[12.5px] font-medium text-ink-secondary md:inline">
           {SAVINGS_TOTAL_SAVED_LABEL} ·{" "}
           {formatCents(overview.totalSavedCents, {
             currency: overview.profile.currencyCode,
@@ -151,7 +151,7 @@ export function SavingsView() {
 
       <section className="mt-6">
         <div className="mb-3.5 flex items-center gap-2">
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-faint">
+          <span className="text-[12.5px] font-medium text-ink-secondary">
             {GOALS_SECTION_LABEL}
           </span>
           <div className="h-px flex-1 bg-line-divider" />
@@ -192,7 +192,7 @@ export function SavingsView() {
             ))}
           </div>
         ) : showGoalsEmptyState ? (
-          <div className="flex flex-col items-center gap-1.5 rounded-[14px] border border-dashed border-line bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-line/70 bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
             <span
               className="flex size-10 items-center justify-center rounded-full border border-dashed border-mute md:size-10"
               aria-hidden
@@ -208,7 +208,7 @@ export function SavingsView() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1.5 rounded-[14px] border border-dashed border-line bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-line/70 bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
             <span
               className="flex size-10 items-center justify-center rounded-full border border-dashed border-mute"
               aria-hidden
@@ -279,12 +279,12 @@ function SavingsViewSkeleton() {
         className="mt-5 h-[11px] w-[90px] rounded-[5px]"
       />
       <div className="mt-3.5 grid gap-3 md:grid-cols-3">
-        <Skeleton className="h-[78px] rounded-[13px]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:150ms]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:300ms]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:150ms]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:300ms]" />
-        <Skeleton className="h-[78px] rounded-[13px]" />
+        <Skeleton className="h-[78px] rounded-xl" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-[78px] rounded-xl" />
       </div>
     </div>
   );

@@ -1,5 +1,9 @@
 import { formatLimaDateTime } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
+import {
+  movementAmountClassName,
+  movementAmountPrefix,
+} from "@/shared/lib/movement-amount-display";
 
 export type MovementItem = {
   id: string;
@@ -78,11 +82,9 @@ export function MovementList({ movements, currencyCode }: Props) {
             {formatLimaDateTime(movement.timestamp)}
           </span>
           <span
-            className={`min-w-20 text-right font-serif text-[15px] ${
-              movement.kind === "income" ? "text-qp-deep" : "text-ink"
-            }`}
+            className={`min-w-20 text-right font-serif text-[15px] ${movementAmountClassName(movement.kind)}`}
           >
-            {movement.kind === "income" ? "+" : "−"}{" "}
+            {movementAmountPrefix(movement.kind)}{" "}
             {formatCents(movement.amount, { currency: currencyCode })}
           </span>
         </li>

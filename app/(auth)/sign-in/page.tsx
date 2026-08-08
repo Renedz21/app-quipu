@@ -14,9 +14,11 @@ export const metadata: Metadata = pageMetadata({
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; reason?: string }>;
+  searchParams: Promise<{ email?: string; reason?: string; next?: string }>;
 }) {
-  await requireUnauthenticatedSession();
-  const { email, reason } = await searchParams;
-  return <SignInView initialEmail={email ?? ""} reason={reason} />;
+  const { email, reason, next } = await searchParams;
+  await requireUnauthenticatedSession(next);
+  return (
+    <SignInView initialEmail={email ?? ""} reason={reason} returnTo={next} />
+  );
 }

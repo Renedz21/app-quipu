@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
+import { CheckCircle } from "reicon-react/icons/CheckCircle";
 import { FREQ_DISPLAY_LABELS, MODEL_DISPLAY_LABELS } from "../constants";
 import { useOnboarding } from "./onboarding-provider";
 

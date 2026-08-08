@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { LockKeyholeOpen } from "reicon-react";
+import { LockKeyholeOpen } from "reicon-react/icons/LockKeyholeOpen";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import {
@@ -11,10 +11,12 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { authSecondaryButtonClass } from "../constants";
+import { resolveAuthDestination } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 
-export function SignInPasskeyButton() {
+export function SignInPasskeyButton({ returnTo }: { returnTo?: string }) {
   const [pending, setPending] = useState(false);
+  const postAuthDestination = resolveAuthDestination(returnTo, "/dashboard");
 
   async function handleClick() {
     setPending(true);
@@ -27,7 +29,7 @@ export function SignInPasskeyButton() {
       days_since_last_login: stampAndComputeDaysSinceLastLogin(),
     });
     toast.success("Bienvenido de vuelta");
-    navigateAfterAuth("/dashboard");
+    navigateAfterAuth(postAuthDestination);
   }
 
   return (

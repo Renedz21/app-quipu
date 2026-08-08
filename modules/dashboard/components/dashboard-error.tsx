@@ -13,7 +13,7 @@ type Props = {
 
 export function DashboardError({ onRetry }: Props) {
   return (
-    <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+    <section className="rounded-xl border border-danger-line bg-danger-bg p-5 md:p-6">
       <h2 className="text-base font-semibold text-danger-ink">
         {DASHBOARD_ERROR_TITLE}
       </h2>

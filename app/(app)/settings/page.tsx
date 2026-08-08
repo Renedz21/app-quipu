@@ -1,10 +1,6 @@
-import { Suspense } from "react";
 import { requireOnboardedProfile } from "@/auth/auth-server";
 import { pageMetadata } from "@/core/seo";
-import {
-  SettingsView,
-  SettingsViewSkeleton,
-} from "@/modules/settings/components/settings-view";
+import { SettingsView } from "@/modules/settings/components/settings-view";
 
 export const metadata = pageMetadata({
   title: "Ajustes",
@@ -14,9 +10,5 @@ export const metadata = pageMetadata({
 export default async function SettingsPage() {
   await requireOnboardedProfile();
 
-  return (
-    <Suspense fallback={<SettingsViewSkeleton />}>
-      <SettingsView />
-    </Suspense>
-  );
+  return <SettingsView />;
 }

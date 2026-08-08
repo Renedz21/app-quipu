@@ -33,13 +33,14 @@ export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_PREPARING = "Preparando…";
 export const SETTINGS_PLAN_BILLING_UNAVAILABLE =
   "Facturación no disponible; intenta más tarde.";
-export const SETTINGS_PLAN_VALUE_HEADING = "Qué incluye Plus";
+export const SETTINGS_PLAN_VALUE_HEADING = "Quipu hace más trabajo por ti.";
 export const SETTINGS_PLAN_VALUE_BULLETS = [
-  "Predice cuándo se agota cada sobre.",
-  "Plan de crisis claro cuando algo no cuadra.",
-  "Avisos antes de que venzan tus compromisos.",
-  "Informe de cierre al terminar cada ciclo.",
-  "Reglas de ingresos extraordinarios que tú defines.",
+  "Proyecta cuánto te durará tu dinero al ritmo actual.",
+  "Aplica automáticamente tus reglas para CTS, bonos y gratificaciones.",
+  "Te guía cuando tu presupuesto empieza a desordenarse.",
+  "Mantiene visibles tus próximos compromisos.",
+  "Resume automáticamente cómo terminó tu ciclo.",
+  "Crea espacios financieros compartidos con tu pareja.",
 ] as const;
 export const SETTINGS_PLAN_TAX_INCLUDED = "Precio con impuestos incluidos.";
 export const SETTINGS_CHECKOUT_SUCCESS =
@@ -138,9 +139,9 @@ export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL =
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_HINT =
   "Quipu Plus usa la regla que ya definiste al registrar el ingreso.";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE =
-  "Las automatizaciones son parte de Quipu Plus";
+  "Plus aplica tus reglas por ti";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY =
-  "Define la regla una vez. Plus la aplica al registrar el ingreso, siempre bajo las reglas que tú elegiste.";
+  "Define una vez qué hacer con CTS, bonos y gratificaciones. Plus lo aplica al registrar cada ingreso extraordinario.";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT = "Julio y diciembre";
 export const SETTINGS_EXTRAORDINARY_CTS = "CTS";

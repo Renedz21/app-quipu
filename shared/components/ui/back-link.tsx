@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentProps } from "react";
-import { ArrowLeft } from "reicon-react";
+import { ArrowLeft } from "reicon-react/icons/ArrowLeft";
 import { cn } from "@/shared/lib/utils";
 
 type Props = ComponentProps<typeof Link> & {

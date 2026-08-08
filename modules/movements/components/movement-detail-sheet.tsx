@@ -3,7 +3,8 @@
 import { useMutation } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
-import { Edit, Trash } from "reicon-react";
+import { Edit } from "reicon-react/icons/Edit";
+import { Trash } from "reicon-react/icons/Trash";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -21,6 +22,10 @@ import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { formatLimaDateTime } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
+import {
+  movementAmountClassName,
+  movementAmountPrefix,
+} from "@/shared/lib/movement-amount-display";
 import { ExpenseEditForm } from "./expense-edit-form";
 import { IncomeEditForm } from "./income-edit-form";
 
@@ -28,7 +33,7 @@ type EnvelopeType = "needs" | "wants";
 
 export type MovementForDetail = {
   id: string;
-  kind: "expense" | "income";
+  kind: "expense" | "income" | "contribution";
   label: string;
   amount: number;
   timestamp: number;
@@ -133,6 +138,7 @@ export function MovementDetailSheet({
   function renderContent() {
     if (!movement) return null;
     const isIncome = movement.kind === "income";
+    const isContribution = movement.kind === "contribution";
 
     if (state === "success") {
       return (
@@ -286,14 +292,19 @@ export function MovementDetailSheet({
         : movement.timestamp;
     const envelopeType =
       movement.kind === "expense" ? movement.envelopeType : undefined;
+    const kindLabel = isContribution
+      ? "Aporte"
+      : isIncome
+        ? "Ingreso"
+        : "Gasto";
 
     return (
       <div className="space-y-5">
-        <div className="rounded-[13px] border border-line bg-surface-soft px-4 py-4">
+        <div className="rounded-xl border border-line/70 bg-surface-warm/40 px-4 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium uppercase tracking-[0.05em] text-mute">
-                {isIncome ? "Ingreso" : "Gasto"}
+              <p className="text-[12.5px] font-medium text-ink-secondary">
+                {kindLabel}
                 {envelopeType ? ` · ${ENVELOPE_LABELS[envelopeType]}` : ""}
               </p>
               <p className="mt-0.5 text-[15px] font-semibold text-ink">
@@ -305,11 +316,9 @@ export function MovementDetailSheet({
             </div>
             <div className="flex flex-col items-end gap-1">
               <span
-                className={`font-serif text-[20px] font-medium ${
-                  isIncome ? "text-qp-deep" : "text-ink"
-                }`}
+                className={`font-serif text-[20px] font-medium ${movementAmountClassName(movement.kind)}`}
               >
-                {isIncome ? "+" : "−"}{" "}
+                {movementAmountPrefix(movement.kind)}{" "}
                 {formatCents(movement.amount, { currency: currencyCode })}
               </span>
               {envelopeType ? (
@@ -322,29 +331,39 @@ export function MovementDetailSheet({
           </div>
         </div>
 
-        <p className="text-center font-serif text-[18px] text-ink">
-          ¿Qué corregimos de este movimiento?
-        </p>
+        {isContribution ? (
+          <p className="text-[13px] leading-relaxed text-mute">
+            Los aportes al espacio compartido se registran desde Espacios.
+          </p>
+        ) : (
+          <>
+            <p className="text-center font-serif text-[18px] text-ink">
+              ¿Qué corregimos de este movimiento?
+            </p>
 
-        <div className="space-y-2.5">
-          <Button
-            type="button"
-            onClick={() => setState(isIncome ? "edit-income" : "edit-expense")}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
-          >
-            <Edit size={16} color="currentColor" aria-hidden />
-            Editar
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setState("confirm-delete")}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] border-danger-line text-[14.5px] font-semibold text-danger-ink hover:bg-danger-bg"
-          >
-            <Trash size={16} color="currentColor" aria-hidden />
-            Eliminar
-          </Button>
-        </div>
+            <div className="space-y-2.5">
+              <Button
+                type="button"
+                onClick={() =>
+                  setState(isIncome ? "edit-income" : "edit-expense")
+                }
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
+              >
+                <Edit size={16} color="currentColor" aria-hidden />
+                Editar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setState("confirm-delete")}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] border-danger-line text-[14.5px] font-semibold text-danger-ink hover:bg-danger-bg"
+              >
+                <Trash size={16} color="currentColor" aria-hidden />
+                Eliminar
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     );
   }

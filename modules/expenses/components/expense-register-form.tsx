@@ -2,7 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";

@@ -80,10 +80,18 @@ Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
 <!-- CODEGRAPH_START -->
 ## CodeGraph
 
-In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
+Este repo tiene **dos índices** (ambos gitignored):
 
-- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
-- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
+| Ámbito | Directorio | Cuándo usarlo |
+|---|---|---|
+| Proyecto (Next + modules) | `.codegraph/` en la raíz | UI, routing, wrappers, shared |
+| Convex (backend) | `convex/.codegraph/` | queries, mutations, schema, `convex/lib/*` |
 
-If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
+Antes de grep/find o leer archivos sueltos, usa CodeGraph:
+
+- **MCP:** `codegraph_explore` (proyecto) o `codegraph-convex` → `codegraph_explore` (backend). Devuelve source verbatim + call paths, incluyendo dispatch dinámico.
+- **Shell:** `codegraph explore "<query>"` (raíz) · `codegraph explore "<query>" --path convex` (backend).
+- **Sync tras cambios grandes:** `pnpm codegraph:sync` y/o `pnpm codegraph:sync:convex`.
+
+Si falta el índice del ámbito que necesitas: `codegraph init` (raíz) o `codegraph init convex`.
 <!-- CODEGRAPH_END -->

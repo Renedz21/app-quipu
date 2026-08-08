@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "reicon-react";
+import { ChevronDown } from "reicon-react/icons/ChevronDown";
 import { DASHBOARD_SECONDARY_INSIGHTS_LABEL } from "../constants";
 import { CycleForecastCard } from "./cycle-forecast-card";
 import { UpcomingCommitmentsBadge } from "./upcoming-commitments-badge";
@@ -20,9 +20,9 @@ export function DashboardSecondaryInsights({ currencyCode, isPremium }: Props) {
         type="button"
         aria-expanded={expanded}
         onClick={() => setExpanded((open) => !open)}
-        className="flex w-full items-center gap-2 rounded-[12px] border border-line bg-surface-warm px-3 py-2.5 text-left md:hidden"
+        className="flex w-full items-center gap-2 rounded-xl border border-line/70 bg-surface-warm/40 px-3 py-2.5 text-left md:hidden"
       >
-        <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-mute">
+        <span className="text-[12.5px] font-medium text-ink-secondary">
           {DASHBOARD_SECONDARY_INSIGHTS_LABEL}
         </span>
         <ChevronDown

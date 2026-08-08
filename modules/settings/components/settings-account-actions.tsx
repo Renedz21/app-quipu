@@ -25,12 +25,12 @@ export function SettingsAccountActions({ className }: Props) {
 
   return (
     <footer className={cn("mt-8 md:mt-10", className)}>
-      <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint md:text-[10px]">
+      <p className="mb-2 text-[12.5px] font-medium text-ink-secondary">
         {SETTINGS_ACCOUNT_ACTIONS_LABEL}
       </p>
 
-      <div className="rounded-[14px] border border-line bg-card px-4 py-0.5">
-        <div className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5">
+      <div className="rounded-xl border border-line/70 bg-card px-4 py-0.5">
+        <div className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5">
           <SettingsExportDataItem
             onExport={() => downloadProfileExport(fetchExport)}
           />
@@ -44,7 +44,7 @@ export function SettingsAccountActions({ className }: Props) {
       >
         <h2
           id="settings-danger-zone"
-          className="mb-1 font-mono text-[10px] uppercase tracking-[0.1em] text-faint"
+          className="mb-1 text-[12.5px] font-medium text-ink-secondary"
         >
           {SETTINGS_DANGER_ZONE_LABEL}
         </h2>

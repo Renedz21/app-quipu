@@ -3,7 +3,7 @@
 import { useMutation } from "convex/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { authClient } from "@/auth/auth-client";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -53,10 +53,10 @@ export function SettingsViewSkeleton() {
       />
       <div className="mt-6 flex flex-col gap-3.5 lg:flex-row">
         <div className="flex flex-1 flex-col gap-3.5">
-          <Skeleton className="h-[150px] rounded-2xl" />
-          <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
+          <Skeleton className="h-[150px] rounded-xl" />
+          <Skeleton className="h-[150px] rounded-xl [animation-delay:150ms]" />
         </div>
-        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] lg:self-start" />
+        <Skeleton className="h-[230px] rounded-xl [animation-delay:300ms] lg:self-start" />
       </div>
     </div>
   );
@@ -97,10 +97,10 @@ function MobileAccountList({
   isPremium: boolean;
 }) {
   return (
-    <div className="mb-2.5 rounded-[14px] border border-line bg-card px-4 py-0.5">
+    <div className="mb-2.5 rounded-xl border border-line/70 bg-card px-4 py-0.5">
       <Link
         href="/settings/account#perfil"
-        className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PROFILE_LABEL}
@@ -109,7 +109,7 @@ function MobileAccountList({
       </Link>
       <Link
         href="/settings/account#plan"
-        className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PLAN_LABEL}
@@ -123,7 +123,7 @@ function MobileAccountList({
       </Link>
       <Link
         href="/settings/account#seguridad"
-        className="flex min-h-11 items-center gap-2 border-b border-line-soft py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_SECURITY_LABEL}
@@ -143,7 +143,7 @@ function MobileHubSignOut() {
   const router = useRouter();
 
   return (
-    <div className="rounded-[14px] border border-line bg-card px-4">
+    <div className="rounded-xl border border-line/70 bg-card px-4">
       <button
         type="button"
         className="flex min-h-11 w-full items-center py-2.5 text-left text-[13.5px] text-danger-ink"
@@ -170,6 +170,7 @@ export function SettingsView() {
   const checkoutSuccess = searchParams.get("checkout") === "success";
   const [showCheckoutBanner] = useState(checkoutSuccess);
   const reconcileMyPlan = useMutation(api.billing.reconcileMyPlan);
+  const checkoutTracked = useRef(false);
 
   const shouldReconcileCheckout =
     checkoutSuccess && settingsData !== undefined && settingsData !== null;
@@ -178,7 +179,18 @@ export function SettingsView() {
     if (!shouldReconcileCheckout) return;
     void reconcileMyPlan({});
     window.history.replaceState(null, "", `${window.location.pathname}#plan`);
-  }, [shouldReconcileCheckout, reconcileMyPlan]);
+    if (checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    const overview =
+      settingsData !== undefined && settingsData !== null
+        ? mapConvexSettingsOverview(settingsData)
+        : null;
+    if (overview) {
+      track(AnalyticsEvents.PLUS_CHECKOUT_COMPLETED, {
+        currency: overview.subscription.currencyCode,
+      });
+    }
+  }, [shouldReconcileCheckout, reconcileMyPlan, settingsData]);
 
   const passkeysQuery = authClient.useListPasskeys();
   const passkeyCount = passkeysQuery.data?.length ?? 0;
@@ -223,7 +235,7 @@ export function SettingsView() {
           currencyCode={overview.subscription.currencyCode}
         />
 
-        <p className="mb-2 font-mono text-[9.5px] uppercase tracking-[0.1em] text-faint">
+        <p className="mb-2 text-[12.5px] font-medium text-ink-secondary">
           {SETTINGS_MOBILE_ACCOUNT_LABEL}
         </p>
         <MobileAccountList
@@ -241,7 +253,7 @@ export function SettingsView() {
             commitmentCount={commitmentCount}
           />
         ) : (
-          <Skeleton className="h-[200px] rounded-[14px]" />
+          <Skeleton className="h-[200px] rounded-xl" />
         )}
 
         <div className="mt-2.5">
@@ -262,8 +274,8 @@ export function SettingsView() {
 
         <SettingsSystemGoCard className="mb-5" />
 
-        <div className="flex min-w-0 flex-col gap-3.5 lg:flex-row lg:gap-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+        <div className="grid min-w-0 grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1fr)_min(28rem,100%)] lg:gap-4">
+          <div className="flex min-w-0 flex-col gap-3.5">
             <SettingsProfileCard id="perfil" profile={overview.profile} />
             <div id="plan" className="min-w-0 scroll-mt-6">
               <SettingsPlanCard subscription={overview.subscription} />
@@ -277,7 +289,7 @@ export function SettingsView() {
               ) : null}
             </div>
           </div>
-          <div className="min-w-0 w-full lg:max-w-md lg:flex-1">
+          <div className="min-w-0">
             <SettingsSecurityCard
               id="seguridad"
               sessionsApiReady={overview.sessionsApiReady}

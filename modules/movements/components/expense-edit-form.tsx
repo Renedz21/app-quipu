@@ -126,10 +126,10 @@ export function ExpenseEditForm({
                     field.handleChange(type);
                     field.handleBlur();
                   }}
-                  className={`w-full rounded-[14px] border p-4 text-left transition-colors ${
+                  className={`w-full rounded-xl border p-4 text-left transition-colors ${
                     isSelected
                       ? `${styles.selectedBorder} ${styles.selectedBg} border-[1.5px]`
-                      : "border-line bg-card hover:bg-surface-warm"
+                      : "border-line/70 bg-card hover:border-line hover:bg-surface-warm/40"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -151,7 +151,14 @@ export function ExpenseEditForm({
       <form.Field name="description">
         {(field) => (
           <Field>
+            <label
+              htmlFor="expense-edit-description"
+              className="mb-1.5 block text-[12.5px] font-medium text-ink-secondary"
+            >
+              Concepto <span className="font-normal text-mute">(opcional)</span>
+            </label>
             <Input
+              id="expense-edit-description"
               name={field.name}
               value={field.state.value}
               onBlur={field.handleBlur}

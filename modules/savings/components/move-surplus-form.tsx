@@ -3,7 +3,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMemo } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
-import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
+import { Lock } from "reicon-react/icons/Lock";
 import { Button } from "@/shared/components/ui/button";
 import { Slider } from "@/shared/components/ui/slider";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
@@ -196,7 +196,7 @@ export function MoveSurplusForm({
                 <p className="mb-2.5 text-[12.5px] font-medium text-ink-secondary">
                   {MOVE_SURPLUS_AMOUNT_LABEL}
                 </p>
-                <div className="flex h-16 items-center justify-between rounded-[14px] border-[1.5px] border-qp-shield-line bg-card px-5">
+                <div className="flex h-16 items-center justify-between rounded-xl border border-qp-shield-line bg-card px-5">
                   <span className="font-serif text-[34px] leading-none text-ink">
                     {formatCents(sliderValue, { currency: currencyCode })}
                   </span>
@@ -272,10 +272,10 @@ export function MoveSurplusForm({
                           form.setFieldValue("destinationId", destination.id)
                         }
                         className={cn(
-                          "flex items-center gap-3 rounded-[13px] border p-3.5 text-left transition-colors",
+                          "flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
                           selected
                             ? "border-moss bg-qp-success"
-                            : "border-line bg-card hover:bg-surface-soft",
+                            : "border-line/70 bg-card hover:bg-surface-warm/40",
                         )}
                       >
                         <span
@@ -285,7 +285,7 @@ export function MoveSurplusForm({
                           )}
                         >
                           {isFund ? (
-                            <EmergencyFundIcon size="sm" />
+                            <Lock size={13} aria-hidden />
                           ) : (
                             <span className="size-3 rounded-full border-2 border-mute" />
                           )}

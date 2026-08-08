@@ -12,8 +12,8 @@ import { DashboardEmptyCycle } from "./dashboard-empty-cycle";
 import { DashboardError } from "./dashboard-error";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardHero } from "./dashboard-hero";
-import { DashboardHeroSkeleton } from "./dashboard-hero-skeleton";
 import { DashboardSecondaryInsights } from "./dashboard-secondary-insights";
+import { DashboardViewSkeleton } from "./dashboard-view-skeleton";
 import { EnvelopeCards } from "./envelope-cards";
 import { EnvelopeCardsSkeleton } from "./envelope-cards-skeleton";
 import { RecentMovements } from "./recent-movements";
@@ -64,13 +64,7 @@ function DashboardContent({ profileName }: Props) {
   }, [summary]);
 
   if (summary === undefined) {
-    return (
-      <>
-        <DashboardHeader name={profileName} />
-        <DashboardHeroSkeleton />
-        <EnvelopeCardsSkeleton />
-      </>
-    );
+    return <DashboardViewSkeleton />;
   }
 
   if (summary === null) {
@@ -158,7 +152,7 @@ function DashboardContent({ profileName }: Props) {
 
 export function DashboardView({ profileName }: Props) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-8 md:py-8">
+    <div className="mx-auto w-full max-w-6xl p-4 md:px-8 md:py-8">
       <DashboardContent profileName={profileName} />
     </div>
   );

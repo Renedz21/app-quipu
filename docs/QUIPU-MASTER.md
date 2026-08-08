@@ -106,6 +106,13 @@ cuenta como opt-in del usuario (§2.5 regla 8), no como promesa de «sin confirm
 (preview / copy gamificado); la generación y descarga PDF queda para **v2.6**. No abre export masivo
 ni contabilidad — alinea con la pregunta filtro si el usuario ya cerró ciclos.
 
+**Modo Pareja (Quipu Plus — v1, 2026-08-07):** presupuesto compartido para parejas. El **owner Premium**
+crea un espacio (máx. 1); invita a un segundo miembro (Free permitido). Ciclo, sobres y gastos del
+espacio son **dominio paralelo** al personal — no comparten filas. Participación = aportes explícitos +
+gastos pagados con bolsillo personal (`personal_pocket`); sin deudas tipo Splitwise. Fuera de v1:
+coach en espacio, ingresos del espacio, export completo del espacio, grupos >2.
+Ver §5.6.
+
 **La pregunta filtro** — antes de agregar cualquier tabla, pantalla, métrica o feature:
 
 > "¿Esto ayuda al usuario a tomar una mejor decisión con el próximo sol que entre?"
@@ -365,13 +372,10 @@ neutro `--qpD`. Pulso (`qpulse`) solo en loading, nunca en estado final.
 **Achievement badge:** círculo 34–42px. Done (`--qp01`+`--qp02`+ícono `--qpA`) ·
 Discoverable (dashed, ícono faint) · Locked (opacity .75).
 
-**FAB (solo dashboard móvil):** 52px, bg `--text-strong`, elevado `translateY(-14px)` desde bottom nav.
-
-**Sidebar (web):** 228px, bg `--surface-warm`, **5 ítems** + avatar al fondo (34px, `--qp03`, inicial serif):
-Inicio · Registrar → `/income/register` (ingreso habitual/extraordinario; también CTAs header/FAB) · Ahorros · Compromisos · Ajustes.
+**Sidebar (web):** 228px, bg `--surface-warm`, **7 ítems** + avatar al fondo (34px, `--qp03`, inicial serif):
+Inicio · Registrar → `/income/register` · **Movimientos** · Ahorros · Compromisos · Espacios · Ajustes.
 **Sin ítem Coach:** el bloque 7 vive embebido en `/dashboard` (canon bloque 7); el canvas `quipu-2.html` aún muestra Coach en sidebar — tratar como IA obsoleta, no producto.
-Active: bg `--qp04` + 600. **Bottom nav (móvil):** 76px, bg `rgba(251,250,247,.94)` + blur,
-4 items + FAB central; active `--qpB` 600.
+Active: bg `--qp04` + 600. **Nav móvil:** header fijo (`AppMobileHeader`, 52px + safe-area, `z-30`) + **drawer lateral izquierdo** (`Sheet side=left`, ~288px / `w-72`, `z-50`) reutilizando `AppNavContent`; feedback en el drawer; sin bottom bar ni FAB central. Cierre del drawer: `onOpenChange`, `onNavigate` en links y `key={pathname}` en `AppMobileNav` — sin `useEffect` en pathname. Rutas inmersivas (`/income/register`) ocultan header/drawer.
 
 **Animaciones:** `qspin` (0.8s linear, spinner) y `qpulse` (1.4s ease-in-out, skeletons con stagger 0.2s).
 
@@ -691,6 +695,11 @@ pinta sin esperar secciones secundarias. Convención: cada sección expone su `*
 **Imágenes/fuentes:** `next/image` con `preload` en la imagen LCP (`priority` deprecado en v16),
 `sizes` explícito siempre; `next/font/google` con `display: swap` (Newsreader, Hanken Grotesk, Geist Mono).
 
+**Code-splitting (`next/dynamic`, `ssr: false`):** componentes below-the-fold o bajo demanda del usuario —
+`MovementDetailSheet`, flujos Espacios (`SpaceContributeFlow`/`SpaceExpenseFlow`), Turnstile y passkeys en auth.
+Reservar `<Suspense>` en `page.tsx` solo para Server Components async o `useSearchParams` con boundary real;
+vistas `'use client'` con loading interno (Convex `useQuery`) no necesitan Suspense cosmético en la página.
+
 ### 4.7 Reglas de UX técnica
 
 - **Mobile-first:** 375px primero; touch targets ≥44×44px; drawer/sheet sobre modal en móvil;
@@ -738,12 +747,22 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `fixedCommitments` | profileId, name, amount, envelope (needs/wants), `dueDay` (1–31, Lima), `coveredAt?`, `coveredBy?`, `postponedForCycleId?` (P1-10), **`paidAt?`**, **`paidForCycleId?`** (P3-7) | Cobertura cascada + pago; reservas explícitas en `commitmentReservations` |
 | `commitmentReservations` | profileId, cycleId, commitmentId, reservedCents, status, consumedCents, releasedCents | Dinero apartado para un compromiso; reduce disponible sin ser gasto |
 | `incomeAllocationLines` | profileId, cycleId, incomeEventId, destination, amountCents, … | Hechos de distribución por ingreso |
-| `internalTransfers` | profileId, cycleId, kind (`cycle_correction` / `liquidity_reconciliation` / `inferred_savings_annulment` / …), amountCents, from, to, note? | Correcciones internas (no ingreso ni gasto). `liquidity_reconciliation` alinea Quipu con saldo bancario; `inferred_savings_annulment` baja Fondo inflado sin mover a otro sobre. |
+| `internalTransfers` | profileId, cycleId, kind (`cycle_correction` / `liquidity_reconciliation` / `inferred_savings_annulment` / **`personal_to_space_contribution`** / …), amountCents, from, to, note?, spaceId?, spaceContributionId? | Correcciones internas (no ingreso ni gasto). `personal_to_space_contribution` = aporte al espacio compartido. |
 | `expenses` | profileId, cycleId, envelopeId, subEnvelopeId?, amount, description, timestamp, `updatedAt?` (P3-5) | Gastos del ciclo; editables en ciclo activo (P3-5) |
 | `coachInteractions` | profileId, cycleId, triggerEvent, initialNudge, options[], selectedOptionId?, status (pending/resolved), createdAt | El coach sugiere; el usuario decide |
 | `streaks` | profileId, currentStreak, longestStreak, lastEvaluatedCycleId? | Unidad de progreso = ciclo |
 | `cycleHistory` | profileId, cycleId, status (compliant/warning/failed), evaluatedAt, wantsWithinBudget, allCommitmentsCovered, **`closedAtPremium?`** (Plus v1) | "warning" = zona de amortiguación; hechos al cierre; `closedAtPremium` congela si el usuario tenía Plus al cerrar |
 | `incomeEvents` | profileId, cycleId, amount (céntimos >0), source (payroll/freelance/business/gift/refund/investment/other), description (siempre requerido), occurredAt, `distributionApplied{needs,wants,savings}` (snapshot histórico), `incomeKind?` (habitual/extraordinary), `extraordinaryType?`, `extraordinaryLabel?`, `distributionPolicy?` (profile_default/all_to_savings), **`heldCents?`** (histórico: suma de reservas al crear/editar; la verdad de cobertura es `commitmentReservations`) | Log unificado; create/update **requieren** `allocation` explícita (ledger); `totalIncomeReceived` es bruto (Σ amount); campos extraordinarios P2-7 |
+| `financialSpaces` | createdByProfileId, name, status (active/closed/readonly), currencyCode/Symbol, allocationNeeds/Wants/Savings, cycleDurationDays, cycleAnchorAt, premiumExpiredAt?, closedAt? | Modo Pareja v1; moneda = del creator; readonly si Premium del owner expira |
+| `spaceMembers` | spaceId, profileId, role (owner/member), status (active/left), expectedContributionCents, joinedAt, leftAt? | Máx. 2 activos (pareja) |
+| `spaceInvitations` | spaceId, tokenHash, expiresAt, status, invitedEmail?, acceptedByProfileId?, createdByProfileId | Token en link; solo hash persistido |
+| `spaceCycles` | spaceId, startDate, endDate, status, totalContributionsReceived, unallocatedCents?, snapshot al cerrar | Ciclo independiente del personal |
+| `spaceEnvelopes` | spaceId, cycleId, type (needs/wants/savings), allocatedAmount, remainingAmount | Espejo acotado de `envelopes` |
+| `spaceGoals` | spaceId, cycleId, label, targetAmount?, currentAmount | Metas compartidas v1 |
+| `spaceContributions` | spaceId, cycleId, fromProfileId, fromPersonalEnvelopeId, amountCents, kind (explicit_transfer/expense_paid_personally), linkedSpaceExpenseId?, linkedPersonalTransferId? | Puente personal → espacio |
+| `spaceExpenses` | spaceId, cycleId, paidByProfileId, amount, description, fundingSource (space_budget/personal_pocket), envelopeId? | `personal_pocket` suma participación del pagador |
+| `spaceCommitments` | spaceId, name, amount, envelope, dueDay, coveredAt?, paidAt? | Sin coach v1 |
+| `spaceChangeProposals` | spaceId, kind, payload, effectiveOn (current_cycle/next_cycle), status, proposedByProfileId, respondedByProfileId? | Dual confirm para cambios del ciclo activo |
 
 ### 5.2 Funciones por archivo
 
@@ -752,7 +771,18 @@ componente `convex/betterAuth/` y no se re-exportan.
 | `convex/incomeEvents.ts` | `createIncomeEvent` (acepta `allocation` explícita), `deleteIncomeEvent`, `updateIncomeEvent` |
 | `convex/cycleCorrection.ts` | `correctActiveCycleAllocation` — redistribuye ciclo activo vía transferencias internas; acepta `declaredLiquidCents` (conciliación bancaria) y `annulInferredSavingsCents` |
 | `convex/expenses.ts` | `registerExpense`, `deleteExpense`, `updateExpense` (mutations; P3-5), `getRecentExpenses` (query) |
-| `convex/movements.ts` | `listForActiveCycle` (query; lista unificada ingresos + gastos) |
+| `convex/movements.ts` | `listForActiveCycle`, **`listForContext`** (personal o espacio) |
+| `convex/spaces.ts` | `create`, `getMySpaces`, `getOverview`, `updateName`, `close`, `leave`, `reactivate`, `updateAllocation` |
+| `convex/spaceInvitations.ts` | `create`, `previewByToken`, `accept`, `revoke`, `listPendingForSpace` |
+| `convex/spaceContributions.ts` | `contribute` (aporte atómico personal → espacio) |
+| `convex/spaceExpenses.ts` | `register` (`space_budget` / `personal_pocket`) |
+| `convex/spaceChangeProposals.ts` | `create`, `respond`, `listPending`, `updateExpectedContribution` |
+| `convex/spaceCycles.ts` | `closeActive` |
+| `convex/spaceCommitments.ts` | CRUD compromisos compartidos |
+| `convex/spaceGoals.ts` | CRUD metas compartidas |
+| `convex/lib/spaceAuth.ts` | `requireSpaceMember`, `requireSpaceOwner`, `requireSpaceWritable`, helpers invitación/ciclo |
+| `convex/lib/spaceParticipation.ts` | Puras: participación por miembro (TDD) |
+| `convex/lib/spaceLifecycle.ts` | Transiciones readonly/reactivate al cambiar plan Premium |
 | `convex/fixedCommitments.ts` | `listMyCommitments`, `getCommitment`, `getCommitmentCoverage` (queries), `createFixedCommitment`, `deleteFixedCommitment`, `createCommitmentsBulk`, **`markCommitmentAsPaid`** (mutations; P3-7) |
 | `convex/coachEngine.ts` | `getActiveNudge` (query), `resolveNudgeAction`, `applyRescueTransfer`, `dismissRescueSuggestion`, `applyCoverFromCycleSavings`, `postponeCommitmentForCycle`, `snoozeCrisisCoach`, **`applyCrisisPlan`** (mutations; Plus v1 Slice 3) — sugiere, confirma, aplica |
 | `convex/lib/rescueTransfer.ts` | Puras: `validateRescueTransferApply`, `computeRescueEnvelopePatches` (con tests) |
@@ -817,6 +847,8 @@ componente `convex/betterAuth/` y no se re-exportan.
   para email/contraseña; flujos UI `/recuperar`, `/restablecer-contrasena`, post-registro
   «Revisa tu correo». Passkey-first sigue permitido con `emailVerified: false` hasta confirmar
   correo para login con contraseña. Detalle en `docs/security-debt.md` (D1 — owner: Resend prod).
+- **`requireAuthenticatedProfile()`** (Modo Pareja): sesión + perfil (completo o stub); no redirige a
+  onboarding. Rutas `/espacios/**`. Onboarding completo sigue exigido en dashboard, ingresos, ahorros.
 - **Postura de seguridad (auditoría 2026-07-22):** passkey `resolveUser` rechaza emails ya
   registrados (cierra account takeover anónimo); `createProfile` fija `plan: "free"` en servidor;
   `resetDb.resetAll` es `internalAction` (solo CLI/dashboard, dev); headers de seguridad en
@@ -843,8 +875,42 @@ componente `convex/betterAuth/` y no se re-exportan.
 | I6 | **Auth en primitiva común** | APIs públicas de dominio parten de pocas puertas: cuenta autenticada activa (+ pertenencia). No copiar checks a mano en cada función. |
 | I7 | **Export/borrado = libro completo** | Incluye reservas, líneas de asignación, transferencias internas, feedback y el resto del dominio personal. |
 | I8 | **Revisión de contenido por candidatos** | Cron procesa perfiles ya marcados como sospechosos (o muestreo acotado). No barrido completo de todos los usuarios cada ciclo. |
+| I9 | **Espacio ≠ personal** | Presupuesto personal y espacio no comparten filas de sobres, gastos ni ciclos. Dominio paralelo (`space*`). |
+| I10 | **Aporte explícito** | Dinero que entra al espacio desde lo personal = movimiento explícito (`spaceContributions` + `internalTransfers.personal_to_space_contribution`). |
+| I11 | **Participación sin deudas** | Gasto `personal_pocket` suma participación del pagador; no hay saldos «debes X» entre miembros. |
+| I12 | **Dual confirm en ciclo activo** | Cambios N/G/A, duración de ciclo o metas del ciclo activo requieren propuesta + confirmación del segundo miembro (`spaceChangeProposals`). |
 
 **Tríada financiera (I1):** compromiso (obligación) ≠ reserva (dinero apartado que afecta disponibilidad) ≠ gasto real (hecho observado). Mezclarlas en una sola mutación es un bug de dominio.
+
+### 5.6 Espacios compartidos (Modo Pareja v1)
+
+Dominio paralelo al presupuesto personal. Tablas `financialSpaces`, `spaceMembers`, `spaceInvitations`,
+`spaceCycles`, `spaceEnvelopes`, `spaceGoals`, `spaceContributions`, `spaceExpenses`,
+`spaceCommitments`, `spaceChangeProposals`. Extensión en `internalTransfers.kind`:
+`personal_to_space_contribution`.
+
+**Reglas cerradas v1:**
+
+| Regla | Comportamiento |
+|---|---|
+| Quién crea | Owner **Premium**; máx. **1** espacio activo por creator |
+| Miembros | Máx. **2** activos (modo pareja); invitado puede ser Free |
+| Moneda | = moneda del creator; si invitado onboarded con otra moneda → `CURRENCY_MISMATCH` |
+| Ciclo | Independiente del ciclo personal (`spaceCycles`) |
+| Aporte esperado | Meta blanda por miembro/ciclo; cambios al ciclo **activo** → propuesta dual |
+| Gastos | `space_budget` (presupuesto del espacio) o `personal_pocket` (participación del pagador) |
+| Participación | Σ aportes explícitos + gastos `personal_pocket`; sin deudas entre miembros |
+| Propuestas | Owner: N/G/A, duración ciclo, ambos aportes esperados. Member: solo su aporte esperado |
+| Premium expira | Espacio → `readonly`; reactivar al renovar (`reactivate`) |
+| Cerrar / salir | Historial preservado; owner cierra, member sale |
+| Fuera v1 | Coach en espacio, ingresos del espacio, export completo espacio, FX, grupos >2 |
+
+**UI:** `modules/espacios/`; rutas `/espacios`, `/espacios/[spaceId]`, `/espacios/unirse/[token]`;
+ítem **Espacios** solo en sidebar (sin bottom nav). Movimientos: selector Personal | espacio
+(`movements.listForContext`).
+
+**Errores:** `CURRENCY_MISMATCH`, `SPACE_MEMBER_LIMIT`, `SPACE_READONLY`, `SPACE_PROPOSAL_PENDING`,
+`SPACE_NOT_MEMBER` en `core/errors/index.ts`.
 
 ---
 
@@ -1100,6 +1166,7 @@ el DoD v2.5 ya está cubierto en la rama de trabajo.
 - **Bloque 9 — Perfil y ajustes:** `/settings` (cuenta) + `/settings/system` (sistema + automatizaciones) + allocations + **wizard ciclo** (`/settings/cycle`, regla §5.3); **tema oscuro** (`next-themes` en Preferencias); **editar nombre** inline; **sesiones** (`sessionsApiReady`, cerrar todas vía Convex + `ConfirmDestructiveDialog`); Polar billing (2026-07-22). Sin selector de acento ni ícono.
 - **Movimientos del ciclo:** `/movements` (lista completa; enlace «Ver todo» en dashboard). **P3-5:** detalle + editar/eliminar ingresos y gastos del ciclo activo; móvil `Sheet` bottom, desktop `Dialog` centrado (`max-w-[400px]`).
 - **Compromisos:** `/commitments` (lista con cobertura + **pago** del ciclo, total `/ ciclo`, agregar compromiso). **Detalle:** móvil sheet / desktop dialog (mismo patrón que movimientos); filas Cobertura + Pago; botón «Marcar como pagado» (P3-7); eliminar con `ConfirmDestructiveDialog`; nav sidebar/bottom activa; enlace «Ver todo» en dashboard.
+- **Modo Pareja (Plus v1 — 2026-08-07):** `/espacios` hub + dashboard por espacio + accept flow; backend `convex/spaces*`, invitaciones, aportes, gastos, propuestas, lifecycle Premium readonly; movimientos con selector de contexto; export personal incluye refs de espacio (`quipu-app-snapshot-3`). Sin coach en espacio v1.
 
 **No existe todavía (bloquea DoD v2.5 — ver §8.1):**
 - Coach estado **tranquilo:** CTAs — **cerrado 2026-07-22** (§8.4).
@@ -1132,6 +1199,7 @@ flowchart LR
     ST["/settings"]
     SYS["/settings/system"]
     P["/progress"]
+    E["/espacios"]
   end
   D --> M
   D --> I
@@ -1208,7 +1276,8 @@ flowchart LR
 | **1 — Plus v1** | Predicción, reglas auto, crisis avanzado, recordatorios in-app, informe cierre | 🟡 En progreso (2026-07-28, Slices 0–5) |
 | **2 — Email inbound** | Parsers banco + `pendingExpenses` + variante C | ⬜ No iniciado |
 | **3 — Import PDF/Excel** | Mismo embudo que Fase 2 | ⬜ No iniciado |
-| **4 — Con MRR** | Gmail, sync bancario, pareja, coach LLM | ⬜ Fuera de alcance hasta demanda |
+| **4 — Con MRR** | Gmail, sync bancario, coach LLM | ⬜ Fuera de alcance hasta demanda |
+| **Modo Pareja v1** | Espacios compartidos Premium (pareja, 2 miembros) | ✅ **Cerrado 2026-08-07** — ver §5.6 |
 
 ### 8.4 Delta diseño v3.0 vs código (backlog de UI por bloque)
 
@@ -1253,6 +1322,11 @@ pnpm test                   # Vitest
 npx convex dashboard        # UI de Convex
 pnpm deploy:convex          # Deploy Convex (usa CONVEX_DEPLOY_KEY → prod chihuahua)
 npx convex ai-files install # Refrescar bloque managed de AGENTS.md
+
+# CodeGraph (índices locales gitignored — ver AGENTS.md § CodeGraph)
+pnpm codegraph:sync           # Reindexar frontend/modules (raíz)
+pnpm codegraph:sync:convex    # Reindexar solo convex/
+pnpm codegraph:status         # Stats de ambos índices
 
 # Producción (Vercel): `pnpm build` = `convex deploy` + `next build`
 # Requiere CONVEX_DEPLOY_KEY en el entorno de build (deployment patient-chihuahua-640).
@@ -1398,6 +1472,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-08-07 — Modo Pareja Premium v1 (Espacios compartidos).** Dominio `space*` paralelo al personal; 10 tablas nuevas; invariantes I9–I12; APIs `convex/spaces*`, invitaciones, aportes, gastos, propuestas, lifecycle readonly al expirar Premium; UI `modules/espacios/` + rutas `/espacios`; movimientos con contexto personal/espacio; export snapshot v3; TDD en `convex/lib/space*`. §2.4, §5.6, §8.
 - **2026-08-07 — Multi-mercado + Plus mensual/anual.** Mercados PEN/EUR/USD en onboarding (moneda fija después). Quipu Plus: 2 productos Polar (`plusMonthly` / `plusYearly`) con multi-currency; card de plan con toggle Mensual/Anual y copy por `currencyCode` del perfil. Env: `POLAR_PRODUCT_ID_PLUS_MONTHLY` / `PLUS_YEARLY` (§9.5).
 - **2026-08-07 — Rescate free unificado (I3 UI).** Quitado atajo `free_advice`/upsell: free y Plus usan el mismo flujo de sugerir → confirmar → transferir. Sin paywall de rescate en coach.
 - **2026-08-07 — Alineación código I1–I8.** Backend cumple invariantes §5.5: Pagado señal-only; freeze en salidas; crisis Plus matriz; `needsReview`≠unallocated; admin `internal*`; `requireActiveAccount` en mutaciones de dinero/coach; cron contenido por `needsContentReview` + marcado al escribir. Plan: `docs/superpowers/plans/2026-08-07-alinear-backend-invariantes.md`.

@@ -1,4 +1,6 @@
-import { Check, Home, ShoppingBag } from "reicon-react";
+import { Check } from "reicon-react/icons/Check";
+import { Home } from "reicon-react/icons/Home";
+import { ShoppingBag } from "reicon-react/icons/ShoppingBag";
 import {
   COVERAGE_COVERED_HEADER,
   COVERAGE_UNCOVERED_HEADER,

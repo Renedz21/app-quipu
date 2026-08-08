@@ -1,47 +1,87 @@
 "use client";
 
-import { Add, CalendarCheck, Home, Money, Settings } from "reicon-react";
+import type { IconProps } from "reicon-react";
+import { BillList } from "reicon-react/icons/BillList";
+import { Bullseye } from "reicon-react/icons/Bullseye";
+import { Gear } from "reicon-react/icons/Gear";
+import { HandDollar } from "reicon-react/icons/HandDollar";
+import { Home } from "reicon-react/icons/Home";
+import { Layer } from "reicon-react/icons/Layer";
+import { MoneyPlus } from "reicon-react/icons/MoneyPlus";
+import { Settings } from "reicon-react/icons/Settings";
+
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
   label: string;
   active?: boolean;
-  className?: string;
-  size?: number;
-};
+} & IconProps;
 
 function iconColor(active: boolean | undefined): string {
   return active ? "var(--qp-deep)" : "var(--mute)";
 }
 
-export function AppNavIcon({ label, active, className, size = 16 }: Props) {
+export function AppNavIcon({ label, active, size = 18 }: Props) {
   const color = iconColor(active);
-  const iconProps = {
-    size,
-    color,
-    className: cn("shrink-0", className),
-    weight: (active ? "Filled" : "Outline") as "Filled" | "Outline",
-  };
 
   switch (label) {
     case "Inicio":
-      return <Home {...iconProps} />;
-    case "Registrar":
-      return <Add size={size} color={color} className={iconProps.className} />;
-    case "Ahorros":
-      return <Money {...iconProps} />;
-    case "Compromisos":
-      return <CalendarCheck {...iconProps} />;
-    case "Ajustes":
-      return <Settings {...iconProps} />;
-    default:
       return (
-        <Settings
-          size={size}
+        <Home
           color={color}
-          className={iconProps.className}
-          weight="Outline"
+          size={size}
+          weight={active ? "Filled" : "Outline"}
         />
       );
+    case "Registrar":
+      return (
+        <MoneyPlus
+          color={color}
+          size={size}
+          weight={active ? "Filled" : "Outline"}
+        />
+      );
+    case "Movimientos":
+      return (
+        <BillList
+          color={color}
+          size={size}
+          weight={active ? "Filled" : "Outline"}
+        />
+      );
+    case "Ahorros":
+      return (
+        <HandDollar
+          color={color}
+          size={size}
+          weight={active ? "Filled" : "Outline"}
+        />
+      );
+    case "Compromisos":
+      return (
+        <Bullseye
+          color={color}
+          size={size}
+          weight={active ? "Filled" : "Outline"}
+        />
+      );
+    case "Espacios":
+      return (
+        <Layer
+          color={color}
+          size={size}
+          weight={active ? "Filled" : "Outline"}
+        />
+      );
+    case "Ajustes":
+      return (
+        <Gear
+          color={color}
+          size={size}
+          weight={active ? "Filled" : "Outline"}
+        />
+      );
+    default:
+      return <Settings size={size} color={color} weight="Outline" />;
   }
 }

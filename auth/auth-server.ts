@@ -5,6 +5,10 @@ import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { clientEnv } from "@/core/env.client";
 import { isAccountAccessAllowed } from "@/lib/account-status";
+import {
+  appendAuthReturnTo,
+  sanitizeAuthReturnTo,
+} from "@/modules/auth/lib/auth-return-to";
 
 export const {
   handler,
@@ -31,9 +35,13 @@ export const getMyProfileRsc = cache(async () =>
   fetchAuthQuery(api.profiles.getMyProfile, {}),
 );
 
-export async function requireUnauthenticatedSession() {
+export async function requireUnauthenticatedSession(returnTo?: string) {
   const authed = await isAuthenticated();
   if (!authed) return;
+  const safeReturnTo = sanitizeAuthReturnTo(returnTo);
+  if (safeReturnTo) {
+    redirect(safeReturnTo);
+  }
   const profile = await getMyProfileRsc();
   if (profile) {
     redirect("/dashboard");
@@ -46,11 +54,27 @@ export async function requireUnauthenticatedSession() {
  * Garantiza que el usuario está autenticado. Si no, redirige a /sign-in.
  * Usar como primera línea en page.tsx de rutas protegidas (NO en layout.tsx).
  */
-export async function requireAuthenticatedSession() {
+export async function requireAuthenticatedSession(returnTo?: string) {
   const authed = await isAuthenticated();
   if (!authed) {
-    redirect("/sign-in");
+    redirect(appendAuthReturnTo("/sign-in", returnTo));
   }
+}
+
+/**
+ * Sesión + perfil (completo o stub). No exige onboarding.
+ * Usar en rutas `/espacios/**`.
+ */
+export async function requireAuthenticatedProfile(): Promise<Doc<"profiles">> {
+  await requireAuthenticatedSession();
+  const profile = await getMyProfileRsc();
+  if (!profile) {
+    redirect("/onboarding");
+  }
+  if (!isAccountAccessAllowed(profile.accountStatus)) {
+    redirect("/sign-in?reason=suspended");
+  }
+  return profile;
 }
 
 /**

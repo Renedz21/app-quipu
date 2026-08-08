@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
-import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
+import { Lock } from "reicon-react/icons/Lock";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -34,7 +34,7 @@ export function EmergencyFundDetailView() {
         <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 md:py-8">
           <Skeleton variant="line" className="h-4 w-24" />
           <Skeleton className="mt-4 h-10 w-56 rounded-lg" />
-          <Skeleton className="mt-6 h-40 w-full rounded-[13px] [animation-delay:150ms]" />
+          <Skeleton className="mt-6 h-40 w-full rounded-xl [animation-delay:150ms]" />
         </div>
       </div>
     );
@@ -66,7 +66,7 @@ export function EmergencyFundDetailView() {
 
         <div className="mt-4 flex items-center gap-3">
           <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-moss text-white">
-            <EmergencyFundIcon size="md" />
+            <Lock size={15} aria-hidden />
           </span>
           <h1 className="font-serif text-[21px] font-medium text-ink md:text-[26px]">
             {EMERGENCY_FUND_LABEL}
@@ -154,8 +154,8 @@ export function EmergencyFundDetailView() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-[13px] border border-line bg-card p-4 md:p-[17px]">
-      <p className="text-xs text-mute">{label}</p>
+    <article className="rounded-xl border border-line/70 bg-card p-4 md:px-5 md:py-4">
+      <p className="text-[12.5px] font-medium text-ink-secondary">{label}</p>
       <p className="mt-1.5 font-serif text-xl text-ink md:text-[22px]">
         {value}
       </p>

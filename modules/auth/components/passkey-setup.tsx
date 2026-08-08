@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { LockKeyholeOpen } from "reicon-react";
+import { LockKeyholeOpen } from "reicon-react/icons/LockKeyholeOpen";
 import { authClient } from "@/auth/auth-client";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { Button } from "@/shared/components/ui/button";

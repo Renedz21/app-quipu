@@ -40,7 +40,7 @@ export function SavingsGoalCard({
   const canContribute = availableToContributeCents > 0;
 
   return (
-    <article className="rounded-[13px] border border-line bg-card p-3 md:p-[17px]">
+    <article className="rounded-xl border border-line/70 bg-card p-3 md:p-[17px]">
       <div className="mb-2 flex items-center justify-between gap-2 md:mb-1 md:block">
         <h3 className="text-[13px] font-semibold text-ink md:text-sm">
           {goal.label}

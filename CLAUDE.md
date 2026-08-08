@@ -76,3 +76,22 @@ Notas no obvias para agentes en la VM de Cursor Cloud. Comandos estándar
 - **Alcance de agentes CI/CD-front:** ajustes de CI/CD, estilos y frontend no
   requieren tocar lógica de Convex; para eso basta `pnpm dev` (+ Convex local si
   se necesita datos). Levantar Convex en la nube está fuera de ese alcance.
+
+<!-- CODEGRAPH_START -->
+## CodeGraph
+
+Este repo tiene **dos índices** (ambos gitignored):
+
+| Ámbito | Directorio | Cuándo usarlo |
+|---|---|---|
+| Proyecto (Next + modules) | `.codegraph/` en la raíz | UI, routing, wrappers, shared |
+| Convex (backend) | `convex/.codegraph/` | queries, mutations, schema, `convex/lib/*` |
+
+Antes de grep/find o leer archivos sueltos, usa CodeGraph:
+
+- **MCP:** `codegraph_explore` (proyecto) o `codegraph-convex` → `codegraph_explore` (backend). Devuelve source verbatim + call paths, incluyendo dispatch dinámico.
+- **Shell:** `codegraph explore "<query>"` (raíz) · `codegraph explore "<query>" --path convex` (backend).
+- **Sync tras cambios grandes:** `pnpm codegraph:sync` y/o `pnpm codegraph:sync:convex`.
+
+Si falta el índice del ámbito que necesitas: `codegraph init` (raíz) o `codegraph init convex`.
+<!-- CODEGRAPH_END -->

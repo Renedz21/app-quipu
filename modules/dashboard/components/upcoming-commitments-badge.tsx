@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Calendar } from "reicon-react";
+import { Calendar } from "reicon-react/icons/Calendar";
 import { api } from "@/convex/_generated/api";
 import { SectionLink } from "@/shared/components/ui/section-link";
 import { formatCents } from "@/shared/lib/money";
@@ -37,7 +37,7 @@ export function UpcomingCommitmentsBadge({ currencyCode, isPremium }: Props) {
   return (
     <section
       aria-label={UPCOMING_COMMITMENTS_BADGE_ARIA}
-      className="rounded-[14px] border border-warning-border bg-warning-bg/70 p-3 md:p-4"
+      className="rounded-xl border border-warning-border bg-warning-bg/70 p-3 md:p-4"
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-border px-2.5 py-1 text-[11px] font-semibold text-warning-text">

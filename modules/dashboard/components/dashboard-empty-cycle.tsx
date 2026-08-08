@@ -23,7 +23,7 @@ export function DashboardEmptyCycle({
 }: Props) {
   return (
     <div className="space-y-5">
-      <section className="rounded-[18px] border border-line bg-qp-gradient p-5 shadow-[0_1px_2px_color-mix(in_oklch,var(--qp-ink)_3%,transparent)] md:p-7">
+      <section className="rounded-xl border border-line/70 bg-linear-to-tr from-qp-gradient to-qp-gradient/10 p-5 shadow-[0_1px_2px_color-mix(in_oklch,var(--qp-ink)_3%,transparent)] md:p-7">
         <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-qp-deep">
           {HERO_EMPTY_EYEBROW}
         </p>

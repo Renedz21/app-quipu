@@ -10,8 +10,10 @@ import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
 import type { Allocation } from "@/modules/onboarding/lib/allocation";
+import { ModuleLoadingShell } from "@/shared/components/layout/module-loading-shell";
 import { BackLink } from "@/shared/components/ui/back-link";
 import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ENVELOPES } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import { useUpdateAllocations } from "../actions";
@@ -40,10 +42,12 @@ export function SettingsAllocationsEditor({
 
   if (summary === undefined) {
     return (
-      <div className="mx-auto flex min-h-[50vh] w-full max-w-lg flex-col px-5 py-6">
-        <div className="h-4 w-24 animate-pulse rounded bg-line" />
-        <div className="mt-4 h-8 w-48 animate-pulse rounded bg-line" />
-      </div>
+      <ModuleLoadingShell maxWidth="lg" className="flex min-h-[50vh] flex-col">
+        <Skeleton variant="line" className="h-4 w-24" />
+        <Skeleton className="mt-4 h-8 w-48 rounded-lg" />
+        <Skeleton className="mt-6 h-40 w-full rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="mt-4 h-24 w-full rounded-xl [animation-delay:300ms]" />
+      </ModuleLoadingShell>
     );
   }
 

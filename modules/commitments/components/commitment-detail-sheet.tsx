@@ -121,7 +121,9 @@ export function CommitmentDetailSheet({
     <>
       <dl className="space-y-3 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-mute">Monto</dt>
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            Monto
+          </dt>
           <dd className="font-serif text-lg text-ink">
             {formatCents(commitment.amount, {
               currency: currencyCode,
@@ -129,13 +131,17 @@ export function CommitmentDetailSheet({
           </dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-mute">Sobre</dt>
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            Sobre
+          </dt>
           <dd className="font-medium text-ink">
             {ENVELOPE_LABELS[commitment.envelope]}
           </dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-mute">{COMMITMENT_NEXT_DUE_LABEL}</dt>
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            {COMMITMENT_NEXT_DUE_LABEL}
+          </dt>
           <dd className="text-right font-medium text-ink">
             <div>{formatLimaDate(commitment.nextDueAt)}</div>
             {commitment.paymentStatus !== "paid" ? (
@@ -146,13 +152,17 @@ export function CommitmentDetailSheet({
           </dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-mute">{COMMITMENT_COVERAGE_LABEL}</dt>
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            {COMMITMENT_COVERAGE_LABEL}
+          </dt>
           <dd className="font-medium text-ink">
             {formatCoverageStatusLabel(commitment.coverageStatus)}
           </dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-mute">{COMMITMENT_PAYMENT_LABEL}</dt>
+          <dt className="text-[12.5px] font-medium text-ink-secondary">
+            {COMMITMENT_PAYMENT_LABEL}
+          </dt>
           <dd
             className={cn(
               "font-medium",

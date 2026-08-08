@@ -27,7 +27,7 @@ export function SettingsFeedbackView() {
         </p>
       </header>
 
-      <section className="max-w-xl rounded-[14px] border border-line bg-card p-5 md:p-6">
+      <section className="max-w-xl rounded-xl border border-line/70 bg-card p-5 md:p-6">
         <FeedbackForm />
       </section>
 

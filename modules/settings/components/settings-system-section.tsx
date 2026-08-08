@@ -7,6 +7,7 @@ import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import { useUpdateNotificationPreferences } from "../actions";
 import {
@@ -30,6 +31,7 @@ import {
   formatCycleType,
   formatIncomeProfileLabel,
 } from "../lib/cycle-display";
+import { SettingsSection } from "./settings-section";
 import { SettingsThemeToggle } from "./settings-theme-toggle";
 import { SettingsToggle } from "./settings-toggle";
 
@@ -48,7 +50,17 @@ export function SettingsSystemSection({ className }: { className?: string }) {
   const profile = useMyProfile();
   const updatePrefs = useUpdateNotificationPreferences();
 
-  if (!profile) return null;
+  if (profile === undefined) {
+    return (
+      <section className={cn("flex flex-col gap-3.5", className)}>
+        <Skeleton className="h-[180px] rounded-xl" />
+        <Skeleton className="h-[140px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[200px] rounded-xl [animation-delay:300ms]" />
+      </section>
+    );
+  }
+
+  if (profile === null) return null;
 
   const needs = profile.allocationNeeds;
   const wants = profile.allocationWants;
@@ -69,17 +81,16 @@ export function SettingsSystemSection({ className }: { className?: string }) {
 
   return (
     <section className={cn("flex flex-col gap-3.5", className)}>
-      <div className="rounded-2xl border border-line bg-card px-4 py-4 md:px-[22px] md:py-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
-            {SETTINGS_PERCENTAGES_LABEL}
-          </span>
+      <SettingsSection
+        title={SETTINGS_PERCENTAGES_LABEL}
+        titleAside={
           <span className="text-xs font-semibold text-qp-deep">
             {SETTINGS_PERCENTAGES_SUM_OK}
           </span>
-        </div>
+        }
+      >
         <AllocationBar needs={needs} wants={wants} savings={savings} />
-        <div className="mt-4 flex gap-2.5">
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
           {(
             [
               { label: "Necesidades", pct: needs, dot: "needs" },
@@ -89,7 +100,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           ).map((item) => (
             <div
               key={item.label}
-              className="flex-1 rounded-[11px] border border-line-subtle bg-surface-warm px-3 py-2.5"
+              className="rounded-lg bg-surface-warm/40 px-3 py-2.5"
             >
               <div className="mb-1 flex items-center gap-1.5 text-xs text-body-secondary">
                 <span
@@ -113,13 +124,10 @@ export function SettingsSystemSection({ className }: { className?: string }) {
         >
           {SETTINGS_ADJUST_ALLOCATIONS}
         </Link>
-      </div>
+      </SettingsSection>
 
-      <div className="rounded-2xl border border-line bg-card px-4 py-4 md:px-[22px] md:py-5">
-        <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
-          {SETTINGS_CYCLE_LABEL}
-        </div>
-        <div className="flex flex-col gap-2.5 sm:flex-row">
+      <SettingsSection title={SETTINGS_CYCLE_LABEL}>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           {(
             [
               { label: SETTINGS_CYCLE_TYPE, value: formatCycleType(profile) },
@@ -135,10 +143,14 @@ export function SettingsSystemSection({ className }: { className?: string }) {
           ).map((card) => (
             <div
               key={card.label}
-              className="flex-1 rounded-[11px] border border-line-subtle bg-surface-warm px-3.5 py-3"
+              className="rounded-lg bg-surface-warm/40 px-3.5 py-3"
             >
-              <div className="text-[11.5px] text-mute">{card.label}</div>
-              <div className="text-sm font-semibold text-ink">{card.value}</div>
+              <div className="text-[12.5px] font-medium text-ink-secondary">
+                {card.label}
+              </div>
+              <div className="mt-0.5 text-sm font-semibold text-ink">
+                {card.value}
+              </div>
             </div>
           ))}
         </div>
@@ -151,17 +163,15 @@ export function SettingsSystemSection({ className }: { className?: string }) {
         >
           {SETTINGS_CHANGE_CYCLE}
         </Link>
-      </div>
+      </SettingsSection>
 
-      <div
+      <SettingsSection
         id="preferencias"
-        className="scroll-mt-6 rounded-2xl border border-line bg-card px-4 py-4 md:px-[22px] md:py-5"
+        className="scroll-mt-6"
+        title={SETTINGS_PREFERENCES_LABEL}
       >
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
-          {SETTINGS_PREFERENCES_LABEL}
-        </div>
-        <div className="divide-y divide-line-subtle">
-          <div className="flex items-center justify-between gap-3 py-2.5">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-2.5">
             <span className="text-sm text-ink">{SETTINGS_CURRENCY_LABEL}</span>
             <span className="text-[13.5px] text-mute">
               {currencyReadOnlyLabel(
@@ -170,14 +180,16 @@ export function SettingsSystemSection({ className }: { className?: string }) {
               )}
             </span>
           </div>
-          <div className="flex items-center justify-between gap-3 py-2.5">
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-2.5">
             <span className="text-sm text-ink">{SETTINGS_LANGUAGE_LABEL}</span>
             <span className="text-[13.5px] text-mute">
               {SETTINGS_LANGUAGE_VALUE}
             </span>
           </div>
-          <SettingsThemeToggle />
-          <div className="flex items-center justify-between gap-3 py-2.5">
+          <div className="rounded-lg bg-surface-warm/40 px-3.5">
+            <SettingsThemeToggle />
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-2.5">
             <span className="text-sm text-ink">
               {SETTINGS_DAILY_SUMMARY_LABEL}
             </span>
@@ -187,7 +199,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
               onCheckedChange={(v) => void patchPref("dailySummaryEnabled", v)}
             />
           </div>
-          <div className="flex items-center justify-between gap-3 py-2.5">
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-2.5">
             <span className="text-sm text-ink">
               {SETTINGS_CYCLE_ALERTS_LABEL}
             </span>
@@ -198,7 +210,7 @@ export function SettingsSystemSection({ className }: { className?: string }) {
             />
           </div>
         </div>
-      </div>
+      </SettingsSection>
     </section>
   );
 }

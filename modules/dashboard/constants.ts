@@ -34,7 +34,7 @@ export const DASHBOARD_ERROR_BODY =
 export const DASHBOARD_ERROR_RETRY = "Reintentar";
 
 export const MOVEMENTS_SECTION_LABEL = "Movimientos recientes";
-export const MOVEMENTS_VIEW_ALL = "Ver todo";
+export const MOVEMENTS_VIEW_ALL = "Ver movimientos";
 export const COMMITMENTS_VIEW_ALL = "Ver todo";
 
 export const UPCOMING_COMMITMENTS_BADGE_ARIA = "Compromisos que vencen pronto";
@@ -90,7 +90,11 @@ export const FORECAST_DEFICIT_LINE = (envelopeLabel: string, amount: string) =>
   `Faltan ${amount} en ${envelopeLabel} al cierre`;
 export const FORECAST_ALREADY_DEPLETED = (envelopeLabel: string) =>
   `${envelopeLabel} ya está en cero`;
-export const FORECAST_PAYWALL_NUDGE = "Predice cuándo se agota cada sobre.";
+export const FORECAST_PAYWALL_NUDGE =
+  "Proyecta cuánto te durará tu dinero al ritmo actual.";
+export const FORECAST_HEALTHY_TITLE = "Vas bien";
+export const FORECAST_HEALTHY_BODY =
+  "Aún no hay ritmo de gasto para proyectar el cierre. Sigue registrando y aquí verás cómo cierras el ciclo.";
 
 export const REGISTER_CTA = "Registrar";
 

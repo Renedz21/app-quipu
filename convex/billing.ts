@@ -9,6 +9,7 @@ import {
   polarSubscriptionFromWebhook,
   resolvePlanTier,
 } from "./lib/billingSync";
+import { transitionOwnedSpacesOnPlanChange } from "./lib/spaceLifecycle";
 import { listPlusProductIds, polar } from "./polar";
 
 function plusProductIdList(): string[] {
@@ -83,6 +84,11 @@ export const applyProfilePlanFromPolar = internalMutation({
     }
 
     await ctx.db.patch(profile._id, patch);
+
+    const updatedProfile = await ctx.db.get("profiles", profile._id);
+    if (updatedProfile) {
+      await transitionOwnedSpacesOnPlanChange(ctx, updatedProfile);
+    }
     return null;
   },
 });
@@ -132,6 +138,11 @@ export const reconcileMyPlan = mutation({
     }
 
     await ctx.db.patch(profile._id, patch);
+
+    const updatedProfile = await ctx.db.get("profiles", profile._id);
+    if (updatedProfile) {
+      await transitionOwnedSpacesOnPlanChange(ctx, updatedProfile);
+    }
     return { plan };
   },
 });

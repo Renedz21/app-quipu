@@ -401,13 +401,172 @@ export const appTables = {
       v.literal("liquidity_reconciliation"),
       // Write-down of inferred Fondo that never existed as confirmed cash.
       v.literal("inferred_savings_annulment"),
+      v.literal("personal_to_space_contribution"),
     ),
     amountCents: v.number(),
     from: v.string(),
     to: v.string(),
     note: v.optional(v.string()),
+    spaceId: v.optional(v.id("financialSpaces")),
+    spaceContributionId: v.optional(v.id("spaceContributions")),
     createdAt: v.number(),
   }).index("by_cycle", ["cycleId"]),
+
+  // ─── Modo Pareja (Espacios Premium v1) ───────────────────────────────────
+
+  financialSpaces: defineTable({
+    name: v.string(),
+    createdByProfileId: v.id("profiles"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("closed"),
+      v.literal("readonly"),
+    ),
+    currencyCode: v.string(),
+    currencySymbol: v.string(),
+    allocationNeeds: v.number(),
+    allocationWants: v.number(),
+    allocationSavings: v.number(),
+    cycleDurationDays: v.number(),
+    cycleAnchorAt: v.number(),
+    premiumExpiredAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_creator", ["createdByProfileId"]),
+
+  spaceMembers: defineTable({
+    spaceId: v.id("financialSpaces"),
+    profileId: v.id("profiles"),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    status: v.union(v.literal("active"), v.literal("left")),
+    expectedContributionCents: v.number(),
+    joinedAt: v.number(),
+    leftAt: v.optional(v.number()),
+  })
+    .index("by_profile", ["profileId"])
+    .index("by_space_profile", ["spaceId", "profileId"])
+    .index("by_space_status", ["spaceId", "status"]),
+
+  spaceInvitations: defineTable({
+    spaceId: v.id("financialSpaces"),
+    tokenHash: v.string(),
+    invitedEmail: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("revoked"),
+      v.literal("expired"),
+    ),
+    expiresAt: v.number(),
+    createdByProfileId: v.id("profiles"),
+    acceptedByProfileId: v.optional(v.id("profiles")),
+    createdAt: v.number(),
+  })
+    .index("by_tokenHash", ["tokenHash"])
+    .index("by_space_status", ["spaceId", "status"]),
+
+  spaceCycles: defineTable({
+    spaceId: v.id("financialSpaces"),
+    startDate: v.number(),
+    endDate: v.number(),
+    status: v.union(v.literal("active"), v.literal("closed")),
+    totalContributionsReceived: v.number(),
+    unallocatedCents: v.optional(v.number()),
+    memberParticipationSnapshot: v.optional(v.any()),
+    allocationSnapshot: v.optional(v.any()),
+    closedAt: v.optional(v.number()),
+  }).index("by_space_status", ["spaceId", "status"]),
+
+  spaceEnvelopes: defineTable({
+    spaceId: v.id("financialSpaces"),
+    cycleId: v.id("spaceCycles"),
+    type: v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
+    allocatedAmount: v.number(),
+    remainingAmount: v.number(),
+  })
+    .index("by_cycle_type", ["cycleId", "type"])
+    .index("by_space", ["spaceId"]),
+
+  spaceGoals: defineTable({
+    spaceId: v.id("financialSpaces"),
+    label: v.string(),
+    emoji: v.string(),
+    currentAmount: v.number(),
+    targetAmount: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_space", ["spaceId"]),
+
+  spaceContributions: defineTable({
+    spaceId: v.id("financialSpaces"),
+    cycleId: v.id("spaceCycles"),
+    fromProfileId: v.id("profiles"),
+    fromPersonalEnvelopeId: v.optional(v.id("envelopes")),
+    kind: v.union(
+      v.literal("explicit_transfer"),
+      v.literal("expense_paid_personally"),
+    ),
+    amountCents: v.number(),
+    envelopeType: v.optional(
+      v.union(v.literal("needs"), v.literal("wants"), v.literal("savings")),
+    ),
+    linkedSpaceExpenseId: v.optional(v.id("spaceExpenses")),
+    linkedPersonalTransferId: v.optional(v.id("internalTransfers")),
+    createdAt: v.number(),
+  })
+    .index("by_space_cycle", ["spaceId", "cycleId"])
+    .index("by_profile", ["fromProfileId"])
+    .index("by_cycle", ["cycleId"]),
+
+  spaceExpenses: defineTable({
+    spaceId: v.id("financialSpaces"),
+    cycleId: v.id("spaceCycles"),
+    paidByProfileId: v.id("profiles"),
+    envelopeType: v.union(
+      v.literal("needs"),
+      v.literal("wants"),
+      v.literal("savings"),
+    ),
+    fundingSource: v.union(
+      v.literal("space_budget"),
+      v.literal("personal_pocket"),
+    ),
+    amount: v.number(),
+    description: v.string(),
+    timestamp: v.number(),
+  })
+    .index("by_space_cycle_time", ["spaceId", "cycleId", "timestamp"])
+    .index("by_paid_by", ["paidByProfileId"]),
+
+  spaceCommitments: defineTable({
+    spaceId: v.id("financialSpaces"),
+    name: v.string(),
+    amount: v.number(),
+    envelope: v.union(v.literal("needs"), v.literal("wants")),
+    dueDay: v.number(),
+    createdAt: v.number(),
+  }).index("by_space", ["spaceId"]),
+
+  spaceChangeProposals: defineTable({
+    spaceId: v.id("financialSpaces"),
+    kind: v.union(
+      v.literal("allocation"),
+      v.literal("cycle_duration"),
+      v.literal("expected_contribution"),
+    ),
+    payload: v.any(),
+    effectiveOn: v.union(v.literal("current_cycle"), v.literal("next_cycle")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
+    proposedByProfileId: v.id("profiles"),
+    respondedByProfileId: v.optional(v.id("profiles")),
+    createdAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index("by_space_status", ["spaceId", "status"])
+    .index("by_space", ["spaceId"]),
 
   emailSendLog: defineTable({
     email: v.string(),

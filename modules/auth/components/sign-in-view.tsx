@@ -16,6 +16,7 @@ import {
   authFetchOptions,
   requireTurnstileToken,
 } from "../lib/auth-fetch-options";
+import { resolveAuthDestination } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { passwordOnlySchema } from "../schemas";
 import { AuthSidePanel } from "./auth-side-panel";
@@ -44,9 +45,11 @@ function trackLogin(method: "password" | "passkey"): void {
 export function SignInView({
   initialEmail = "",
   reason,
+  returnTo,
 }: {
   initialEmail?: string;
   reason?: string;
+  returnTo?: string;
 }) {
   const support = usePasskeySupport();
   const [step, setStep] = useState<Step>(
@@ -59,6 +62,8 @@ export function SignInView({
   >(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
+  const postAuthDestination = resolveAuthDestination(returnTo, "/dashboard");
+
   useEffect(() => {
     if (!support.conditionalUI) return;
     void authClient.signIn.passkey({
@@ -67,11 +72,11 @@ export function SignInView({
         onSuccess: () => {
           trackLogin("passkey");
           toast.success("Bienvenido de vuelta");
-          navigateAfterAuth("/dashboard");
+          navigateAfterAuth(postAuthDestination);
         },
       },
     });
-  }, [support.conditionalUI]);
+  }, [support.conditionalUI, postAuthDestination]);
 
   const emailForm = useForm({
     defaultValues: { email: initialEmail },
@@ -110,7 +115,7 @@ export function SignInView({
       }
       trackLogin("password");
       toast.success("Bienvenido de vuelta");
-      navigateAfterAuth("/dashboard");
+      navigateAfterAuth(postAuthDestination);
     },
   });
 
@@ -134,6 +139,7 @@ export function SignInView({
                 reason={reason}
                 error={error}
                 showPasskey={support.webauthn}
+                returnTo={returnTo}
               />
             ) : (
               <PasswordStep
@@ -149,6 +155,7 @@ export function SignInView({
                   setStep({ kind: "email" });
                 }}
                 showPasskey={support.webauthn}
+                returnTo={returnTo}
               />
             )}
           </div>

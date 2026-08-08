@@ -132,7 +132,7 @@ function CycleChangeWizardForm({ profile }: { profile: Profile }) {
           <p className="mt-2 text-[13px] leading-relaxed text-mute-subtle">
             {SETTINGS_CYCLE_WIZARD_STEP1_BODY}
           </p>
-          <dl className="mt-6 space-y-3 rounded-2xl border border-line bg-card px-4 py-4">
+          <dl className="mt-6 space-y-3 rounded-xl border border-line/70 bg-card px-4 py-4">
             <div>
               <dt className="text-[11px] uppercase tracking-wide text-faint">
                 Perfil

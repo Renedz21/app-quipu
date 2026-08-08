@@ -29,14 +29,14 @@ export function ProgressRewardsView() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-40 rounded-lg" />
-        <Skeleton className="h-32 w-full rounded-[13px] [animation-delay:150ms]" />
+        <Skeleton className="h-32 w-full rounded-xl [animation-delay:150ms]" />
       </div>
     );
   }
 
   if (rewards === null) {
     return (
-      <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+      <section className="rounded-xl border border-danger-line bg-danger-bg p-5 md:p-6">
         <h2 className="text-base font-semibold text-danger-ink">
           {PROGRESS_ERROR_TITLE}
         </h2>
@@ -83,10 +83,10 @@ export function ProgressRewardsView() {
             <div
               key={reward.id}
               className={cn(
-                "flex items-center gap-3 rounded-[13px] px-[17px] py-3.5 md:gap-3.5",
+                "flex items-center gap-3 rounded-xl border px-4 py-3.5 md:gap-3.5 md:px-5",
                 locked
-                  ? "border border-dashed border-[#D8D3CB] bg-[#FAF8F5] opacity-75 dark:border-line dark:bg-surface-warm"
-                  : "border border-line bg-surface",
+                  ? "border-dashed border-line/70 bg-surface-soft opacity-75"
+                  : "border-line/70 bg-card",
               )}
             >
               <span

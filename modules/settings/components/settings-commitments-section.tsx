@@ -14,6 +14,7 @@ import {
   SETTINGS_COMMITMENTS_TOTAL_SUFFIX,
 } from "../constants";
 import { useSettingsCommitments } from "../queries";
+import { SettingsSection } from "./settings-section";
 
 function envelopeDot(envelope: "needs" | "wants") {
   return envelope === "needs" ? "bg-needs" : "bg-clay";
@@ -36,7 +37,7 @@ export function SettingsCommitmentsSection({
       <div
         id={id}
         className={cn(
-          "h-64 animate-pulse scroll-mt-6 rounded-2xl border border-line bg-card",
+          "h-64 animate-pulse scroll-mt-6 rounded-xl border border-line/70 bg-card",
           className,
         )}
       />
@@ -46,35 +47,30 @@ export function SettingsCommitmentsSection({
   const totalCents = commitments.reduce((sum, c) => sum + c.amount, 0);
 
   return (
-    <section
+    <SettingsSection
       id={id}
-      className={cn(
-        "flex scroll-mt-6 flex-col rounded-2xl border border-line bg-card px-4 py-4 md:px-[22px] md:py-5",
-        className,
-      )}
-    >
-      <div className="mb-3.5 flex items-center justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
-          {SETTINGS_COMMITMENTS_LABEL}
-        </span>
-        {commitments.length > 0 ? (
+      className={cn("scroll-mt-6 flex flex-col", className)}
+      contentClassName="flex flex-1 flex-col"
+      title={SETTINGS_COMMITMENTS_LABEL}
+      titleAside={
+        commitments.length > 0 ? (
           <span className="text-xs text-mute">
             {formatCents(totalCents, { currency: currencyCode })}{" "}
             {SETTINGS_COMMITMENTS_TOTAL_SUFFIX}
           </span>
-        ) : null}
-      </div>
-
+        ) : null
+      }
+    >
       {commitments.length === 0 ? (
         <p className="mb-3 flex-1 text-[13px] text-mute md:mb-0">
           {SETTINGS_COMMITMENTS_EMPTY}
         </p>
       ) : (
-        <ul className="flex-1 divide-y divide-line-subtle">
+        <ul className="flex flex-1 flex-col gap-2">
           {commitments.map((commitment) => (
             <li
               key={commitment._id}
-              className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+              className="flex items-center gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-2.5"
             >
               <span
                 className={cn(
@@ -102,12 +98,12 @@ export function SettingsCommitmentsSection({
       <button
         type="button"
         onClick={() => setAddOpen(true)}
-        className="mt-3 w-full shrink-0 rounded-[11px] border border-dashed border-qp-border bg-card py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft md:mt-auto"
+        className="mt-3 w-full shrink-0 rounded-lg border border-dashed border-qp-border bg-surface-warm/40 py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft md:mt-auto"
       >
         {ADD_COMMITMENT_CTA}
       </button>
 
       <AddCommitmentDialog open={addOpen} onOpenChange={setAddOpen} />
-    </section>
+    </SettingsSection>
   );
 }

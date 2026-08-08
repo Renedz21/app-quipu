@@ -488,3 +488,9 @@ Rutas estáticas se prefetchean por defecto (TTL cliente ~5 min). Rutas dinámic
 - **Fuentes secundarias en cifras de rendimiento.** El "5-10x faster Fast Refresh / 2-5x faster builds" viene del post oficial de Next.js 16. El "~87% más rápido el dev server" es específico de **16.2 frente a 16.1** (benchmark de Roboto Studio: *"Next.js 16.2 starts your dev server roughly 87% faster than 16.1, or about a 4x speed ratio"*), y el "25-60% faster HTML render" que a veces se cita en paralelo Vercel lo atribuye a un cambio de deserialización de RSC en el core de React. El "TTFB −60% con PPR" proviene de blogs de practicantes; son indicativos, no garantías — mide en tu propio proyecto.
 - **Este documento asume App Router.** Nada de Cache Components/PPR/`use cache` aplica al Pages Router (que sigue soportado sin cambios).
 - Los valores de perfiles `cacheLife` de la tabla provienen del PR #71322 de vercel/next.js; confirma que sigan vigentes en la referencia de `cacheLife` de tu versión concreta.
+
+---
+
+## Apéndice Quipu: matriz de lazy loading
+
+En Quipu, `next/dynamic(..., { ssr: false })` aplica a UI pesada o browser-only que no compite con el LCP: sheets/dialogs bajo interacción (`MovementDetailSheet`, flujos Espacios), Turnstile (script Cloudflare) y passkeys/WebAuthn en auth. Las páginas autenticadas delegan loading a skeletons internos del Client Component (`useQuery`); no envolver esas vistas en `<Suspense>` en `page.tsx` salvo boundary real (Server Component async). Detalle en `docs/QUIPU-MASTER.md` §4.6.

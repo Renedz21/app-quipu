@@ -19,6 +19,7 @@ import { CycleCorrectContributeSection } from "./cycle-correct-contribute-sectio
 import { CycleCorrectEnvelopeFields } from "./cycle-correct-envelope-fields";
 import { CycleCorrectReconciliationNote } from "./cycle-correct-reconciliation-note";
 import { CycleCorrectReserveSection } from "./cycle-correct-reserve-section";
+import { CycleCorrectViewSkeleton } from "./cycle-correct-view-skeleton";
 
 export function CycleCorrectView() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export function CycleCorrectView() {
   }, [summary]);
 
   if (summary === undefined) {
-    return <p className="p-6 text-sm text-mute">Cargando…</p>;
+    return <CycleCorrectViewSkeleton />;
   }
   if (!summary?.cycle) {
     return (

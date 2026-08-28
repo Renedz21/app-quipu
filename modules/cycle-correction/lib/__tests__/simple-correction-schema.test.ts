@@ -12,9 +12,7 @@ const valid = {
 
 describe("simpleCorrectionWizardSchema", () => {
   it("acepta un wizard completo", () => {
-    expect(
-      simpleCorrectionWizardSchema.safeParse(valid).success,
-    ).toBe(true);
+    expect(simpleCorrectionWizardSchema.safeParse(valid).success).toBe(true);
   });
 
   it("rechaza ingreso <= 0", () => {

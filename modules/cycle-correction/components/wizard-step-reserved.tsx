@@ -41,18 +41,14 @@ export function WizardStepReserved(props: Props) {
       reservedCents <= 0 ||
       props.newCommitment.dueDay < 1 ||
       props.newCommitment.dueDay > 31);
-  const canContinue =
-    !exceeds && !missingCommitment && !newCommitmentInvalid;
+  const canContinue = !exceeds && !missingCommitment && !newCommitmentInvalid;
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-serif text-xl text-ink">
-          ¿Cuánto ya tiene dueño?
-        </h2>
+        <h2 className="font-serif text-xl text-ink">¿Cuánto ya tiene dueño?</h2>
         <p className="mt-1 text-sm text-mute">
-          Dinero que debes separar para compromisos fijos, como cuotas o
-          deudas.
+          Dinero que debes separar para compromisos fijos, como cuotas o deudas.
         </p>
       </div>
       <div>
@@ -73,9 +69,7 @@ export function WizardStepReserved(props: Props) {
         ) : null}
       </div>
       <fieldset className="space-y-2">
-        <legend className="text-[13px] text-mute">
-          ¿A qué se destina?
-        </legend>
+        <legend className="text-[13px] text-mute">¿A qué se destina?</legend>
         {MODE_OPTIONS.map((option) => (
           <label
             key={option.mode}
@@ -103,9 +97,7 @@ export function WizardStepReserved(props: Props) {
             id="wizard-reserved-commitment"
             className="mt-1.5 w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm"
             value={props.commitmentId}
-            onChange={(event) =>
-              props.onCommitmentChange(event.target.value)
-            }
+            onChange={(event) => props.onCommitmentChange(event.target.value)}
           >
             <option value="">Elige un compromiso…</option>
             {props.commitments.map((commitment) => (

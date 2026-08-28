@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/convex/_generated/api";
 
@@ -55,14 +61,19 @@ const SUMMARY_FIXTURE = {
   commitments: [{ id: "c1", name: "Cuota auto", amount: 250_000 }],
 };
 
-function mockBackend(overrides?: { cycle?: typeof SUMMARY_FIXTURE.cycle | null }) {
+function mockBackend(overrides?: {
+  cycle?: typeof SUMMARY_FIXTURE.cycle | null;
+}) {
   mockedUseQuery.mockImplementation((query: unknown) => {
     if (query === api.settings.getSettingsOverview) {
       return SETTINGS_FIXTURE;
     }
     return {
       ...SUMMARY_FIXTURE,
-      cycle: overrides && "cycle" in overrides ? overrides.cycle : SUMMARY_FIXTURE.cycle,
+      cycle:
+        overrides && "cycle" in overrides
+          ? overrides.cycle
+          : SUMMARY_FIXTURE.cycle,
     };
   });
   mockedUseMutation.mockReturnValue(vi.fn().mockResolvedValue(null));
@@ -124,7 +135,9 @@ describe("CycleCorrectWizard", () => {
   it("flujo completo: reserva existente y aplica", async () => {
     mockBackend();
     const { correct, createCommitment } = await goToStep3();
-    fireEvent.click(screen.getByRole("button", { name: /aplicar corrección/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /aplicar corrección/i }),
+    );
     await waitFor(() => expect(correct).toHaveBeenCalledTimes(1));
     const args = correct.mock.calls[0][0];
     expect(args.reserveToCommitments).toEqual([
@@ -162,7 +175,9 @@ describe("CycleCorrectWizard", () => {
       data: { code: "INSUFFICIENT_FUNDS", message: "Fondos insuficientes" },
     });
     await goToStep3({ correct });
-    fireEvent.click(screen.getByRole("button", { name: /aplicar corrección/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /aplicar corrección/i }),
+    );
     await waitFor(() =>
       expect(screen.getByText(/fondos insuficientes/i)).toBeTruthy(),
     );
@@ -199,7 +214,9 @@ describe("CycleCorrectWizard", () => {
     await waitFor(() =>
       expect(screen.getByText(/reparte lo libre/i)).toBeTruthy(),
     );
-    fireEvent.click(screen.getByRole("button", { name: /aplicar corrección/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /aplicar corrección/i }),
+    );
     await waitFor(() =>
       expect(screen.getByText(/no se pudo crear el compromiso/i)).toBeTruthy(),
     );

@@ -9,16 +9,16 @@ import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { parseToCents } from "@/shared/lib/money";
 import {
+  type Allocation,
   buildSimpleCorrectionPlan,
   computeFreeCents,
-  proposeRemainingByEnvelope,
-  type Allocation,
   type EnvelopeTargets,
+  proposeRemainingByEnvelope,
   type SimpleCorrectionResult,
 } from "../lib/simple-correction-plan";
 import {
-  simpleCorrectionWizardSchema,
   type SimpleCorrectionWizardValues,
+  simpleCorrectionWizardSchema,
 } from "../lib/simple-correction-schema";
 import { CycleCorrectViewSkeleton } from "./cycle-correct-view-skeleton";
 import { WizardStepIncome } from "./wizard-step-income";
@@ -111,8 +111,7 @@ export function CycleCorrectWizard() {
       <section className="mx-auto max-w-lg px-4 py-8">
         <h1 className="font-serif text-2xl text-ink">Corregir distribución</h1>
         <p className="mt-2 text-sm text-mute">
-          Necesitas un ciclo activo para corregir cómo está repartido tu
-          dinero.
+          Necesitas un ciclo activo para corregir cómo está repartido tu dinero.
         </p>
       </section>
     );
@@ -173,8 +172,7 @@ export function CycleCorrectWizard() {
           incomeCents,
           reservedWithCommitmentCents:
             reservedMode === "generic" ? 0 : reservedCents,
-          reservedGenericCents:
-            reservedMode === "generic" ? reservedCents : 0,
+          reservedGenericCents: reservedMode === "generic" ? reservedCents : 0,
           commitmentId: effectiveCommitmentId,
           allocation,
           spentPerEnvelope,

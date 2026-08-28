@@ -2,8 +2,8 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
-import { formatCents } from "@/shared/lib/money";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
+import { formatCents } from "@/shared/lib/money";
 import type { EnvelopeTargets } from "../lib/simple-correction-plan";
 
 type Props = {

@@ -2,10 +2,7 @@ import { z } from "zod";
 
 export const simpleCorrectionWizardSchema = z
   .object({
-    incomeCents: z
-      .number()
-      .int()
-      .positive("El ingreso debe ser mayor a 0."),
+    incomeCents: z.number().int().positive("El ingreso debe ser mayor a 0."),
     reservedMode: z.enum(["existing", "create", "generic"]),
     reservedCents: z
       .number()
@@ -15,10 +12,7 @@ export const simpleCorrectionWizardSchema = z
     newCommitment: z
       .object({
         name: z.string().trim().min(1, "Ponle un nombre al compromiso."),
-        amountCents: z
-          .number()
-          .int()
-          .positive("La cuota debe ser mayor a 0."),
+        amountCents: z.number().int().positive("La cuota debe ser mayor a 0."),
         dueDay: z
           .number()
           .int()

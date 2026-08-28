@@ -1,4 +1,4 @@
-import { cleanup, render, screen, fireEvent } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WizardStepIncome } from "../wizard-step-income";
 import { WizardStepReserved } from "../wizard-step-reserved";
@@ -50,9 +50,7 @@ describe("WizardStepIncome", () => {
 });
 
 describe("WizardStepReserved", () => {
-  const commitments = [
-    { id: "c1", name: "Cuota auto", amount: 250_000 },
-  ];
+  const commitments = [{ id: "c1", name: "Cuota auto", amount: 250_000 }];
 
   it("muestra error cuando lo apartado supera el ingreso", () => {
     render(
@@ -77,9 +75,7 @@ describe("WizardStepReserved", () => {
         onNext={() => {}}
       />,
     );
-    expect(
-      screen.getByText(/no puede superar lo ingresado/i),
-    ).toBeTruthy();
+    expect(screen.getByText(/no puede superar lo ingresado/i)).toBeTruthy();
   });
 
   it("deshabilita continuar sin compromiso en modo existing", () => {
@@ -130,10 +126,7 @@ describe("WizardStepSplit", () => {
       />,
     );
     fireEvent.click(screen.getAllByRole("button", { name: "+" })[0]);
-    expect(onTargetChange).toHaveBeenCalledWith(
-      "needs",
-      65_000 + 10_000,
-    );
+    expect(onTargetChange).toHaveBeenCalledWith("needs", 65_000 + 10_000);
     expect(screen.getByText(/te quedan/i)).toBeTruthy();
   });
 
@@ -152,8 +145,11 @@ describe("WizardStepSplit", () => {
       />,
     );
     expect(
-      (screen.getByRole("button", { name: /aplicar corrección/i }) as HTMLButtonElement)
-        .disabled,
+      (
+        screen.getByRole("button", {
+          name: /aplicar corrección/i,
+        }) as HTMLButtonElement
+      ).disabled,
     ).toBe(true);
   });
 });

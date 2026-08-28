@@ -57,6 +57,10 @@ type Props = {
 
 const SOURCE_ORDER: SurplusFromEnvelope[] = ["wants", "needs", "extraordinary"];
 
+function centsToInput(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+
 function pickDefaultSource(
   sources: MoveSurplusSources,
   preferred?: SurplusFromEnvelope,
@@ -111,10 +115,6 @@ export function MoveSurplusForm({
     initialAmountCents != null && initialAmountCents > 0
       ? Math.min(initialAmountCents, defaultAvailable)
       : 0;
-
-  function centsToInput(cents: number): string {
-    return (cents / 100).toFixed(2);
-  }
 
   const [amountText, setAmountText] = useState(
     defaultAmountCents > 0 ? centsToInput(defaultAmountCents) : "",
@@ -189,6 +189,7 @@ export function MoveSurplusForm({
                           sourceAvailable <= 0 &&
                             "cursor-not-allowed opacity-40",
                         )}
+                        aria-pressed={selected}
                       >
                         <SourceDot source={source} />
                         {sourceLabel(source, sourceAvailable, currencyCode)}
@@ -202,7 +203,7 @@ export function MoveSurplusForm({
                 <p className="mb-2.5 text-[12.5px] font-medium text-ink-secondary">
                   {MOVE_SURPLUS_AMOUNT_LABEL}
                 </p>
-                <div className="flex h-16 items-center justify-between rounded-xl border border-qp-shield-line bg-card px-5">
+                <div className="flex flex-col gap-0.5 rounded-xl border border-qp-shield-line bg-card px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:gap-0 sm:px-5">
                   <input
                     value={amountText}
                     onChange={(event) => {
@@ -214,9 +215,9 @@ export function MoveSurplusForm({
                     inputMode="decimal"
                     placeholder={MOVE_SURPLUS_AMOUNT_PLACEHOLDER}
                     aria-label={MOVE_SURPLUS_AMOUNT_LABEL}
-                    className="w-full bg-transparent font-serif text-[34px] leading-none text-ink placeholder:text-faint focus:outline-none"
+                    className="w-full bg-transparent font-serif text-[26px] leading-none text-ink placeholder:text-faint focus:outline-none sm:text-[34px]"
                   />
-                  <span className="shrink-0 pl-3 text-[13px] text-faint">
+                  <span className="text-[12px] text-faint sm:shrink-0 sm:pl-3 sm:text-[13px]">
                     {MOVE_SURPLUS_AMOUNT_AVAILABLE_PREFIX}{" "}
                     {formatCents(available, { currency: currencyCode })}{" "}
                     {MOVE_SURPLUS_AMOUNT_AVAILABLE_SUFFIX}
@@ -244,7 +245,7 @@ export function MoveSurplusForm({
                         form.setFieldValue("amountCents", next);
                         setAmountText(centsToInput(next));
                       }}
-                      className="rounded-[10px] border border-line bg-card px-3.5 py-2 text-[13px] text-ink-secondary hover:bg-surface-soft"
+                      className="rounded-[10px] border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink-secondary hover:bg-surface-soft"
                     >
                       + {formatCents(increment, { currency: currencyCode })}
                     </button>
@@ -256,7 +257,7 @@ export function MoveSurplusForm({
                       form.setFieldValue("amountCents", available);
                       setAmountText(centsToInput(available));
                     }}
-                    className="rounded-[10px] border border-line bg-card px-3.5 py-2 text-[13px] text-ink-secondary hover:bg-surface-soft"
+                    className="rounded-[10px] border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink-secondary hover:bg-surface-soft"
                   >
                     {MOVE_SURPLUS_SHORTCUT_ALL}
                   </button>
@@ -278,6 +279,7 @@ export function MoveSurplusForm({
                         onClick={() =>
                           form.setFieldValue("destinationId", destination.id)
                         }
+                        aria-pressed={selected}
                         className={cn(
                           "flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
                           selected

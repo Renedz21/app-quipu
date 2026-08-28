@@ -65,6 +65,7 @@ describe("WizardStepReserved", () => {
           name: "",
           amountCents: 0,
           dueDay: 0,
+          envelope: "needs",
         }}
         commitments={commitments}
         currencyCode="PEN"
@@ -92,6 +93,7 @@ describe("WizardStepReserved", () => {
           name: "",
           amountCents: 0,
           dueDay: 0,
+          envelope: "needs",
         }}
         commitments={commitments}
         currencyCode="PEN"
@@ -133,5 +135,25 @@ describe("WizardStepSplit", () => {
       65_000 + 10_000,
     );
     expect(screen.getByText(/te quedan/i)).toBeTruthy();
+  });
+
+  it("deshabilita aplicar cuando recibe disabled", () => {
+    render(
+      <WizardStepSplit
+        freeCents={130_000}
+        targets={targets}
+        currencyCode="PEN"
+        overrunWarning={null}
+        onTargetChange={() => {}}
+        onResetProposal={() => {}}
+        onBack={() => {}}
+        onSubmit={() => {}}
+        disabled={true}
+      />,
+    );
+    expect(
+      (screen.getByRole("button", { name: /aplicar corrección/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 });

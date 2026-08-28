@@ -15,6 +15,7 @@ type Props = {
   onResetProposal: () => void;
   onBack: () => void;
   onSubmit: () => void;
+  disabled?: boolean;
 };
 
 const STEP_CENTS = 10_000;
@@ -94,7 +95,11 @@ export function WizardStepSplit(props: Props) {
         <Button variant="outline" className="flex-1" onClick={props.onBack}>
           Atrás
         </Button>
-        <Button className="flex-1" onClick={props.onSubmit}>
+        <Button
+          className="flex-1"
+          disabled={props.disabled === true}
+          onClick={props.onSubmit}
+        >
           Aplicar corrección
         </Button>
       </div>

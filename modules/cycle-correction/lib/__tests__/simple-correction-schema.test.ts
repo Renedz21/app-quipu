@@ -64,6 +64,24 @@ describe("simpleCorrectionWizardSchema", () => {
     ).toBe(true);
   });
 
+  it("dueDay fuera de rango da mensaje en español", () => {
+    const result = simpleCorrectionWizardSchema.safeParse({
+      ...valid,
+      reservedMode: "create",
+      commitmentId: undefined,
+      newCommitment: {
+        name: "Cuota auto",
+        amountCents: 250_000,
+        dueDay: 40,
+        envelope: "needs" as const,
+      },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain("día de pago");
+    }
+  });
+
   it("rechaza targets negativos o no enteros", () => {
     expect(
       simpleCorrectionWizardSchema.safeParse({

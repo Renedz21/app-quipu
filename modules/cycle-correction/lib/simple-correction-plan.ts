@@ -47,6 +47,9 @@ export function proposeRemainingByEnvelope(input: {
 export function buildSimpleCorrectionPlan(
   input: SimpleCorrectionInput,
 ): SimpleCorrectionResult {
+  if (input.reservedWithCommitmentCents > 0 && !input.commitmentId) {
+    throw new Error("Elige o crea el compromiso para tu reserva");
+  }
   if (
     input.reservedWithCommitmentCents + input.reservedGenericCents >
     input.incomeCents

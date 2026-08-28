@@ -7,13 +7,23 @@ export const simpleCorrectionWizardSchema = z
       .int()
       .positive("El ingreso debe ser mayor a 0."),
     reservedMode: z.enum(["existing", "create", "generic"]),
-    reservedCents: z.number().int().nonnegative(),
+    reservedCents: z
+      .number()
+      .int()
+      .nonnegative("El monto apartado no puede ser negativo."),
     commitmentId: z.string().optional(),
     newCommitment: z
       .object({
         name: z.string().trim().min(1, "Ponle un nombre al compromiso."),
-        amountCents: z.number().int().positive(),
-        dueDay: z.number().int().min(1).max(31),
+        amountCents: z
+          .number()
+          .int()
+          .positive("La cuota debe ser mayor a 0."),
+        dueDay: z
+          .number()
+          .int()
+          .min(1, "El día de pago debe estar entre 1 y 31.")
+          .max(31, "El día de pago debe estar entre 1 y 31."),
         envelope: z.enum(["needs", "wants"]),
       })
       .optional(),

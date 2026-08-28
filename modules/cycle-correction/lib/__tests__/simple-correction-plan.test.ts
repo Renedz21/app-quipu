@@ -94,6 +94,17 @@ describe("buildSimpleCorrectionPlan", () => {
     ).toThrow("Los sobres no pueden superar el dinero libre");
   });
 
+  it("lanza si hay reserva a compromiso sin commitmentId", () => {
+    expect(() =>
+      buildSimpleCorrectionPlan({
+        ...base,
+        reservedWithCommitmentCents: 250_000,
+        reservedGenericCents: 0,
+        commitmentId: null,
+      }),
+    ).toThrow("Elige o crea el compromiso para tu reserva");
+  });
+
   it("lanza si reservado supera el ingreso", () => {
     expect(() =>
       buildSimpleCorrectionPlan({

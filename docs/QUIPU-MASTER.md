@@ -375,9 +375,21 @@ Discoverable (dashed, ícono faint) · Locked (opacity .75).
 **Sidebar (web):** 228px, bg `--surface-warm`, **7 ítems** + avatar al fondo (34px, `--qp03`, inicial serif):
 Inicio · Registrar → `/income/register` · **Movimientos** · Ahorros · Compromisos · Espacios · Ajustes.
 **Sin ítem Coach:** el bloque 7 vive embebido en `/dashboard` (canon bloque 7); el canvas `quipu-2.html` aún muestra Coach en sidebar — tratar como IA obsoleta, no producto.
-Active: bg `--qp04` + 600. **Nav móvil:** header fijo (`AppMobileHeader`, 52px + safe-area, `z-30`) + **drawer lateral izquierdo** (`Sheet side=left`, ~288px / `w-72`, `z-50`) reutilizando `AppNavContent`; feedback en el drawer; sin bottom bar ni FAB central. Cierre del drawer: `onOpenChange`, `onNavigate` en links y `key={pathname}` en `AppMobileNav` — sin `useEffect` en pathname. Rutas inmersivas (`/income/register`) ocultan header/drawer.
+Active: bg `--qp04` + 600. **Nav móvil:** header fijo (`AppMobileHeader`, 52px + safe-area, `z-30`) + **drawer lateral izquierdo** (`Sheet side=left`, ~288px / `w-72`, `z-50`) reutilizando `AppNavContent`; feedback en el drawer; sin bottom bar ni FAB central. Cierre del drawer: `onOpenChange`, `onNavigate` en links y `key={pathname}` en `AppMobileNav` — sin `useEffect` en pathname.
 
-**Animaciones:** `qspin` (0.8s linear, spinner) y `qpulse` (1.4s ease-in-out, skeletons con stagger 0.2s).
+**Breadcrumbs (sub-rutas):** primitivo shadcn en `shared/components/ui/breadcrumb.tsx`; trail resuelto en `shared/lib/breadcrumbs.ts` y renderizado vía `AppBreadcrumb` dentro de `AppPageShell`. Estilo sutil: `text-[12.5px] text-mute`, separador `ChevronRight`, último segmento `text-ink-secondary font-medium` con `aria-current="page"`. Ocultos en home (`/dashboard`) y hubs de primer nivel del sidebar (`/savings`, `/settings`). Sub-rutas muestran trail (`Inicio > Ahorros > Mover sobrante`, etc.).
+
+**Anchos de página (`AppPageShell`):**
+
+| Tier | Tailwind | Cuándo |
+|------|----------|--------|
+| **narrow** | `max-w-2xl` | Sub-páginas, formularios, listas secundarias (movements, commitments, move surplus, register, espacios detail) |
+| **medium** | `max-w-4xl` | Progreso, fondo de emergencia |
+| **wide** | `max-w-6xl` | Dashboard, hub ahorros, hub ajustes |
+
+Padding: tier `6xl` usa `px-4 md:px-8`; tiers `2xl`/`4xl` usan `px-5 py-6 md:px-0 md:py-8`. Overview wide: columna `flex flex-col gap-*`; grid solo en rejillas internas (p. ej. metas en `/savings`).
+
+**Animaciones decorativas:** `qspin` (0.8s linear, spinner) y `qpulse` (1.4s ease-in-out, skeletons con stagger 0.2s). Transiciones de vista (detalle → formulario, paso N → N+1): ver **§3.10 Motion**.
 
 ### 3.6 Estados transversales
 
@@ -476,7 +488,7 @@ Detalle del fondo (`/savings/fund`): gradiente página `--qp10`→canvas, 3 sub-
 no el remanente tras mover al Fondo.
 **Mover sobrante (6N-B/C):** `/savings/move` — TanStack Form + Zod (`move-surplus-form.tsx`): chips Desde
 (Necesidades / Gustos / gratificación vía origen `extraordinary`), fila de monto + slider + pills, destino
-en cards (Fondo recomendado u otra meta), banner verde “solo este ciclo”; móvil = bottom sheet (`SavingsFormShell`).
+en cards (Fondo recomendado u otra meta), banner verde “solo este ciclo”; **ruta normal** con nav + breadcrumb (`AppPageShell`, tier narrow) — ya no bottom sheet en móvil.
 Tras mutación → `/savings/move/success` (6N-C) con snapshot en query params + breakdown del ciclo.
 Sin metas compartidas, inversiones, cripto ni plazos.
 Spec: misma ruta que Bloque 5 arriba.
@@ -550,6 +562,54 @@ Si falta una, la pantalla está incompleta.
 - Web: dashboard en estados no-positivos (vacío/crisis solo se ilustran en B7).
 - Modal de confirmación destructiva (diseñado en spec, no implementado).
 - Theme switcher a CSS variables y componentes codificados como sistema (no existe Storybook).
+
+### 3.10 Motion (transiciones UI)
+
+> Sobrio y funcional: suaviza cambios de intención (detalle → editar, formulario → éxito, paso de wizard), no decoración. CSS + `tw-animate-css` ya en el stack; **sin** Framer Motion ni librerías nuevas.
+
+**Principios**
+
+1. **Suave, no espectacular:** fade + slide vertical de 4–8px (o horizontal en drawer). Evitar zoom en contenido interno.
+2. **Overlays alineados:** Sheet, Dialog, Popover y AlertDialog ~**200ms** entrada; salida ~**150ms**.
+3. **`prefers-reduced-motion`:** obligatorio. Con preferencia activa, swap instantáneo — misma información, mismo foco, sin animación perceptible.
+4. **Teclado:** al cambiar paso/vista, el primer Tab cae en el primer campo editable (monto, descripción, etc.) o en el título anunciable (`tabIndex={-1}` + `aria-live="polite"` en títulos de paso).
+5. **No bloquear:** animaciones CSS puras; la UI debe ser interactiva en cuanto el contenido está montado.
+
+**Tokens** (`app/globals.css`, `@theme`):
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--duration-motion-fast` | `150ms` | Salida, crossfades cortos |
+| `--duration-motion-normal` | `200ms` | Entrada estándar (overlays, `AnimatedView`) |
+| `--duration-motion-slow` | `280ms` | Solo hero/éxito ocasional |
+| `--ease-motion-enter` | `cubic-bezier(0.16, 1, 0.3, 1)` | ease-out suave |
+| `--ease-motion-exit` | `cubic-bezier(0.4, 0, 1, 1)` | ease-in |
+
+Utilidades opcionales: `.qp-motion-enter` / `.qp-motion-exit` (combinan `animate-in`, `fade-in-0`, slide leve + `motion-reduce:animate-none motion-reduce:transition-none`).
+
+**Cuándo usar `AnimatedView`**
+
+Primitivo compartido: `shared/components/ui/animated-view.tsx`.
+
+| Caso | Patrón |
+|---|---|
+| Máquina de estados dentro de Sheet/Dialog (p. ej. detalle ↔ editar ↔ confirmar) | `<AnimatedView viewKey={state} direction="forward\|back">` envuelve el cuerpo; el shell del overlay ya anima apertura/cierre |
+| Wizard multi-paso (onboarding, auth, ciclo) | `viewKey={step}`; `direction="back"` en botón Atrás |
+| Formulario → pantalla de éxito | `viewKey="success"` + fade; check con `motion-safe:` si aplica |
+
+API mínima: `viewKey` (remount → entrada), `direction` (`forward` \| `back`), `role="region"`, `aria-live="polite"` opcional, ref para focus al montar.
+
+**Regla reduced-motion (WCAG 2.3.3)**
+
+En overlay content y `AnimatedView`:
+
+```html
+class="… motion-reduce:animate-none motion-reduce:transition-none"
+```
+
+Verificación manual: DevTools → Rendering → *Emulate CSS media feature `prefers-reduced-motion: reduce`*.
+
+**Fuera de alcance:** transiciones entre rutas Next (View Transitions API), Lottie/confeti, spinners globales `qspin` salvo auth/loading local.
 
 ---
 
@@ -1160,6 +1220,7 @@ el DoD v2.5 ya está cubierto en la rama de trabajo.
 - **Bloque 5 — Ingresos:** `/income/register` habitual + extraordinario (P2-7), preview, confirmación con deltas.
 - **Bloque 6 — Ahorros:** `/savings`, `/savings/fund`, `/savings/move` + success; card ahorro del ciclo; hero Fondo, metas (máx 6), aporte manual al fondo y a metas custom (`contributeToGoal` UI); «Ajustar aporte» → `/settings/allocations`.
 - **Coach (Bloque 7):** 4 estados + `applyRescueTransfer` (P1-2) + CTAs advertencia/crisis activos (P1-10). **Plus v1 Slice 3:** premium en crisis ve plan numerado transaccional (`buildCrisisPlan` + `applyCrisisPlan` + `CoachCrisisPlanActions`); free mantiene acciones sueltas (`CoachCrisisActions`).
+- **Corrección de ciclo (`/cycle/correct`):** wizard de 3 pasos (ingreso real → dinero con dueño → repartir lo libre) con propuesta automática según % del perfil; reemplaza el formulario técnico de saldos (2026-08-28).
 - **Plus v1 Slice 4 — Recordatorios in-app:** badge «N vencen pronto» en dashboard (`UpcomingCommitmentsBadge` + `listUpcomingForBadge` gated); lista corta (≤3 ítems) + enlace a `/commitments`; free no ve nada. Sin email ni push.
 - **Bloque 8 — Gamificación:** `/progress` + `/progress/rewards`; racha al cerrar ciclo (`evaluateClosedCycle`), logros derivados, recompensas/personalización (P1-11).
 - **Tokens diseño §3.3:** migrados a `@theme` en `app/globals.css` (P1-6).
@@ -1472,6 +1533,7 @@ El historial git preserva sus versiones originales.
 
 ## Changelog de este documento
 
+- **2026-08-28 - Corrección de ciclo simplificada.** `/cycle/correct` reemplazado por wizard de 3 pasos (ingreso real, dinero con dueño —compromiso existente, nuevo o genérico—, reparto con propuesta % y steppers). Lógica pura `simple-correction-plan.ts` + schema zod `simple-correction-schema.ts` (TDD). Backend sin cambios (`correctActiveCycleAllocation` consume el mismo plan). Formulario técnico eliminado.
 - **2026-08-07 — Modo Pareja Premium v1 (Espacios compartidos).** Dominio `space*` paralelo al personal; 10 tablas nuevas; invariantes I9–I12; APIs `convex/spaces*`, invitaciones, aportes, gastos, propuestas, lifecycle readonly al expirar Premium; UI `modules/espacios/` + rutas `/espacios`; movimientos con contexto personal/espacio; export snapshot v3; TDD en `convex/lib/space*`. §2.4, §5.6, §8.
 - **2026-08-07 — Multi-mercado + Plus mensual/anual.** Mercados PEN/EUR/USD en onboarding (moneda fija después). Quipu Plus: 2 productos Polar (`plusMonthly` / `plusYearly`) con multi-currency; card de plan con toggle Mensual/Anual y copy por `currencyCode` del perfil. Env: `POLAR_PRODUCT_ID_PLUS_MONTHLY` / `PLUS_YEARLY` (§9.5).
 - **2026-08-07 — Rescate free unificado (I3 UI).** Quitado atajo `free_advice`/upsell: free y Plus usan el mismo flujo de sugerir → confirmar → transferir. Sin paywall de rescate en coach.

@@ -38,7 +38,7 @@ export function WizardStepReserved(props: Props) {
   const newCommitmentInvalid =
     props.reservedMode === "create" &&
     (!props.newCommitment.name.trim() ||
-      props.newCommitment.amountCents <= 0 ||
+      reservedCents <= 0 ||
       props.newCommitment.dueDay < 1 ||
       props.newCommitment.dueDay > 31);
   const canContinue =

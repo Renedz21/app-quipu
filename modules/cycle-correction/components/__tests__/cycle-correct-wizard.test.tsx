@@ -25,11 +25,16 @@ vi.mock("@/core/analytics", () => ({
 }));
 
 import { useMutation, useQuery } from "convex/react";
+import { getFunctionName } from "convex/server";
 import type { Mock } from "vitest";
 import { CycleCorrectWizard } from "../cycle-correct-wizard";
 
 const mockedUseQuery = useQuery as unknown as Mock;
 const mockedUseMutation = useMutation as unknown as Mock;
+
+const isCreateCommitment = (mutation: unknown) =>
+  getFunctionName(mutation as never) ===
+  "fixedCommitments:createFixedCommitment";
 
 const SETTINGS_FIXTURE = {
   allocations: { needs: 50, wants: 30, savings: 20 },
@@ -71,9 +76,7 @@ async function goToStep3(options?: {
   const createCommitment =
     options?.createCommitment ?? vi.fn().mockResolvedValue("c-new");
   mockedUseMutation.mockImplementation((mutation: unknown) =>
-    mutation === api.fixedCommitments.createFixedCommitment
-      ? createCommitment
-      : correct,
+    isCreateCommitment(mutation) ? createCommitment : correct,
   );
   render(<CycleCorrectWizard />);
   fireEvent.change(screen.getByLabelText("Monto que ingresó este ciclo"), {
@@ -163,5 +166,43 @@ describe("CycleCorrectWizard", () => {
     await waitFor(() =>
       expect(screen.getByText(/fondos insuficientes/i)).toBeTruthy(),
     );
+  });
+
+  it("muestra el error cuando falla la creación del compromiso", async () => {
+    mockBackend();
+    const correct = vi.fn().mockResolvedValue(null);
+    const createCommitment = vi.fn().mockRejectedValue({
+      data: {
+        code: "VALIDATION_ERROR",
+        message: "No se pudo crear el compromiso",
+      },
+    });
+    mockedUseMutation.mockImplementation((mutation: unknown) =>
+      isCreateCommitment(mutation) ? createCommitment : correct,
+    );
+    render(<CycleCorrectWizard />);
+    fireEvent.change(screen.getByLabelText("Monto que ingresó este ciclo"), {
+      target: { value: "3800" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+    fireEvent.change(screen.getByLabelText("Monto apartado"), {
+      target: { value: "2500" },
+    });
+    fireEvent.click(screen.getByLabelText("Crear un compromiso nuevo"));
+    fireEvent.change(screen.getByLabelText("Nombre"), {
+      target: { value: "Cuota auto" },
+    });
+    fireEvent.change(screen.getByLabelText("Día de pago"), {
+      target: { value: "5" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+    await waitFor(() =>
+      expect(screen.getByText(/reparte lo libre/i)).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /aplicar corrección/i }));
+    await waitFor(() =>
+      expect(screen.getByText(/no se pudo crear el compromiso/i)).toBeTruthy(),
+    );
+    expect(correct).not.toHaveBeenCalled();
   });
 });

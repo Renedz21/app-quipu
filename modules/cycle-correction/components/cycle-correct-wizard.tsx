@@ -155,12 +155,17 @@ export function CycleCorrectWizard() {
     try {
       let effectiveCommitmentId = commitmentId;
       if (reservedMode === "create") {
-        effectiveCommitmentId = await createCommitment({
-          name: newCommitment.name,
-          amount: newCommitment.amountCents,
-          envelope: newCommitment.envelope,
-          dueDay: newCommitment.dueDay,
-        });
+        try {
+          effectiveCommitmentId = await createCommitment({
+            name: newCommitment.name,
+            amount: newCommitment.amountCents,
+            envelope: newCommitment.envelope,
+            dueDay: newCommitment.dueDay,
+          });
+        } catch (error) {
+          setServerError(fromConvexError(error).message);
+          return;
+        }
       }
       let plan: SimpleCorrectionResult;
       try {

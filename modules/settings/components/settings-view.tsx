@@ -39,7 +39,7 @@ import { SettingsSystemHubList } from "./settings-system-hub-list";
 
 /** Canon bloque 9 "Cargando": perfil + plan a la izquierda, seguridad
  *  a la derecha. */
-export function SettingsViewSkeleton() {
+function SettingsViewSkeleton() {
   return (
     <div
       role="status"

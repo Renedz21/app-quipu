@@ -31,7 +31,6 @@ export const EMERGENCY_FUND_TARGET_SUFFIX = "meta de 3 meses de gastos";
 export const EMERGENCY_FUND_AUTO_CONTRIBUTION_PREFIX = "Aporte automático";
 export const EMERGENCY_FUND_AUTO_CONTRIBUTION_SUFFIX = "/ ciclo";
 
-export const EMERGENCY_FUND_DETAIL_BACK = "Ahorros";
 export const EMERGENCY_FUND_DETAIL_BODY =
   "Tu red de seguridad. Cuando esté lleno, tres meses de tranquilidad pase lo que pase.";
 export const EMERGENCY_FUND_DETAIL_MOBILE_BODY =
@@ -166,7 +165,6 @@ export const MOVE_SURPLUS_DESTINATION_FUND_HINT = "Recomendado · va primero";
 export const MOVE_SURPLUS_DESTINATION_GOAL_HINT = "Viaje, laptop, depa…";
 export const MOVE_SURPLUS_GRATIFICATION_LABEL = "De mi gratificación";
 export const MOVE_SURPLUS_WANTS_SURPLUS_PREFIX = "Sobrante de Gustos";
-export const MOVE_SURPLUS_PILL_ALL_SUFFIX = "Todo el sobrante";
 export const MOVE_SURPLUS_CANCEL_CTA = "Cancelar";
 export const MOVE_SURPLUS_SUBMIT_CTA_PREFIX = "Mover";
 export const MOVE_SURPLUS_SUCCESS_TITLE_PREFIX = "Guardaste";

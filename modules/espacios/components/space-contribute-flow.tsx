@@ -40,6 +40,7 @@ export function SpaceContributeFlow({ open, onOpenChange, spaceId }: Props) {
         <input
           className="mt-4 w-full rounded-[11px] border border-line bg-canvas px-3 py-2 text-sm"
           inputMode="decimal"
+          aria-label="Monto"
           placeholder="Monto"
           value={amount}
           onChange={(event) => setAmount(event.target.value)}

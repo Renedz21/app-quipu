@@ -21,11 +21,7 @@ export const SETTINGS_PLAN_PLUS_NAME = "Quipu Plus";
 export const SETTINGS_PLAN_FREE_NAME = "Plan Quipu";
 export const SETTINGS_PLAN_CURRENT_LABEL = "Tu plan actual";
 export const SETTINGS_PLAN_PLUS_OFFER_LABEL = "Quipu Plus";
-export {
-  PLUS_CHECKOUT_CTA as SETTINGS_PLAN_UPGRADE,
-  PLUS_MONTHLY_PRICE as SETTINGS_PLAN_PLUS_PRICE,
-  PLUS_UPGRADE_PRICE_HINT as SETTINGS_PLAN_PLUS_PRICE_HINT,
-} from "@/shared/constants/plan";
+export { PLUS_CHECKOUT_CTA as SETTINGS_PLAN_UPGRADE } from "@/shared/constants/plan";
 export const SETTINGS_PLAN_FREE_BODY = "Gratis. Registros manuales sin límite.";
 export const SETTINGS_PLAN_RENEWAL_AUTOMATIC = "Renovación automática";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
@@ -63,7 +59,6 @@ export const SETTINGS_SIGN_OUT = "Cerrar sesión";
 
 export const SETTINGS_ACCOUNT_ACTIONS_LABEL = "Acciones de cuenta";
 
-export const SETTINGS_FEEDBACK_LINK = "Cuéntanos";
 export const SETTINGS_FEEDBACK_LABEL = "Cuéntanos";
 export const SETTINGS_FEEDBACK_HINT = "Problemas, ideas o consultas";
 
@@ -104,7 +99,6 @@ export const SETTINGS_ALLOCATIONS_SAVE = "Guardar cambios";
 export const SETTINGS_ALLOCATIONS_SAVED = "Reparto actualizado.";
 export const SETTINGS_ALLOCATIONS_NEXT_CYCLE =
   "Suma 100% · se aplica al próximo ciclo";
-export const SETTINGS_BACK_LINK = "Ajustes";
 
 export const SETTINGS_CYCLE_LABEL = "Ciclo";
 export const SETTINGS_CYCLE_TYPE = "Tipo";

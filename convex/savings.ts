@@ -172,11 +172,11 @@ async function buildSavingsOverview(ctx: QueryCtx) {
     };
   }
 
-  const goals = subEnvelopes
-    .filter((subEnvelope) => !subEnvelope.isSystemDefault)
-    .sort((a, b) => b.currentAmount - a.currentAmount)
-    .slice(0, MAX_SAVINGS_GOALS)
-    .map(mapGoal);
+  const goalCandidates = subEnvelopes.filter(
+    (subEnvelope) => !subEnvelope.isSystemDefault,
+  );
+  goalCandidates.sort((a, b) => b.currentAmount - a.currentAmount);
+  const goals = goalCandidates.slice(0, MAX_SAVINGS_GOALS).map(mapGoal);
 
   const emergencyFundPayload = buildEmergencyFundPayload({
     emergencyFund,
@@ -194,14 +194,12 @@ async function buildSavingsOverview(ctx: QueryCtx) {
       currentAmount: emergencyFund.currentAmount,
       targetAmount: emergencyFundPayload.targetAmount,
     },
-    goals: subEnvelopes
-      .filter((subEnvelope) => !subEnvelope.isSystemDefault)
-      .map((subEnvelope) => ({
-        subEnvelopeId: subEnvelope._id,
-        label: subEnvelope.label,
-        currentAmount: subEnvelope.currentAmount,
-        targetAmount: subEnvelope.targetAmount ?? 0,
-      })),
+    goals: goals.map((goal) => ({
+      subEnvelopeId: goal.id,
+      label: goal.label,
+      currentAmount: goal.currentAmount,
+      targetAmount: goal.targetAmount ?? 0,
+    })),
   });
 
   const totalSavedCents = subEnvelopes.reduce(
@@ -220,9 +218,7 @@ async function buildSavingsOverview(ctx: QueryCtx) {
     emergencyFund: emergencyFundPayload,
     goals,
     assignPlan,
-    canCreateGoal:
-      subEnvelopes.filter((subEnvelope) => !subEnvelope.isSystemDefault)
-        .length < MAX_SAVINGS_GOALS,
+    canCreateGoal: goals.length < MAX_SAVINGS_GOALS,
   };
 }
 
@@ -236,20 +232,23 @@ async function executeContribution(
     "Registra un ingreso para activar tu ciclo antes de aportar.",
   );
 
-  const subEnvelope = await ctx.db.get(subEnvelopeId);
+  const subEnvelopePromise = ctx.db.get(subEnvelopeId);
+  const savingsEnvelopePromise = ctx.db
+    .query("envelopes")
+    .withIndex("by_cycle_type", (q) =>
+      q.eq("cycleId", activeCycle._id).eq("type", "savings"),
+    )
+    .unique();
+  const [subEnvelope, savingsEnvelope] = await Promise.all([
+    subEnvelopePromise,
+    savingsEnvelopePromise,
+  ]);
   if (!subEnvelope || subEnvelope.profileId !== profile._id) {
     throw new ConvexError({
       code: "NOT_FOUND",
       message: "Meta de ahorro no encontrada.",
     });
   }
-
-  const savingsEnvelope = await ctx.db
-    .query("envelopes")
-    .withIndex("by_cycle_type", (q) =>
-      q.eq("cycleId", activeCycle._id).eq("type", "savings"),
-    )
-    .unique();
   if (!savingsEnvelope) {
     throw new ConvexError({
       code: "NOT_FOUND",
@@ -529,32 +528,28 @@ export const assignSavingsEnvelope = mutation({
       remainingAmount: savingsEnvelope.remainingAmount - total,
     });
 
-    const results: Array<{
-      subEnvelopeId: Id<"subEnvelopes">;
-      label: string;
-      amount: number;
-      newCurrentAmount: number;
-    }> = [];
-    for (const line of validLines) {
-      const subEnvelope = await ctx.db.get(
-        line.subEnvelopeId as Id<"subEnvelopes">,
-      );
-      if (!subEnvelope) {
-        throw new ConvexError({
-          code: "NOT_FOUND",
-          message: "Meta de ahorro no encontrada.",
+    const results = await Promise.all(
+      validLines.map(async (line) => {
+        const subEnvelope = await ctx.db.get(
+          line.subEnvelopeId as Id<"subEnvelopes">,
+        );
+        if (!subEnvelope) {
+          throw new ConvexError({
+            code: "NOT_FOUND",
+            message: "Meta de ahorro no encontrada.",
+          });
+        }
+        await ctx.db.patch(subEnvelope._id, {
+          currentAmount: subEnvelope.currentAmount + line.amount,
         });
-      }
-      await ctx.db.patch(subEnvelope._id, {
-        currentAmount: subEnvelope.currentAmount + line.amount,
-      });
-      results.push({
-        subEnvelopeId: subEnvelope._id,
-        label: subEnvelope.label,
-        amount: line.amount,
-        newCurrentAmount: subEnvelope.currentAmount + line.amount,
-      });
-    }
+        return {
+          subEnvelopeId: subEnvelope._id,
+          label: subEnvelope.label,
+          amount: line.amount,
+          newCurrentAmount: subEnvelope.currentAmount + line.amount,
+        };
+      }),
+    );
 
     return {
       assignedCents: total,

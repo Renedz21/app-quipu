@@ -15,6 +15,7 @@ import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
 import { ThemeToggleButton } from "@/shared/components/theme-toggle-button";
 import { SIDEBAR_ITEMS } from "@/shared/constants/navigation";
+import { navItemActive } from "@/shared/lib/nav-item-active";
 import { useSignOut } from "@/shared/lib/use-sign-out";
 import { cn } from "@/shared/lib/utils";
 
@@ -24,19 +25,6 @@ type Props = {
   onNavigate?: () => void;
   className?: string;
 };
-
-export function navItemActive(pathname: string, href: string) {
-  if (href === "/settings") {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-  if (href === "/income/register") {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-  if (href === "/movements") {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-  return pathname === href;
-}
 
 function isFeedbackRoute(pathname: string) {
   return pathname.startsWith("/settings/feedback");

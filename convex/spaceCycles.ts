@@ -25,17 +25,18 @@ export const closeActive = mutation({
     const space = await ctx.db.get("financialSpaces", args.spaceId);
     if (!space) return null;
 
-    const members = await ctx.db
-      .query("spaceMembers")
-      .withIndex("by_space_status", (q) =>
-        q.eq("spaceId", args.spaceId).eq("status", "active"),
-      )
-      .collect();
-
-    const contributions = await ctx.db
-      .query("spaceContributions")
-      .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-      .collect();
+    const [members, contributions] = await Promise.all([
+      ctx.db
+        .query("spaceMembers")
+        .withIndex("by_space_status", (q) =>
+          q.eq("spaceId", args.spaceId).eq("status", "active"),
+        )
+        .collect(),
+      ctx.db
+        .query("spaceContributions")
+        .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+        .collect(),
+    ]);
 
     const memberParticipationSnapshot = Object.fromEntries(
       members.map((member) => [
@@ -83,15 +84,17 @@ export const closeActive = mutation({
       unallocatedCents: 0,
     });
 
-    for (const type of ["needs", "wants", "savings"] as const) {
-      await ctx.db.insert("spaceEnvelopes", {
-        spaceId: args.spaceId,
-        cycleId: nextCycleId,
-        type,
-        allocatedAmount: 0,
-        remainingAmount: 0,
-      });
-    }
+    await Promise.all(
+      (["needs", "wants", "savings"] as const).map((type) =>
+        ctx.db.insert("spaceEnvelopes", {
+          spaceId: args.spaceId,
+          cycleId: nextCycleId,
+          type,
+          allocatedAmount: 0,
+          remainingAmount: 0,
+        }),
+      ),
+    );
 
     return null;
   },

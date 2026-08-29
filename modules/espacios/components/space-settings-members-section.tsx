@@ -27,12 +27,15 @@ type Props = {
   settings: SpaceSettings;
 };
 
+const inviteExpiryFormatter = new Intl.DateTimeFormat("es-PE", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "America/Lima",
+});
+
 function formatInviteExpiry(expiresAt: number): string {
-  return new Date(expiresAt).toLocaleDateString("es-PE", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return inviteExpiryFormatter.format(expiresAt);
 }
 
 export function SpaceSettingsMembersSection({ spaceId, settings }: Props) {

@@ -245,9 +245,11 @@ export const accept = mutation({
         q.eq("spaceId", space._id).eq("status", "pending"),
       )
       .collect();
-    for (const pendingInvite of remainingPending) {
-      await ctx.db.patch(pendingInvite._id, { status: "revoked" });
-    }
+    await Promise.all(
+      remainingPending.map((pendingInvite) =>
+        ctx.db.patch(pendingInvite._id, { status: "revoked" }),
+      ),
+    );
 
     return space._id;
   },

@@ -28,6 +28,11 @@ type Props = {
 export function SpaceSettingsGeneralSection({ spaceId, settings }: Props) {
   const updateName = useUpdateSpaceName();
   const [name, setName] = useState(settings.space.name);
+  const [syncedName, setSyncedName] = useState(settings.space.name);
+  if (syncedName !== settings.space.name) {
+    setSyncedName(settings.space.name);
+    setName(settings.space.name);
+  }
   const [isPending, startTransition] = useTransition();
 
   const canEditName = canEditSpaceSettingsSection(

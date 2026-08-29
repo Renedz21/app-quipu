@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
 import { useAcceptInvitation } from "../actions";
@@ -19,6 +19,7 @@ export function SpaceInviteAcceptView({ token }: Props) {
   const [pending, setPending] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestRef = useRef(0);
 
   if (accepted || preview === undefined) {
     return <EspaciosLoadingSkeleton />;
@@ -56,17 +57,22 @@ export function SpaceInviteAcceptView({ token }: Props) {
         className="mt-5 rounded-[11px] bg-ink px-4 py-2.5 text-sm font-semibold text-canvas"
         disabled={pending}
         onClick={async () => {
+          const requestId = ++requestRef.current;
           setPending(true);
           setError(null);
           try {
             const spaceId = await accept({ token });
+            if (requestRef.current !== requestId) return;
             track(AnalyticsEvents.SPACE_INVITE_ACCEPTED, { space_id: spaceId });
             setAccepted(true);
             router.push(`/espacios/${spaceId}`);
           } catch (caught) {
+            if (requestRef.current !== requestId) return;
             setError(fromConvexError(caught).message);
           } finally {
-            setPending(false);
+            if (requestRef.current === requestId) {
+              setPending(false);
+            }
           }
         }}
       >

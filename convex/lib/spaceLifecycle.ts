@@ -14,38 +14,46 @@ export async function detachProfileFromSpacesOnDelete(
     .withIndex("by_profile", (q) => q.eq("profileId", profileId))
     .collect();
 
+  const leavePromises: Array<Promise<void>> = [];
   for (const membership of memberships) {
     if (membership.status === "active") {
-      await ctx.db.patch(membership._id, {
-        status: "left",
-        leftAt: now,
-      });
+      leavePromises.push(
+        ctx.db.patch(membership._id, {
+          status: "left",
+          leftAt: now,
+        }),
+      );
     }
   }
+  await Promise.all(leavePromises);
 
   const ownedSpaces = await ctx.db
     .query("financialSpaces")
     .withIndex("by_creator", (q) => q.eq("createdByProfileId", profileId))
     .collect();
 
-  for (const space of ownedSpaces) {
-    if (space.status === "active" || space.status === "readonly") {
-      await ctx.db.patch(space._id, {
-        status: "closed",
-        closedAt: now,
-      });
-    }
+  await Promise.all(
+    ownedSpaces.map(async (space) => {
+      if (space.status === "active" || space.status === "readonly") {
+        await ctx.db.patch(space._id, {
+          status: "closed",
+          closedAt: now,
+        });
+      }
 
-    const pendingInvites = await ctx.db
-      .query("spaceInvitations")
-      .withIndex("by_space_status", (q) =>
-        q.eq("spaceId", space._id).eq("status", "pending"),
-      )
-      .collect();
-    for (const invitation of pendingInvites) {
-      await ctx.db.patch(invitation._id, { status: "revoked" });
-    }
-  }
+      const pendingInvites = await ctx.db
+        .query("spaceInvitations")
+        .withIndex("by_space_status", (q) =>
+          q.eq("spaceId", space._id).eq("status", "pending"),
+        )
+        .collect();
+      await Promise.all(
+        pendingInvites.map((invitation) =>
+          ctx.db.patch(invitation._id, { status: "revoked" }),
+        ),
+      );
+    }),
+  );
 }
 
 export async function transitionOwnedSpacesOnPlanChange(
@@ -57,12 +65,16 @@ export async function transitionOwnedSpacesOnPlanChange(
     .withIndex("by_creator", (q) => q.eq("createdByProfileId", profile._id))
     .collect();
 
+  const readonlyPromises: Array<Promise<void>> = [];
   for (const space of spaces) {
     if (shouldTransitionSpaceToReadonly(space, profile)) {
-      await ctx.db.patch(space._id, {
-        status: "readonly",
-        premiumExpiredAt: Date.now(),
-      });
+      readonlyPromises.push(
+        ctx.db.patch(space._id, {
+          status: "readonly",
+          premiumExpiredAt: Date.now(),
+        }),
+      );
     }
   }
+  await Promise.all(readonlyPromises);
 }

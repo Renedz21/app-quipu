@@ -56,8 +56,6 @@ export const ESPACIOS_SETTINGS_BUDGET_DISCLAIMER =
   "Esto no mueve el dinero ya aportado en el ciclo actual.";
 export const ESPACIOS_SETTINGS_GOAL_DISCLAIMER =
   "Meta informativa; no limita tus movimientos.";
-export const ESPACIOS_SETTINGS_CYCLE_READONLY_NOTE =
-  "Las fechas del ciclo activo no se pueden editar.";
 export const ESPACIOS_SETTINGS_WAITING_PARTNER =
   "Esperando confirmación de tu pareja";
 export const ESPACIOS_SETTINGS_WAITING_PARTNER_SLOT = "Esperando pareja";
@@ -65,19 +63,12 @@ export const ESPACIOS_SETTINGS_INVITE_ACTION = "Generar enlace";
 export const ESPACIOS_SETTINGS_REVOKE_INVITE = "Revocar invitación";
 
 // Settings — status badges
-export const ESPACIOS_SETTINGS_STATUS_ACTIVE = "Activo";
-export const ESPACIOS_SETTINGS_STATUS_READONLY = "Solo lectura";
-export const ESPACIOS_SETTINGS_STATUS_CLOSED = "Cerrado";
-export const ESPACIOS_SETTINGS_READONLY_EXPLANATION =
-  "Este espacio está en solo lectura. Renueva Quipu Plus para volver a editarlo.";
 export const ESPACIOS_SETTINGS_REACTIVATE_ACTION = "Reactivar espacio";
 
 // Settings — destructive actions
-export const ESPACIOS_SETTINGS_CLOSE_TITLE = "Cerrar espacio";
 export const ESPACIOS_SETTINGS_CLOSE_BODY =
   "El historial se conservará, pero no podrán registrarse nuevos movimientos.";
 export const ESPACIOS_SETTINGS_CLOSE_CONFIRM = "Cerrar espacio";
-export const ESPACIOS_SETTINGS_LEAVE_TITLE = "Abandonar espacio";
 export const ESPACIOS_SETTINGS_LEAVE_BODY =
   "Dejarás de ver este espacio compartido. El historial se conserva para el titular.";
 export const ESPACIOS_SETTINGS_LEAVE_CONFIRM = "Abandonar espacio";
@@ -148,6 +139,3 @@ export const ESPACIOS_SETTINGS_REACTIVATE = ESPACIOS_SETTINGS_REACTIVATE_ACTION;
 export const ESPACIOS_SETTINGS_REACTIVATED = "Espacio reactivado.";
 export const ESPACIOS_READONLY_REACTIVATE_HINT =
   "Renueva Quipu Plus para volver a editar este espacio.";
-
-export const ESPACIOS_HEADER_ACTIONS_LABEL = ESPACIOS_MENU_ACTIONS;
-export const ESPACIOS_HEADER_SETTINGS = ESPACIOS_MENU_SETTINGS;

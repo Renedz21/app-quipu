@@ -34,15 +34,17 @@ async function seedSpaceCycle(
     unallocatedCents: 0,
   });
 
-  for (const type of ["needs", "wants", "savings"] as const) {
-    await ctx.db.insert("spaceEnvelopes", {
-      spaceId: space._id,
-      cycleId,
-      type,
-      allocatedAmount: 0,
-      remainingAmount: 0,
-    });
-  }
+  await Promise.all(
+    (["needs", "wants", "savings"] as const).map((type) =>
+      ctx.db.insert("spaceEnvelopes", {
+        spaceId: space._id,
+        cycleId,
+        type,
+        allocatedAmount: 0,
+        remainingAmount: 0,
+      }),
+    ),
+  );
 
   return cycleId;
 }
@@ -492,51 +494,55 @@ export const getSettings = query({
       )
       .collect();
 
-    const memberRows = await Promise.all(
-      activeMembers.map(async (member) => {
-        const memberProfile = await ctx.db.get("profiles", member.profileId);
-        const contributions = cycle
-          ? await ctx.db
-              .query("spaceContributions")
-              .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
-              .collect()
-          : [];
-        const memberContributions = contributions.filter(
-          (row) => row.fromProfileId === member.profileId,
-        );
-        const participation =
-          partitionParticipationSources(memberContributions);
-        return {
-          profileId: member.profileId,
-          name: memberProfile?.name ?? "Miembro",
-          role: member.role,
-          joinedAt: member.joinedAt,
-          expectedContributionCents: member.expectedContributionCents,
-          contributedCents:
-            computeMemberParticipationCents(memberContributions),
-          explicitContributionCents: participation.explicitCents,
-          personalPocketCents: participation.personalPocketCents,
-        };
-      }),
-    );
-
-    const pendingProposals = await ctx.db
-      .query("spaceChangeProposals")
-      .withIndex("by_space_status", (q) =>
-        q.eq("spaceId", space._id).eq("status", "pending"),
-      )
-      .collect();
+    const [memberRows, pendingProposals, pendingInvitationRows] =
+      await Promise.all([
+        Promise.all(
+          activeMembers.map(async (member) => {
+            const memberProfile = await ctx.db.get(
+              "profiles",
+              member.profileId,
+            );
+            const contributions = cycle
+              ? await ctx.db
+                  .query("spaceContributions")
+                  .withIndex("by_cycle", (q) => q.eq("cycleId", cycle._id))
+                  .collect()
+              : [];
+            const memberContributions = contributions.filter(
+              (row) => row.fromProfileId === member.profileId,
+            );
+            const participation =
+              partitionParticipationSources(memberContributions);
+            return {
+              profileId: member.profileId,
+              name: memberProfile?.name ?? "Miembro",
+              role: member.role,
+              joinedAt: member.joinedAt,
+              expectedContributionCents: member.expectedContributionCents,
+              contributedCents:
+                computeMemberParticipationCents(memberContributions),
+              explicitContributionCents: participation.explicitCents,
+              personalPocketCents: participation.personalPocketCents,
+            };
+          }),
+        ),
+        ctx.db
+          .query("spaceChangeProposals")
+          .withIndex("by_space_status", (q) =>
+            q.eq("spaceId", space._id).eq("status", "pending"),
+          )
+          .collect(),
+        ctx.db
+          .query("spaceInvitations")
+          .withIndex("by_space_status", (q) =>
+            q.eq("spaceId", space._id).eq("status", "pending"),
+          )
+          .collect(),
+      ]);
 
     const pendingInvitations =
       membership.role === "owner"
-        ? (
-            await ctx.db
-              .query("spaceInvitations")
-              .withIndex("by_space_status", (q) =>
-                q.eq("spaceId", space._id).eq("status", "pending"),
-              )
-              .collect()
-          ).map((row) => ({
+        ? pendingInvitationRows.map((row) => ({
             _id: row._id,
             expiresAt: row.expiresAt,
             invitedEmail: row.invitedEmail,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -42,11 +42,9 @@ export function SpaceExpenseFlow({
   >("space_budget");
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (!allowPersonalPocket && fundingSource === "personal_pocket") {
-      setFundingSource("space_budget");
-    }
-  }, [allowPersonalPocket, fundingSource]);
+  const effectiveFundingSource = allowPersonalPocket
+    ? fundingSource
+    : "space_budget";
 
   if (!open) return null;
 
@@ -60,6 +58,7 @@ export function SpaceExpenseFlow({
         <h2 className="font-serif text-xl text-ink">Gasto compartido</h2>
         <input
           className="mt-4 w-full rounded-[11px] border border-line bg-canvas px-3 py-2 text-sm"
+          aria-label="Descripción"
           placeholder="Descripción"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -67,6 +66,7 @@ export function SpaceExpenseFlow({
         <input
           className="mt-3 w-full rounded-[11px] border border-line bg-canvas px-3 py-2 text-sm"
           inputMode="decimal"
+          aria-label="Monto"
           placeholder="Monto"
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
@@ -88,7 +88,7 @@ export function SpaceExpenseFlow({
                 key={source}
                 type="button"
                 className={`rounded-[11px] border px-3 py-2 text-xs ${
-                  fundingSource === source
+                  effectiveFundingSource === source
                     ? "border-qp bg-qp/10 text-qp-deep"
                     : "border-line text-mute"
                 }`}
@@ -131,13 +131,13 @@ export function SpaceExpenseFlow({
                   amount: cents,
                   description: description.trim(),
                   envelopeType,
-                  fundingSource,
+                  fundingSource: effectiveFundingSource,
                 });
                 track(AnalyticsEvents.SPACE_EXPENSE_REGISTERED, {
                   space_id: spaceId,
                   amount: cents,
                   envelope: envelopeType,
-                  funding_source: fundingSource,
+                  funding_source: effectiveFundingSource,
                 });
                 toast.success("Gasto registrado");
                 onOpenChange(false);

@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { SavingsFormShell } from "./savings-form-shell";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
@@ -24,6 +23,7 @@ import {
 } from "../constants";
 import { parseOptionalTargetCents } from "../lib/savingsCopy";
 import type { SavingsOverview } from "../types";
+import { SavingsFormShell } from "./savings-form-shell";
 
 type Plan = NonNullable<SavingsOverview["assignPlan"]>;
 

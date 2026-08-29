@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { SpaceProposalKind } from "../lib/space-proposal-labels";
 import { usePendingProposals } from "../queries";
@@ -18,19 +19,22 @@ type Props = {
   excludeKinds?: SpaceProposalKind[];
 };
 
+const DEFAULT_EXCLUDE_KINDS: SpaceProposalKind[] = ["expected_contribution"];
+
 export function SpaceProposalBanner({
   spaceId,
   viewerProfileId,
   members,
   currencyCode,
-  excludeKinds = ["expected_contribution"],
+  excludeKinds = DEFAULT_EXCLUDE_KINDS,
 }: Props) {
   const proposals = usePendingProposals(spaceId);
+  const excludeSet = useMemo(() => new Set(excludeKinds), [excludeKinds]);
 
   if (proposals === undefined || proposals.length === 0) return null;
 
   const visible = proposals.filter(
-    (proposal) => !excludeKinds.includes(proposal.kind),
+    (proposal) => !excludeSet.has(proposal.kind),
   );
   if (visible.length === 0) return null;
 

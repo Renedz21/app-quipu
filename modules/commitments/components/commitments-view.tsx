@@ -28,7 +28,7 @@ import {
 import type { CommitmentForDetail } from "./commitment-detail-sheet";
 import { CommitmentDetailSheet } from "./commitment-detail-sheet";
 
-export function CommitmentsViewSkeleton() {
+function CommitmentsViewSkeleton() {
   return (
     <AppPageShell maxWidth="2xl" breadcrumbs="auto">
       <Skeleton variant="line" className="h-4 w-20" />

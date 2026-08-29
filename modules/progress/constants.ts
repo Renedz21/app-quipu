@@ -1,7 +1,6 @@
 export const PROGRESS_PAGE_TITLE = "Tu progreso";
 export const PROGRESS_PAGE_SUBTITLE =
   "La constancia también se construye. Un ciclo a la vez.";
-export const PROGRESS_BACK_LINK = "Volver";
 
 export const PROGRESS_STREAK_LABEL = "Racha actual";
 export const PROGRESS_STREAK_SUFFIX = "ciclos cerrados en orden";

@@ -25,11 +25,13 @@ type Props = {
   viewerProfileId?: Id<"profiles">;
 };
 
+const EMPTY_PROPOSALS: SpaceOverview["pendingProposals"] = [];
+
 export function SpaceMembersParticipation({
   spaceId,
   members,
   currencyCode,
-  pendingProposals = [],
+  pendingProposals = EMPTY_PROPOSALS,
   viewerProfileId,
 }: Props) {
   return (
@@ -132,7 +134,7 @@ export function SpaceMembersParticipation({
                   aria-label={`${pct}% de la meta`}
                 >
                   <div
-                    className="h-full rounded-full bg-qp transition-all"
+                    className="h-full rounded-full bg-qp transition-[width]"
                     style={{ width: `${pct}%` }}
                   />
                 </div>

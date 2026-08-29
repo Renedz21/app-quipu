@@ -1,41 +1,35 @@
 import type { ReactNode } from "react";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
+import type { Crumb } from "@/shared/lib/breadcrumbs";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
-  backHref?: string;
-  backLabel?: string;
+  breadcrumbs?: "auto" | Crumb[] | false;
   eyebrow?: string;
   title?: string;
   subtitle?: string;
   children: ReactNode;
   className?: string;
+  maxWidth?: "2xl" | "4xl" | "6xl";
 };
 
 export function SpacePageShell({
-  backHref,
-  backLabel = "Espacios",
+  breadcrumbs = "auto",
   eyebrow,
   title,
   subtitle,
   children,
   className,
+  maxWidth = "2xl",
 }: Props) {
   return (
-    <div
-      className={cn(
-        "mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8",
-        className,
-      )}
+    <AppPageShell
+      maxWidth={maxWidth}
+      breadcrumbs={breadcrumbs}
+      className={className}
     >
-      {backHref ? <BackLink href={backHref}>{backLabel}</BackLink> : null}
       {eyebrow ? (
-        <p
-          className={cn(
-            "text-[11px] font-medium uppercase tracking-[0.12em] text-faint",
-            backHref ? "mt-4" : "",
-          )}
-        >
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-faint">
           {eyebrow}
         </p>
       ) : null}
@@ -43,7 +37,7 @@ export function SpacePageShell({
         <h1
           className={cn(
             "font-serif text-[26px] font-medium tracking-tight text-ink",
-            eyebrow || backHref ? "mt-1" : "",
+            eyebrow ? "mt-1" : "",
           )}
         >
           {title}
@@ -55,6 +49,6 @@ export function SpacePageShell({
         </p>
       ) : null}
       {children}
-    </div>
+    </AppPageShell>
   );
 }

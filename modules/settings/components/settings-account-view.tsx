@@ -5,12 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import {
-  SETTINGS_BACK_LINK,
   SETTINGS_CHECKOUT_SUCCESS,
   SETTINGS_ERROR_BODY,
   SETTINGS_ERROR_RETRY,
@@ -27,21 +26,18 @@ import { SettingsSecurityCard } from "./settings-security-card";
 
 export function SettingsAccountViewSkeleton() {
   return (
-    <div
-      role="status"
-      aria-label="Abriendo cuenta"
-      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
-    >
-      <Skeleton className="h-4 w-20 rounded" />
-      <Skeleton className="mt-4 h-[30px] w-[150px] rounded-lg" />
-      <div className="mt-6 flex flex-col gap-3.5 lg:flex-row">
-        <div className="flex flex-1 flex-col gap-3.5">
-          <Skeleton className="h-[150px] rounded-2xl" />
-          <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
+    <AppPageShell maxWidth="6xl" breadcrumbs="auto">
+      <div role="status" aria-label="Abriendo cuenta">
+        <Skeleton className="h-[30px] w-[150px] rounded-lg" />
+        <div className="mt-6 flex flex-col gap-3.5 lg:flex-row">
+          <div className="flex flex-1 flex-col gap-3.5">
+            <Skeleton className="h-[150px] rounded-2xl" />
+            <Skeleton className="h-[150px] rounded-2xl [animation-delay:150ms]" />
+          </div>
+          <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] lg:self-start" />
         </div>
-        <Skeleton className="h-[230px] flex-1 rounded-2xl [animation-delay:300ms] lg:self-start" />
       </div>
-    </div>
+    </AppPageShell>
   );
 }
 
@@ -79,7 +75,7 @@ export function SettingsAccountView() {
 
   if (settingsData === null) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+      <AppPageShell maxWidth="6xl" breadcrumbs="auto">
         <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
           <h2 className="text-base font-semibold text-danger-ink">
             {SETTINGS_ERROR_TITLE}
@@ -96,21 +92,14 @@ export function SettingsAccountView() {
             {SETTINGS_ERROR_RETRY}
           </button>
         </section>
-      </div>
+      </AppPageShell>
     );
   }
 
   const overview = mapConvexSettingsOverview(settingsData);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <BackLink
-        href="/settings"
-        className="mb-3 text-[12.5px] text-mute hover:text-ink md:hidden"
-      >
-        {SETTINGS_BACK_LINK}
-      </BackLink>
-
+    <AppPageShell maxWidth="6xl" breadcrumbs="auto">
       <header className="mb-5 md:mb-6">
         <h1 className="font-serif text-[23px] font-medium text-ink md:text-[27px]">
           {SETTINGS_MOBILE_ACCOUNT_LABEL}
@@ -145,6 +134,6 @@ export function SettingsAccountView() {
       </div>
 
       <SettingsAccountActions />
-    </div>
+    </AppPageShell>
   );
 }

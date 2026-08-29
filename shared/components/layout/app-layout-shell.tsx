@@ -11,16 +11,11 @@ type Props = {
   children: ReactNode;
 };
 
-/** Routes where mobile chrome (header, drawer) is hidden for immersive UX. */
-const IMMERSIVE_PATHS = ["/income/register"];
-
 export function AppLayoutShell({ children }: Props) {
   const profile = useMyProfile();
   const pathname = usePathname();
   const profileName = profile?.name;
   const plan = profile?.plan ?? "free";
-
-  const isImmersive = IMMERSIVE_PATHS.includes(pathname);
 
   return (
     <ExpenseRegisterProvider>
@@ -31,13 +26,7 @@ export function AppLayoutShell({ children }: Props) {
           className="sticky top-0 hidden h-dvh md:flex"
         />
         <div className="flex min-h-dvh flex-1 flex-col">
-          {!isImmersive ? (
-            <AppMobileNav
-              key={pathname}
-              profileName={profileName}
-              plan={plan}
-            />
-          ) : null}
+          <AppMobileNav key={pathname} profileName={profileName} plan={plan} />
           <main className="flex-1 md:pb-8">{children}</main>
         </div>
       </div>

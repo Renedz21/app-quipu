@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { IncomeSource } from "@/modules/income/types";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { ModuleLoadingShell } from "@/shared/components/layout/module-loading-shell";
-import { BackLink } from "@/shared/components/ui/back-link";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate, formatLimaDateTime } from "@/shared/lib/date";
@@ -15,7 +15,6 @@ import {
 } from "@/shared/lib/movement-amount-display";
 import { cn } from "@/shared/lib/utils";
 import {
-  MOVEMENTS_BACK_LINK,
   MOVEMENTS_EMPTY_BODY,
   MOVEMENTS_EMPTY_CTA,
   MOVEMENTS_EMPTY_TITLE,
@@ -147,15 +146,8 @@ export function MovementsView() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
-        <BackLink
-          href="/dashboard"
-          className="text-sm font-medium text-qp-deep hover:underline"
-        >
-          {MOVEMENTS_BACK_LINK}
-        </BackLink>
-
-        <header className="mt-4">
+      <AppPageShell maxWidth="2xl" breadcrumbs="auto">
+        <header>
           <h1 className="font-serif text-[28px] leading-tight text-ink md:text-[32px]">
             {MOVEMENTS_PAGE_TITLE}
           </h1>
@@ -299,7 +291,7 @@ export function MovementsView() {
             </ul>
           )}
         </div>
-      </div>
+      </AppPageShell>
 
       <MovementDetailSheet
         open={sheetOpen}

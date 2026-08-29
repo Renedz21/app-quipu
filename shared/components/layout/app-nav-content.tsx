@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logout } from "reicon-react/icons/Logout";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { getInitial } from "@/modules/dashboard/lib/dashboard-math";
 import {
   SETTINGS_FEEDBACK_HINT,
   SETTINGS_FEEDBACK_LABEL,
   SETTINGS_SIDEBAR_PLUS_LINK,
+  SETTINGS_SIGN_OUT,
 } from "@/modules/settings/constants";
 import { AppNavIcon } from "@/shared/components/app-nav-icon";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
+import { ThemeToggleButton } from "@/shared/components/theme-toggle-button";
 import { SIDEBAR_ITEMS } from "@/shared/constants/navigation";
-import { PLAN_LABELS } from "@/shared/constants/plan";
+import { useSignOut } from "@/shared/lib/use-sign-out";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {
@@ -78,6 +81,7 @@ export function AppNavContent({
   className,
 }: Props) {
   const pathname = usePathname();
+  const signOut = useSignOut();
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
@@ -132,12 +136,9 @@ export function AppNavContent({
           <span className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-qp-soft font-serif text-base text-qp-deep">
             {getInitial(profileName ?? "Quipu")}
           </span>
-          <div className="min-w-0 leading-tight">
+          <div className="min-w-0 flex-1 leading-tight">
             <div className="truncate text-[13.5px] font-semibold text-ink">
               {profileName ?? "Quipu"}
-            </div>
-            <div className="truncate text-[11.5px] text-mute">
-              {PLAN_LABELS[plan]}
             </div>
             {plan === "free" ? (
               <Link
@@ -149,7 +150,16 @@ export function AppNavContent({
               </Link>
             ) : null}
           </div>
+          <ThemeToggleButton />
         </div>
+        <button
+          type="button"
+          onClick={signOut}
+          className="flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-[11.5px] text-mute transition-colors hover:bg-qp-soft hover:text-ink"
+        >
+          <Logout size={13} color="currentColor" aria-hidden />
+          {SETTINGS_SIGN_OUT}
+        </button>
       </div>
     </div>
   );

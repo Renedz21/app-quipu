@@ -171,6 +171,10 @@ Regla de oro para PPR:
 
 **Granularidad de los Suspense boundaries:** uno por "sección independiente" que tenga su propia latencia. En un dashboard, envuelve cada widget en su propio `<Suspense>` para que se hidraten por separado (mejora INP) y cada uno haga streaming en cuanto sus datos estén listos.
 
+#### Motion en Client Components (Quipu)
+
+Las transiciones de **contenido dentro** de overlays y wizards (no el shell de la ruta) viven en Client Components (`Sheet`, `Dialog`, flujos con `useState`/`step`). No usan PPR ni `use cache`: son estado local + CSS (`tw-animate-css`, primitivo `AnimatedView`). Duraciones, `prefers-reduced-motion` y focus al cambiar paso están en **`docs/QUIPU-MASTER.md` §3.10 Motion**. Mantén el boundary `'use client'` en la hoja del flujo; no subas motion al layout de servidor.
+
 ---
 
 ### 3. Next.js 16: features específicas y cambios de versión
@@ -494,3 +498,5 @@ Rutas estáticas se prefetchean por defecto (TTL cliente ~5 min). Rutas dinámic
 ## Apéndice Quipu: matriz de lazy loading
 
 En Quipu, `next/dynamic(..., { ssr: false })` aplica a UI pesada o browser-only que no compite con el LCP: sheets/dialogs bajo interacción (`MovementDetailSheet`, flujos Espacios), Turnstile (script Cloudflare) y passkeys/WebAuthn en auth. Las páginas autenticadas delegan loading a skeletons internos del Client Component (`useQuery`); no envolver esas vistas en `<Suspense>` en `page.tsx` salvo boundary real (Server Component async). Detalle en `docs/QUIPU-MASTER.md` §4.6.
+
+**AppPageShell y breadcrumbs:** sub-rutas del área privada usan `AppPageShell` (`shared/components/layout/app-page-shell.tsx`) con `maxWidth` (`2xl` | `4xl` | `6xl`) y `breadcrumbs="auto"` (resolver en `shared/lib/breadcrumbs.ts`). Hubs (`/dashboard`, `/savings`, `/settings`) omiten breadcrumb. Ver tiers en `docs/QUIPU-MASTER.md` §3.

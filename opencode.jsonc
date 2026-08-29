@@ -3,7 +3,12 @@
   "mcp": {
     "codegraph": {
       "type": "local",
-      "command": ["codegraph", "serve", "--mcp"],
+      "command": ["codegraph", "serve", "--mcp", "--path", "."],
+      "enabled": true
+    },
+    "codegraph-convex": {
+      "type": "local",
+      "command": ["codegraph", "serve", "--mcp", "--path", "convex"],
       "enabled": true
     }
   }

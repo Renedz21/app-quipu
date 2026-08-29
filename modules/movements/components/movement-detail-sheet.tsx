@@ -11,6 +11,7 @@ import { AnalyticsEvents, track } from "@/core/analytics";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import type { IncomeSource } from "@/modules/income/types";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -98,8 +99,17 @@ export function MovementDetailSheet({
 }: Props) {
   const isMobile = useIsMobile();
   const [state, setState] = useState<SheetState>("detail");
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function goTo(
+    next: SheetState,
+    nextDirection: "forward" | "back" = "forward",
+  ) {
+    setDirection(nextDirection);
+    setState(next);
+  }
 
   const deleteExpense = useMutation(api.expenses.deleteExpense);
   const deleteIncomeEvent = useMutation(api.incomeEvents.deleteIncomeEvent);
@@ -108,6 +118,7 @@ export function MovementDetailSheet({
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
+      setDirection("forward");
       setState("detail");
       setDeleteError(null);
     }
@@ -213,7 +224,7 @@ export function MovementDetailSheet({
               variant="outline"
               disabled={isDeleting}
               onClick={() => {
-                setState("detail");
+                goTo("detail", "back");
                 setDeleteError(null);
               }}
               className="h-12 flex-1 rounded-[12px] border-line text-[14.5px] font-semibold text-mute"
@@ -236,6 +247,7 @@ export function MovementDetailSheet({
     if (state === "edit-expense" && movement.kind === "expense") {
       return (
         <ExpenseEditForm
+          autoFocus
           expenseId={movement.id}
           initialAmountCents={movement.amount}
           initialDescription={movement.label}
@@ -249,20 +261,35 @@ export function MovementDetailSheet({
               envelopeType: args.envelopeType,
             })
           }
-          onSuccess={() => setState("success")}
-          onCancel={() => setState("detail")}
+          onSuccess={() => goTo("success")}
+          onCancel={() => goTo("detail", "back")}
         />
       );
     }
 
-    if (
-      state === "edit-income" &&
-      movement.kind === "income" &&
-      movement.source &&
-      movement.occurredAt !== undefined
-    ) {
+    if (state === "edit-income" && movement.kind === "income") {
+      if (!movement.source || movement.occurredAt === undefined) {
+        return (
+          <div className="space-y-4">
+            <p className="text-[13.5px] leading-relaxed text-mute" role="alert">
+              No pudimos cargar los datos para editar este ingreso. Cierra y
+              vuelve a abrir el movimiento; si sigue igual, recarga la página.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => goTo("detail", "back")}
+              className="h-12 w-full rounded-[12px] border-line text-[14.5px] font-semibold text-mute"
+            >
+              Volver
+            </Button>
+          </div>
+        );
+      }
+
       return (
         <IncomeEditForm
+          autoFocus
           eventId={movement.id}
           initialAmountCents={movement.amount}
           initialSource={movement.source}
@@ -279,8 +306,8 @@ export function MovementDetailSheet({
               incomeKind: args.incomeKind,
             })
           }
-          onSuccess={() => setState("success")}
-          onCancel={() => setState("detail")}
+          onSuccess={() => goTo("success")}
+          onCancel={() => goTo("detail", "back")}
         />
       );
     }
@@ -344,9 +371,7 @@ export function MovementDetailSheet({
             <div className="space-y-2.5">
               <Button
                 type="button"
-                onClick={() =>
-                  setState(isIncome ? "edit-income" : "edit-expense")
-                }
+                onClick={() => goTo(isIncome ? "edit-income" : "edit-expense")}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
               >
                 <Edit size={16} color="currentColor" aria-hidden />
@@ -355,7 +380,7 @@ export function MovementDetailSheet({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setState("confirm-delete")}
+                onClick={() => goTo("confirm-delete")}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] border-danger-line text-[14.5px] font-semibold text-danger-ink hover:bg-danger-bg"
               >
                 <Trash size={16} color="currentColor" aria-hidden />
@@ -370,6 +395,15 @@ export function MovementDetailSheet({
 
   const title = SHEET_TITLES[state];
   const body = renderContent();
+  const animatedBody = body ? (
+    <AnimatedView
+      viewKey={state}
+      direction={direction}
+      aria-labelledby="movement-sheet-title"
+    >
+      {body}
+    </AnimatedView>
+  ) : null;
 
   if (isMobile) {
     return (
@@ -380,11 +414,14 @@ export function MovementDetailSheet({
           className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-0 pt-3"
         >
           <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line" />
-          <SheetTitle className="mb-4 shrink-0 pr-8 text-[15px] font-semibold text-ink">
+          <SheetTitle
+            id="movement-sheet-title"
+            className="mb-4 shrink-0 pr-8 text-[15px] font-semibold text-ink"
+          >
             {title}
           </SheetTitle>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(env(safe-area-inset-bottom),20px)]">
-            {body}
+            {animatedBody}
           </div>
         </SheetContent>
       </Sheet>
@@ -394,11 +431,14 @@ export function MovementDetailSheet({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[400px] gap-0 rounded-[22px] border-line bg-card p-0">
-        <DialogTitle className="px-5 pt-5 pr-12 text-[15px] font-semibold text-ink">
+        <DialogTitle
+          id="movement-sheet-title"
+          className="px-5 pt-5 pr-12 text-[15px] font-semibold text-ink"
+        >
           {title}
         </DialogTitle>
         <div className="max-h-[min(85vh,720px)] overflow-y-auto px-5 pb-5 pt-4">
-          {body}
+          {animatedBody}
         </div>
       </DialogContent>
     </Dialog>

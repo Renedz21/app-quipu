@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -81,47 +82,52 @@ export function CoachRescueConfirmDialog({
       });
   }
 
+  const titleId = "coach-rescue-confirm-title";
+  const contentKey = `${interactionId}-${suggestion.transfer}-${suggestion.projectedDeficit}`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="rounded-[14px]">
-        <DialogHeader>
-          <DialogTitle className="font-serif text-xl text-ink">
-            {RESCUE_CONFIRM_TITLE}
-          </DialogTitle>
-          <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
-            Transferir{" "}
-            <strong className="font-semibold text-ink">
-              {formatCents(suggestion.transfer, { currency: currencyCode })}
-            </strong>{" "}
-            de Ahorro a Gustos para cubrir{" "}
-            <strong className="font-semibold text-ink">
-              {formatCents(suggestion.projectedDeficit, {
-                currency: currencyCode,
-              })}
-            </strong>{" "}
-            de déficit. Esta acción mueve dinero entre sobres; no registra un
-            gasto nuevo.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="mt-4 gap-2 sm:justify-stretch">
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-[11px]"
-            disabled={isSubmitting}
-            onClick={() => void handleDismiss()}
-          >
-            {RESCUE_CONFIRM_DISMISS_CTA}
-          </Button>
-          <Button
-            type="button"
-            className="rounded-[11px] bg-ink text-canvas hover:bg-ink/90"
-            disabled={isSubmitting}
-            onClick={() => void handleApply()}
-          >
-            {RESCUE_CONFIRM_APPLY_CTA}
-          </Button>
-        </DialogFooter>
+        <AnimatedView viewKey={contentKey} aria-labelledby={titleId}>
+          <DialogHeader>
+            <DialogTitle id={titleId} className="font-serif text-xl text-ink">
+              {RESCUE_CONFIRM_TITLE}
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed text-ink-secondary">
+              Transferir{" "}
+              <strong className="font-semibold text-ink">
+                {formatCents(suggestion.transfer, { currency: currencyCode })}
+              </strong>{" "}
+              de Ahorro a Gustos para cubrir{" "}
+              <strong className="font-semibold text-ink">
+                {formatCents(suggestion.projectedDeficit, {
+                  currency: currencyCode,
+                })}
+              </strong>{" "}
+              de déficit. Esta acción mueve dinero entre sobres; no registra un
+              gasto nuevo.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:justify-stretch">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-[11px]"
+              disabled={isSubmitting}
+              onClick={() => void handleDismiss()}
+            >
+              {RESCUE_CONFIRM_DISMISS_CTA}
+            </Button>
+            <Button
+              type="button"
+              className="rounded-[11px] bg-ink text-canvas hover:bg-ink/90"
+              disabled={isSubmitting}
+              onClick={() => void handleApply()}
+            >
+              {RESCUE_CONFIRM_APPLY_CTA}
+            </Button>
+          </DialogFooter>
+        </AnimatedView>
       </DialogContent>
     </Dialog>
   );

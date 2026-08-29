@@ -3,6 +3,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useMemo, useRef, useState } from "react";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import type { DistributionPolicy } from "@/shared/lib/allocations";
 import { limaStartOfDay } from "@/shared/lib/date";
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
@@ -30,7 +32,6 @@ import {
   type IncomeRegisterFormData,
 } from "./income-register-fields-section";
 import { IncomeRegisterFooter } from "./income-register-footer";
-import { IncomeRegisterMobileHeader } from "./income-register-mobile-header";
 import {
   type CreateIncomeEvent,
   type DashboardSummary,
@@ -118,11 +119,9 @@ export function IncomeRegisterForm({
   };
 
   return (
-    <>
-      <IncomeRegisterMobileHeader />
-
+    <AppPageShell maxWidth="2xl" breadcrumbs="auto">
       <form
-        className="mx-auto w-full max-w-6xl px-4 pt-[calc(68px+env(safe-area-inset-top))] pb-[calc(88px+env(safe-area-inset-bottom))] md:px-8 md:py-8 md:pb-8 md:pt-8"
+        className="w-full"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -198,6 +197,8 @@ export function IncomeRegisterForm({
                 ? getExtraordinarySubmitCta(values.extraordinaryType)
                 : INCOME_SUBMIT_CTA;
 
+            const contentViewKey = isExtraordinary ? extraStep : "habitual";
+
             return (
               <>
                 <IncomeRegisterTitle
@@ -216,86 +217,88 @@ export function IncomeRegisterForm({
                   />
                 </div>
 
-                {showPick ? (
-                  <IncomeExtraordinaryPickStep
-                    value={values.extraordinaryType}
-                    error={pickTypeError ?? undefined}
-                    onChangeType={(type) => {
-                      setPickTypeError(null);
-                      form.setFieldValue("extraordinaryType", type);
-                      form.setFieldValue(
-                        "distributionPolicy",
-                        policyForExtraordinaryType(
-                          type,
-                          profile.extraordinaryRules,
-                        ),
-                        silentSet,
-                      );
-                    }}
-                    onMissingType={() =>
-                      setPickTypeError(
-                        "Elige un tipo de ingreso extraordinario.",
-                      )
-                    }
-                    onContinue={() => setExtraStep("details")}
-                  />
-                ) : null}
+                <AnimatedView viewKey={contentViewKey} direction="forward">
+                  {showPick ? (
+                    <IncomeExtraordinaryPickStep
+                      value={values.extraordinaryType}
+                      error={pickTypeError ?? undefined}
+                      onChangeType={(type) => {
+                        setPickTypeError(null);
+                        form.setFieldValue("extraordinaryType", type);
+                        form.setFieldValue(
+                          "distributionPolicy",
+                          policyForExtraordinaryType(
+                            type,
+                            profile.extraordinaryRules,
+                          ),
+                          silentSet,
+                        );
+                      }}
+                      onMissingType={() =>
+                        setPickTypeError(
+                          "Elige un tipo de ingreso extraordinario.",
+                        )
+                      }
+                      onContinue={() => setExtraStep("details")}
+                    />
+                  ) : null}
 
-                <IncomeRegisterFieldsSection
-                  form={form}
-                  profile={profile}
-                  values={values}
-                  isExtraordinary={isExtraordinary}
-                  showDetails={showDetails}
-                  currencyCode={currencyCode}
-                  preview={previewInput}
-                  suggestedHeldCents={suggestedHeldCents}
-                  onChangeDestination={() => {
-                    destinationSubmitAfterConfirmRef.current = false;
-                    setDestinationOpen(true);
-                  }}
-                />
-
-                <IncomeRegisterFooter
-                  showDestinationDialog={Boolean(showDetails)}
-                  destinationOpen={destinationOpen}
-                  extraordinaryType={values.extraordinaryType}
-                  amountCents={values.amountCents}
-                  currencyCode={currencyCode}
-                  preview={previewInput}
-                  distributionPolicy={values.distributionPolicy}
-                  serverError={serverError}
-                  onDestinationOpenChange={setDestinationOpen}
-                  onConfirmDestination={(policy) => {
-                    form.setFieldValue("distributionPolicy", policy);
-                    if (destinationSubmitAfterConfirmRef.current) {
+                  <IncomeRegisterFieldsSection
+                    form={form}
+                    profile={profile}
+                    values={values}
+                    isExtraordinary={isExtraordinary}
+                    showDetails={showDetails}
+                    currencyCode={currencyCode}
+                    preview={previewInput}
+                    suggestedHeldCents={suggestedHeldCents}
+                    onChangeDestination={() => {
                       destinationSubmitAfterConfirmRef.current = false;
-                      void form.handleSubmit();
+                      setDestinationOpen(true);
+                    }}
+                  />
+
+                  <IncomeRegisterFooter
+                    showDestinationDialog={Boolean(showDetails)}
+                    destinationOpen={destinationOpen}
+                    extraordinaryType={values.extraordinaryType}
+                    amountCents={values.amountCents}
+                    currencyCode={currencyCode}
+                    preview={previewInput}
+                    distributionPolicy={values.distributionPolicy}
+                    serverError={serverError}
+                    onDestinationOpenChange={setDestinationOpen}
+                    onConfirmDestination={(policy) => {
+                      form.setFieldValue("distributionPolicy", policy);
+                      if (destinationSubmitAfterConfirmRef.current) {
+                        destinationSubmitAfterConfirmRef.current = false;
+                        void form.handleSubmit();
+                      }
+                    }}
+                    actions={
+                      showFormCtas ? (
+                        <form.Subscribe
+                          selector={(state) =>
+                            [state.canSubmit, state.isSubmitting] as const
+                          }
+                        >
+                          {([canSubmit, isSubmitting]) => (
+                            <IncomeRegisterActions
+                              canSubmit={canSubmit}
+                              isSubmitting={isSubmitting}
+                              submitLabel={submitLabel}
+                            />
+                          )}
+                        </form.Subscribe>
+                      ) : null
                     }
-                  }}
-                  actions={
-                    showFormCtas ? (
-                      <form.Subscribe
-                        selector={(state) =>
-                          [state.canSubmit, state.isSubmitting] as const
-                        }
-                      >
-                        {([canSubmit, isSubmitting]) => (
-                          <IncomeRegisterActions
-                            canSubmit={canSubmit}
-                            isSubmitting={isSubmitting}
-                            submitLabel={submitLabel}
-                          />
-                        )}
-                      </form.Subscribe>
-                    ) : null
-                  }
-                />
+                  />
+                </AnimatedView>
               </>
             );
           }}
         </form.Subscribe>
       </form>
-    </>
+    </AppPageShell>
   );
 }

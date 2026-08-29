@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { fromConvexError } from "@/core/errors";
 import { ConfirmDestructiveDialog } from "@/shared/components/confirm-destructive-dialog";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import {
@@ -116,6 +117,8 @@ export function CommitmentDetailSheet({
   }
 
   const title = commitment?.name ?? "Compromiso";
+  const titleId = "commitment-detail-sheet-title";
+  const contentKey = commitment?.id ?? "empty";
 
   const body = commitment ? (
     <>
@@ -216,19 +219,33 @@ export function CommitmentDetailSheet({
             className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-[24px] border-line bg-card px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-3"
           >
             <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line" />
-            <SheetTitle className="mb-4 shrink-0 pr-8 font-serif text-xl text-ink">
+            <SheetTitle
+              id={titleId}
+              className="mb-4 shrink-0 pr-8 font-serif text-xl text-ink"
+            >
               {title}
             </SheetTitle>
-            {body}
+            <AnimatedView viewKey={contentKey} aria-labelledby={titleId}>
+              {body}
+            </AnimatedView>
           </SheetContent>
         </Sheet>
       ) : (
         <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogContent className="max-w-[400px] gap-0 rounded-[22px] border-line bg-card p-0">
-            <DialogTitle className="px-5 pt-5 pr-12 font-serif text-xl text-ink">
+            <DialogTitle
+              id={titleId}
+              className="px-5 pt-5 pr-12 font-serif text-xl text-ink"
+            >
               {title}
             </DialogTitle>
-            <div className="px-5 pb-5 pt-4">{body}</div>
+            <AnimatedView
+              viewKey={contentKey}
+              aria-labelledby={titleId}
+              className="px-5 pb-5 pt-4"
+            >
+              {body}
+            </AnimatedView>
           </DialogContent>
         </Dialog>
       )}

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError } from "@/shared/components/ui/field";
 import { EXPENSE_AMOUNT_LABEL, EXPENSE_NEXT_CTA } from "../constants";
@@ -156,174 +157,183 @@ function ExpenseRegisterFormFields({
 
   if (step === "amount" && variant === "fab") {
     return (
-      <div className="space-y-4">
-        <form.Field name="amountCents">
-          {(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-            return (
-              <Field data-invalid={isInvalid}>
-                <div className="text-center">
-                  <p className="mb-1 font-mono text-[10px] tracking-widest text-mute uppercase">
-                    {EXPENSE_AMOUNT_LABEL}
-                  </p>
-                  <p className="font-serif text-[46px] leading-none text-ink">
-                    {formatKeypadDisplay(field.state.value, currencySymbol)}
-                  </p>
-                </div>
-                <ExpenseKeypad
-                  amountCents={field.state.value}
-                  onChange={(cents) => {
-                    field.handleChange(cents);
-                    field.handleBlur();
-                  }}
-                />
-                {isInvalid ? (
-                  <FieldError
-                    className="mt-2 text-center"
-                    errors={field.state.meta.errors}
+      <AnimatedView viewKey={`${variant}-${step}`} direction="forward">
+        <div className="space-y-4">
+          <form.Field name="amountCents">
+            {(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return (
+                <Field data-invalid={isInvalid}>
+                  <div className="text-center">
+                    <p className="mb-1 font-mono text-[10px] tracking-widest text-mute uppercase">
+                      {EXPENSE_AMOUNT_LABEL}
+                    </p>
+                    <p className="font-serif text-[46px] leading-none text-ink">
+                      {formatKeypadDisplay(field.state.value, currencySymbol)}
+                    </p>
+                  </div>
+                  <ExpenseKeypad
+                    amountCents={field.state.value}
+                    onChange={(cents) => {
+                      field.handleChange(cents);
+                      field.handleBlur();
+                    }}
                   />
-                ) : null}
-              </Field>
-            );
-          }}
-        </form.Field>
-        {serverError ? (
-          <p className="text-center text-sm text-danger" role="alert">
-            {serverError}
-          </p>
-        ) : null}
-        <form.Subscribe
-          selector={(state) =>
-            [state.fieldMeta.amountCents?.isValid, state.isSubmitting] as const
-          }
-        >
-          {([amountValid, isSubmitting]) => (
-            <Button
-              type="button"
-              disabled={!amountValid || isSubmitting}
-              onClick={() => void handleAmountNextFab()}
-              className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
-            >
-              {EXPENSE_NEXT_CTA}
-              <ArrowRight size={20} color="currentColor" aria-hidden />
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
+                  {isInvalid ? (
+                    <FieldError
+                      className="mt-2 text-center"
+                      errors={field.state.meta.errors}
+                    />
+                  ) : null}
+                </Field>
+              );
+            }}
+          </form.Field>
+          {serverError ? (
+            <p className="text-center text-sm text-danger" role="alert">
+              {serverError}
+            </p>
+          ) : null}
+          <form.Subscribe
+            selector={(state) =>
+              [
+                state.fieldMeta.amountCents?.isValid,
+                state.isSubmitting,
+              ] as const
+            }
+          >
+            {([amountValid, isSubmitting]) => (
+              <Button
+                type="button"
+                disabled={!amountValid || isSubmitting}
+                onClick={() => void handleAmountNextFab()}
+                className="h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
+              >
+                {EXPENSE_NEXT_CTA}
+                <ArrowRight size={20} color="currentColor" aria-hidden />
+              </Button>
+            )}
+          </form.Subscribe>
+        </div>
+      </AnimatedView>
     );
   }
 
   if (step === "amount" && variant === "envelope" && preselectedEnvelope) {
     return (
-      <div>
-        <form.Subscribe
-          selector={(state) => ({
-            amountCents: state.values.amountCents,
-            description: state.values.description,
-            isSubmitting: state.isSubmitting,
-          })}
-        >
-          {({ amountCents: amount, description, isSubmitting }) => (
-            <>
-              <form.Field name="amountCents">
-                {(amountField) => (
-                  <form.Field name="description">
-                    {(descriptionField) => (
-                      <ExpenseVariantBForm
-                        envelopeType={preselectedEnvelope}
-                        amountCents={amount}
-                        description={description}
-                        currencySymbol={currencySymbol}
-                        isSubmitting={isSubmitting}
-                        onAmountChange={(cents) => {
-                          amountField.handleChange(cents);
-                          amountField.handleBlur();
-                        }}
-                        onDescriptionChange={(value) => {
-                          descriptionField.handleChange(value);
-                        }}
-                        onSubmit={() => void handleVariantBSubmit()}
-                      />
-                    )}
-                  </form.Field>
-                )}
-              </form.Field>
-            </>
-          )}
-        </form.Subscribe>
-        <form.Field name="amountCents">
-          {(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-            return isInvalid ? (
-              <FieldError
-                className="mt-2 text-center"
-                errors={field.state.meta.errors}
-              />
-            ) : null;
-          }}
-        </form.Field>
-        <form.Field name="description">
-          {(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-            return isInvalid ? (
-              <FieldError
-                className="mt-2 text-center"
-                errors={field.state.meta.errors}
-              />
-            ) : null;
-          }}
-        </form.Field>
-        {serverError ? (
-          <p className="mt-3 text-center text-sm text-danger" role="alert">
-            {serverError}
-          </p>
-        ) : null}
-      </div>
+      <AnimatedView viewKey={`${variant}-${step}`} direction="forward">
+        <div>
+          <form.Subscribe
+            selector={(state) => ({
+              amountCents: state.values.amountCents,
+              description: state.values.description,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {({ amountCents: amount, description, isSubmitting }) => (
+              <>
+                <form.Field name="amountCents">
+                  {(amountField) => (
+                    <form.Field name="description">
+                      {(descriptionField) => (
+                        <ExpenseVariantBForm
+                          envelopeType={preselectedEnvelope}
+                          amountCents={amount}
+                          description={description}
+                          currencySymbol={currencySymbol}
+                          isSubmitting={isSubmitting}
+                          onAmountChange={(cents) => {
+                            amountField.handleChange(cents);
+                            amountField.handleBlur();
+                          }}
+                          onDescriptionChange={(value) => {
+                            descriptionField.handleChange(value);
+                          }}
+                          onSubmit={() => void handleVariantBSubmit()}
+                        />
+                      )}
+                    </form.Field>
+                  )}
+                </form.Field>
+              </>
+            )}
+          </form.Subscribe>
+          <form.Field name="amountCents">
+            {(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return isInvalid ? (
+                <FieldError
+                  className="mt-2 text-center"
+                  errors={field.state.meta.errors}
+                />
+              ) : null;
+            }}
+          </form.Field>
+          <form.Field name="description">
+            {(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+              return isInvalid ? (
+                <FieldError
+                  className="mt-2 text-center"
+                  errors={field.state.meta.errors}
+                />
+              ) : null;
+            }}
+          </form.Field>
+          {serverError ? (
+            <p className="mt-3 text-center text-sm text-danger" role="alert">
+              {serverError}
+            </p>
+          ) : null}
+        </div>
+      </AnimatedView>
     );
   }
 
   if (step === "envelope" && variant === "fab") {
     return (
-      <div>
-        <form.Subscribe
-          selector={(state) => ({
-            amountCents: state.values.amountCents,
-            envelopeType: state.values.envelopeType,
-            isSubmitting: state.isSubmitting,
-          })}
-        >
-          {({ amountCents: amount, envelopeType, isSubmitting }) => {
-            const suggestion = suggestionForAmount(amount);
-            return (
-              <form.Field name="envelopeType">
-                {(field) => (
-                  <ExpenseEnvelopeStep
-                    amountCents={amount}
-                    currencySymbol={currencySymbol}
-                    selectedEnvelope={envelopeType}
-                    suggestedEnvelope={suggestion.envelopeType}
-                    hint={suggestion.hint}
-                    isSubmitting={isSubmitting}
-                    onSelectEnvelope={(type) => {
-                      field.handleChange(type);
-                      field.handleBlur();
-                    }}
-                    onConfirm={() => void form.handleSubmit()}
-                  />
-                )}
-              </form.Field>
-            );
-          }}
-        </form.Subscribe>
-        {serverError ? (
-          <p className="mt-3 text-center text-sm text-danger" role="alert">
-            {serverError}
-          </p>
-        ) : null}
-      </div>
+      <AnimatedView viewKey={`${variant}-${step}`} direction="forward">
+        <div>
+          <form.Subscribe
+            selector={(state) => ({
+              amountCents: state.values.amountCents,
+              envelopeType: state.values.envelopeType,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {({ amountCents: amount, envelopeType, isSubmitting }) => {
+              const suggestion = suggestionForAmount(amount);
+              return (
+                <form.Field name="envelopeType">
+                  {(field) => (
+                    <ExpenseEnvelopeStep
+                      amountCents={amount}
+                      currencySymbol={currencySymbol}
+                      selectedEnvelope={envelopeType}
+                      suggestedEnvelope={suggestion.envelopeType}
+                      hint={suggestion.hint}
+                      isSubmitting={isSubmitting}
+                      onSelectEnvelope={(type) => {
+                        field.handleChange(type);
+                        field.handleBlur();
+                      }}
+                      onConfirm={() => void form.handleSubmit()}
+                    />
+                  )}
+                </form.Field>
+              );
+            }}
+          </form.Subscribe>
+          {serverError ? (
+            <p className="mt-3 text-center text-sm text-danger" role="alert">
+              {serverError}
+            </p>
+          ) : null}
+        </div>
+      </AnimatedView>
     );
   }
 

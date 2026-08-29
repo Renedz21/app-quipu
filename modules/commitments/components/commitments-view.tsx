@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import type { CommitmentCoverageItem } from "@/shared/components/commitments/commitment-coverage-list";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
@@ -15,7 +15,6 @@ import { formatLimaDate } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
-  COMMITMENTS_BACK_LINK,
   COMMITMENTS_EMPTY_BODY,
   COMMITMENTS_EMPTY_TITLE,
   COMMITMENTS_ERROR_BODY,
@@ -31,12 +30,12 @@ import { CommitmentDetailSheet } from "./commitment-detail-sheet";
 
 export function CommitmentsViewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
+    <AppPageShell maxWidth="2xl" breadcrumbs="auto">
       <Skeleton variant="line" className="h-4 w-20" />
       <Skeleton className="mt-4 h-9 w-48 rounded-lg" />
       <Skeleton variant="line" className="mt-2 h-4 w-full max-w-md" />
       <Skeleton className="mt-6 h-72 w-full rounded-xl [animation-delay:150ms]" />
-    </div>
+    </AppPageShell>
   );
 }
 
@@ -114,15 +113,8 @@ export function CommitmentsView() {
       : null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
-      <BackLink
-        href="/dashboard"
-        className="text-sm font-medium text-qp-deep hover:underline"
-      >
-        {COMMITMENTS_BACK_LINK}
-      </BackLink>
-
-      <header className="mt-4">
+    <AppPageShell maxWidth="2xl" breadcrumbs="auto">
+      <header>
         <h1 className="font-serif text-[28px] leading-tight text-ink md:text-[32px]">
           {COMMITMENTS_PAGE_TITLE}
         </h1>
@@ -195,6 +187,6 @@ export function CommitmentsView() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
       />
-    </div>
+    </AppPageShell>
   );
 }

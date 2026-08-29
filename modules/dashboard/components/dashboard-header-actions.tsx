@@ -7,8 +7,8 @@ import {
   INCOME_MOBILE_CTA,
 } from "@/modules/dashboard/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import { DashboardRegisterButton } from "./dashboard-register-button";
 

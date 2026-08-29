@@ -10,6 +10,7 @@ import {
 } from "@/core/analytics";
 import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
 import { usePasskeySupport } from "../hooks/use-passkey-support";
 import {
@@ -57,6 +58,7 @@ export function SignInView({
       ? { kind: "password", email: initialEmail }
       : { kind: "email" },
   );
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [error, setError] = useState<
     "credentials" | "passkey" | "unverified" | null
   >(null);
@@ -83,6 +85,7 @@ export function SignInView({
     validators: { onChange: emailOnlySchema },
     onSubmit: async ({ value }) => {
       setError(null);
+      setDirection("forward");
       setStep({ kind: "password", email: value.email });
     },
   });
@@ -132,7 +135,12 @@ export function SignInView({
             : `Ingresa tu contraseña para ${step.email}`}
         </p>
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex w-full max-w-95 flex-col gap-5">
+          <AnimatedView
+            viewKey={step.kind}
+            direction={direction}
+            aria-live="off"
+            className="flex w-full max-w-95 flex-col gap-5"
+          >
             {step.kind === "email" ? (
               <EmailStep
                 form={emailForm}
@@ -152,13 +160,14 @@ export function SignInView({
                 onChangeEmail={() => {
                   setError(null);
                   setTurnstileToken(null);
+                  setDirection("back");
                   setStep({ kind: "email" });
                 }}
                 showPasskey={support.webauthn}
                 returnTo={returnTo}
               />
             )}
-          </div>
+          </AnimatedView>
         </div>
       </div>
     </div>

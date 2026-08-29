@@ -2,23 +2,16 @@
 
 import { useMutation } from "convex/react";
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import type { MouseEvent } from "react";
 import { api } from "@/convex/_generated/api";
+import { themeChangeTransition } from "@/shared/lib/theme-transition";
+import { useIsClient } from "@/shared/lib/use-is-client";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_THEME_DARK,
   SETTINGS_THEME_LABEL,
   SETTINGS_THEME_LIGHT,
 } from "../constants";
-
-/** Client-only gate without useEffect/setState (avoids mount flash). */
-function useIsClient() {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
 
 export function SettingsThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -28,8 +21,11 @@ export function SettingsThemeToggle() {
   // SSR / first paint: defaultTheme is light, so treat as light until client.
   const isDark = isClient && resolvedTheme === "dark";
 
-  async function applyTheme(next: "light" | "dark") {
-    setTheme(next);
+  async function applyTheme(
+    next: "light" | "dark",
+    origin?: { x: number; y: number },
+  ) {
+    themeChangeTransition(() => setTheme(next), origin);
     try {
       await updateAppearance({
         appearanceTheme: next === "dark" ? "tinta" : "light",
@@ -49,7 +45,9 @@ export function SettingsThemeToggle() {
           aria-pressed={!isDark}
           aria-label={SETTINGS_THEME_LIGHT}
           disabled={!isClient}
-          onClick={() => void applyTheme("light")}
+          onClick={(e: MouseEvent<HTMLButtonElement>) =>
+            void applyTheme("light", { x: e.clientX, y: e.clientY })
+          }
           className={cn(
             "h-[30px] w-11 rounded-lg border transition-colors",
             "bg-[#FBFAF7]",
@@ -61,7 +59,9 @@ export function SettingsThemeToggle() {
           aria-pressed={isDark}
           aria-label={SETTINGS_THEME_DARK}
           disabled={!isClient}
-          onClick={() => void applyTheme("dark")}
+          onClick={(e: MouseEvent<HTMLButtonElement>) =>
+            void applyTheme("dark", { x: e.clientX, y: e.clientY })
+          }
           className={cn(
             "h-[30px] w-11 rounded-lg border transition-colors",
             "bg-[#23201C]",

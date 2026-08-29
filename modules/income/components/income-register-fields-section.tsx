@@ -69,7 +69,7 @@ export function IncomeRegisterFieldsSection({
   return (
     <div
       className={cn(
-        "grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-7",
+        "grid gap-6 xl:grid-cols-[1fr_min(320px,100%)] xl:gap-7",
         showDetails && "mt-2",
       )}
     >

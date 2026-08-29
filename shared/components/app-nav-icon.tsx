@@ -10,8 +10,6 @@ import { Layer } from "reicon-react/icons/Layer";
 import { MoneyPlus } from "reicon-react/icons/MoneyPlus";
 import { Settings } from "reicon-react/icons/Settings";
 
-import { cn } from "@/shared/lib/utils";
-
 type Props = {
   label: string;
   active?: boolean;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import type { PremiumLockCopy } from "@/shared/components/premium-lock-card";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import {
   Dialog,
   DialogContent,
@@ -60,51 +61,57 @@ export function PremiumLockPrompt({
     });
   }, [open]);
 
+  const titleId = "premium-lock-prompt-title";
+
   const bodyContent = (
-    <div className="relative">
-      <div>
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-qp-deep">
-          Quipu Plus
-        </span>
-        {isMobile ? (
-          <SheetTitle className="mt-3 font-serif text-[22px] font-medium leading-snug text-ink">
-            {title}
-          </SheetTitle>
-        ) : (
-          <DialogTitle className="mt-3 font-serif text-[22px] font-medium leading-snug text-ink">
-            {title}
-          </DialogTitle>
-        )}
-        {isMobile ? (
-          <SheetDescription className="mt-2 text-[13.5px] leading-relaxed text-mute">
-            {body}
-          </SheetDescription>
-        ) : (
-          <DialogDescription className="mt-2 text-[13.5px] leading-relaxed text-mute">
-            {body}
-          </DialogDescription>
-        )}
-        <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <Link
-            href={href}
-            onClick={() => onOpenChange(false)}
-            className={cn(
-              "inline-flex min-h-11 items-center justify-center rounded-[11px] bg-ink px-4 py-2.5",
-              "text-[13.5px] font-semibold text-canvas transition-colors hover:bg-ink/90",
-            )}
-          >
-            {resolvedCta}
-          </Link>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="inline-flex min-h-11 items-center justify-center rounded-[11px] px-3 text-[13px] font-medium text-mute transition-colors hover:text-ink"
-          >
-            Ahora no
-          </button>
-        </div>
+    <AnimatedView viewKey={title} aria-labelledby={titleId}>
+      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-qp-deep">
+        Quipu Plus
+      </span>
+      {isMobile ? (
+        <SheetTitle
+          id={titleId}
+          className="mt-3 font-serif text-[22px] font-medium leading-snug text-ink"
+        >
+          {title}
+        </SheetTitle>
+      ) : (
+        <DialogTitle
+          id={titleId}
+          className="mt-3 font-serif text-[22px] font-medium leading-snug text-ink"
+        >
+          {title}
+        </DialogTitle>
+      )}
+      {isMobile ? (
+        <SheetDescription className="mt-2 text-[13.5px] leading-relaxed text-mute">
+          {body}
+        </SheetDescription>
+      ) : (
+        <DialogDescription className="mt-2 text-[13.5px] leading-relaxed text-mute">
+          {body}
+        </DialogDescription>
+      )}
+      <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+        <Link
+          href={href}
+          onClick={() => onOpenChange(false)}
+          className={cn(
+            "inline-flex min-h-11 items-center justify-center rounded-[11px] bg-ink px-4 py-2.5",
+            "text-[13.5px] font-semibold text-canvas transition-colors hover:bg-ink/90",
+          )}
+        >
+          {resolvedCta}
+        </Link>
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="inline-flex min-h-11 items-center justify-center rounded-[11px] px-3 text-[13px] font-medium text-mute transition-colors hover:text-ink"
+        >
+          Ahora no
+        </button>
       </div>
-    </div>
+    </AnimatedView>
   );
 
   if (isMobile) {

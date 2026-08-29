@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { currencySymbolForCode, DEFAULT_CURRENCY } from "@/core/constants";
 import { useDashboardSummary } from "@/modules/dashboard/hooks/use-dashboard-summary";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import {
   EXPENSE_FLOW_TITLE,
@@ -73,32 +74,32 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
       title={step === "success" ? EXPENSE_FLOW_TITLE : title}
       progress={step === "success" ? null : <FlowProgress step={step} />}
     >
-      {step !== "success" ? (
-        <ExpenseRegisterForm
-          step={step}
-          setStep={setStep}
-          variant={variant}
-          preselectedEnvelope={preselectedEnvelope}
-          recentEnvelopes={recentEnvelopes}
-          currencySymbol={currencySymbol}
-          registerExpense={registerExpense}
-          onSuccess={(response) => {
-            setResult(response);
-            setStep("success");
-          }}
-        />
-      ) : null}
-
-      {step === "success" && result ? (
-        <ExpenseConfirmation
-          amountCents={result.amount}
-          envelopeType={result.envelopeType}
-          remainingAmount={result.remainingAmount}
-          currencyCode={currencyCode}
-          startedAt={startedAt}
-          onClose={close}
-        />
-      ) : null}
+      <AnimatedView viewKey={step} direction="forward" aria-live="polite">
+        {step === "success" && result ? (
+          <ExpenseConfirmation
+            amountCents={result.amount}
+            envelopeType={result.envelopeType}
+            remainingAmount={result.remainingAmount}
+            currencyCode={currencyCode}
+            startedAt={startedAt}
+            onClose={close}
+          />
+        ) : (
+          <ExpenseRegisterForm
+            step={step}
+            setStep={setStep}
+            variant={variant}
+            preselectedEnvelope={preselectedEnvelope}
+            recentEnvelopes={recentEnvelopes}
+            currencySymbol={currencySymbol}
+            registerExpense={registerExpense}
+            onSuccess={(response) => {
+              setResult(response);
+              setStep("success");
+            }}
+          />
+        )}
+      </AnimatedView>
     </ExpenseRegisterShell>
   );
 }

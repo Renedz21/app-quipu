@@ -120,8 +120,8 @@ export function SavingsView() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-mute md:hidden">
             {SAVINGS_PAGE_SUBTITLE}
@@ -149,7 +149,7 @@ export function SavingsView() {
         />
       ) : null}
 
-      <section className="mt-6">
+      <section>
         <div className="mb-3.5 flex items-center gap-2">
           <span className="text-[12.5px] font-medium text-ink-secondary">
             {GOALS_SECTION_LABEL}
@@ -267,7 +267,7 @@ function SavingsViewSkeleton() {
     <div
       role="status"
       aria-label="Cargando tus ahorros"
-      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8"
     >
       <div className="flex items-center justify-between gap-4">
         <Skeleton className="h-[30px] w-[180px] rounded-lg" />

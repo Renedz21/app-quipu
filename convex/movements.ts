@@ -160,6 +160,40 @@ const contextValidator = v.union(
   }),
 );
 
+const incomeSourceValidator = v.union(
+  v.literal("payroll"),
+  v.literal("freelance"),
+  v.literal("business"),
+  v.literal("gift"),
+  v.literal("refund"),
+  v.literal("investment"),
+  v.literal("other"),
+);
+
+const movementListItemValidator = v.object({
+  id: v.string(),
+  kind: v.union(
+    v.literal("expense"),
+    v.literal("income"),
+    v.literal("contribution"),
+  ),
+  label: v.string(),
+  amount: v.number(),
+  timestamp: v.number(),
+  envelopeLabel: v.optional(v.string()),
+  envelopeType: v.optional(v.union(v.literal("needs"), v.literal("wants"))),
+  fundingSource: v.optional(
+    v.union(v.literal("space_budget"), v.literal("personal_pocket")),
+  ),
+  isExtraordinaryIncome: v.optional(v.boolean()),
+  appliedByAutoRule: v.optional(v.boolean()),
+  occurredAt: v.optional(v.number()),
+  source: v.optional(incomeSourceValidator),
+  incomeKind: v.optional(
+    v.union(v.literal("habitual"), v.literal("extraordinary")),
+  ),
+});
+
 export const listForContext = query({
   args: { context: contextValidator },
   returns: v.union(
@@ -174,24 +208,7 @@ export const listForContext = query({
           endDate: v.number(),
         }),
       ),
-      movements: v.array(
-        v.object({
-          id: v.string(),
-          kind: v.union(
-            v.literal("expense"),
-            v.literal("income"),
-            v.literal("contribution"),
-          ),
-          label: v.string(),
-          envelopeLabel: v.optional(v.string()),
-          amount: v.number(),
-          timestamp: v.number(),
-          fundingSource: v.optional(
-            v.union(v.literal("space_budget"), v.literal("personal_pocket")),
-          ),
-          isExtraordinaryIncome: v.optional(v.boolean()),
-        }),
-      ),
+      movements: v.array(movementListItemValidator),
     }),
   ),
   handler: async (ctx, args) => {
@@ -250,29 +267,7 @@ export const listForContext = query({
         incomesRaw,
         envelopeTypeById,
         MOVEMENTS_LIST_LIMIT,
-      ).map((movement) => {
-        if (movement.kind === "income") {
-          return {
-            id: movement.id,
-            kind: movement.kind,
-            label: movement.label,
-            amount: movement.amount,
-            timestamp: movement.timestamp,
-            isExtraordinaryIncome: movement.isExtraordinaryIncome,
-          };
-        }
-        if (movement.kind === "expense") {
-          return {
-            id: movement.id,
-            kind: movement.kind,
-            label: movement.label,
-            envelopeLabel: movement.envelopeLabel,
-            amount: movement.amount,
-            timestamp: movement.timestamp,
-          };
-        }
-        return movement;
-      });
+      );
 
       return {
         currencyCode: profile.currencyCode,

@@ -10,8 +10,7 @@ import { AllocationBar } from "@/modules/onboarding/components/allocation-bar";
 import { AllocationRow } from "@/modules/onboarding/components/allocation-row";
 import { CheckMark } from "@/modules/onboarding/components/check-mark";
 import type { Allocation } from "@/modules/onboarding/lib/allocation";
-import { ModuleLoadingShell } from "@/shared/components/layout/module-loading-shell";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ENVELOPES } from "@/shared/constants/envelopes";
@@ -23,7 +22,6 @@ import {
   SETTINGS_ALLOCATIONS_PAGE_TITLE,
   SETTINGS_ALLOCATIONS_SAVE,
   SETTINGS_ALLOCATIONS_SAVED,
-  SETTINGS_SYSTEM_HEADING,
 } from "../constants";
 import { useSettingsDashboardSummary } from "../queries";
 
@@ -42,12 +40,15 @@ export function SettingsAllocationsEditor({
 
   if (summary === undefined) {
     return (
-      <ModuleLoadingShell maxWidth="lg" className="flex min-h-[50vh] flex-col">
-        <Skeleton variant="line" className="h-4 w-24" />
-        <Skeleton className="mt-4 h-8 w-48 rounded-lg" />
+      <AppPageShell
+        maxWidth="6xl"
+        breadcrumbs="auto"
+        className="flex min-h-[50vh] flex-col"
+      >
+        <Skeleton className="h-8 w-48 rounded-lg" />
         <Skeleton className="mt-6 h-40 w-full rounded-xl [animation-delay:150ms]" />
         <Skeleton className="mt-4 h-24 w-full rounded-xl [animation-delay:300ms]" />
-      </ModuleLoadingShell>
+      </AppPageShell>
     );
   }
 
@@ -95,14 +96,12 @@ export function SettingsAllocationsEditor({
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-lg flex-col px-5 py-4 md:py-8">
-      <BackLink
-        href="/settings/system"
-        className="text-[12.5px] text-mute hover:text-ink"
-      >
-        {SETTINGS_SYSTEM_HEADING}
-      </BackLink>
-      <h1 className="mt-3 font-serif text-[23px] font-medium text-ink">
+    <AppPageShell
+      maxWidth="6xl"
+      breadcrumbs="auto"
+      className="flex min-h-[calc(100dvh-4rem)] flex-col"
+    >
+      <h1 className="font-serif text-[23px] font-medium text-ink">
         {SETTINGS_ALLOCATIONS_PAGE_TITLE}
       </h1>
       <p className="mt-1 text-[12.5px] text-mute-subtle">
@@ -167,6 +166,6 @@ export function SettingsAllocationsEditor({
       >
         {isPending ? "Guardando…" : SETTINGS_ALLOCATIONS_SAVE}
       </Button>
-    </div>
+    </AppPageShell>
   );
 }

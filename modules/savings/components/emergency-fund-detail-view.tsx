@@ -2,9 +2,9 @@
 
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { api } from "@/convex/_generated/api";
 import { Lock } from "reicon-react/icons/Lock";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { api } from "@/convex/_generated/api";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatCents } from "@/shared/lib/money";
@@ -12,7 +12,6 @@ import { cn } from "@/shared/lib/utils";
 import {
   EMERGENCY_FUND_ADJUST_CTA,
   EMERGENCY_FUND_ADJUST_HINT,
-  EMERGENCY_FUND_DETAIL_BACK,
   EMERGENCY_FUND_DETAIL_BODY,
   EMERGENCY_FUND_DETAIL_MOBILE_BODY,
   EMERGENCY_FUND_LABEL,
@@ -31,11 +30,11 @@ export function EmergencyFundDetailView() {
   if (detail === undefined) {
     return (
       <div className="min-h-full bg-gradient-to-b from-qp10 to-canvas to-40%">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 md:py-8">
+        <AppPageShell maxWidth="4xl" breadcrumbs="auto">
           <Skeleton variant="line" className="h-4 w-24" />
           <Skeleton className="mt-4 h-10 w-56 rounded-lg" />
           <Skeleton className="mt-6 h-40 w-full rounded-xl [animation-delay:150ms]" />
-        </div>
+        </AppPageShell>
       </div>
     );
   }
@@ -43,14 +42,11 @@ export function EmergencyFundDetailView() {
   if (detail === null || !detail.emergencyFund) {
     return (
       <div className="min-h-full bg-gradient-to-b from-qp10 to-canvas to-40%">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 md:py-8">
-          <BackLink href="/savings" className="text-sm text-mute">
-            {EMERGENCY_FUND_DETAIL_BACK}
-          </BackLink>
-          <p className="mt-6 text-sm text-mute">
+        <AppPageShell maxWidth="4xl" breadcrumbs="auto">
+          <p className="mt-2 text-sm text-mute">
             Aún no encontramos tu fondo de emergencia.
           </p>
-        </div>
+        </AppPageShell>
       </div>
     );
   }
@@ -59,12 +55,8 @@ export function EmergencyFundDetailView() {
 
   return (
     <div className="min-h-full bg-gradient-to-b from-qp10 to-canvas to-40%">
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-8 md:py-8">
-        <BackLink href="/savings" className="text-[13px] text-mute">
-          {EMERGENCY_FUND_DETAIL_BACK}
-        </BackLink>
-
-        <div className="mt-4 flex items-center gap-3">
+      <AppPageShell maxWidth="4xl" breadcrumbs="auto">
+        <div className="flex items-center gap-3">
           <span className="flex size-[34px] items-center justify-center rounded-[10px] bg-moss text-white">
             <Lock size={15} aria-hidden />
           </span>
@@ -147,7 +139,7 @@ export function EmergencyFundDetailView() {
             {EMERGENCY_FUND_ADJUST_CTA}
           </Link>
         </div>
-      </div>
+      </AppPageShell>
     </div>
   );
 }

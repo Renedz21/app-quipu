@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ESPACIOS_SETTINGS_TITLE } from "../constants";
 import type { SpaceProposalKind } from "../lib/space-proposal-labels";
@@ -46,16 +45,10 @@ export function SpaceSettingsView({ spaceId }: Props) {
 
   if (settings === null) {
     return (
-      <SpacePageShell backHref="/espacios" backLabel="Espacios">
+      <SpacePageShell>
         <p className="mt-6 text-sm leading-relaxed text-mute">
           No pudimos cargar este espacio o ya no tienes acceso.
         </p>
-        <Link
-          href="/espacios"
-          className="mt-3 inline-block text-sm font-medium text-qp-deep underline-offset-2 hover:underline"
-        >
-          Volver a espacios
-        </Link>
       </SpacePageShell>
     );
   }
@@ -77,12 +70,7 @@ export function SpaceSettingsView({ spaceId }: Props) {
     );
 
   return (
-    <SpacePageShell
-      backHref={`/espacios/${spaceId}`}
-      backLabel={settings.space.name}
-      title={ESPACIOS_SETTINGS_TITLE}
-      className="max-w-5xl"
-    >
+    <SpacePageShell title={ESPACIOS_SETTINGS_TITLE} maxWidth="6xl">
       <div className="mt-5">
         <SpaceAlerts
           spaceId={spaceId}

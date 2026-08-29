@@ -123,6 +123,12 @@
   --shadow-shield: 0 16px 40px -20px rgba(60, 125, 110, 0.5);
 
   --animate-qpulse: qpulse 1.4s ease-in-out infinite;
+
+  --duration-motion-fast: 150ms;
+  --duration-motion-normal: 200ms;
+  --duration-motion-slow: 280ms;
+  --ease-motion-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-motion-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
 @keyframes qpulse {
@@ -316,6 +322,16 @@ html[data-accent="clay"] {
   --warning-text: oklch(0.86 0.08 85);
 }
 
+@layer utilities {
+  .qp-motion-enter {
+    @apply animate-in fade-in-0 duration-200 motion-reduce:animate-none;
+  }
+
+  .qp-motion-exit {
+    @apply animate-out fade-out-0 duration-150 motion-reduce:animate-none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -325,5 +341,36 @@ html[data-accent="clay"] {
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Revelado circular al cambiar de tema (View Transitions API).
+   --vt-x / --vt-y son el punto de click; ver shared/lib/theme-transition.ts. */
+::view-transition-old(root) {
+  animation: none;
+  animation-fill-mode: both;
+  z-index: -1;
+}
+
+::view-transition-new(root) {
+  animation: qp-theme-reveal 0.9s cubic-bezier(0.25, 1, 0.4, 1);
+  animation-fill-mode: both;
+  clip-path: circle(0px at var(--vt-x, 50%) var(--vt-y, 50%));
+}
+
+@keyframes qp-theme-reveal {
+  from {
+    clip-path: circle(0px at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+  to {
+    clip-path: circle(250vmax at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    clip-path: none;
   }
 }

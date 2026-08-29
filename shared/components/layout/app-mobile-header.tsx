@@ -2,6 +2,7 @@
 
 import { Menu } from "reicon-react/icons/Menu";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
+import { ThemeToggleButton } from "@/shared/components/theme-toggle-button";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 
@@ -29,6 +30,7 @@ export function AppMobileHeader({ onMenuClick, className }: Props) {
         <Menu size={22} color="currentColor" aria-hidden />
       </Button>
       <QuipuLogo className="scale-90 flex-1" />
+      <ThemeToggleButton />
     </header>
   );
 }

@@ -6,18 +6,11 @@ import {
   FEEDBACK_PAGE_SUBTITLE,
   FEEDBACK_PAGE_TITLE,
 } from "@/modules/feedback/constants";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 
 export function SettingsFeedbackView() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <BackLink
-        href="/dashboard"
-        className="mb-3 text-[12.5px] text-mute hover:text-ink"
-      >
-        Volver
-      </BackLink>
-
+    <AppPageShell maxWidth="6xl" breadcrumbs="auto">
       <header className="mb-5 md:mb-6">
         <h1 className="font-serif text-[23px] font-medium text-ink md:text-[27px]">
           {FEEDBACK_PAGE_TITLE}
@@ -34,6 +27,6 @@ export function SettingsFeedbackView() {
       <p className="mt-4 max-w-xl text-[12.5px] text-mute-subtle">
         {FEEDBACK_FOOTER}
       </p>
-    </div>
+    </AppPageShell>
   );
 }

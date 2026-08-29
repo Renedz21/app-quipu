@@ -6,14 +6,13 @@ import { useEffect, useRef } from "react";
 import { Check } from "reicon-react/icons/Check";
 import { api } from "@/convex/_generated/api";
 import { AnalyticsEvents, track } from "@/core/analytics";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatLimaDate } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/utils";
 import {
   PROGRESS_ACHIEVEMENTS_LABEL,
-  PROGRESS_BACK_LINK,
   PROGRESS_CHART_CAPTION,
   PROGRESS_CHART_LABEL,
   PROGRESS_ERROR_BODY,
@@ -94,11 +93,7 @@ function AchievementCard({
 /** Canon bloque 8 "Cargando": hero de racha + rejilla de logros. */
 function ProgressOverviewSkeleton() {
   return (
-    <div
-      role="status"
-      aria-label="Reuniendo tu progreso"
-      className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 md:py-8"
-    >
+    <AppPageShell maxWidth="4xl" breadcrumbs="auto">
       <Skeleton variant="line" className="h-3 w-[60px] rounded-[5px]" />
       <Skeleton className="mt-3.5 h-[30px] w-[200px] rounded-lg" />
       <Skeleton
@@ -118,7 +113,7 @@ function ProgressOverviewSkeleton() {
         <Skeleton className="h-[74px] rounded-xl [animation-delay:300ms]" />
         <Skeleton className="h-[74px] rounded-xl" />
       </div>
-    </div>
+    </AppPageShell>
   );
 }
 
@@ -159,15 +154,8 @@ export function ProgressView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-6 md:px-8 md:py-8">
-      <BackLink
-        href="/dashboard"
-        className="text-[12.5px] text-ink-secondary hover:text-ink md:text-[13px]"
-      >
-        {PROGRESS_BACK_LINK}
-      </BackLink>
-
-      <header className="mt-3 mb-6 md:mt-3.5">
+    <AppPageShell maxWidth="4xl" breadcrumbs="auto">
+      <header className="mb-6 md:mb-6">
         <h1 className="font-serif text-[22px] font-medium text-ink md:text-[27px]">
           {PROGRESS_PAGE_TITLE}
         </h1>
@@ -236,6 +224,6 @@ export function ProgressView() {
           {PROGRESS_REWARDS_LINK}
         </Link>
       </div>
-    </div>
+    </AppPageShell>
   );
 }

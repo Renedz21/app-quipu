@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { currencySymbolForCode, DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import { ExpenseKeypad } from "@/modules/expenses/components/expense-keypad";
@@ -33,6 +33,7 @@ type Props = {
   updateExpense: UpdateExpenseFn;
   onSuccess: () => void;
   onCancel: () => void;
+  autoFocus?: boolean;
 };
 
 const ENVELOPES: ExpenseEnvelopeType[] = ["needs", "wants"];
@@ -46,9 +47,19 @@ export function ExpenseEditForm({
   updateExpense,
   onSuccess,
   onCancel,
+  autoFocus = false,
 }: Props) {
+  const formRef = useRef<HTMLDivElement>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const currencySymbol = currencySymbolForCode(currencyCode);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const firstField = formRef.current?.querySelector<HTMLElement>(
+      'button[type="button"]:not([disabled])',
+    );
+    firstField?.focus();
+  }, [autoFocus]);
 
   const form = useForm({
     defaultValues: {
@@ -77,7 +88,7 @@ export function ExpenseEditForm({
   });
 
   return (
-    <div className="space-y-4">
+    <div ref={formRef} className="space-y-4">
       <form.Field name="amountCents">
         {(field) => {
           const isInvalid =

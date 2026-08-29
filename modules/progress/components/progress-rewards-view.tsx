@@ -3,12 +3,11 @@
 import { useMutation, useQuery } from "convex/react";
 import { useTheme } from "next-themes";
 import { api } from "@/convex/_generated/api";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import {
-  PROGRESS_BACK_LINK,
   PROGRESS_ERROR_BODY,
   PROGRESS_ERROR_RETRY,
   PROGRESS_ERROR_TITLE,
@@ -27,10 +26,10 @@ export function ProgressRewardsView() {
 
   if (rewards === undefined) {
     return (
-      <div className="space-y-4">
+      <AppPageShell maxWidth="4xl" breadcrumbs="auto">
         <Skeleton className="h-8 w-40 rounded-lg" />
-        <Skeleton className="h-32 w-full rounded-xl [animation-delay:150ms]" />
-      </div>
+        <Skeleton className="mt-4 h-32 w-full rounded-xl [animation-delay:150ms]" />
+      </AppPageShell>
     );
   }
 
@@ -56,15 +55,8 @@ export function ProgressRewardsView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-8 md:py-8">
-      <BackLink
-        href="/progress"
-        className="text-[12.5px] text-ink-secondary hover:text-ink md:text-[13px]"
-      >
-        {PROGRESS_BACK_LINK}
-      </BackLink>
-
-      <header className="mt-3 mb-6">
+    <AppPageShell maxWidth="4xl" breadcrumbs="auto">
+      <header className="mb-6">
         <h1 className="font-serif text-[22px] font-medium text-ink md:text-[24px]">
           {REWARDS_PAGE_TITLE}
         </h1>
@@ -155,6 +147,6 @@ export function ProgressRewardsView() {
       </div>
 
       <p className="text-[12.5px] text-mute-subtle">{REWARDS_THEME_HINT}</p>
-    </div>
+    </AppPageShell>
   );
 }

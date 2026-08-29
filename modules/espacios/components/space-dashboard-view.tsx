@@ -81,16 +81,10 @@ export function SpaceDashboardView({ spaceId }: Props) {
 
   if (overview === null || profile === null) {
     return (
-      <SpacePageShell backHref="/espacios" backLabel="Espacios">
+      <SpacePageShell>
         <p className="mt-6 text-sm leading-relaxed text-mute">
           No pudimos cargar este espacio o ya no tienes acceso.
         </p>
-        <Link
-          href="/espacios"
-          className="mt-3 inline-block text-sm font-medium text-qp-deep underline-offset-2 hover:underline"
-        >
-          Volver a espacios
-        </Link>
       </SpacePageShell>
     );
   }
@@ -107,7 +101,7 @@ export function SpaceDashboardView({ spaceId }: Props) {
     overview.viewerRole === "owner" && !readonly && waitingForPartner;
 
   return (
-    <SpacePageShell backHref="/espacios" backLabel="Espacios">
+    <SpacePageShell>
       <SpaceDashboardHeader
         spaceId={spaceId}
         name={overview.space.name}

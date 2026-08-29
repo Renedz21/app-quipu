@@ -118,3 +118,8 @@ export const CYCLE_CLOSE_REPORT_EXTRAORDINARY_HINT =
 export const INCOME_MOBILE_CTA = "+ Ingreso";
 /** Desktop income CTA in the dashboard header. */
 export const INCOME_DESKTOP_CTA = "Registrar ingreso";
+
+export const COACH_SAVINGS_UNASSIGNED_PREFIX = "Tienes";
+export const COACH_SAVINGS_UNASSIGNED_SUFFIX =
+  "en tu sobre de ahorro sin destino.";
+export const COACH_SAVINGS_UNASSIGNED_CTA = "Decidir destino";

@@ -122,6 +122,9 @@ function DashboardContent({ profileName }: Props) {
               currencyCode={summary.profile.currencyCode}
               layout="full"
               isPremium={summary.profile.plan === "premium"}
+              savingsUnassignedCents={
+                summary.liquidity.savingsParkedInEnvelopeCents
+              }
             />
           ) : null}
 
@@ -136,6 +139,9 @@ function DashboardContent({ profileName }: Props) {
                 coach={summary.coach}
                 currencyCode={summary.profile.currencyCode}
                 isPremium={summary.profile.plan === "premium"}
+                savingsUnassignedCents={
+                  summary.liquidity.savingsParkedInEnvelopeCents
+                }
               />
             ) : null}
           </div>

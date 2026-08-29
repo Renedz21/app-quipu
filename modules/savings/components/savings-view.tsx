@@ -29,6 +29,8 @@ import {
 } from "../constants";
 import { buildCycleContributionSubtitle } from "../lib/savingsCopy";
 import { useCycleSavingsBreakdown } from "../queries";
+import { AssignSavingsCard } from "./assign-savings-card";
+import { AssignSavingsSheet } from "./assign-savings-sheet";
 import { ContributeGoalDialog } from "./contribute-goal-dialog";
 import {
   CycleSavingsSection,
@@ -46,6 +48,7 @@ export function SavingsView() {
     id: Id<"subEnvelopes">;
     label: string;
   } | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   if (overview === undefined) {
     return <SavingsViewSkeleton />;
@@ -53,7 +56,7 @@ export function SavingsView() {
 
   if (overview === null) {
     return (
-      <section className="rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+      <section className="rounded-xl border border-danger-line bg-danger-bg p-5 md:p-6">
         <h2 className="text-base font-semibold text-danger-ink">
           {SAVINGS_ERROR_TITLE}
         </h2>
@@ -120,8 +123,8 @@ export function SavingsView() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-mute md:hidden">
             {SAVINGS_PAGE_SUBTITLE}
@@ -133,7 +136,7 @@ export function SavingsView() {
             {headerSubtitle}
           </p>
         </div>
-        <span className="hidden rounded-lg border border-line bg-card px-3 py-2 font-mono text-[11px] text-mute md:inline">
+        <span className="hidden rounded-xl border border-line/70 bg-card px-3 py-2 text-[12.5px] font-medium text-ink-secondary md:inline">
           {SAVINGS_TOTAL_SAVED_LABEL} ·{" "}
           {formatCents(overview.totalSavedCents, {
             currency: overview.profile.currencyCode,
@@ -149,9 +152,17 @@ export function SavingsView() {
         />
       ) : null}
 
-      <section className="mt-6">
+      {overview.assignPlan ? (
+        <AssignSavingsCard
+          availableCents={overview.assignPlan.totalCents}
+          currencyCode={overview.profile.currencyCode}
+          onOpen={() => setAssignOpen(true)}
+        />
+      ) : null}
+
+      <section>
         <div className="mb-3.5 flex items-center gap-2">
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-faint">
+          <span className="text-[12.5px] font-medium text-ink-secondary">
             {GOALS_SECTION_LABEL}
           </span>
           <div className="h-px flex-1 bg-line-divider" />
@@ -192,7 +203,7 @@ export function SavingsView() {
             ))}
           </div>
         ) : showGoalsEmptyState ? (
-          <div className="flex flex-col items-center gap-1.5 rounded-[14px] border border-dashed border-line bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-line/70 bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
             <span
               className="flex size-10 items-center justify-center rounded-full border border-dashed border-mute md:size-10"
               aria-hidden
@@ -208,7 +219,7 @@ export function SavingsView() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1.5 rounded-[14px] border border-dashed border-line bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-line/70 bg-surface-soft px-4 py-6 text-center md:gap-[7px] md:py-[26px]">
             <span
               className="flex size-10 items-center justify-center rounded-full border border-dashed border-mute"
               aria-hidden
@@ -244,6 +255,13 @@ export function SavingsView() {
       ) : null}
 
       <NewGoalDialog open={newGoalOpen} onOpenChange={setNewGoalOpen} />
+      <AssignSavingsSheet
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        availableCents={overview.assignPlan?.totalCents ?? 0}
+        currencyCode={overview.profile.currencyCode}
+        plan={overview.assignPlan}
+      />
       {contributeGoal ? (
         <ContributeGoalDialog
           open
@@ -267,24 +285,25 @@ function SavingsViewSkeleton() {
     <div
       role="status"
       aria-label="Cargando tus ahorros"
-      className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8"
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8"
     >
       <div className="flex items-center justify-between gap-4">
         <Skeleton className="h-[30px] w-[180px] rounded-lg" />
         <Skeleton className="hidden h-[34px] w-[170px] rounded-lg [animation-delay:150ms] md:block" />
       </div>
       <Skeleton className="mt-5 h-[168px] w-full rounded-[20px] [animation-delay:150ms]" />
+      <Skeleton className="mt-3 h-[104px] w-full rounded-xl [animation-delay:200ms]" />
       <Skeleton
         variant="line"
         className="mt-5 h-[11px] w-[90px] rounded-[5px]"
       />
       <div className="mt-3.5 grid gap-3 md:grid-cols-3">
-        <Skeleton className="h-[78px] rounded-[13px]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:150ms]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:300ms]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:150ms]" />
-        <Skeleton className="h-[78px] rounded-[13px] [animation-delay:300ms]" />
-        <Skeleton className="h-[78px] rounded-[13px]" />
+        <Skeleton className="h-[78px] rounded-xl" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:150ms]" />
+        <Skeleton className="h-[78px] rounded-xl [animation-delay:300ms]" />
+        <Skeleton className="h-[78px] rounded-xl" />
       </div>
     </div>
   );

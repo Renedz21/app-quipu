@@ -50,7 +50,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
   return (
     <section
       aria-labelledby="dashboard-hero-title"
-      className="mb-2.5 rounded-[16px] border border-line bg-linear-to-tr from-qp-gradient to-qp-gradient/10 p-3.5 shadow-[0_1px_2px_color-mix(in_oklch,var(--qp-ink)_3%,transparent)] md:mb-3.5 md:rounded-[18px] md:p-7"
+      className="mb-2.5 rounded-xl border border-line/70 bg-linear-to-tr from-qp-gradient to-qp-gradient/10 p-3.5 shadow-[0_1px_2px_color-mix(in_oklch,var(--qp-ink)_3%,transparent)] md:mb-3.5 md:p-7"
     >
       {needsReview ? (
         <div className="mb-3 flex flex-col gap-2 rounded-[12px] border border-clay/30 bg-card/80 px-3 py-2.5 md:flex-row md:items-center md:justify-between">
@@ -105,21 +105,27 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
           </p>
 
           {showLiquidity ? (
-            <dl className="mt-3 grid grid-cols-3 gap-2 text-[11px] md:mt-4 md:text-[12.5px]">
+            <dl className="mt-3 grid grid-cols-3 gap-2 md:mt-4">
               <div>
-                <dt className="text-mute">{HERO_LIQUIDITY_SPENDABLE}</dt>
+                <dt className="text-[12.5px] font-medium text-ink-secondary">
+                  {HERO_LIQUIDITY_SPENDABLE}
+                </dt>
                 <dd className="font-semibold text-ink">
                   {formatCents(spendableCents, { currency: currencyCode })}
                 </dd>
               </div>
               <div>
-                <dt className="text-mute">{HERO_LIQUIDITY_RESERVED}</dt>
+                <dt className="text-[12.5px] font-medium text-ink-secondary">
+                  {HERO_LIQUIDITY_RESERVED}
+                </dt>
                 <dd className="font-semibold text-ink">
                   {formatCents(reservedCents, { currency: currencyCode })}
                 </dd>
               </div>
               <div>
-                <dt className="text-mute">{HERO_LIQUIDITY_UNALLOCATED}</dt>
+                <dt className="text-[12.5px] font-medium text-ink-secondary">
+                  {HERO_LIQUIDITY_UNALLOCATED}
+                </dt>
                 <dd className="font-semibold text-ink">
                   {formatCents(unallocatedCents, { currency: currencyCode })}
                 </dd>
@@ -159,7 +165,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
 
         <div className="hidden flex-1 flex-col justify-center border-l border-qp-border pl-8 md:flex">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[13px] text-ink-secondary">
+            <span className="text-[12.5px] font-medium text-ink-secondary">
               {HERO_DAYS_REMAINING}
             </span>
             <span className="font-serif text-[19px] text-ink">
@@ -179,7 +185,7 @@ export function DashboardHero({ hero, cycle, currencyCode }: Props) {
             />
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[13px] text-ink-secondary">
+            <span className="text-[12.5px] font-medium text-ink-secondary">
               {HERO_CYCLE_HEALTH}
             </span>
             <span

@@ -2,8 +2,10 @@
 
 import { CheckoutLink } from "@convex-dev/polar/react";
 import { useAction } from "convex/react";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import {
   type BillingInterval,
@@ -58,6 +60,28 @@ export function SettingsPlanCard({ subscription, className }: Props) {
 
   const generatePortal = useAction(api.polar.generateCustomerPortalUrl);
   const [portalPending, setPortalPending] = useState(false);
+  const searchParams = useSearchParams();
+  const paywallTracked = useRef(false);
+  const checkoutCompletedTracked = useRef(false);
+
+  useEffect(() => {
+    if (isPremium || paywallTracked.current) return;
+    paywallTracked.current = true;
+    track(AnalyticsEvents.PLUS_PAYWALL_VIEWED, {
+      surface: "settings_plan",
+      plan: "free",
+    });
+  }, [isPremium]);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") !== "success") return;
+    if (checkoutCompletedTracked.current) return;
+    checkoutCompletedTracked.current = true;
+    track(AnalyticsEvents.PLUS_CHECKOUT_COMPLETED, {
+      interval: billingInterval,
+      currency: subscription.currencyCode,
+    });
+  }, [searchParams, billingInterval, subscription.currencyCode]);
 
   const upgradeButtonClass = cn(
     buttonVariants({ variant: "default", size: "default" }),
@@ -70,6 +94,7 @@ export function SettingsPlanCard({ subscription, className }: Props) {
   );
 
   const onManage = () => {
+    track(AnalyticsEvents.PLUS_PORTAL_OPENED, {});
     void (async () => {
       setPortalPending(true);
       try {
@@ -77,23 +102,33 @@ export function SettingsPlanCard({ subscription, className }: Props) {
           returnUrl: `${window.location.origin}/settings#plan`,
         });
         window.open(url, "_blank", "noopener,noreferrer");
+      } catch {
+        // Portal errors surface via Polar; keep button usable.
       } finally {
         setPortalPending(false);
       }
     })();
   };
 
+  const handleCheckoutStart = () => {
+    primeCheckoutSuccessReturnUrl();
+    track(AnalyticsEvents.PLUS_CHECKOUT_STARTED, {
+      interval: billingInterval,
+      currency: subscription.currencyCode,
+    });
+  };
+
   return (
     <section
       id="plan"
       className={cn(
-        "scroll-mt-6 overflow-hidden rounded-2xl border border-line bg-card",
+        "scroll-mt-6 overflow-hidden rounded-xl border border-line/70 bg-card",
         className,
       )}
     >
-      <div className="border-b border-line-soft px-5 py-4 md:px-6">
+      <div className="border-b border-line/50 px-5 py-4 md:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
+          <span className="text-[12.5px] font-medium text-ink-secondary">
             {SETTINGS_PLAN_LABEL}
           </span>
           {isPremium ? (
@@ -132,7 +167,7 @@ export function SettingsPlanCard({ subscription, className }: Props) {
         <div className="relative px-5 py-5 md:px-6 md:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
             <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-qp-deep">
+              <p className="text-[12.5px] font-medium text-qp-deep">
                 {SETTINGS_PLAN_PLUS_OFFER_LABEL}
               </p>
               <p className="mt-2 font-serif text-[32px] leading-none tracking-tight text-ink md:text-[36px]">
@@ -181,10 +216,10 @@ export function SettingsPlanCard({ subscription, className }: Props) {
           </div>
 
           <div className="mt-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+            <p className="font-serif text-[17px] leading-snug text-ink md:text-[18px]">
               {SETTINGS_PLAN_VALUE_HEADING}
             </p>
-            <ul className="mt-3 space-y-2.5">
+            <ul className="mt-3.5 space-y-2.5">
               {SETTINGS_PLAN_VALUE_BULLETS.map((line) => (
                 <li
                   key={line}
@@ -204,7 +239,7 @@ export function SettingsPlanCard({ subscription, className }: Props) {
             {canCheckout && productId ? (
               <span
                 className="inline-flex w-full sm:w-auto"
-                onPointerDownCapture={primeCheckoutSuccessReturnUrl}
+                onPointerDownCapture={handleCheckoutStart}
               >
                 <CheckoutLink
                   polarApi={{

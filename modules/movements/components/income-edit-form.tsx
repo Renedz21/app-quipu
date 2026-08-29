@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
@@ -40,6 +40,7 @@ type Props = {
   updateIncomeEvent: UpdateIncomeEventFn;
   onSuccess: () => void;
   onCancel: () => void;
+  autoFocus?: boolean;
 };
 
 export function IncomeEditForm({
@@ -52,9 +53,19 @@ export function IncomeEditForm({
   updateIncomeEvent,
   onSuccess,
   onCancel,
+  autoFocus = false,
 }: Props) {
+  const formRef = useRef<HTMLDivElement>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const initialConcept = extractConcept(initialDescription, initialSource);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const amountInput = formRef.current?.querySelector<HTMLInputElement>(
+      'input[inputmode="decimal"]',
+    );
+    amountInput?.focus();
+  }, [autoFocus]);
 
   const form = useForm({
     defaultValues: {
@@ -92,7 +103,7 @@ export function IncomeEditForm({
   });
 
   return (
-    <div className="space-y-5">
+    <div ref={formRef} className="space-y-5">
       <form.Field name="amountCents">
         {(amountField) => {
           const isInvalid =

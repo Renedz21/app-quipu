@@ -2,7 +2,7 @@
   "name": "app-quipu",
   "version": "0.0.2",
   "private": true,
-  "packageManager": "pnpm@11.16.0",
+  "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +14,10 @@
     "format:check": "biome format --check .",
     "ci:quality": "biome ci .",
     "test": "vitest",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "codegraph:sync": "codegraph sync",
+    "codegraph:sync:convex": "codegraph sync convex",
+    "codegraph:status": "codegraph status && codegraph status convex"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -33,7 +36,7 @@
     "clsx": "^2.1.1",
     "convex": "^1.43.0",
     "date-fns": "^4.4.0",
-    "next": "16.3.0",
+    "next": "16.3.3",
     "next-themes": "^0.4.6",
     "posthog-js": "^1.413.2",
     "posthog-node": "^5.48.0",

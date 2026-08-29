@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { AnalyticsEvents, setPersonProperties, track } from "@/core/analytics";
+import { ModuleLoadingCrossfade } from "@/shared/components/layout/module-loading-shell";
 import { formatCycleDayLine } from "../lib/dashboard-math";
 import { useDashboardSummary } from "../queries";
 import type { DashboardCoach } from "../types";
@@ -12,8 +13,8 @@ import { DashboardEmptyCycle } from "./dashboard-empty-cycle";
 import { DashboardError } from "./dashboard-error";
 import { DashboardHeader } from "./dashboard-header";
 import { DashboardHero } from "./dashboard-hero";
-import { DashboardHeroSkeleton } from "./dashboard-hero-skeleton";
 import { DashboardSecondaryInsights } from "./dashboard-secondary-insights";
+import { DashboardViewSkeleton } from "./dashboard-view-skeleton";
 import { EnvelopeCards } from "./envelope-cards";
 import { EnvelopeCardsSkeleton } from "./envelope-cards-skeleton";
 import { RecentMovements } from "./recent-movements";
@@ -31,48 +32,12 @@ type Props = {
   profileName: string;
 };
 
-function DashboardContent({ profileName }: Props) {
-  const summary = useDashboardSummary();
-  const reviewTrackedForCycle = useRef<string | null>(null);
+type LoadedSummary = Exclude<ReturnType<typeof useDashboardSummary>, undefined>;
 
-  useEffect(() => {
-    if (!summary?.cycle || !summary.hero) return;
-    const needsReview = summary.cycle.needsReview === true;
-    const reservedCents = summary.hero.reservedCents ?? 0;
-    const unallocatedCents = summary.cycle.unallocatedCents ?? 0;
-    track(AnalyticsEvents.DASHBOARD_VIEWED, {
-      cycle_id: summary.cycle.id,
-      is_new_cycle: summary.isEarlyCycle ?? false,
-      days_remaining: summary.cycle.daysRemaining,
-      needs_review: needsReview,
-      reserved_cents: reservedCents,
-      unallocated_cents: unallocatedCents,
-    });
-    if (needsReview && reviewTrackedForCycle.current !== summary.cycle.id) {
-      reviewTrackedForCycle.current = summary.cycle.id;
-      track(AnalyticsEvents.ALLOCATION_REVIEW_SURFACED, {
-        cycle_id: summary.cycle.id,
-        reserved_cents: reservedCents,
-        unallocated_cents: unallocatedCents,
-        spendable_cents: summary.hero.spendableCents ?? 0,
-      });
-      setPersonProperties({
-        allocation_needs_review: true,
-        allocation_needs_review_cycle_id: summary.cycle.id,
-      });
-    }
-  }, [summary]);
-
-  if (summary === undefined) {
-    return (
-      <>
-        <DashboardHeader name={profileName} />
-        <DashboardHeroSkeleton />
-        <EnvelopeCardsSkeleton />
-      </>
-    );
-  }
-
+function DashboardLoadedContent({
+  profileName,
+  summary,
+}: Props & { summary: LoadedSummary }) {
   if (summary === null) {
     return <DashboardError />;
   }
@@ -128,6 +93,9 @@ function DashboardContent({ profileName }: Props) {
               currencyCode={summary.profile.currencyCode}
               layout="full"
               isPremium={summary.profile.plan === "premium"}
+              savingsUnassignedCents={
+                summary.liquidity.savingsParkedInEnvelopeCents
+              }
             />
           ) : null}
 
@@ -142,6 +110,9 @@ function DashboardContent({ profileName }: Props) {
                 coach={summary.coach}
                 currencyCode={summary.profile.currencyCode}
                 isPremium={summary.profile.plan === "premium"}
+                savingsUnassignedCents={
+                  summary.liquidity.savingsParkedInEnvelopeCents
+                }
               />
             ) : null}
           </div>
@@ -156,9 +127,54 @@ function DashboardContent({ profileName }: Props) {
   );
 }
 
+function DashboardContent({ profileName }: Props) {
+  const summary = useDashboardSummary();
+  const reviewTrackedForCycle = useRef<string | null>(null);
+  const isLoading = summary === undefined;
+
+  useEffect(() => {
+    if (!summary?.cycle || !summary.hero) return;
+    const needsReview = summary.cycle.needsReview === true;
+    const reservedCents = summary.hero.reservedCents ?? 0;
+    const unallocatedCents = summary.cycle.unallocatedCents ?? 0;
+    track(AnalyticsEvents.DASHBOARD_VIEWED, {
+      cycle_id: summary.cycle.id,
+      is_new_cycle: summary.isEarlyCycle ?? false,
+      days_remaining: summary.cycle.daysRemaining,
+      needs_review: needsReview,
+      reserved_cents: reservedCents,
+      unallocated_cents: unallocatedCents,
+    });
+    if (needsReview && reviewTrackedForCycle.current !== summary.cycle.id) {
+      reviewTrackedForCycle.current = summary.cycle.id;
+      track(AnalyticsEvents.ALLOCATION_REVIEW_SURFACED, {
+        cycle_id: summary.cycle.id,
+        reserved_cents: reservedCents,
+        unallocated_cents: unallocatedCents,
+        spendable_cents: summary.hero.spendableCents ?? 0,
+      });
+      setPersonProperties({
+        allocation_needs_review: true,
+        allocation_needs_review_cycle_id: summary.cycle.id,
+      });
+    }
+  }, [summary]);
+
+  return (
+    <ModuleLoadingCrossfade
+      isLoading={isLoading}
+      skeleton={<DashboardViewSkeleton />}
+    >
+      {summary !== undefined ? (
+        <DashboardLoadedContent profileName={profileName} summary={summary} />
+      ) : null}
+    </ModuleLoadingCrossfade>
+  );
+}
+
 export function DashboardView({ profileName }: Props) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-8 md:py-8">
+    <div className="mx-auto w-full max-w-6xl p-4 md:px-8 md:py-8">
       <DashboardContent profileName={profileName} />
     </div>
   );

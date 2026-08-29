@@ -63,11 +63,11 @@ export function SettingsProfileCard({ profile, className, id }: Props) {
     <section
       id={id}
       className={cn(
-        "scroll-mt-6 rounded-2xl border border-line bg-card px-5 py-5 md:px-6 md:py-[22px]",
+        "scroll-mt-6 rounded-xl border border-line/70 bg-card px-5 py-5 md:px-6 md:py-[22px]",
         className,
       )}
     >
-      <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+      <div className="mb-4 text-[12.5px] font-medium text-ink-secondary">
         {SETTINGS_PROFILE_LABEL}
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">

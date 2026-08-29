@@ -1,4 +1,6 @@
-import { Check, Home, ShoppingBag } from "reicon-react";
+import { BagSmile } from "reicon-react/icons/BagSmile";
+import { Check } from "reicon-react/icons/Check";
+import { Home } from "reicon-react/icons/Home";
 import {
   COVERAGE_COVERED_HEADER,
   COVERAGE_UNCOVERED_HEADER,
@@ -33,7 +35,7 @@ function CommitmentIcon({ envelope }: { envelope: "needs" | "wants" }) {
   if (envelope === "wants") {
     return (
       <span className="flex size-8 items-center justify-center rounded-[9px] bg-clay-soft">
-        <ShoppingBag
+        <BagSmile
           size={14}
           color="var(--clay)"
           className="shrink-0"

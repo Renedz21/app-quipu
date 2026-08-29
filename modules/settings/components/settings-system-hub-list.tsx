@@ -41,10 +41,10 @@ export function SettingsSystemHubList({
   commitmentCount,
 }: Props) {
   return (
-    <div className="rounded-[14px] border border-line bg-card px-4 py-0.5">
+    <div className="rounded-xl border border-line/70 bg-card px-4 py-0.5">
       <Link
         href="/settings/allocations"
-        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PERCENTAGES_LABEL}
@@ -67,7 +67,7 @@ export function SettingsSystemHubList({
       </Link>
       <Link
         href="/settings/system#compromisos"
-        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_COMMITMENTS_LABEL}
@@ -79,7 +79,7 @@ export function SettingsSystemHubList({
       </Link>
       <Link
         href="/settings/cycle"
-        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_CYCLE_LABEL}
@@ -91,7 +91,7 @@ export function SettingsSystemHubList({
       </Link>
       <Link
         href="/cycle/correct"
-        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
         onClick={() =>
           track(AnalyticsEvents.ALLOCATION_CORRECT_CTA_CLICKED, {
             source: "settings",
@@ -110,7 +110,7 @@ export function SettingsSystemHubList({
       </Link>
       <Link
         href="/settings/system#preferencias"
-        className="flex min-h-11 items-center gap-2 border-b border-line-subtle py-2.5"
+        className="flex min-h-11 items-center gap-2 border-b border-line/50 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_PREFERENCES_LABEL}
@@ -119,7 +119,7 @@ export function SettingsSystemHubList({
       </Link>
       <Link
         href="/settings/system#automatizaciones"
-        className="flex min-h-11 items-center gap-2 py-2.5"
+        className="flex min-h-11 items-center gap-2 py-2.5 transition-colors hover:bg-surface-warm/40"
       >
         <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
           {SETTINGS_EXTRAORDINARY_LABEL}

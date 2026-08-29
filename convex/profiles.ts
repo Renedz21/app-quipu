@@ -7,7 +7,9 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { APP_DATA_SNAPSHOT_FORMAT } from "./lib/appDataTables";
 import { isValidAllocations, isValidPaydays } from "./lib/budgetMath";
+import { detachProfileFromSpacesOnDelete } from "./lib/spaceLifecycle";
 /**
  * Obtiene el perfil del usuario autenticado actual.
  * Retorna null si el usuario no ha completado el onboarding.
@@ -190,6 +192,70 @@ export const createProfile = mutation({
     });
 
     return profileId;
+  },
+});
+
+/**
+ * Perfil mínimo para invitados de Modo Pareja (sin onboarding personal).
+ */
+export const createMinimalProfile = mutation({
+  args: {
+    currencyCode: v.string(),
+    currencySymbol: v.string(),
+    country: v.string(),
+    allocationNeeds: v.number(),
+    allocationWants: v.number(),
+    allocationSavings: v.number(),
+  },
+  returns: v.id("profiles"),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "Debes iniciar sesión.",
+      });
+    }
+
+    const existing = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (existing) return existing._id;
+
+    if (
+      !isValidAllocations(
+        args.allocationNeeds,
+        args.allocationWants,
+        args.allocationSavings,
+      )
+    ) {
+      throw new ConvexError({
+        code: "VALIDATION_ERROR",
+        message: "La distribución debe sumar 100%.",
+      });
+    }
+
+    const name = (identity.name ?? identity.email ?? "Miembro").trim();
+    return await ctx.db.insert("profiles", {
+      userId: identity.subject,
+      name: name || "Miembro",
+      country: args.country,
+      currencyCode: args.currencyCode,
+      currencySymbol: args.currencySymbol,
+      incomeModel: "variable",
+      allocationNeeds: args.allocationNeeds,
+      allocationWants: args.allocationWants,
+      allocationSavings: args.allocationSavings,
+      onboardingComplete: false,
+      plan: "free",
+      appearanceTheme: "light",
+      accentPreset: "moss",
+      appIconVariant: "light",
+      dailySummaryEnabled: true,
+      cycleAlertsEnabled: true,
+      createdAt: Date.now(),
+    });
   },
 });
 
@@ -387,6 +453,9 @@ export const exportMyData = query({
       cycleHistory,
       accountReviewFlags,
       feedbackSubmissions,
+      spaceMemberships,
+      spaceContributions,
+      spaceExpensesPaid,
     ] = await Promise.all([
       ctx.db
         .query("envelopes")
@@ -430,9 +499,41 @@ export const exportMyData = query({
           q.eq("profileId", profileId),
         )
         .collect(),
+      ctx.db
+        .query("spaceMembers")
+        .withIndex("by_profile", (q) => q.eq("profileId", profileId))
+        .collect(),
+      ctx.db
+        .query("spaceContributions")
+        .withIndex("by_profile", (q) => q.eq("fromProfileId", profileId))
+        .collect(),
+      ctx.db
+        .query("spaceExpenses")
+        .withIndex("by_paid_by", (q) => q.eq("paidByProfileId", profileId))
+        .collect(),
     ]);
 
+    const spaceContributionTransfers = internalTransfers.filter(
+      (transfer) => transfer.kind === "personal_to_space_contribution",
+    );
+
+    const spaceRefs = await Promise.all(
+      [...new Set(spaceMemberships.map((m) => m.spaceId))].map(
+        async (spaceId) => {
+          const space = await ctx.db.get("financialSpaces", spaceId);
+          if (!space) return null;
+          return {
+            spaceId: space._id,
+            name: space.name,
+            status: space.status,
+            role: spaceMemberships.find((m) => m.spaceId === spaceId)?.role,
+          };
+        },
+      ),
+    );
+
     return {
+      format: APP_DATA_SNAPSHOT_FORMAT,
       exportedAt: Date.now(),
       profile,
       financialCycles,
@@ -450,6 +551,13 @@ export const exportMyData = query({
       cycleHistory,
       accountReviewFlags,
       feedbackSubmissions,
+      spaceMemberships,
+      spaceContributions,
+      spaceExpensesPaid,
+      spaceContributionTransfers,
+      spaceRefs: spaceRefs.filter(
+        (row): row is NonNullable<typeof row> => row !== null,
+      ),
     };
   },
 });
@@ -570,6 +678,8 @@ export const deleteAllDataForProfile = internalMutation({
         )
         .collect(),
     );
+
+    await detachProfileFromSpacesOnDelete(ctx, profileId);
 
     await ctx.db.delete(profileId);
     return null;

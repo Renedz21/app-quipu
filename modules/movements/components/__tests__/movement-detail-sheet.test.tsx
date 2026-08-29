@@ -1,6 +1,7 @@
 /**
  * Regresión: cerrar tras un update deja el sheet en detalle (reset en el
  * handler de cierre), sin remount por key — así Base UI anima la entrada.
+ * AnimatedView envuelve el cuerpo; los tests no dependen de clases de animación.
  */
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -25,15 +26,39 @@ vi.mock("@/shared/hooks/use-mobile", () => ({
 }));
 
 vi.mock("../expense-edit-form", () => ({
-  ExpenseEditForm: ({ onSuccess }: { onSuccess: () => void }) => (
-    <button type="button" onClick={onSuccess}>
-      Guardar gasto
-    </button>
+  ExpenseEditForm: ({
+    onSuccess,
+    autoFocus,
+  }: {
+    onSuccess: () => void;
+    autoFocus?: boolean;
+  }) => (
+    <div>
+      {autoFocus ? <button type="button">Teclado 1</button> : null}
+      <button type="button" onClick={onSuccess}>
+        Guardar gasto
+      </button>
+    </div>
   ),
 }));
 
 vi.mock("../income-edit-form", () => ({
-  IncomeEditForm: () => null,
+  IncomeEditForm: ({
+    onSuccess,
+    autoFocus,
+  }: {
+    onSuccess: () => void;
+    autoFocus?: boolean;
+  }) => (
+    <div>
+      {autoFocus ? (
+        <input type="text" inputMode="decimal" aria-label="Monto" />
+      ) : null}
+      <button type="button" onClick={onSuccess}>
+        Guardar ingreso
+      </button>
+    </div>
+  ),
 }));
 
 const { MovementDetailSheet } = await import("../movement-detail-sheet");
@@ -54,6 +79,24 @@ const expenseB: MovementForDetail = {
   amount: 1500,
   timestamp: 1_700_000_100_000,
   envelopeType: "needs",
+};
+
+const incomeA: MovementForDetail = {
+  id: "income-a",
+  kind: "income",
+  label: "Sueldo",
+  amount: 250_000,
+  timestamp: 1_700_000_200_000,
+  occurredAt: 1_700_000_200_000,
+  source: "payroll",
+};
+
+const incomeMissingFields: MovementForDetail = {
+  id: "income-b",
+  kind: "income",
+  label: "Sueldo incompleto",
+  amount: 250_000,
+  timestamp: 1_700_000_300_000,
 };
 
 afterEach(() => {
@@ -132,5 +175,83 @@ describe("MovementDetailSheet", () => {
     ).toBeTruthy();
     expect(screen.queryByText("Listo")).toBeNull();
     expect(screen.getByText("Almuerzo")).toBeTruthy();
+  });
+
+  it("muestra el formulario al editar un ingreso con source y occurredAt", () => {
+    render(
+      <MovementDetailSheet
+        open
+        onOpenChange={() => undefined}
+        movement={incomeA}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    expect(
+      screen.getByRole("button", { name: "Guardar ingreso" }),
+    ).toBeTruthy();
+  });
+
+  it("avisa si faltan campos para editar ingreso en lugar de quedarse en detalle", () => {
+    render(
+      <MovementDetailSheet
+        open
+        onOpenChange={() => undefined}
+        movement={incomeMissingFields}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    expect(
+      screen.getByText(/No pudimos cargar los datos para editar este ingreso/i),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Guardar ingreso" }),
+    ).toBeNull();
+  });
+
+  it("envuelve el contenido en una región animada ligada al título", () => {
+    render(
+      <MovementDetailSheet
+        open
+        onOpenChange={() => undefined}
+        movement={expenseA}
+      />,
+    );
+
+    const title = screen.getByRole("heading", {
+      name: "Detalle del movimiento",
+    });
+    expect(title.id).toBe("movement-sheet-title");
+
+    const region = screen.getByRole("region");
+    expect(region.getAttribute("aria-labelledby")).toBe("movement-sheet-title");
+    expect(screen.getByRole("button", { name: "Editar" })).toBeTruthy();
+  });
+
+  it("pasa autoFocus al formulario de edición de gasto", () => {
+    render(
+      <MovementDetailSheet
+        open
+        onOpenChange={() => undefined}
+        movement={expenseA}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    expect(screen.getByRole("button", { name: "Teclado 1" })).toBeTruthy();
+  });
+
+  it("pasa autoFocus al formulario de edición de ingreso", () => {
+    render(
+      <MovementDetailSheet
+        open
+        onOpenChange={() => undefined}
+        movement={incomeA}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    expect(screen.getByRole("textbox", { name: "Monto" })).toBeTruthy();
   });
 });

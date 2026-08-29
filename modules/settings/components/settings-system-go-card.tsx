@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_SYSTEM_GO_LINK,
@@ -16,7 +16,7 @@ export function SettingsSystemGoCard({ className }: Props) {
     <Link
       href="/settings/system"
       className={cn(
-        "flex min-h-11 items-center gap-3 rounded-2xl border border-line bg-card px-4 py-3.5 transition-colors",
+        "flex min-h-11 items-center gap-3 rounded-xl border border-line/70 bg-card px-4 py-3.5 transition-colors",
         "hover:border-qp-border hover:bg-qp-soft/40",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qp-tint/80 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
         className,

@@ -1,4 +1,5 @@
-import { ArrowRight, Check } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
+import { Check } from "reicon-react/icons/Check";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { authPrimaryButtonClass } from "../constants";

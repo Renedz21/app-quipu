@@ -8,6 +8,10 @@ import {
 } from "./lib/cycleSavingsBreakdown";
 import { computeAvailableExtraordinarySavingsForMove } from "./lib/extraordinarySavingsSurplus";
 import {
+  buildSavingsAssignPlan,
+  validateSavingsAssignLines,
+} from "./lib/savingsAssignPlan";
+import {
   buildMonthsCoveredCopy,
   computeCyclesToComplete,
   computeEmergencyFundTargetCents,
@@ -164,14 +168,15 @@ async function buildSavingsOverview(ctx: QueryCtx) {
       emergencyFund: null,
       goals: [],
       canCreateGoal: false,
+      assignPlan: null,
     };
   }
 
-  const goals = subEnvelopes
-    .filter((subEnvelope) => !subEnvelope.isSystemDefault)
-    .sort((a, b) => b.currentAmount - a.currentAmount)
-    .slice(0, MAX_SAVINGS_GOALS)
-    .map(mapGoal);
+  const goalCandidates = subEnvelopes.filter(
+    (subEnvelope) => !subEnvelope.isSystemDefault,
+  );
+  goalCandidates.sort((a, b) => b.currentAmount - a.currentAmount);
+  const goals = goalCandidates.slice(0, MAX_SAVINGS_GOALS).map(mapGoal);
 
   const emergencyFundPayload = buildEmergencyFundPayload({
     emergencyFund,
@@ -179,6 +184,22 @@ async function buildSavingsOverview(ctx: QueryCtx) {
     cycleContributionCents,
     contributionStreak: streak?.currentStreak ?? 0,
     availableToContributeCents: savingsEnvelopeRemaining,
+  });
+
+  const assignPlan = buildSavingsAssignPlan({
+    availableCents: savingsEnvelopeRemaining,
+    emergencyFund: {
+      subEnvelopeId: emergencyFund._id,
+      label: emergencyFund.label,
+      currentAmount: emergencyFund.currentAmount,
+      targetAmount: emergencyFundPayload.targetAmount,
+    },
+    goals: goals.map((goal) => ({
+      subEnvelopeId: goal.id,
+      label: goal.label,
+      currentAmount: goal.currentAmount,
+      targetAmount: goal.targetAmount ?? 0,
+    })),
   });
 
   const totalSavedCents = subEnvelopes.reduce(
@@ -196,9 +217,8 @@ async function buildSavingsOverview(ctx: QueryCtx) {
     cycleContributionCents,
     emergencyFund: emergencyFundPayload,
     goals,
-    canCreateGoal:
-      subEnvelopes.filter((subEnvelope) => !subEnvelope.isSystemDefault)
-        .length < MAX_SAVINGS_GOALS,
+    assignPlan,
+    canCreateGoal: goals.length < MAX_SAVINGS_GOALS,
   };
 }
 
@@ -207,52 +227,28 @@ async function executeContribution(
   subEnvelopeId: Id<"subEnvelopes">,
   amountArg?: number,
 ) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "Debes iniciar sesión con tu Passkey o credencial.",
-    });
-  }
+  const { profile, activeCycle } = await getOwnedProfileAndActiveCycle(
+    ctx,
+    "Registra un ingreso para activar tu ciclo antes de aportar.",
+  );
 
-  const profile = await ctx.db
-    .query("profiles")
-    .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+  const subEnvelopePromise = ctx.db.get(subEnvelopeId);
+  const savingsEnvelopePromise = ctx.db
+    .query("envelopes")
+    .withIndex("by_cycle_type", (q) =>
+      q.eq("cycleId", activeCycle._id).eq("type", "savings"),
+    )
     .unique();
-  if (!profile) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "Perfil no encontrado.",
-    });
-  }
-
-  const subEnvelope = await ctx.db.get(subEnvelopeId);
+  const [subEnvelope, savingsEnvelope] = await Promise.all([
+    subEnvelopePromise,
+    savingsEnvelopePromise,
+  ]);
   if (!subEnvelope || subEnvelope.profileId !== profile._id) {
     throw new ConvexError({
       code: "NOT_FOUND",
       message: "Meta de ahorro no encontrada.",
     });
   }
-
-  const activeCycle = await ctx.db
-    .query("financialCycles")
-    .withIndex("by_profile_status", (q) =>
-      q.eq("profileId", profile._id).eq("status", "active"),
-    )
-    .unique();
-  if (!activeCycle) {
-    throw new ConvexError({
-      code: "NO_ACTIVE_CYCLE",
-      message: "Registra un ingreso para activar tu ciclo antes de aportar.",
-    });
-  }
-
-  const savingsEnvelope = await ctx.db
-    .query("envelopes")
-    .withIndex("by_cycle_type", (q) =>
-      q.eq("cycleId", activeCycle._id).eq("type", "savings"),
-    )
-    .unique();
   if (!savingsEnvelope) {
     throw new ConvexError({
       code: "NOT_FOUND",
@@ -473,6 +469,96 @@ export const contributeToSubEnvelope = mutation({
     executeContribution(ctx, args.subEnvelopeId, args.amount),
 });
 
+export const assignSavingsEnvelope = mutation({
+  args: {
+    lines: v.array(
+      v.object({
+        subEnvelopeId: v.id("subEnvelopes"),
+        amount: v.number(),
+      }),
+    ),
+  },
+  returns: v.object({
+    assignedCents: v.number(),
+    savingsRemainingCents: v.number(),
+    results: v.array(
+      v.object({
+        subEnvelopeId: v.id("subEnvelopes"),
+        label: v.string(),
+        amount: v.number(),
+        newCurrentAmount: v.number(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const { profile, activeCycle } = await getOwnedProfileAndActiveCycle(ctx);
+
+    const savingsEnvelope = await ctx.db
+      .query("envelopes")
+      .withIndex("by_cycle_type", (q) =>
+        q.eq("cycleId", activeCycle._id).eq("type", "savings"),
+      )
+      .unique();
+    if (!savingsEnvelope) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Sobre de ahorro no encontrado en el ciclo actual.",
+      });
+    }
+    const available = Math.max(0, savingsEnvelope.remainingAmount);
+
+    const subEnvelopes = await ctx.db
+      .query("subEnvelopes")
+      .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
+      .collect();
+
+    const validLines = validateSavingsAssignLines(
+      args.lines.map((line) => ({
+        subEnvelopeId: line.subEnvelopeId as string,
+        amount: line.amount,
+      })),
+      {
+        availableCents: available,
+        ownedIds: subEnvelopes.map((subEnvelope) => subEnvelope._id),
+      },
+    );
+
+    const total = validLines.reduce((sum, line) => sum + line.amount, 0);
+    await ctx.db.patch(savingsEnvelope._id, {
+      remainingAmount: savingsEnvelope.remainingAmount - total,
+    });
+
+    const results = await Promise.all(
+      validLines.map(async (line) => {
+        const subEnvelope = await ctx.db.get(
+          line.subEnvelopeId as Id<"subEnvelopes">,
+        );
+        if (!subEnvelope) {
+          throw new ConvexError({
+            code: "NOT_FOUND",
+            message: "Meta de ahorro no encontrada.",
+          });
+        }
+        await ctx.db.patch(subEnvelope._id, {
+          currentAmount: subEnvelope.currentAmount + line.amount,
+        });
+        return {
+          subEnvelopeId: subEnvelope._id,
+          label: subEnvelope.label,
+          amount: line.amount,
+          newCurrentAmount: subEnvelope.currentAmount + line.amount,
+        };
+      }),
+    );
+
+    return {
+      assignedCents: total,
+      savingsRemainingCents: savingsEnvelope.remainingAmount - total,
+      results,
+    };
+  },
+});
+
 export const createSavingsGoal = mutation({
   args: {
     label: v.string(),
@@ -565,15 +651,6 @@ export const createSavingsGoal = mutation({
   },
 });
 
-export const contributeToGoal = mutation({
-  args: {
-    goalId: v.id("subEnvelopes"),
-    amount: v.optional(v.number()),
-  },
-  handler: async (ctx, args) =>
-    executeContribution(ctx, args.goalId, args.amount),
-});
-
 const surplusFromEnvelopeValidator = v.union(
   v.literal("needs"),
   v.literal("wants"),
@@ -584,7 +661,10 @@ const moveSurplusSourceValidator = v.object({
   availableCents: v.number(),
 });
 
-async function getOwnedProfileAndActiveCycle(ctx: QueryCtx | MutationCtx) {
+async function getOwnedProfileAndActiveCycle(
+  ctx: QueryCtx | MutationCtx,
+  noCycleMessage = "Registra un ingreso para activar tu ciclo antes de mover sobrante.",
+) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new ConvexError({
@@ -613,8 +693,7 @@ async function getOwnedProfileAndActiveCycle(ctx: QueryCtx | MutationCtx) {
   if (!activeCycle) {
     throw new ConvexError({
       code: "NO_ACTIVE_CYCLE",
-      message:
-        "Registra un ingreso para activar tu ciclo antes de mover sobrante.",
+      message: noCycleMessage,
     });
   }
 

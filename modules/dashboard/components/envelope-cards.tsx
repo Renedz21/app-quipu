@@ -91,9 +91,9 @@ export function EnvelopeCards({
           return (
             <article
               key={envelope.type}
-              className={`rounded-[14px] border border-line bg-card p-3 md:p-5 ${
+              className={`rounded-xl border border-line/70 bg-card p-3 md:p-5 ${
                 !isSavings
-                  ? "cursor-pointer transition-colors hover:bg-surface-warm"
+                  ? "cursor-pointer transition-colors hover:border-line hover:bg-surface-warm/40"
                   : ""
               }`}
               {...(!isSavings

@@ -1,4 +1,6 @@
-import { TurnstileWidget } from "@/shared/components/turnstile-widget";
+"use client";
+
+import dynamic from "next/dynamic";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -10,7 +12,20 @@ import { authLabelClass, authPrimaryButtonClass } from "../constants";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { RecoverPasswordLink } from "./recover-password-link";
-import { SignInPasskeyButton } from "./sign-in-passkey-button";
+
+const TurnstileWidget = dynamic(
+  () =>
+    import("@/shared/components/turnstile-widget").then(
+      (mod) => mod.TurnstileWidget,
+    ),
+  { ssr: false },
+);
+
+const SignInPasskeyButton = dynamic(
+  () =>
+    import("./sign-in-passkey-button").then((mod) => mod.SignInPasskeyButton),
+  { ssr: false },
+);
 
 export function PasswordStep({
   form,
@@ -20,6 +35,7 @@ export function PasswordStep({
   onTurnstileTokenChange,
   onChangeEmail,
   showPasskey,
+  returnTo,
 }: {
   form: any;
   email: string;
@@ -29,6 +45,7 @@ export function PasswordStep({
   onTurnstileTokenChange: (token: string | null) => void;
   onChangeEmail: VoidFunction;
   showPasskey: boolean;
+  returnTo?: string;
 }) {
   return (
     <>
@@ -165,7 +182,7 @@ export function PasswordStep({
             <span className="text-xs text-faint">o con passkey</span>
             <span className="h-px flex-1 bg-line" />
           </div>
-          <SignInPasskeyButton />
+          <SignInPasskeyButton returnTo={returnTo} />
         </>
       )}
     </>

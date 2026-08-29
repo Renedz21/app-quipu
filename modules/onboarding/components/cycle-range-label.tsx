@@ -1,4 +1,4 @@
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { cn } from "@/shared/lib/utils";
 import type { FormattedCycle } from "../lib/cycle";
 

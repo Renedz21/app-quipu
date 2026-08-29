@@ -6,7 +6,9 @@ import {
   DayPicker,
   getDefaultClassNames,
 } from "react-day-picker";
-import { ChevronDown, ChevronLeft, ChevronRight } from "reicon-react";
+import { ChevronDown } from "reicon-react/icons/ChevronDown";
+import { ChevronLeft } from "reicon-react/icons/ChevronLeft";
+import { ChevronRight } from "reicon-react/icons/ChevronRight";
 import { Button } from "@/shared/components/ui/button";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { cn } from "@/shared/lib/utils";

@@ -1,7 +1,6 @@
 export const COMMITMENTS_PAGE_TITLE = "Compromisos";
 export const COMMITMENTS_PAGE_SUBTITLE =
   "Alquiler, servicios y suscripciones. Quipu los ordena por vencimiento y te muestra si ya están cubiertos en este ciclo.";
-export const COMMITMENTS_BACK_LINK = "Inicio";
 export const COMMITMENTS_TOTAL_SUFFIX = "/ ciclo";
 export const COMMITMENTS_EMPTY_TITLE = "Aún no tienes compromisos";
 export const COMMITMENTS_EMPTY_BODY =

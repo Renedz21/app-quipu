@@ -1,4 +1,5 @@
-import { Check, CloseCircle } from "reicon-react";
+import { Check } from "reicon-react/icons/Check";
+import { CloseCircle } from "reicon-react/icons/CloseCircle";
 import { Toaster } from "sonner";
 
 export function AppToaster() {

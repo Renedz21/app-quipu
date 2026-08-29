@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "reicon-react";
+import { Check } from "reicon-react/icons/Check";
 import { cn } from "@/shared/lib/utils";
 
 type Props = {

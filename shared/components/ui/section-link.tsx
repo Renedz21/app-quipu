@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
-import { ChevronRight } from "reicon-react";
+import { ChevronRight } from "reicon-react/icons/ChevronRight";
 import { cn } from "@/shared/lib/utils";
 
 type Props = ComponentProps<typeof Link> & {

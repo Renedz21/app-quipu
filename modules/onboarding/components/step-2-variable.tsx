@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { CheckMark } from "./check-mark";

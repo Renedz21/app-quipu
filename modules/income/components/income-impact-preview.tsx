@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "reicon-react";
+import { ArrowRight } from "reicon-react/icons/ArrowRight";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";
 import {

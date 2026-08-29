@@ -1,15 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
+import {
+  AnalyticsEvents,
+  type EspaciosPremiumPaywallSurface,
+  type PlusPaywallSurface,
+  track,
+} from "@/core/analytics";
 import { plusMonthlyPriceLabel, plusPaywallCta } from "@/shared/constants/plan";
 import { cn } from "@/shared/lib/utils";
 
-type Props = {
-  /** Qué obtiene el usuario al pasar a Plus (una sola promesa). */
+export type PremiumLockCopy = {
   title: string;
-  /** Por qué le ahorra trabajo o estrés (copy canon: acción + beneficio). */
   body: string;
+};
+
+type Props = PremiumLockCopy & {
   className?: string;
   ctaLabel?: string;
   currencyCode?: string;
+  plusPaywallSurface?: PlusPaywallSurface;
+  espaciosPaywallSurface?: EspaciosPremiumPaywallSurface;
 };
 
 /**
@@ -24,9 +36,31 @@ export function PremiumLockCard({
   className,
   currencyCode,
   ctaLabel,
+  plusPaywallSurface,
+  espaciosPaywallSurface,
 }: Props) {
+  const tracked = useRef(false);
   const priceLabel = plusMonthlyPriceLabel(currencyCode);
   const resolvedCta = ctaLabel ?? plusPaywallCta(currencyCode);
+
+  useEffect(() => {
+    if (tracked.current) return;
+    if (!plusPaywallSurface && !espaciosPaywallSurface) return;
+    tracked.current = true;
+    if (espaciosPaywallSurface) {
+      track(AnalyticsEvents.ESPACIOS_PREMIUM_PAYWALL_VIEWED, {
+        surface: espaciosPaywallSurface,
+      });
+      return;
+    }
+    if (plusPaywallSurface) {
+      track(AnalyticsEvents.PLUS_PAYWALL_VIEWED, {
+        surface: plusPaywallSurface,
+        plan: "free",
+      });
+    }
+  }, [espaciosPaywallSurface, plusPaywallSurface]);
+
   return (
     <section
       className={cn(

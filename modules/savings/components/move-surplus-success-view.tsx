@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
@@ -41,8 +42,8 @@ export function MoveSurplusSuccessView({
     formatCents(cents, { currency: currencyCode });
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10 md:px-8 md:py-12">
-      <div className="rounded-[14px] border border-line bg-card px-6 py-10 text-center md:px-12 md:py-12">
+    <AppPageShell maxWidth="2xl" breadcrumbs="auto">
+      <div className="rounded-xl border border-line/70 bg-card px-6 py-10 text-center md:px-12 md:py-12">
         <div className="mx-auto mb-5 flex size-[70px] items-center justify-center rounded-full bg-moss shadow-[0_14px_34px_-14px_var(--qp-shadow-moss)]">
           <span className="mb-1 block size-4 rotate-45 border-r-4 border-b-4 border-white" />
         </div>
@@ -90,7 +91,7 @@ export function MoveSurplusSuccessView({
           {MOVE_SURPLUS_SUCCESS_HOME_CTA}
         </Link>
       </div>
-    </div>
+    </AppPageShell>
   );
 }
 
@@ -109,13 +110,13 @@ function SuccessMetric({
   return (
     <article
       className={cn(
-        "rounded-[14px] border p-4",
+        "rounded-xl border p-4",
         isTotal
-          ? "border-[1.5px] border-qp-shield-line bg-qp-success"
-          : "border-line bg-card",
+          ? "border-qp-shield-line bg-qp-success"
+          : "border-line/70 bg-card",
       )}
     >
-      <div className="mb-2 flex items-center gap-2 text-[12.5px] text-mute">
+      <div className="mb-2 flex items-center gap-2 text-[12.5px] font-medium text-ink-secondary">
         {variant !== "total" ? (
           <span
             className={cn(

@@ -171,6 +171,10 @@ Regla de oro para PPR:
 
 **Granularidad de los Suspense boundaries:** uno por "sección independiente" que tenga su propia latencia. En un dashboard, envuelve cada widget en su propio `<Suspense>` para que se hidraten por separado (mejora INP) y cada uno haga streaming en cuanto sus datos estén listos.
 
+#### Motion en Client Components (Quipu)
+
+Las transiciones de **contenido dentro** de overlays y wizards (no el shell de la ruta) viven en Client Components (`Sheet`, `Dialog`, flujos con `useState`/`step`). No usan PPR ni `use cache`: son estado local + CSS (`tw-animate-css`, primitivo `AnimatedView`). Duraciones, `prefers-reduced-motion` y focus al cambiar paso están en **`docs/QUIPU-MASTER.md` §3.10 Motion**. Mantén el boundary `'use client'` en la hoja del flujo; no subas motion al layout de servidor.
+
 ---
 
 ### 3. Next.js 16: features específicas y cambios de versión
@@ -488,3 +492,11 @@ Rutas estáticas se prefetchean por defecto (TTL cliente ~5 min). Rutas dinámic
 - **Fuentes secundarias en cifras de rendimiento.** El "5-10x faster Fast Refresh / 2-5x faster builds" viene del post oficial de Next.js 16. El "~87% más rápido el dev server" es específico de **16.2 frente a 16.1** (benchmark de Roboto Studio: *"Next.js 16.2 starts your dev server roughly 87% faster than 16.1, or about a 4x speed ratio"*), y el "25-60% faster HTML render" que a veces se cita en paralelo Vercel lo atribuye a un cambio de deserialización de RSC en el core de React. El "TTFB −60% con PPR" proviene de blogs de practicantes; son indicativos, no garantías — mide en tu propio proyecto.
 - **Este documento asume App Router.** Nada de Cache Components/PPR/`use cache` aplica al Pages Router (que sigue soportado sin cambios).
 - Los valores de perfiles `cacheLife` de la tabla provienen del PR #71322 de vercel/next.js; confirma que sigan vigentes en la referencia de `cacheLife` de tu versión concreta.
+
+---
+
+## Apéndice Quipu: matriz de lazy loading
+
+En Quipu, `next/dynamic(..., { ssr: false })` aplica a UI pesada o browser-only que no compite con el LCP: sheets/dialogs bajo interacción (`MovementDetailSheet`, flujos Espacios), Turnstile (script Cloudflare) y passkeys/WebAuthn en auth. Las páginas autenticadas delegan loading a skeletons internos del Client Component (`useQuery`); no envolver esas vistas en `<Suspense>` en `page.tsx` salvo boundary real (Server Component async). Detalle en `docs/QUIPU-MASTER.md` §4.6.
+
+**AppPageShell y breadcrumbs:** sub-rutas del área privada usan `AppPageShell` (`shared/components/layout/app-page-shell.tsx`) con `maxWidth` (`2xl` | `4xl` | `6xl`) y `breadcrumbs="auto"` (resolver en `shared/lib/breadcrumbs.ts`). Hubs (`/dashboard`, `/savings`, `/settings`) omiten breadcrumb. Ver tiers en `docs/QUIPU-MASTER.md` §3.

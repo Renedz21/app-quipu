@@ -44,11 +44,13 @@ export const resetAll = internalAction({
     const appDeleted: Record<string, number> =
       (appResult as { deleted?: Record<string, number> } | null)?.deleted ?? {};
 
-    const authCounts: Record<string, number> = {};
-
-    for (const model of AUTH_MODELS) {
-      authCounts[model] = await deleteAuthModel(ctx, model);
-    }
+    const authEntries = await Promise.all(
+      AUTH_MODELS.map(async (model) => {
+        const deleted = await deleteAuthModel(ctx, model);
+        return [model, deleted] as const;
+      }),
+    );
+    const authCounts = Object.fromEntries(authEntries);
 
     return { deleted: { ...appDeleted, ...authCounts } };
   },

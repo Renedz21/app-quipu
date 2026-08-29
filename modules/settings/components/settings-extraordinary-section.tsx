@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "reicon-react";
+import { ChevronDown } from "reicon-react/icons/ChevronDown";
 import { toast } from "sonner";
 import { fromConvexError } from "@/core/errors";
 import { useMyProfile } from "@/modules/auth/hooks/use-my-profile";
 import { PremiumLockPrompt } from "@/shared/components/premium-lock-prompt";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   type ExtraordinaryProfileRule,
   type ExtraordinaryRules,
@@ -41,6 +42,7 @@ import {
   dropOptimisticKey,
   patchAutoApply,
 } from "../lib/autoApplyToggle";
+import { SettingsSection } from "./settings-section";
 import { SettingsToggle } from "./settings-toggle";
 
 const RULE_OPTIONS: ExtraordinaryProfileRule[] = [
@@ -149,7 +151,17 @@ export function SettingsExtraordinarySection({
     optimisticAutoApply,
   );
 
-  if (!profile) return null;
+  if (profile === undefined) {
+    return (
+      <SettingsSection className={className}>
+        <Skeleton variant="line" className="h-3 w-32" />
+        <Skeleton variant="line" className="mt-2 h-4 w-full max-w-md" />
+        <Skeleton className="mt-4 h-48 w-full rounded-xl [animation-delay:150ms]" />
+      </SettingsSection>
+    );
+  }
+
+  if (profile === null) return null;
 
   const rules = mergeExtraordinaryRules(profile.extraordinaryRules);
   const autoApply = {
@@ -215,21 +227,11 @@ export function SettingsExtraordinarySection({
   }
 
   return (
-    <section
-      className={cn(
-        "rounded-[14px] border border-line-strong bg-card px-[18px] py-4 md:px-5",
-        className,
-      )}
+    <SettingsSection
+      className={className}
+      title={SETTINGS_EXTRAORDINARY_LABEL}
+      description={SETTINGS_EXTRAORDINARY_DESCRIPTION}
     >
-      <div className="mb-3.5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
-          {SETTINGS_EXTRAORDINARY_LABEL}
-        </p>
-        <p className="mt-1 text-[13px] text-mute">
-          {SETTINGS_EXTRAORDINARY_DESCRIPTION}
-        </p>
-      </div>
-
       <ul className="flex flex-col gap-2.5">
         {ROWS.map((row) => {
           const current = rules[row.key];
@@ -240,9 +242,9 @@ export function SettingsExtraordinarySection({
           return (
             <li
               key={row.key}
-              className="flex flex-col gap-3 rounded-[14px] border border-line-strong bg-canvas px-[18px] py-[15px]"
+              className="flex flex-col gap-3 rounded-xl border border-line/70 bg-card px-4 py-4 md:px-[18px] md:py-[15px]"
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3.5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-3.5">
                 <RowIcon kind={row.icon} />
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-[15px] text-ink">
@@ -284,7 +286,7 @@ export function SettingsExtraordinarySection({
               </div>
 
               {canAutoApply ? (
-                <div className="flex items-center justify-between gap-3 border-t border-line-subtle pt-3">
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-3">
                   <div className="min-w-0">
                     <p className="text-[13px] font-medium text-ink">
                       {SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL}
@@ -319,6 +321,6 @@ export function SettingsExtraordinarySection({
       <p className="mt-3 text-[12.5px] leading-snug text-mute">
         {SETTINGS_EXTRAORDINARY_FOOTER}
       </p>
-    </section>
+    </SettingsSection>
   );
 }

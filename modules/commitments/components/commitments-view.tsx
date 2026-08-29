@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { AddCommitmentDialog } from "@/shared/components/commitments/add-commitment-dialog";
 import type { CommitmentCoverageItem } from "@/shared/components/commitments/commitment-coverage-list";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
-import { BackLink } from "@/shared/components/ui/back-link";
+import { AppPageShell } from "@/shared/components/layout/app-page-shell";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ADD_COMMITMENT_CTA } from "@/shared/constants/commitments";
@@ -15,7 +15,6 @@ import { formatLimaDate } from "@/shared/lib/date";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
-  COMMITMENTS_BACK_LINK,
   COMMITMENTS_EMPTY_BODY,
   COMMITMENTS_EMPTY_TITLE,
   COMMITMENTS_ERROR_BODY,
@@ -29,14 +28,14 @@ import {
 import type { CommitmentForDetail } from "./commitment-detail-sheet";
 import { CommitmentDetailSheet } from "./commitment-detail-sheet";
 
-export function CommitmentsViewSkeleton() {
+function CommitmentsViewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
+    <AppPageShell maxWidth="2xl" breadcrumbs="auto">
       <Skeleton variant="line" className="h-4 w-20" />
       <Skeleton className="mt-4 h-9 w-48 rounded-lg" />
       <Skeleton variant="line" className="mt-2 h-4 w-full max-w-md" />
-      <Skeleton className="mt-6 h-72 w-full rounded-[14px] [animation-delay:150ms]" />
-    </div>
+      <Skeleton className="mt-6 h-72 w-full rounded-xl [animation-delay:150ms]" />
+    </AppPageShell>
   );
 }
 
@@ -87,7 +86,7 @@ export function CommitmentsView() {
 
   if (data === null) {
     return (
-      <section className="mx-auto w-full max-w-2xl rounded-[14px] border border-danger-line bg-danger-bg p-5 md:p-6">
+      <section className="mx-auto w-full max-w-2xl rounded-xl border border-danger-line bg-danger-bg p-5 md:p-6">
         <h2 className="text-base font-semibold text-danger-ink">
           {COMMITMENTS_ERROR_TITLE}
         </h2>
@@ -114,15 +113,8 @@ export function CommitmentsView() {
       : null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-5 py-6 md:px-0 md:py-8">
-      <BackLink
-        href="/dashboard"
-        className="text-sm font-medium text-qp-deep hover:underline"
-      >
-        {COMMITMENTS_BACK_LINK}
-      </BackLink>
-
-      <header className="mt-4">
+    <AppPageShell maxWidth="2xl" breadcrumbs="auto">
+      <header>
         <h1 className="font-serif text-[28px] leading-tight text-ink md:text-[32px]">
           {COMMITMENTS_PAGE_TITLE}
         </h1>
@@ -130,7 +122,7 @@ export function CommitmentsView() {
           {COMMITMENTS_PAGE_SUBTITLE}
         </p>
         {cycleRange ? (
-          <p className="mt-2 font-mono text-[10.5px] uppercase tracking-widest text-mute">
+          <p className="mt-2 text-[12.5px] font-medium text-ink-secondary">
             Ciclo · {cycleRange}
           </p>
         ) : (
@@ -140,7 +132,7 @@ export function CommitmentsView() {
         )}
       </header>
 
-      <div className="mt-6 overflow-hidden rounded-[14px] border border-line bg-card">
+      <div className="mt-6 overflow-hidden rounded-xl border border-line/70 bg-card">
         {data.commitments.length === 0 ? (
           <div className="flex flex-col items-center px-6 py-12 text-center">
             <h2 className="text-base font-semibold text-ink">
@@ -159,8 +151,8 @@ export function CommitmentsView() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-3 border-b border-line-divider px-4 py-3 md:px-4.5">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-mute">
+            <div className="flex items-center justify-between gap-3 border-b border-line/50 px-4 py-3 md:px-5">
+              <span className="text-[12.5px] font-medium text-ink-secondary">
                 Próximos vencimientos
               </span>
               <span className="text-xs text-mute">
@@ -174,11 +166,11 @@ export function CommitmentsView() {
               showCoverageHeader
               onCommitmentClick={openCommitmentDetail}
             />
-            <div className="border-t border-line-divider p-4 md:px-4.5">
+            <div className="border-t border-line/50 p-4 md:px-5">
               <button
                 type="button"
                 onClick={() => setAddOpen(true)}
-                className="w-full rounded-[11px] border border-dashed border-qp-border bg-card py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft"
+                className="w-full rounded-lg border border-dashed border-qp-border bg-surface-warm/40 py-2.5 text-[13.5px] font-semibold text-qp-deep transition-colors hover:bg-qp-soft"
               >
                 {ADD_COMMITMENT_CTA}
               </button>
@@ -195,6 +187,6 @@ export function CommitmentsView() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
       />
-    </div>
+    </AppPageShell>
   );
 }

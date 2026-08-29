@@ -29,11 +29,13 @@ export type {
   CrisisAction,
   DeviceType,
   EnvelopeType,
+  EspaciosPremiumPaywallSurface,
   IncomeKind,
   IncomeType,
   OnboardingStepProperties,
   PayloadFor,
   Platform,
+  PlusPaywallSurface,
   SignInMethod,
 } from "./events";
 export { AnalyticsEvents } from "./events";

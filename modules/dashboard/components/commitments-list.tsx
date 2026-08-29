@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Calendar, Check } from "reicon-react";
+import { Calendar } from "reicon-react/icons/Calendar";
+import { Check } from "reicon-react/icons/Check";
 import { CommitmentCoverageList } from "@/shared/components/commitments/commitment-coverage-list";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { SectionLink } from "@/shared/components/ui/section-link";
@@ -62,7 +63,7 @@ export function CommitmentsList({
   return (
     <section
       aria-labelledby="dashboard-commitments"
-      className="rounded-[14px] border border-line bg-card p-3 md:p-5"
+      className="rounded-xl border border-line/70 bg-card p-3 md:p-5"
     >
       <div className="mb-2.5 flex items-center justify-between gap-3 md:mb-3.5">
         <h2

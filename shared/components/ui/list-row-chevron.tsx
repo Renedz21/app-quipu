@@ -1,4 +1,4 @@
-import { ChevronRight } from "reicon-react";
+import { ChevronRight } from "reicon-react/icons/ChevronRight";
 import { cn } from "@/shared/lib/utils";
 
 export function ListRowChevron({ className }: { className?: string }) {

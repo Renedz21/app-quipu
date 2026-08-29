@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnalyticsEvents, track } from "@/core/analytics";
 import {
   SETTINGS_FEEDBACK_HINT,
   SETTINGS_FEEDBACK_LABEL,
@@ -39,6 +40,9 @@ export function AppFeedbackLink({ variant, className }: Props) {
       >
         <Link
           href="/settings/feedback"
+          onClick={() =>
+            track(AnalyticsEvents.FEEDBACK_ENTRY_CLICKED, { variant: "mobile" })
+          }
           className={cn(
             "pointer-events-auto rounded-full border border-line/70 bg-[color-mix(in_oklch,var(--qp-canvas)_92%,transparent)] px-3 py-1",
             "font-mono text-[9px] uppercase tracking-[0.12em] text-faint backdrop-blur-sm",
@@ -54,6 +58,9 @@ export function AppFeedbackLink({ variant, className }: Props) {
   return (
     <Link
       href="/settings/feedback"
+      onClick={() =>
+        track(AnalyticsEvents.FEEDBACK_ENTRY_CLICKED, { variant: "sidebar" })
+      }
       className={cn(
         "group mb-3 block rounded-[10px] px-2.5 py-2 transition-colors hover:bg-qp-soft/50",
         className,

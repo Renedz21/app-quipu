@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft } from "reicon-react";
+import { ArrowLeft } from "reicon-react/icons/ArrowLeft";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,

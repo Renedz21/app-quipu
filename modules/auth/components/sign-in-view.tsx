@@ -10,12 +10,14 @@ import {
 } from "@/core/analytics";
 import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import { emailOnlySchema } from "@/shared/lib/validation/auth";
 import { usePasskeySupport } from "../hooks/use-passkey-support";
 import {
   authFetchOptions,
   requireTurnstileToken,
 } from "../lib/auth-fetch-options";
+import { resolveAuthDestination } from "../lib/auth-return-to";
 import { navigateAfterAuth } from "../lib/navigate-after-auth";
 import { passwordOnlySchema } from "../schemas";
 import { AuthSidePanel } from "./auth-side-panel";
@@ -44,9 +46,11 @@ function trackLogin(method: "password" | "passkey"): void {
 export function SignInView({
   initialEmail = "",
   reason,
+  returnTo,
 }: {
   initialEmail?: string;
   reason?: string;
+  returnTo?: string;
 }) {
   const support = usePasskeySupport();
   const [step, setStep] = useState<Step>(
@@ -54,10 +58,13 @@ export function SignInView({
       ? { kind: "password", email: initialEmail }
       : { kind: "email" },
   );
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [error, setError] = useState<
     "credentials" | "passkey" | "unverified" | null
   >(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const postAuthDestination = resolveAuthDestination(returnTo, "/dashboard");
 
   useEffect(() => {
     if (!support.conditionalUI) return;
@@ -67,17 +74,18 @@ export function SignInView({
         onSuccess: () => {
           trackLogin("passkey");
           toast.success("Bienvenido de vuelta");
-          navigateAfterAuth("/dashboard");
+          navigateAfterAuth(postAuthDestination);
         },
       },
     });
-  }, [support.conditionalUI]);
+  }, [support.conditionalUI, postAuthDestination]);
 
   const emailForm = useForm({
     defaultValues: { email: initialEmail },
     validators: { onChange: emailOnlySchema },
     onSubmit: async ({ value }) => {
       setError(null);
+      setDirection("forward");
       setStep({ kind: "password", email: value.email });
     },
   });
@@ -110,7 +118,7 @@ export function SignInView({
       }
       trackLogin("password");
       toast.success("Bienvenido de vuelta");
-      navigateAfterAuth("/dashboard");
+      navigateAfterAuth(postAuthDestination);
     },
   });
 
@@ -127,13 +135,19 @@ export function SignInView({
             : `Ingresa tu contraseña para ${step.email}`}
         </p>
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex w-full max-w-95 flex-col gap-5">
+          <AnimatedView
+            viewKey={step.kind}
+            direction={direction}
+            aria-live="off"
+            className="flex w-full max-w-95 flex-col gap-5"
+          >
             {step.kind === "email" ? (
               <EmailStep
                 form={emailForm}
                 reason={reason}
                 error={error}
                 showPasskey={support.webauthn}
+                returnTo={returnTo}
               />
             ) : (
               <PasswordStep
@@ -146,12 +160,14 @@ export function SignInView({
                 onChangeEmail={() => {
                   setError(null);
                   setTurnstileToken(null);
+                  setDirection("back");
                   setStep({ kind: "email" });
                 }}
                 showPasskey={support.webauthn}
+                returnTo={returnTo}
               />
             )}
-          </div>
+          </AnimatedView>
         </div>
       </div>
     </div>

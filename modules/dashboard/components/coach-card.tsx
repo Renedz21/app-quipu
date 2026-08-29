@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ChatDots } from "reicon-react";
+import { ChatDots } from "reicon-react/icons/ChatDots";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { CoachCrisisActions } from "@/modules/coach/components/coach-crisis-actions";
 import { CoachCrisisPlanActions } from "@/modules/coach/components/coach-crisis-plan-actions";
@@ -10,10 +11,14 @@ import { CoachNudgeActions } from "@/modules/coach/components/coach-nudge-action
 import { EXPENSE_NO_CYCLE_HINT } from "@/modules/expenses/constants";
 import { useExpenseRegister } from "@/modules/expenses/hooks/use-expense-register-context";
 import { Button } from "@/shared/components/ui/button";
+import { formatCents } from "@/shared/lib/money";
 import {
   COACH_EARLY_REGISTER_CTA,
   COACH_EARLY_VIEW_SYSTEM_CTA,
   COACH_KIND_LABELS,
+  COACH_SAVINGS_UNASSIGNED_CTA,
+  COACH_SAVINGS_UNASSIGNED_PREFIX,
+  COACH_SAVINGS_UNASSIGNED_SUFFIX,
   COACH_TRANQUIL_SAVE_MORE_CTA,
   COACH_TRANQUIL_VIEW_CTA,
   COACH_WARNING_ADJUST_CTA,
@@ -27,6 +32,7 @@ type Props = {
   currencyCode: string;
   layout?: "inline" | "full";
   isPremium?: boolean;
+  savingsUnassignedCents?: number;
 };
 
 const INSIGHT_TYPE_BY_KIND: Record<DashboardCoach["kind"], string> = {
@@ -96,6 +102,7 @@ export function CoachCard({
   currencyCode,
   layout = "inline",
   isPremium = false,
+  savingsUnassignedCents = 0,
 }: Props) {
   const router = useRouter();
   const { open } = useExpenseRegister();
@@ -114,7 +121,7 @@ export function CoachCard({
   return (
     <section
       aria-labelledby="dashboard-coach"
-      className={`flex flex-col rounded-[14px] border p-3 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
+      className={`flex flex-col rounded-xl border p-3 md:p-5 ${coachSectionClass(coach.kind, layout)}`}
     >
       <div className="mb-2 flex items-center gap-2 md:mb-3">
         <span
@@ -139,6 +146,22 @@ export function CoachCard({
       >
         {coach.message}
       </p>
+
+      {!isCrisis && savingsUnassignedCents > 0 ? (
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-line/70 bg-card px-3 py-2.5 md:mt-3">
+          <p className="text-[12.5px] text-ink-secondary">
+            {COACH_SAVINGS_UNASSIGNED_PREFIX}{" "}
+            {formatCents(savingsUnassignedCents, { currency: currencyCode })}{" "}
+            {COACH_SAVINGS_UNASSIGNED_SUFFIX}
+          </p>
+          <Link
+            href="/savings"
+            className="shrink-0 text-[12.5px] font-medium text-qp-deep"
+          >
+            {COACH_SAVINGS_UNASSIGNED_CTA}
+          </Link>
+        </div>
+      ) : null}
 
       {isContigo ? (
         <div className="mt-3 flex flex-wrap gap-2 md:mt-4">

@@ -31,7 +31,6 @@ export const EMERGENCY_FUND_TARGET_SUFFIX = "meta de 3 meses de gastos";
 export const EMERGENCY_FUND_AUTO_CONTRIBUTION_PREFIX = "Aporte automático";
 export const EMERGENCY_FUND_AUTO_CONTRIBUTION_SUFFIX = "/ ciclo";
 
-export const EMERGENCY_FUND_DETAIL_BACK = "Ahorros";
 export const EMERGENCY_FUND_DETAIL_BODY =
   "Tu red de seguridad. Cuando esté lleno, tres meses de tranquilidad pase lo que pase.";
 export const EMERGENCY_FUND_DETAIL_MOBILE_BODY =
@@ -156,6 +155,8 @@ export const MOVE_SURPLUS_SOURCE_LABEL = "Desde";
 export const MOVE_SURPLUS_AMOUNT_LABEL = "Cuánto mover";
 export const MOVE_SURPLUS_AMOUNT_AVAILABLE_PREFIX = "de";
 export const MOVE_SURPLUS_AMOUNT_AVAILABLE_SUFFIX = "disponible";
+export const MOVE_SURPLUS_AMOUNT_PLACEHOLDER = "¿Cuánto quieres mover?";
+export const MOVE_SURPLUS_SHORTCUT_ALL = "Todo";
 export const MOVE_SURPLUS_DESTINATION_LABEL = "Hacia";
 export const MOVE_SURPLUS_CYCLE_BANNER_EMPHASIS = "Solo por este ciclo.";
 export const MOVE_SURPLUS_CYCLE_BANNER_REST =
@@ -164,7 +165,6 @@ export const MOVE_SURPLUS_DESTINATION_FUND_HINT = "Recomendado · va primero";
 export const MOVE_SURPLUS_DESTINATION_GOAL_HINT = "Viaje, laptop, depa…";
 export const MOVE_SURPLUS_GRATIFICATION_LABEL = "De mi gratificación";
 export const MOVE_SURPLUS_WANTS_SURPLUS_PREFIX = "Sobrante de Gustos";
-export const MOVE_SURPLUS_PILL_ALL_SUFFIX = "Todo el sobrante";
 export const MOVE_SURPLUS_CANCEL_CTA = "Cancelar";
 export const MOVE_SURPLUS_SUBMIT_CTA_PREFIX = "Mover";
 export const MOVE_SURPLUS_SUCCESS_TITLE_PREFIX = "Guardaste";
@@ -184,3 +184,21 @@ export const MOVE_SURPLUS_NO_SURPLUS =
   "No tienes sobrante disponible para mover en este ciclo.";
 export const MOVE_SURPLUS_NO_CYCLE_BODY =
   "Registra un ingreso para activar tu ciclo y mover sobrante.";
+
+export const ASSIGN_SHEET_TITLE = "¿Qué hago con mi ahorro?";
+export const ASSIGN_SHEET_AVAILABLE_PREFIX = "Disponible:";
+export const ASSIGN_SHEET_TOTAL_LABEL = "Total a asignar";
+export const ASSIGN_SHEET_CONFIRM_CTA = "Confirmar reparto";
+export const ASSIGN_SHEET_DISMISS = "Prefiero decidirlo después";
+export const ASSIGN_SHEET_SUCCESS_PREFIX = "Listo.";
+export const ASSIGN_SHEET_LINE_HINT_PREFIX = "Faltan";
+export const ASSIGN_SHEET_RATIONALE: Record<
+  "fund_first" | "complete_nearest_goal" | "fund_reinforce",
+  string
+> = {
+  fund_first: "Completamos tu Fondo de emergencia primero.",
+  complete_nearest_goal: "Completamos primero la meta más cercana.",
+  fund_reinforce: "Tus metas están al día: reforzamos tu Fondo.",
+};
+export const ASSIGN_CARD_TITLE = "Tu ahorro del ciclo está sin destino";
+export const ASSIGN_CARD_CTA = "Decidir destino";

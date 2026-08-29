@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LockKeyholeOpen } from "reicon-react";
+import { LockKeyholeOpen } from "reicon-react/icons/LockKeyholeOpen";
 import { toast } from "sonner";
 import { authClient } from "@/auth/auth-client";
 import { fromConvexError } from "@/core/errors";
@@ -99,12 +99,12 @@ export function SettingsSecurityCard({
     <section
       id={id}
       className={cn(
-        "scroll-mt-6 rounded-2xl border border-line bg-card px-5 py-5 md:self-start md:px-6 md:py-[22px]",
+        "scroll-mt-6 rounded-xl border border-line/70 bg-card px-5 py-5 md:self-start md:px-6 md:py-[22px]",
         className,
       )}
     >
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="min-w-0 font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+        <span className="min-w-0 text-[12.5px] font-medium text-ink-secondary">
           {SETTINGS_SECURITY_LABEL}
         </span>
         <LockKeyholeOpen
@@ -117,16 +117,16 @@ export function SettingsSecurityCard({
 
       <div className="mb-3.5 flex flex-col gap-2">
         {passkeysLoading ? (
-          <div className="h-[58px] animate-pulse rounded-xl border border-line-soft bg-surface" />
+          <div className="h-[58px] animate-pulse rounded-lg bg-surface-warm/40" />
         ) : passkeys.length === 0 ? (
-          <p className="rounded-xl border border-line-soft bg-surface px-3.5 py-3 text-[13px] text-mute">
+          <p className="rounded-lg bg-surface-warm/40 px-3.5 py-3 text-[13px] text-mute">
             {SETTINGS_PASSKEY_EMPTY}
           </p>
         ) : (
           passkeys.map((passkey) => (
             <div
               key={passkey.id}
-              className="flex items-center gap-3 rounded-xl border border-line-soft bg-surface px-3.5 py-3"
+              className="flex items-center gap-3 rounded-lg bg-surface-warm/40 px-3.5 py-3"
             >
               <PasskeyRowIcon deviceType={passkey.deviceType} />
               <div className="min-w-0 flex-1">

@@ -9,6 +9,8 @@ import {
   FORECAST_DEFICIT_LINE,
   FORECAST_DEPLETION_LINE,
   FORECAST_EARLY_CYCLE_BODY,
+  FORECAST_HEALTHY_BODY,
+  FORECAST_HEALTHY_TITLE,
   FORECAST_PAYWALL_NUDGE,
   FORECAST_SECTION_LABEL,
   FORECAST_SURPLUS_LINE,
@@ -72,9 +74,9 @@ export function CycleForecastCard({ currencyCode, isPremium }: Props) {
     return (
       <section
         aria-labelledby="cycle-forecast-title"
-        className="rounded-[14px] border border-line bg-card p-3 md:p-5"
+        className="rounded-xl border border-line/70 bg-card p-3 md:p-5"
       >
-        <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+        <p className="text-[12.5px] font-medium text-ink-secondary">
           {FORECAST_SECTION_LABEL}
         </p>
         <div className="mt-3 h-12 animate-pulse rounded-[10px] bg-surface-warm" />
@@ -86,9 +88,9 @@ export function CycleForecastCard({ currencyCode, isPremium }: Props) {
     return (
       <section
         aria-labelledby="cycle-forecast-title"
-        className="rounded-[14px] border border-line bg-card p-3 md:p-5"
+        className="rounded-xl border border-line/70 bg-card p-3 md:p-5"
       >
-        <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+        <p className="text-[12.5px] font-medium text-ink-secondary">
           {FORECAST_SECTION_LABEL}
         </p>
         <p
@@ -109,15 +111,33 @@ export function CycleForecastCard({ currencyCode, isPremium }: Props) {
     .filter((line): line is string => line !== null);
 
   if (lines.length === 0) {
-    return null;
+    return (
+      <section
+        aria-labelledby="cycle-forecast-title"
+        className="rounded-xl border border-line/70 bg-card p-3 md:p-5"
+      >
+        <p className="text-[12.5px] font-medium text-ink-secondary">
+          {FORECAST_SECTION_LABEL}
+        </p>
+        <h2
+          id="cycle-forecast-title"
+          className="mt-2 font-serif text-[17px] font-medium text-ink"
+        >
+          {FORECAST_HEALTHY_TITLE}
+        </h2>
+        <p className="mt-2 text-[13px] leading-snug text-mute">
+          {FORECAST_HEALTHY_BODY}
+        </p>
+      </section>
+    );
   }
 
   return (
     <section
       aria-labelledby="cycle-forecast-title"
-      className="rounded-[14px] border border-line bg-card p-3 md:p-5"
+      className="rounded-xl border border-line/70 bg-card p-3 md:p-5"
     >
-      <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-faint">
+      <p className="text-[12.5px] font-medium text-ink-secondary">
         {FORECAST_SECTION_LABEL}
       </p>
       {forecast.earliestDepletion?.calendarDay ? (
@@ -143,7 +163,7 @@ export function CycleForecastCard({ currencyCode, isPremium }: Props) {
         {lines.map((line) => (
           <li
             key={line}
-            className="rounded-[10px] border border-line-subtle bg-canvas px-3 py-2 text-[13px] text-ink-secondary"
+            className="rounded-lg border border-line/70 bg-surface-warm/40 px-3 py-2 text-[13px] text-ink-secondary md:px-3.5"
           >
             {line}
           </li>

@@ -1,18 +1,19 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Lock } from "reicon-react/icons/Lock";
 import type { Id } from "@/convex/_generated/dataModel";
-import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
 import { Button } from "@/shared/components/ui/button";
-import { Slider } from "@/shared/components/ui/slider";
+import { FieldError } from "@/shared/components/ui/field";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
-import { formatCents } from "@/shared/lib/money";
+import { formatCents, parseToCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
 import {
   MOVE_SURPLUS_AMOUNT_AVAILABLE_PREFIX,
   MOVE_SURPLUS_AMOUNT_AVAILABLE_SUFFIX,
   MOVE_SURPLUS_AMOUNT_LABEL,
+  MOVE_SURPLUS_AMOUNT_PLACEHOLDER,
   MOVE_SURPLUS_CANCEL_CTA,
   MOVE_SURPLUS_CYCLE_BANNER_EMPHASIS,
   MOVE_SURPLUS_CYCLE_BANNER_REST,
@@ -20,7 +21,7 @@ import {
   MOVE_SURPLUS_DESTINATION_GOAL_HINT,
   MOVE_SURPLUS_DESTINATION_LABEL,
   MOVE_SURPLUS_GRATIFICATION_LABEL,
-  MOVE_SURPLUS_PILL_ALL_SUFFIX,
+  MOVE_SURPLUS_SHORTCUT_ALL,
   MOVE_SURPLUS_SOURCE_LABEL,
   MOVE_SURPLUS_SUBMIT_CTA_PREFIX,
   MOVE_SURPLUS_WANTS_SURPLUS_PREFIX,
@@ -55,6 +56,10 @@ type Props = {
 };
 
 const SOURCE_ORDER: SurplusFromEnvelope[] = ["wants", "needs", "extraordinary"];
+
+function centsToInput(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
 
 function pickDefaultSource(
   sources: MoveSurplusSources,
@@ -109,7 +114,11 @@ export function MoveSurplusForm({
   const defaultAmountCents =
     initialAmountCents != null && initialAmountCents > 0
       ? Math.min(initialAmountCents, defaultAvailable)
-      : defaultAvailable;
+      : 0;
+
+  const [amountText, setAmountText] = useState(
+    defaultAmountCents > 0 ? centsToInput(defaultAmountCents) : "",
+  );
 
   const availableBySource = useMemo(
     () => ({
@@ -153,8 +162,6 @@ export function MoveSurplusForm({
       >
         {({ fromSource, amountCents, destinationId }) => {
           const available = availableBySource[fromSource];
-          const sliderMax = Math.max(available, 1);
-          const sliderValue = Math.min(amountCents, available);
 
           return (
             <>
@@ -173,7 +180,6 @@ export function MoveSurplusForm({
                         disabled={sourceAvailable <= 0}
                         onClick={() => {
                           form.setFieldValue("fromSource", source);
-                          form.setFieldValue("amountCents", sourceAvailable);
                         }}
                         className={cn(
                           "inline-flex items-center gap-2 rounded-[11px] border px-3.5 py-2.5 text-sm transition-colors",
@@ -183,6 +189,7 @@ export function MoveSurplusForm({
                           sourceAvailable <= 0 &&
                             "cursor-not-allowed opacity-40",
                         )}
+                        aria-pressed={selected}
                       >
                         <SourceDot source={source} />
                         {sourceLabel(source, sourceAvailable, currencyCode)}
@@ -196,45 +203,49 @@ export function MoveSurplusForm({
                 <p className="mb-2.5 text-[12.5px] font-medium text-ink-secondary">
                   {MOVE_SURPLUS_AMOUNT_LABEL}
                 </p>
-                <div className="flex h-16 items-center justify-between rounded-[14px] border-[1.5px] border-qp-shield-line bg-card px-5">
-                  <span className="font-serif text-[34px] leading-none text-ink">
-                    {formatCents(sliderValue, { currency: currencyCode })}
-                  </span>
-                  <span className="text-[13px] text-faint">
+                <div className="flex flex-col gap-0.5 rounded-xl border border-qp-shield-line bg-card px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:gap-0 sm:px-5">
+                  <input
+                    value={amountText}
+                    onChange={(event) => {
+                      const raw = event.target.value;
+                      setAmountText(raw);
+                      const cents = parseToCents(raw);
+                      form.setFieldValue("amountCents", cents ?? 0);
+                    }}
+                    inputMode="decimal"
+                    placeholder={MOVE_SURPLUS_AMOUNT_PLACEHOLDER}
+                    aria-label={MOVE_SURPLUS_AMOUNT_LABEL}
+                    className="w-full bg-transparent font-serif text-[26px] leading-none text-ink placeholder:text-faint focus:outline-none sm:text-[34px]"
+                  />
+                  <span className="text-[12px] text-faint sm:shrink-0 sm:pl-3 sm:text-[13px]">
                     {MOVE_SURPLUS_AMOUNT_AVAILABLE_PREFIX}{" "}
                     {formatCents(available, { currency: currencyCode })}{" "}
                     {MOVE_SURPLUS_AMOUNT_AVAILABLE_SUFFIX}
                   </span>
                 </div>
-                {available > 0 ? (
-                  <div className="mt-3.5">
-                    <Slider
-                      min={0}
-                      max={sliderMax}
-                      value={[sliderValue]}
-                      onValueChange={(values) => {
-                        const next = Array.isArray(values)
-                          ? (values[0] ?? 0)
-                          : values;
-                        form.setFieldValue("amountCents", next);
-                      }}
-                      className="[&_[data-slot=slider-range]]:bg-gradient-to-r [&_[data-slot=slider-range]]:from-moss-soft [&_[data-slot=slider-range]]:to-moss"
+                <form.Field name="amountCents">
+                  {(field) => (
+                    <FieldError
+                      className="mt-1.5 text-[12.5px] text-danger-ink"
+                      errors={field.state.meta.errors}
                     />
-                  </div>
-                ) : null}
+                  )}
+                </form.Field>
                 <div className="mt-3.5 flex flex-wrap gap-2">
                   {[10_000, 30_000].map((increment) => (
                     <button
                       key={increment}
                       type="button"
                       disabled={available <= 0}
-                      onClick={() =>
-                        form.setFieldValue(
-                          "amountCents",
-                          Math.min(available, amountCents + increment),
-                        )
-                      }
-                      className="rounded-[10px] border border-line bg-card px-3.5 py-2 text-[13px] text-ink-secondary"
+                      onClick={() => {
+                        const next = Math.min(
+                          available,
+                          amountCents + increment,
+                        );
+                        form.setFieldValue("amountCents", next);
+                        setAmountText(centsToInput(next));
+                      }}
+                      className="rounded-[10px] border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink-secondary hover:bg-surface-soft"
                     >
                       + {formatCents(increment, { currency: currencyCode })}
                     </button>
@@ -242,16 +253,13 @@ export function MoveSurplusForm({
                   <button
                     type="button"
                     disabled={available <= 0}
-                    onClick={() => form.setFieldValue("amountCents", available)}
-                    className={cn(
-                      "rounded-[10px] border px-3.5 py-2 text-[13px]",
-                      amountCents === available
-                        ? "border-moss bg-qp-success font-semibold text-qp-deep"
-                        : "border-line bg-card text-ink-secondary",
-                    )}
+                    onClick={() => {
+                      form.setFieldValue("amountCents", available);
+                      setAmountText(centsToInput(available));
+                    }}
+                    className="rounded-[10px] border border-line bg-card px-3.5 py-2.5 text-[13px] text-ink-secondary hover:bg-surface-soft"
                   >
-                    {MOVE_SURPLUS_PILL_ALL_SUFFIX} ·{" "}
-                    {formatCents(available, { currency: currencyCode })}
+                    {MOVE_SURPLUS_SHORTCUT_ALL}
                   </button>
                 </div>
               </section>
@@ -271,11 +279,12 @@ export function MoveSurplusForm({
                         onClick={() =>
                           form.setFieldValue("destinationId", destination.id)
                         }
+                        aria-pressed={selected}
                         className={cn(
-                          "flex items-center gap-3 rounded-[13px] border p-3.5 text-left transition-colors",
+                          "flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors",
                           selected
                             ? "border-moss bg-qp-success"
-                            : "border-line bg-card hover:bg-surface-soft",
+                            : "border-line/70 bg-card hover:bg-surface-warm/40",
                         )}
                       >
                         <span
@@ -285,7 +294,7 @@ export function MoveSurplusForm({
                           )}
                         >
                           {isFund ? (
-                            <EmergencyFundIcon size="sm" />
+                            <Lock size={13} aria-hidden />
                           ) : (
                             <span className="size-3 rounded-full border-2 border-mute" />
                           )}
@@ -306,17 +315,12 @@ export function MoveSurplusForm({
                 </div>
               </section>
 
-              <div className="flex items-start gap-2.5 rounded-xl border border-qp-shield-line bg-qp-success px-4 py-3">
-                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-[1.6px] border-qp-deep">
-                  <span className="mb-0.5 block size-1 rotate-45 border-r-[1.6px] border-b-[1.6px] border-qp-deep" />
-                </span>
-                <p className="text-[13px] leading-relaxed text-qp-deep">
-                  <strong className="font-semibold">
-                    {MOVE_SURPLUS_CYCLE_BANNER_EMPHASIS}
-                  </strong>{" "}
-                  {MOVE_SURPLUS_CYCLE_BANNER_REST}
-                </p>
-              </div>
+              <p className="text-[13px] text-mute">
+                <strong className="font-semibold">
+                  {MOVE_SURPLUS_CYCLE_BANNER_EMPHASIS}
+                </strong>{" "}
+                {MOVE_SURPLUS_CYCLE_BANNER_REST}
+              </p>
 
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
@@ -340,7 +344,7 @@ export function MoveSurplusForm({
                   }
                 >
                   {MOVE_SURPLUS_SUBMIT_CTA_PREFIX}{" "}
-                  {formatCents(sliderValue, { currency: currencyCode })}
+                  {formatCents(amountCents, { currency: currencyCode })}
                 </Button>
               </div>
             </>

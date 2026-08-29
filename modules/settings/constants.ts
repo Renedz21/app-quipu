@@ -21,11 +21,7 @@ export const SETTINGS_PLAN_PLUS_NAME = "Quipu Plus";
 export const SETTINGS_PLAN_FREE_NAME = "Plan Quipu";
 export const SETTINGS_PLAN_CURRENT_LABEL = "Tu plan actual";
 export const SETTINGS_PLAN_PLUS_OFFER_LABEL = "Quipu Plus";
-export {
-  PLUS_CHECKOUT_CTA as SETTINGS_PLAN_UPGRADE,
-  PLUS_MONTHLY_PRICE as SETTINGS_PLAN_PLUS_PRICE,
-  PLUS_UPGRADE_PRICE_HINT as SETTINGS_PLAN_PLUS_PRICE_HINT,
-} from "@/shared/constants/plan";
+export { PLUS_CHECKOUT_CTA as SETTINGS_PLAN_UPGRADE } from "@/shared/constants/plan";
 export const SETTINGS_PLAN_FREE_BODY = "Gratis. Registros manuales sin límite.";
 export const SETTINGS_PLAN_RENEWAL_AUTOMATIC = "Renovación automática";
 export const SETTINGS_PLAN_ACTIVE_BADGE = "Activo";
@@ -33,13 +29,14 @@ export const SETTINGS_PLAN_MANAGE = "Gestionar plan";
 export const SETTINGS_PLAN_PREPARING = "Preparando…";
 export const SETTINGS_PLAN_BILLING_UNAVAILABLE =
   "Facturación no disponible; intenta más tarde.";
-export const SETTINGS_PLAN_VALUE_HEADING = "Qué incluye Plus";
+export const SETTINGS_PLAN_VALUE_HEADING = "Quipu hace más trabajo por ti.";
 export const SETTINGS_PLAN_VALUE_BULLETS = [
-  "Predice cuándo se agota cada sobre.",
-  "Plan de crisis claro cuando algo no cuadra.",
-  "Avisos antes de que venzan tus compromisos.",
-  "Informe de cierre al terminar cada ciclo.",
-  "Reglas de ingresos extraordinarios que tú defines.",
+  "Proyecta cuánto te durará tu dinero al ritmo actual.",
+  "Aplica automáticamente tus reglas para CTS, bonos y gratificaciones.",
+  "Te guía cuando tu presupuesto empieza a desordenarse.",
+  "Mantiene visibles tus próximos compromisos.",
+  "Resume automáticamente cómo terminó tu ciclo.",
+  "Crea espacios financieros compartidos con tu pareja.",
 ] as const;
 export const SETTINGS_PLAN_TAX_INCLUDED = "Precio con impuestos incluidos.";
 export const SETTINGS_CHECKOUT_SUCCESS =
@@ -62,7 +59,6 @@ export const SETTINGS_SIGN_OUT = "Cerrar sesión";
 
 export const SETTINGS_ACCOUNT_ACTIONS_LABEL = "Acciones de cuenta";
 
-export const SETTINGS_FEEDBACK_LINK = "Cuéntanos";
 export const SETTINGS_FEEDBACK_LABEL = "Cuéntanos";
 export const SETTINGS_FEEDBACK_HINT = "Problemas, ideas o consultas";
 
@@ -103,7 +99,6 @@ export const SETTINGS_ALLOCATIONS_SAVE = "Guardar cambios";
 export const SETTINGS_ALLOCATIONS_SAVED = "Reparto actualizado.";
 export const SETTINGS_ALLOCATIONS_NEXT_CYCLE =
   "Suma 100% · se aplica al próximo ciclo";
-export const SETTINGS_BACK_LINK = "Ajustes";
 
 export const SETTINGS_CYCLE_LABEL = "Ciclo";
 export const SETTINGS_CYCLE_TYPE = "Tipo";
@@ -138,9 +133,9 @@ export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LABEL =
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_HINT =
   "Quipu Plus usa la regla que ya definiste al registrar el ingreso.";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_TITLE =
-  "Las automatizaciones son parte de Quipu Plus";
+  "Plus aplica tus reglas por ti";
 export const SETTINGS_EXTRAORDINARY_AUTO_APPLY_LOCK_BODY =
-  "Define la regla una vez. Plus la aplica al registrar el ingreso, siempre bajo las reglas que tú elegiste.";
+  "Define una vez qué hacer con CTS, bonos y gratificaciones. Plus lo aplica al registrar cada ingreso extraordinario.";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS = "Gratificaciones";
 export const SETTINGS_EXTRAORDINARY_GRATIFICATIONS_HINT = "Julio y diciembre";
 export const SETTINGS_EXTRAORDINARY_CTS = "CTS";

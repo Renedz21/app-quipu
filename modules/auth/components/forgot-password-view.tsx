@@ -1,12 +1,12 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import { authClient } from "@/auth/auth-client";
 import { clientEnv } from "@/core/env.client";
 import { QuipuLogo } from "@/shared/components/quipu-logo";
-import { TurnstileWidget } from "@/shared/components/turnstile-widget";
 import { Button } from "@/shared/components/ui/button";
 import {
   Field,
@@ -20,6 +20,14 @@ import { requireTurnstileToken } from "../lib/auth-fetch-options";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { AuthSidePanel } from "./auth-side-panel";
+
+const TurnstileWidget = dynamic(
+  () =>
+    import("@/shared/components/turnstile-widget").then(
+      (mod) => mod.TurnstileWidget,
+    ),
+  { ssr: false },
+);
 
 export function ForgotPasswordView({
   initialEmail = "",

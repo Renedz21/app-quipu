@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { ChatDots } from "reicon-react";
+import { ChatDots } from "reicon-react/icons/ChatDots";
 import { cn } from "@/shared/lib/utils";
 import { authPrimaryButtonClass } from "../constants";
+import { appendAuthReturnTo } from "../lib/auth-return-to";
 
 type Props = {
   email: string;
+  returnTo?: string;
 };
 
 /** Post sign-up cuando `requireEmailVerification` está activo (D1). */
-export function VerifyEmailPromptStep({ email }: Props) {
+export function VerifyEmailPromptStep({ email, returnTo }: Props) {
   return (
     <div className="flex w-full max-w-95 flex-col items-center text-center">
       <div className="mb-7 flex size-[88px] items-center justify-center rounded-full bg-qp-soft">
@@ -23,7 +25,10 @@ export function VerifyEmailPromptStep({ email }: Props) {
         entrar con contraseña. Passkey sigue disponible en iniciar sesión.
       </p>
       <Link
-        href={`/sign-in?email=${encodeURIComponent(email)}&reason=verify`}
+        href={appendAuthReturnTo(
+          `/sign-in?email=${encodeURIComponent(email)}&reason=verify`,
+          returnTo,
+        )}
         className={cn(
           authPrimaryButtonClass,
           "mt-8 inline-flex h-[46px] items-center justify-center px-8",

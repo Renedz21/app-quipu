@@ -14,7 +14,7 @@ export function DashboardHeader({ name, cycleDayLine }: Props) {
             Hola, {name}
           </h1>
           {cycleDayLine ? (
-            <p className="mt-0.5 text-[12px] text-mute md:text-[13.5px]">
+            <p className="mt-0.5 text-[12.5px] font-medium text-ink-secondary md:text-[13px]">
               {cycleDayLine}
             </p>
           ) : null}

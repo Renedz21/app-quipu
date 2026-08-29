@@ -14,6 +14,7 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/lib/utils";
 import {
   SETTINGS_DELETE_ACCOUNT,
   SETTINGS_DELETE_ACCOUNT_BODY,
@@ -26,7 +27,6 @@ import {
   SETTINGS_DELETE_ACCOUNT_WORKING,
 } from "../constants";
 import { deleteAccount } from "../lib/delete-account";
-import { SettingsAccountActionButton } from "./settings-account-action-button";
 
 type Props = {
   className?: string;
@@ -79,13 +79,17 @@ export function SettingsDeleteAccountItem({ className }: Props) {
 
   return (
     <>
-      <SettingsAccountActionButton
-        tone="danger"
+      {/* Enlace discreto: la destructiva NO debe ser el CTA con más peso de la página. */}
+      <button
+        type="button"
         onClick={() => setOpen(true)}
-        className={className}
+        className={cn(
+          "min-h-11 text-left text-[13px] font-medium text-danger-ink underline-offset-4 transition-colors hover:underline",
+          className,
+        )}
       >
         {SETTINGS_DELETE_ACCOUNT}
-      </SettingsAccountActionButton>
+      </button>
 
       <AlertDialog open={open} onOpenChange={handleOpenChange}>
         <AlertDialogContent className="rounded-[22px] border-t-4 border-t-danger">

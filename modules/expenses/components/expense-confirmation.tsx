@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "reicon-react";
+import { Check } from "reicon-react/icons/Check";
 import { Button } from "@/shared/components/ui/button";
 import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { formatCents } from "@/shared/lib/money";

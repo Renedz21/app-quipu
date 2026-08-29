@@ -3,7 +3,12 @@
     "codegraph": {
       "type": "stdio",
       "command": "codegraph",
-      "args": ["serve", "--mcp"]
+      "args": ["serve", "--mcp", "--path", "."]
+    },
+    "codegraph-convex": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": ["serve", "--mcp", "--path", "convex"]
     }
   }
 }

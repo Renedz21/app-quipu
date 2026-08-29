@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { DEFAULT_CURRENCY } from "@/core/constants";
 import { useDashboardSummary } from "@/modules/dashboard/queries";
+import { AnimatedView } from "@/shared/components/ui/animated-view";
 import type { DistributionPolicy } from "@/shared/lib/allocations";
 import type { IncomeFlowStep, IncomeRegisterResult } from "../types";
 import { IncomeConfirmation } from "./income-confirmation";
@@ -84,32 +85,32 @@ export function IncomeRegisterFlow({
     return <IncomeRegisterSkeleton />;
   }
 
-  if (step === "success" && result) {
-    return (
-      <IncomeConfirmation
-        result={result}
-        currencyCode={currencyCode}
-        variant={successVariant}
-        distributionPolicy={successDistributionPolicy}
-        showMoveSurplusLink={showMoveSurplusLink}
-      />
-    );
-  }
-
   return (
-    <IncomeRegisterForm
-      currencyCode={currencyCode}
-      profile={profile}
-      summary={summary}
-      createIncomeEvent={createIncomeEvent}
-      onSuccess={(response, options) => {
-        dispatch({
-          type: "success",
-          result: response,
-          incomeKind: options?.incomeKind ?? "habitual",
-          distributionPolicy: options?.distributionPolicy,
-        });
-      }}
-    />
+    <AnimatedView viewKey={step} direction="forward" aria-live="polite">
+      {step === "success" && result ? (
+        <IncomeConfirmation
+          result={result}
+          currencyCode={currencyCode}
+          variant={successVariant}
+          distributionPolicy={successDistributionPolicy}
+          showMoveSurplusLink={showMoveSurplusLink}
+        />
+      ) : (
+        <IncomeRegisterForm
+          currencyCode={currencyCode}
+          profile={profile}
+          summary={summary}
+          createIncomeEvent={createIncomeEvent}
+          onSuccess={(response, options) => {
+            dispatch({
+              type: "success",
+              result: response,
+              incomeKind: options?.incomeKind ?? "habitual",
+              distributionPolicy: options?.distributionPolicy,
+            });
+          }}
+        />
+      )}
+    </AnimatedView>
   );
 }

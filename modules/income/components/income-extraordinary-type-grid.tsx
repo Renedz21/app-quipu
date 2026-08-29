@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "reicon-react";
+import { Check } from "reicon-react/icons/Check";
 import { Button } from "@/shared/components/ui/button";
 import type { ExtraordinaryType } from "@/shared/lib/extraordinaryIncome";
 import { cn } from "@/shared/lib/utils";

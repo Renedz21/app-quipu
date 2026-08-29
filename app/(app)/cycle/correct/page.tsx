@@ -1,5 +1,5 @@
-import { CycleCorrectView } from "@/modules/cycle-correction/components/cycle-correct-view";
+import { CycleCorrectWizard } from "@/modules/cycle-correction/components/cycle-correct-wizard";
 
 export default function CycleCorrectPage() {
-  return <CycleCorrectView />;
+  return <CycleCorrectWizard />;
 }

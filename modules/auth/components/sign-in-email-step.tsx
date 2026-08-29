@@ -1,3 +1,6 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -7,21 +10,29 @@ import {
   FieldLabel,
 } from "@/shared/components/ui/field";
 import { authLabelClass, authPrimaryButtonClass } from "../constants";
+import { appendAuthReturnTo } from "../lib/auth-return-to";
 import { AuthBanner } from "./auth-banner";
 import { AuthInput } from "./auth-input";
 import { RecoverPasswordLink } from "./recover-password-link";
-import { SignInPasskeyButton } from "./sign-in-passkey-button";
+
+const SignInPasskeyButton = dynamic(
+  () =>
+    import("./sign-in-passkey-button").then((mod) => mod.SignInPasskeyButton),
+  { ssr: false },
+);
 
 export function EmailStep({
   form,
   reason,
   error,
   showPasskey,
+  returnTo,
 }: {
   form: any;
   reason?: string;
   error: "credentials" | "passkey" | "unverified" | null;
   showPasskey: boolean;
+  returnTo?: string;
 }) {
   return (
     <>
@@ -110,12 +121,12 @@ export function EmailStep({
             <span className="text-xs text-faint">o</span>
             <span className="h-px flex-1 bg-line" />
           </div>
-          <SignInPasskeyButton />
+          <SignInPasskeyButton returnTo={returnTo} />
         </>
       )}
       <div className="mt-1 flex justify-center lg:justify-end">
         <Link
-          href="/sign-up"
+          href={appendAuthReturnTo("/sign-up", returnTo)}
           className="text-[13px] font-medium text-qp-deep hover:underline"
         >
           Crear una cuenta nueva

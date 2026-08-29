@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EmergencyFundIcon } from "@/shared/components/icons/emergency-fund-icon";
+import { Lock } from "reicon-react/icons/Lock";
 import { buttonVariants } from "@/shared/components/ui/button-variants";
 import { formatCents } from "@/shared/lib/money";
 import { cn } from "@/shared/lib/utils";
@@ -45,7 +45,7 @@ export function EmergencyFundHero({
       />
       <div className="relative mb-4 flex items-center gap-2.5">
         <span className="flex size-8 items-center justify-center rounded-[9px] bg-moss text-white">
-          <EmergencyFundIcon size="sm" />
+          <Lock size={13} aria-hidden />
         </span>
         <span className="text-base font-semibold text-ink">
           {EMERGENCY_FUND_LABEL}
@@ -93,7 +93,7 @@ export function EmergencyFundHero({
     <>
       <div className="mb-4 flex items-center gap-2.5">
         <span className="flex size-8 items-center justify-center rounded-[9px] bg-moss text-white">
-          <EmergencyFundIcon size="sm" />
+          <Lock size={13} aria-hidden />
         </span>
         <span className="text-base font-semibold text-ink">
           {EMERGENCY_FUND_LABEL}
@@ -163,14 +163,14 @@ export function EmergencyFundHero({
 
   if (isPreTraction) {
     return (
-      <article className="mb-5 rounded-[20px] border border-line bg-gradient-to-br from-canvas to-surface-soft p-5 md:mb-[22px] md:p-7">
+      <article className="mb-5 rounded-xl border border-line/70 bg-gradient-to-br from-canvas to-surface-soft p-5 md:mb-[22px] md:p-7">
         {content}
       </article>
     );
   }
 
   return (
-    <article className="relative mb-5 overflow-hidden rounded-[20px] border border-qp-shield-line bg-gradient-to-br from-qp-shield-from to-qp-shield-to p-5 md:mb-[22px] md:p-7">
+    <article className="relative mb-5 overflow-hidden rounded-xl border border-qp-shield-line bg-gradient-to-br from-qp-shield-from to-qp-shield-to p-5 md:mb-[22px] md:p-7">
       {detailHref ? (
         <Link
           href={detailHref}

@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
-import { Calendar as CalendarIcon } from "reicon-react";
+import { Calendar as CalendarIcon } from "reicon-react/icons/Calendar";
 import { Button } from "@/shared/components/ui/button";
 import { Calendar } from "@/shared/components/ui/calendar";
 import {

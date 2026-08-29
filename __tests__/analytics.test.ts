@@ -223,6 +223,50 @@ describe("AnalyticsEvents enum (sanity)", () => {
       "weekly_summary_viewed",
       "monthly_summary_viewed",
       "financial_insight_viewed",
+      "plus_paywall_viewed",
+      "plus_checkout_started",
+      "plus_checkout_completed",
+      "plus_portal_opened",
+      "espacios_hub_viewed",
+      "espacios_premium_paywall_viewed",
+      "space_created",
+      "space_invite_accepted",
+      "space_dashboard_viewed",
+      "space_expense_registered",
+      "space_contribution_completed",
+      "space_proposal_created",
+      "space_proposal_confirmed",
+      "space_proposal_rejected",
+      "space_entered_readonly",
+      "space_reactivated",
+      "feedback_entry_clicked",
+    ];
+    const present = new Set(Object.values(AnalyticsEvents));
+    for (const r of required) {
+      expect(present.has(r as never), `falta evento: ${r}`).toBe(true);
+    }
+  });
+
+  it("incluye eventos Plus, espacios y feedback", () => {
+    const required = [
+      "feedback_submitted",
+      "feedback_entry_clicked",
+      "plus_paywall_viewed",
+      "plus_checkout_started",
+      "plus_checkout_completed",
+      "plus_portal_opened",
+      "espacios_hub_viewed",
+      "espacios_premium_paywall_viewed",
+      "space_created",
+      "space_invite_accepted",
+      "space_dashboard_viewed",
+      "space_expense_registered",
+      "space_contribution_completed",
+      "space_proposal_created",
+      "space_proposal_confirmed",
+      "space_proposal_rejected",
+      "space_entered_readonly",
+      "space_reactivated",
     ];
     const present = new Set(Object.values(AnalyticsEvents));
     for (const r of required) {

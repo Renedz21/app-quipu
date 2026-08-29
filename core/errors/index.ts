@@ -38,6 +38,12 @@ export type ErrorCode =
   | "OVER_BUDGET_LIMIT"
   // Plan / facturación
   | "PLAN_REQUIRED"
+  // Espacios compartidos (Modo Pareja)
+  | "CURRENCY_MISMATCH"
+  | "SPACE_MEMBER_LIMIT"
+  | "SPACE_READONLY"
+  | "SPACE_PROPOSAL_PENDING"
+  | "SPACE_NOT_MEMBER"
   // Sistema
   | "INTERNAL_ERROR"
   | "EXTERNAL_SERVICE_ERROR"

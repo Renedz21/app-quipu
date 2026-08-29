@@ -73,6 +73,7 @@ import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_rescueTransfer from "../lib/rescueTransfer.js";
 import type * as lib_resetAppTables from "../lib/resetAppTables.js";
 import type * as lib_reverseIncomeAllocationLedger from "../lib/reverseIncomeAllocationLedger.js";
+import type * as lib_savingsAssignPlan from "../lib/savingsAssignPlan.js";
 import type * as lib_savingsMath from "../lib/savingsMath.js";
 import type * as lib_settingsCopy from "../lib/settingsCopy.js";
 import type * as lib_spaceAuth from "../lib/spaceAuth.js";
@@ -177,6 +178,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rescueTransfer": typeof lib_rescueTransfer;
   "lib/resetAppTables": typeof lib_resetAppTables;
   "lib/reverseIncomeAllocationLedger": typeof lib_reverseIncomeAllocationLedger;
+  "lib/savingsAssignPlan": typeof lib_savingsAssignPlan;
   "lib/savingsMath": typeof lib_savingsMath;
   "lib/settingsCopy": typeof lib_settingsCopy;
   "lib/spaceAuth": typeof lib_spaceAuth;

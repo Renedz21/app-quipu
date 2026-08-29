@@ -17,9 +17,10 @@ export function SpaceInviteAcceptView({ token }: Props) {
   const accept = useAcceptInvitation();
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (preview === undefined) {
+  if (accepted || preview === undefined) {
     return <EspaciosLoadingSkeleton />;
   }
 
@@ -60,6 +61,7 @@ export function SpaceInviteAcceptView({ token }: Props) {
           try {
             const spaceId = await accept({ token });
             track(AnalyticsEvents.SPACE_INVITE_ACCEPTED, { space_id: spaceId });
+            setAccepted(true);
             router.push(`/espacios/${spaceId}`);
           } catch (caught) {
             setError(fromConvexError(caught).message);

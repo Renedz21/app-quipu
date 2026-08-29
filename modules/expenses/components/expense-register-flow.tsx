@@ -74,7 +74,8 @@ function ExpenseRegisterFlowSession({ isOpen, close, options }: SessionProps) {
       title={step === "success" ? EXPENSE_FLOW_TITLE : title}
       progress={step === "success" ? null : <FlowProgress step={step} />}
     >
-      <AnimatedView viewKey={step} direction="forward" aria-live="polite">
+      {/* viewKey estable: key={step} remontaría el form y resetearía el monto */}
+      <AnimatedView viewKey="expense-register-flow" aria-live="polite">
         {step === "success" && result ? (
           <ExpenseConfirmation
             amountCents={result.amount}

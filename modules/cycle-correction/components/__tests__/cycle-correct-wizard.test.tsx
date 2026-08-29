@@ -259,6 +259,24 @@ describe("CycleCorrectWizard", () => {
     expect(next.disabled).toBe(false);
   });
 
+  it("resetea la confirmación de mismatch al editar el monto", () => {
+    mockBackend({ registeredIncome: 380_000 });
+    render(<CycleCorrectWizard />);
+    const input = screen.getByLabelText(
+      "Monto que ingresó este ciclo",
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "1200" } });
+    fireEvent.click(
+      screen.getByLabelText(/entiendo; quiero corregir con este monto/i),
+    );
+    const next = screen.getByRole("button", {
+      name: /continuar/i,
+    }) as HTMLButtonElement;
+    expect(next.disabled).toBe(false);
+    fireEvent.change(input, { target: { value: "1500" } });
+    expect(next.disabled).toBe(true);
+  });
+
   it("no advierte cuando el ingreso declarado coincide con el registrado", () => {
     mockBackend({ registeredIncome: 380_000 });
     render(<CycleCorrectWizard />);

@@ -257,7 +257,10 @@ export function CycleCorrectWizard() {
         <WizardStepIncome
           amountText={incomeText}
           currencyCode={currencyCode}
-          onAmountChange={setIncomeText}
+          onAmountChange={(value) => {
+            setIncomeText(value);
+            setMismatchConfirmed(false);
+          }}
           onNext={() => setStep(2)}
           registeredIncomeCents={registeredIncomeCents}
           mismatch={mismatch}

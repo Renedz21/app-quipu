@@ -93,6 +93,9 @@ function DashboardLoadedContent({
               currencyCode={summary.profile.currencyCode}
               layout="full"
               isPremium={summary.profile.plan === "premium"}
+              savingsUnassignedCents={
+                summary.liquidity.savingsParkedInEnvelopeCents
+              }
             />
           ) : null}
 
@@ -107,6 +110,9 @@ function DashboardLoadedContent({
                 coach={summary.coach}
                 currencyCode={summary.profile.currencyCode}
                 isPremium={summary.profile.plan === "premium"}
+                savingsUnassignedCents={
+                  summary.liquidity.savingsParkedInEnvelopeCents
+                }
               />
             ) : null}
           </div>

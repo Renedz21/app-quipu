@@ -5,8 +5,10 @@ import type { FunctionArgs } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
-  type ContributeToGoalInput,
-  contributeToGoalInputSchema,
+  type AssignSavingsInput,
+  assignSavingsInputSchema,
+  type ContributeToSubEnvelopeInput,
+  contributeToSubEnvelopeInputSchema,
   type MoveSurplusInput,
   moveSurplusInputSchema,
 } from "./schemas";
@@ -15,8 +17,8 @@ export function useMoveSurplusToSavings() {
   return useMutation(api.savings.moveSurplusToSavings);
 }
 
-export function useContributeToGoal() {
-  return useMutation(api.savings.contributeToGoal);
+export function useContributeToSubEnvelope() {
+  return useMutation(api.savings.contributeToSubEnvelope);
 }
 
 type MoveSurplusMutationArgs = FunctionArgs<
@@ -43,23 +45,40 @@ export async function moveSurplusToSavings(
   return mutate(parseMoveSurplusInput(raw));
 }
 
-type ContributeToGoalMutationArgs = FunctionArgs<
-  typeof api.savings.contributeToGoal
+type ContributeToSubEnvelopeMutationArgs = FunctionArgs<
+  typeof api.savings.contributeToSubEnvelope
 >;
 
-export function parseContributeToGoalInput(
-  raw: ContributeToGoalInput,
-): ContributeToGoalMutationArgs {
-  const parsed = contributeToGoalInputSchema.parse(raw);
+export function parseContributeToSubEnvelopeInput(
+  raw: ContributeToSubEnvelopeInput,
+): ContributeToSubEnvelopeMutationArgs {
+  const parsed = contributeToSubEnvelopeInputSchema.parse(raw);
   return {
-    goalId: parsed.goalId as Id<"subEnvelopes">,
+    subEnvelopeId: parsed.subEnvelopeId as Id<"subEnvelopes">,
     ...(parsed.amountCents !== undefined ? { amount: parsed.amountCents } : {}),
   };
 }
 
-export async function contributeToGoal(
-  mutate: ReturnType<typeof useContributeToGoal>,
-  raw: ContributeToGoalInput,
+export async function contributeToSubEnvelope(
+  mutate: ReturnType<typeof useContributeToSubEnvelope>,
+  raw: ContributeToSubEnvelopeInput,
 ) {
-  return mutate(parseContributeToGoalInput(raw));
+  return mutate(parseContributeToSubEnvelopeInput(raw));
+}
+
+export function useAssignSavingsEnvelope() {
+  return useMutation(api.savings.assignSavingsEnvelope);
+}
+
+export async function assignSavingsEnvelope(
+  mutate: ReturnType<typeof useAssignSavingsEnvelope>,
+  raw: AssignSavingsInput,
+) {
+  const parsed = assignSavingsInputSchema.parse(raw);
+  return mutate({
+    lines: parsed.lines.map((line) => ({
+      subEnvelopeId: line.subEnvelopeId as Id<"subEnvelopes">,
+      amount: line.amountCents,
+    })),
+  });
 }

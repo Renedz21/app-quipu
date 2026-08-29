@@ -5,6 +5,7 @@ import {
   type ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useReducer,
 } from "react";
 import { ONBOARDING_DEFAULTS, STORAGE_KEY } from "../constants";
@@ -56,8 +57,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
+  const value = useMemo(() => ({ state, dispatch }), [state]);
+
   return (
-    <OnboardingContext.Provider value={{ state, dispatch }}>
+    <OnboardingContext.Provider value={value}>
       {children}
     </OnboardingContext.Provider>
   );

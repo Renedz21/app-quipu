@@ -7,17 +7,11 @@ export function ThemeProvider({
   children,
   ...props
 }: ComponentProps<typeof NextThemesProvider>) {
-  return (
-    <NextThemesProvider
-      {...props}
-      // SSR keeps the default executable script (anti-FOUC). On the client,
-      // React 19 warns about <script> in components — use a data-only type
-      // after hydration; the script already ran from the initial HTML.
-      scriptProps={
-        typeof window === "undefined" ? undefined : { type: "application/json" }
-      }
-    >
-      {children}
-    </NextThemesProvider>
-  );
+  // Render the same structure on the server and first client render:
+  // next-themes' inline <script> already wraps itself in `suppressHydrationWarning`
+  // (see next-themes/dist/index.mjs) and switches the `nonce` attribute between
+  // server and client. Branching on `typeof window` here would emit a different
+  // `scriptProps` object on each side, which is exactly the hydration mismatch
+  // rule prohibits.
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }

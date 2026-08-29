@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import type { ExpenseRegisterOpenOptions } from "../types";
 
 type ExpenseRegisterContextValue = {
@@ -26,17 +33,20 @@ export function ExpenseRegisterContextProvider({
     variant: "fab",
   });
 
-  function open(nextOptions?: ExpenseRegisterOpenOptions) {
+  const open = useCallback((nextOptions?: ExpenseRegisterOpenOptions) => {
     setOptions(nextOptions ?? { variant: "fab" });
     setOpenNonce((nonce) => nonce + 1);
     setIsOpen(true);
-  }
+  }, []);
 
-  function close() {
+  const close = useCallback(() => {
     setIsOpen(false);
-  }
+  }, []);
 
-  const value = { open, close, isOpen, openNonce, options };
+  const value = useMemo(
+    () => ({ open, close, isOpen, openNonce, options }),
+    [open, close, isOpen, openNonce, options],
+  );
 
   return (
     <ExpenseRegisterContext.Provider value={value}>

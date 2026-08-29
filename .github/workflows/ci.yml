@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master, chore/quipu-2.0]
+    branches: [master]
   pull_request:
-    branches: [main, master, chore/quipu-2.0]
+    branches: [master]
 
 jobs:
   quality:
@@ -15,7 +15,7 @@ jobs:
       # pnpm debe instalarse ANTES de setup-node: `cache: pnpm` necesita pnpm
       # en el PATH. action-setup lee la versión del campo `packageManager`.
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/setup@v2
 
       - uses: actions/setup-node@v7
         with:

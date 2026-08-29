@@ -10,6 +10,7 @@ type Props = {
   freeCents: number;
   targets: EnvelopeTargets;
   currencyCode: string;
+  spentCents: number;
   overrunWarning: string | null;
   onTargetChange: (key: keyof EnvelopeTargets, cents: number) => void;
   onResetProposal: () => void;
@@ -23,17 +24,23 @@ const STEP_CENTS = 10_000;
 export function WizardStepSplit(props: Props) {
   const assigned =
     props.targets.needs + props.targets.wants + props.targets.savings;
-  const left = Math.max(0, props.freeCents - assigned);
   return (
     <div className="space-y-4">
       <div>
         <h2 className="font-serif text-xl text-ink">Reparte lo libre</h2>
         <p className="mt-1 text-sm text-mute">
-          Te quedan{" "}
+          Tus sobres quedarán con{" "}
           <span className="font-medium text-ink">
-            {formatCents(left, { currency: props.currencyCode })}
+            {formatCents(assigned, { currency: props.currencyCode })}
           </span>{" "}
-          por repartir.
+          en total.
+        </p>
+        <p className="mt-1 text-sm text-mute">
+          Ya gastaste{" "}
+          <span className="font-medium text-ink">
+            {formatCents(props.spentCents, { currency: props.currencyCode })}
+          </span>{" "}
+          este ciclo; ese dinero sale en la corrección.
         </p>
       </div>
       {props.overrunWarning ? (

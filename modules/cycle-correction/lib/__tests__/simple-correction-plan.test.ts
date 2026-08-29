@@ -58,6 +58,7 @@ describe("buildSimpleCorrectionPlan", () => {
     ]);
     expect(result.remainingByEnvelope).toEqual(base.targets);
     expect(result.unallocatedCents).toBe(0);
+    expect(result.declaredLiquidCents).toBe(380_000);
   });
 
   it("apartar sin compromiso va a por repartir", () => {
@@ -69,9 +70,10 @@ describe("buildSimpleCorrectionPlan", () => {
     });
     expect(result.reserveToCommitments).toEqual([]);
     expect(result.unallocatedCents).toBe(250_000);
+    expect(result.declaredLiquidCents).toBe(380_000);
   });
 
-  it("el sobrante del reparto va a por repartir", () => {
+  it("el sobrante no va a por repartir; se concilia via declarado", () => {
     const result = buildSimpleCorrectionPlan({
       ...base,
       reservedWithCommitmentCents: 250_000,
@@ -79,7 +81,32 @@ describe("buildSimpleCorrectionPlan", () => {
       commitmentId: "c1",
       targets: { needs: 50_000, wants: 30_000, savings: 20_000 },
     });
-    expect(result.unallocatedCents).toBe(30_000);
+    expect(result.unallocatedCents).toBe(0);
+    expect(result.declaredLiquidCents).toBe(350_000);
+  });
+
+  it("con gasto previo, el declarado refleja el liquido real del ciclo", () => {
+    const spentPerEnvelope = { needs: 51_000, wants: 0, savings: 0 };
+    const targets = proposeRemainingByEnvelope({
+      freeCents: 130_000,
+      allocation: ALLOCATION,
+      spentPerEnvelope,
+    });
+    const result = buildSimpleCorrectionPlan({
+      ...base,
+      spentPerEnvelope,
+      targets,
+      reservedWithCommitmentCents: 250_000,
+      reservedGenericCents: 0,
+      commitmentId: "c1",
+    });
+    expect(targets).toEqual({
+      needs: 14_000,
+      wants: 39_000,
+      savings: 26_000,
+    });
+    expect(result.unallocatedCents).toBe(0);
+    expect(result.declaredLiquidCents).toBe(329_000);
   });
 
   it("lanza si los objetivos superan el libre", () => {

@@ -111,13 +111,14 @@ describe("WizardStepReserved", () => {
 describe("WizardStepSplit", () => {
   const targets = { needs: 65_000, wants: 39_000, savings: 26_000 };
 
-  it("stepper suma y muestra el restante vivo", () => {
+  it("stepper suma y muestra el total asignado y el gasto del ciclo", () => {
     const onTargetChange = vi.fn();
     render(
       <WizardStepSplit
         freeCents={130_000}
         targets={targets}
         currencyCode="PEN"
+        spentCents={51_000}
         overrunWarning={null}
         onTargetChange={onTargetChange}
         onResetProposal={() => {}}
@@ -127,7 +128,8 @@ describe("WizardStepSplit", () => {
     );
     fireEvent.click(screen.getAllByRole("button", { name: "+" })[0]);
     expect(onTargetChange).toHaveBeenCalledWith("needs", 65_000 + 10_000);
-    expect(screen.getByText(/te quedan/i)).toBeTruthy();
+    expect(screen.getByText(/sobres quedarán/i)).toBeTruthy();
+    expect(screen.getByText(/ya gastaste/i)).toBeTruthy();
   });
 
   it("deshabilita aplicar cuando recibe disabled", () => {
@@ -136,6 +138,7 @@ describe("WizardStepSplit", () => {
         freeCents={130_000}
         targets={targets}
         currencyCode="PEN"
+        spentCents={0}
         overrunWarning={null}
         onTargetChange={() => {}}
         onResetProposal={() => {}}

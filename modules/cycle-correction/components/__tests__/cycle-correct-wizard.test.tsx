@@ -149,6 +149,7 @@ describe("CycleCorrectWizard", () => {
       savings: 26_000,
     });
     expect(args.setUnallocatedCents).toBe(0);
+    expect(args.declaredLiquidCents).toBe(380_000);
     expect(createCommitment).not.toHaveBeenCalled();
     expect(trackMock).toHaveBeenCalledWith(
       "allocation_correct_completed",

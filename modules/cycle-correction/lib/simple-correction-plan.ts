@@ -15,6 +15,7 @@ export type SimpleCorrectionInput = {
 export type SimpleCorrectionResult = {
   remainingByEnvelope: EnvelopeTargets;
   unallocatedCents: number;
+  declaredLiquidCents: number;
   reserveToCommitments: Array<{ commitmentId: string; amountCents: number }>;
 };
 
@@ -64,7 +65,11 @@ export function buildSimpleCorrectionPlan(
   }
   return {
     remainingByEnvelope: { ...input.targets },
-    unallocatedCents: input.reservedGenericCents + (freeCents - totalTargets),
+    unallocatedCents: input.reservedGenericCents,
+    declaredLiquidCents:
+      totalTargets +
+      input.reservedWithCommitmentCents +
+      input.reservedGenericCents,
     reserveToCommitments:
       input.reservedWithCommitmentCents > 0 && input.commitmentId
         ? [

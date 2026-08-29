@@ -188,6 +188,7 @@ export function CycleCorrectWizard() {
         await correct({
           setEnvelopeRemaining: plan.remainingByEnvelope,
           setUnallocatedCents: plan.unallocatedCents,
+          declaredLiquidCents: plan.declaredLiquidCents,
           reserveToCommitments: plan.reserveToCommitments.map((row) => ({
             commitmentId: row.commitmentId as Id<"fixedCommitments">,
             amountCents: row.amountCents,
@@ -210,6 +211,8 @@ export function CycleCorrectWizard() {
   }
 
   const assigned = targets.needs + targets.wants + targets.savings;
+  const spentCents =
+    spentPerEnvelope.needs + spentPerEnvelope.wants + spentPerEnvelope.savings;
   const overAssigned = assigned > freeCents;
   const overrunWarning =
     spentPerEnvelope.needs > targets.needs ||
@@ -260,6 +263,7 @@ export function CycleCorrectWizard() {
           freeCents={freeCents}
           targets={targets}
           currencyCode={currencyCode}
+          spentCents={spentCents}
           overrunWarning={overrunWarning}
           disabled={saving || overAssigned}
           onTargetChange={(key, cents) =>

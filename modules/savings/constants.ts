@@ -186,3 +186,21 @@ export const MOVE_SURPLUS_NO_SURPLUS =
   "No tienes sobrante disponible para mover en este ciclo.";
 export const MOVE_SURPLUS_NO_CYCLE_BODY =
   "Registra un ingreso para activar tu ciclo y mover sobrante.";
+
+export const ASSIGN_SHEET_TITLE = "¿Qué hago con mi ahorro?";
+export const ASSIGN_SHEET_AVAILABLE_PREFIX = "Disponible:";
+export const ASSIGN_SHEET_TOTAL_LABEL = "Total a asignar";
+export const ASSIGN_SHEET_CONFIRM_CTA = "Confirmar reparto";
+export const ASSIGN_SHEET_DISMISS = "Prefiero decidirlo después";
+export const ASSIGN_SHEET_SUCCESS_PREFIX = "Listo.";
+export const ASSIGN_SHEET_LINE_HINT_PREFIX = "Faltan";
+export const ASSIGN_SHEET_RATIONALE: Record<
+  "fund_first" | "complete_nearest_goal" | "fund_reinforce",
+  string
+> = {
+  fund_first: "Completamos tu Fondo de emergencia primero.",
+  complete_nearest_goal: "Completamos primero la meta más cercana.",
+  fund_reinforce: "Tus metas están al día: reforzamos tu Fondo.",
+};
+export const ASSIGN_CARD_TITLE = "Tu ahorro del ciclo está sin destino";
+export const ASSIGN_CARD_CTA = "Decidir destino";

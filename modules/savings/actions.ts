@@ -5,6 +5,8 @@ import type { FunctionArgs } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
+  type AssignSavingsInput,
+  assignSavingsInputSchema,
   type ContributeToSubEnvelopeInput,
   contributeToSubEnvelopeInputSchema,
   type MoveSurplusInput,
@@ -62,4 +64,21 @@ export async function contributeToSubEnvelope(
   raw: ContributeToSubEnvelopeInput,
 ) {
   return mutate(parseContributeToSubEnvelopeInput(raw));
+}
+
+export function useAssignSavingsEnvelope() {
+  return useMutation(api.savings.assignSavingsEnvelope);
+}
+
+export async function assignSavingsEnvelope(
+  mutate: ReturnType<typeof useAssignSavingsEnvelope>,
+  raw: AssignSavingsInput,
+) {
+  const parsed = assignSavingsInputSchema.parse(raw);
+  return mutate({
+    lines: parsed.lines.map((line) => ({
+      subEnvelopeId: line.subEnvelopeId as Id<"subEnvelopes">,
+      amount: line.amountCents,
+    })),
+  });
 }

@@ -191,3 +191,19 @@ export function moveSurplusFormToMutationArgs(
     toSubEnvelopeId: values.destinationId,
   };
 }
+
+export const assignSavingsInputSchema = z.object({
+  lines: z
+    .array(
+      z.object({
+        subEnvelopeId: z.string().min(1, "Destino no válido."),
+        amountCents: z
+          .number()
+          .int("El monto debe ser un entero de céntimos.")
+          .positive("El monto debe ser mayor a cero."),
+      }),
+    )
+    .min(1, "Agrega al menos un destino."),
+});
+
+export type AssignSavingsInput = z.infer<typeof assignSavingsInputSchema>;

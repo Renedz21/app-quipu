@@ -29,6 +29,8 @@ import {
 } from "../constants";
 import { buildCycleContributionSubtitle } from "../lib/savingsCopy";
 import { useCycleSavingsBreakdown } from "../queries";
+import { AssignSavingsCard } from "./assign-savings-card";
+import { AssignSavingsSheet } from "./assign-savings-sheet";
 import { ContributeGoalDialog } from "./contribute-goal-dialog";
 import {
   CycleSavingsSection,
@@ -46,6 +48,7 @@ export function SavingsView() {
     id: Id<"subEnvelopes">;
     label: string;
   } | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   if (overview === undefined) {
     return <SavingsViewSkeleton />;
@@ -149,6 +152,14 @@ export function SavingsView() {
         />
       ) : null}
 
+      {overview.assignPlan ? (
+        <AssignSavingsCard
+          availableCents={overview.assignPlan.totalCents}
+          currencyCode={overview.profile.currencyCode}
+          onOpen={() => setAssignOpen(true)}
+        />
+      ) : null}
+
       <section className="mt-6">
         <div className="mb-3.5 flex items-center gap-2">
           <span className="text-[12.5px] font-medium text-ink-secondary">
@@ -244,6 +255,13 @@ export function SavingsView() {
       ) : null}
 
       <NewGoalDialog open={newGoalOpen} onOpenChange={setNewGoalOpen} />
+      <AssignSavingsSheet
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        availableCents={overview.assignPlan?.totalCents ?? 0}
+        currencyCode={overview.profile.currencyCode}
+        plan={overview.assignPlan}
+      />
       {contributeGoal ? (
         <ContributeGoalDialog
           open
@@ -274,6 +292,7 @@ function SavingsViewSkeleton() {
         <Skeleton className="hidden h-[34px] w-[170px] rounded-lg [animation-delay:150ms] md:block" />
       </div>
       <Skeleton className="mt-5 h-[168px] w-full rounded-[20px] [animation-delay:150ms]" />
+      <Skeleton className="mt-3 h-[104px] w-full rounded-xl [animation-delay:200ms]" />
       <Skeleton
         variant="line"
         className="mt-5 h-[11px] w-[90px] rounded-[5px]"

@@ -101,7 +101,7 @@ export type MoveSurplusFormValues = z.infer<
   ReturnType<typeof createMoveSurplusFormSchema>
 >;
 
-export function createContributeToGoalSchema(availableCents: number) {
+export function createContributeToSubEnvelopeSchema(availableCents: number) {
   return z
     .object({
       amountInput: z.string(),
@@ -145,12 +145,12 @@ export function createContributeToGoalSchema(availableCents: number) {
     });
 }
 
-export type ContributeToGoalFormValues = z.infer<
-  ReturnType<typeof createContributeToGoalSchema>
+export type ContributeToSubEnvelopeFormValues = z.infer<
+  ReturnType<typeof createContributeToSubEnvelopeSchema>
 >;
 
-export const contributeToGoalInputSchema = z.object({
-  goalId: z.string().min(1, "Meta no válida."),
+export const contributeToSubEnvelopeInputSchema = z.object({
+  subEnvelopeId: z.string().min(1, "Meta no válida."),
   amountCents: z
     .number()
     .int("El monto debe ser un número entero de céntimos.")
@@ -159,13 +159,15 @@ export const contributeToGoalInputSchema = z.object({
     .optional(),
 });
 
-export type ContributeToGoalInput = z.infer<typeof contributeToGoalInputSchema>;
+export type ContributeToSubEnvelopeInput = z.infer<
+  typeof contributeToSubEnvelopeInputSchema
+>;
 
-export function contributeToGoalFormToMutationArgs(
-  goalId: string,
-  values: ContributeToGoalFormValues,
+export function contributeToSubEnvelopeFormToMutationArgs(
+  subEnvelopeId: string,
+  values: ContributeToSubEnvelopeFormValues,
   availableCents: number,
-): ContributeToGoalInput {
+): ContributeToSubEnvelopeInput {
   const trimmed = values.amountInput.trim();
   const amountCents =
     trimmed === ""
@@ -175,7 +177,7 @@ export function contributeToGoalFormToMutationArgs(
     throw new Error("Monto de aporte inválido.");
   }
   return {
-    goalId,
+    subEnvelopeId,
     amountCents,
   };
 }

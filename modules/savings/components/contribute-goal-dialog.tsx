@@ -9,7 +9,10 @@ import { Button } from "@/shared/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import { formatCents } from "@/shared/lib/money";
-import { contributeToGoal, useContributeToGoal } from "../actions";
+import {
+  contributeToSubEnvelope,
+  useContributeToSubEnvelope,
+} from "../actions";
 import {
   CONTRIBUTE_NO_FUNDS,
   GOAL_CONTRIBUTE_AMOUNT_LABEL,
@@ -21,9 +24,9 @@ import {
   GOAL_CONTRIBUTE_USE_ALL_CTA,
 } from "../constants";
 import {
-  type ContributeToGoalFormValues,
-  contributeToGoalFormToMutationArgs,
-  createContributeToGoalSchema,
+  type ContributeToSubEnvelopeFormValues,
+  contributeToSubEnvelopeFormToMutationArgs,
+  createContributeToSubEnvelopeSchema,
 } from "../schemas";
 import { SavingsFormShell } from "./savings-form-shell";
 
@@ -44,16 +47,16 @@ export function ContributeGoalDialog({
   availableCents,
   currencyCode,
 }: Props) {
-  const contributeMutation = useContributeToGoal();
+  const contributeMutation = useContributeToSubEnvelope();
   const formSchema = useMemo(
-    () => createContributeToGoalSchema(availableCents),
+    () => createContributeToSubEnvelopeSchema(availableCents),
     [availableCents],
   );
 
   const form = useForm({
     defaultValues: {
       amountInput: "",
-    } satisfies ContributeToGoalFormValues,
+    } satisfies ContributeToSubEnvelopeFormValues,
     validators: {
       onChange: formSchema,
       onSubmit: formSchema,
@@ -64,12 +67,12 @@ export function ContributeGoalDialog({
         return;
       }
       try {
-        const args = contributeToGoalFormToMutationArgs(
+        const args = contributeToSubEnvelopeFormToMutationArgs(
           goalId,
           value,
           availableCents,
         );
-        const result = await contributeToGoal(contributeMutation, args);
+        const result = await contributeToSubEnvelope(contributeMutation, args);
         toast.success(
           `${GOAL_CONTRIBUTE_SUCCESS_PREFIX} Moviste ${formatCents(
             result.amount,

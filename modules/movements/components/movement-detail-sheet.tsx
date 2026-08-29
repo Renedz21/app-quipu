@@ -1,10 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import Link from "next/link";
-import { useState } from "react";
-import { Edit } from "reicon-react/icons/Edit";
-import { Trash } from "reicon-react/icons/Trash";
+import { useCallback, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
@@ -12,23 +9,18 @@ import { DEFAULT_CURRENCY } from "@/core/constants";
 import { fromConvexError } from "@/core/errors";
 import type { IncomeSource } from "@/modules/income/types";
 import { AnimatedView } from "@/shared/components/ui/animated-view";
-import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/components/ui/sheet";
-import { ENVELOPE_LABELS } from "@/shared/constants/envelopes";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { formatLimaDateTime } from "@/shared/lib/date";
-import { formatCents } from "@/shared/lib/money";
-import {
-  movementAmountClassName,
-  movementAmountPrefix,
-} from "@/shared/lib/movement-amount-display";
-import { ExpenseEditForm } from "./expense-edit-form";
-import { IncomeEditForm } from "./income-edit-form";
+import { MovementDetailCard } from "./movement-detail-card";
+import { MovementDetailConfirmDelete } from "./movement-detail-confirm-delete";
+import { MovementDetailEditExpense } from "./movement-detail-edit-expense";
+import { MovementDetailEditIncome } from "./movement-detail-edit-income";
+import { MovementDetailSuccess } from "./movement-detail-success";
 
 type EnvelopeType = "needs" | "wants";
 
@@ -64,11 +56,6 @@ const SHEET_TITLES: Record<SheetState, string> = {
   success: "Movimiento actualizado",
 };
 
-const ENVELOPE_DOT: Record<EnvelopeType, string> = {
-  needs: "bg-steel",
-  wants: "bg-clay",
-};
-
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -76,21 +63,13 @@ type Props = {
   currencyCode?: string;
 };
 
-async function runDeleteWithBusyFlag(
-  setBusy: (busy: boolean) => void,
-  run: () => Promise<unknown>,
-): Promise<string | null> {
-  setBusy(true);
-  try {
-    await run();
-    return null;
-  } catch (error) {
-    return fromConvexError(error).message;
-  } finally {
-    setBusy(false);
-  }
-}
+type Direction = "forward" | "back";
 
+/**
+ * Sheet/dialog que muestra el detalle de un movimiento (gasto, ingreso o
+ * aporte) y permite editarlo o eliminarlo. Cada vista vive en su propio
+ * componente; aquí solo orquestamos estado, mutaciones y contenedor.
+ */
 export function MovementDetailSheet({
   open,
   onOpenChange,
@@ -99,302 +78,77 @@ export function MovementDetailSheet({
 }: Props) {
   const isMobile = useIsMobile();
   const [state, setState] = useState<SheetState>("detail");
-  const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const [direction, setDirection] = useState<Direction>("forward");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  function goTo(
-    next: SheetState,
-    nextDirection: "forward" | "back" = "forward",
-  ) {
-    setDirection(nextDirection);
-    setState(next);
-  }
+  const goTo = useCallback(
+    (next: SheetState, nextDirection: Direction = "forward") => {
+      setDirection(nextDirection);
+      setState(next);
+    },
+    [],
+  );
+
+  const resetOnClose = useCallback(() => {
+    setDirection("forward");
+    setState("detail");
+    setDeleteError(null);
+  }, []);
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) resetOnClose();
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange, resetOnClose],
+  );
 
   const deleteExpense = useMutation(api.expenses.deleteExpense);
   const deleteIncomeEvent = useMutation(api.incomeEvents.deleteIncomeEvent);
-  const updateExpense = useMutation(api.expenses.updateExpense);
-  const updateIncomeEvent = useMutation(api.incomeEvents.updateIncomeEvent);
 
-  function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) {
-      setDirection("forward");
-      setState("detail");
-      setDeleteError(null);
-    }
-    onOpenChange(nextOpen);
-  }
-
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     if (!movement) return;
     setDeleteError(null);
     const isIncome = movement.kind === "income";
-    const errorMessage = await runDeleteWithBusyFlag(setIsDeleting, () =>
-      isIncome
-        ? deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> })
-        : deleteExpense({ expenseId: movement.id as Id<"expenses"> }),
-    );
-    if (errorMessage) {
-      setDeleteError(errorMessage);
-      return;
-    }
-    track(AnalyticsEvents.MOVEMENT_DELETED, {
-      movement_kind: isIncome ? "income" : "expense",
-      amount: movement.amount,
-      preferred_correct_shown: isIncome,
-    });
-    onOpenChange(false);
-  }
-
-  function renderContent() {
-    if (!movement) return null;
-    const isIncome = movement.kind === "income";
-    const isContribution = movement.kind === "contribution";
-
-    if (state === "success") {
-      return (
-        <div className="flex flex-col items-center py-6 text-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-qp shadow-glow">
-            <svg
-              viewBox="0 0 24 24"
-              className="size-8 text-canvas"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              role="presentation"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <p className="mt-4 font-serif text-[22px] font-medium text-ink">
-            Listo
-          </p>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-mute">
-            Corregimos el registro. Tus sobres se actualizaron.
-          </p>
-          <Button
-            type="button"
-            onClick={() => handleOpenChange(false)}
-            className="mt-6 h-12 w-full rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
-          >
-            Cerrar
-          </Button>
-        </div>
-      );
-    }
-
-    if (state === "confirm-delete") {
-      return (
-        <div className="space-y-4">
-          <div className="rounded-[13px] border border-danger-line bg-danger-bg px-4 py-4">
-            <p className="text-[13.5px] font-semibold text-danger-ink">
-              ¿Eliminar {isIncome ? "este ingreso" : "este gasto"}?
-            </p>
-            <p className="mt-1 text-[13px] leading-relaxed text-danger-text">
-              {isIncome
-                ? "Eliminar borra el registro del ciclo activo y ajusta sobres. Si el problema es que registraste dinero reservado o ya ahorrado, es mejor corregir la distribución sin borrar historial."
-                : "Esta acción no se puede deshacer. Los sobres de tu ciclo se recalcularán automáticamente."}
-            </p>
-          </div>
-          {isIncome ? (
-            <Link
-              href="/cycle/correct"
-              className="block rounded-[12px] border border-qp-shield-line bg-qp-panel px-4 py-3 text-[13px] font-semibold text-qp-deep"
-              onClick={() => {
-                track(AnalyticsEvents.ALLOCATION_CORRECT_CTA_CLICKED, {
-                  source: "delete_income",
-                });
-                onOpenChange(false);
-              }}
-            >
-              Preferible: corregir distribución del ciclo
-            </Link>
-          ) : null}
-          {deleteError ? (
-            <p className="text-sm text-danger" role="alert">
-              {deleteError}
-            </p>
-          ) : null}
-          <div className="flex gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isDeleting}
-              onClick={() => {
-                goTo("detail", "back");
-                setDeleteError(null);
-              }}
-              className="h-12 flex-1 rounded-[12px] border-line text-[14.5px] font-semibold text-mute"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              disabled={isDeleting}
-              onClick={() => void handleDelete()}
-              className="h-12 flex-1 rounded-[12px] bg-[#B0685A] text-[15px] font-semibold text-[#FBFAF7] hover:bg-[#9A5347]"
-            >
-              {isDeleting ? "Eliminando…" : "Eliminar"}
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    if (state === "edit-expense" && movement.kind === "expense") {
-      return (
-        <ExpenseEditForm
-          autoFocus
-          expenseId={movement.id}
-          initialAmountCents={movement.amount}
-          initialDescription={movement.label}
-          initialEnvelopeType={movement.envelopeType ?? "wants"}
-          currencyCode={currencyCode}
-          updateExpense={async (args) =>
-            updateExpense({
-              expenseId: args.expenseId as Id<"expenses">,
-              amount: args.amount,
-              description: args.description,
-              envelopeType: args.envelopeType,
-            })
-          }
-          onSuccess={() => goTo("success")}
-          onCancel={() => goTo("detail", "back")}
-        />
-      );
-    }
-
-    if (state === "edit-income" && movement.kind === "income") {
-      if (!movement.source || movement.occurredAt === undefined) {
-        return (
-          <div className="space-y-4">
-            <p className="text-[13.5px] leading-relaxed text-mute" role="alert">
-              No pudimos cargar los datos para editar este ingreso. Cierra y
-              vuelve a abrir el movimiento; si sigue igual, recarga la página.
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => goTo("detail", "back")}
-              className="h-12 w-full rounded-[12px] border-line text-[14.5px] font-semibold text-mute"
-            >
-              Volver
-            </Button>
-          </div>
-        );
+    try {
+      setIsDeleting(true);
+      if (isIncome) {
+        await deleteIncomeEvent({ eventId: movement.id as Id<"incomeEvents"> });
+      } else {
+        await deleteExpense({ expenseId: movement.id as Id<"expenses"> });
       }
-
-      return (
-        <IncomeEditForm
-          autoFocus
-          eventId={movement.id}
-          initialAmountCents={movement.amount}
-          initialSource={movement.source}
-          initialDescription={movement.label}
-          initialOccurredAt={movement.occurredAt}
-          currencyCode={currencyCode}
-          updateIncomeEvent={async (args) =>
-            updateIncomeEvent({
-              eventId: args.eventId as Id<"incomeEvents">,
-              amount: args.amount,
-              source: args.source,
-              description: args.description,
-              occurredAt: args.occurredAt,
-              incomeKind: args.incomeKind,
-            })
-          }
-          onSuccess={() => goTo("success")}
-          onCancel={() => goTo("detail", "back")}
-        />
-      );
+      track(AnalyticsEvents.MOVEMENT_DELETED, {
+        movement_kind: isIncome ? "income" : "expense",
+        amount: movement.amount,
+        preferred_correct_shown: isIncome,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      setDeleteError(fromConvexError(error).message);
+    } finally {
+      setIsDeleting(false);
     }
-
-    // Default: detail view
-    const displayTimestamp =
-      movement.kind === "income"
-        ? (movement.occurredAt ?? movement.timestamp)
-        : movement.timestamp;
-    const envelopeType =
-      movement.kind === "expense" ? movement.envelopeType : undefined;
-    const kindLabel = isContribution
-      ? "Aporte"
-      : isIncome
-        ? "Ingreso"
-        : "Gasto";
-
-    return (
-      <div className="space-y-5">
-        <div className="rounded-xl border border-line/70 bg-surface-warm/40 px-4 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[12.5px] font-medium text-ink-secondary">
-                {kindLabel}
-                {envelopeType ? ` · ${ENVELOPE_LABELS[envelopeType]}` : ""}
-              </p>
-              <p className="mt-0.5 text-[15px] font-semibold text-ink">
-                {movement.label}
-              </p>
-              <p className="mt-1 text-[12px] text-mute">
-                {formatLimaDateTime(displayTimestamp)}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span
-                className={`font-serif text-[20px] font-medium ${movementAmountClassName(movement.kind)}`}
-              >
-                {movementAmountPrefix(movement.kind)}{" "}
-                {formatCents(movement.amount, { currency: currencyCode })}
-              </span>
-              {envelopeType ? (
-                <span
-                  className={`size-2.5 rounded-full ${ENVELOPE_DOT[envelopeType]}`}
-                  aria-hidden
-                />
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        {isContribution ? (
-          <p className="text-[13px] leading-relaxed text-mute">
-            Los aportes al espacio compartido se registran desde Espacios.
-          </p>
-        ) : (
-          <>
-            <p className="text-center font-serif text-[18px] text-ink">
-              ¿Qué corregimos de este movimiento?
-            </p>
-
-            <div className="space-y-2.5">
-              <Button
-                type="button"
-                onClick={() => goTo(isIncome ? "edit-income" : "edit-expense")}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-canvas hover:bg-ink/90"
-              >
-                <Edit size={16} color="currentColor" aria-hidden />
-                Editar
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => goTo("confirm-delete")}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] border-danger-line text-[14.5px] font-semibold text-danger-ink hover:bg-danger-bg"
-              >
-                <Trash size={16} color="currentColor" aria-hidden />
-                Eliminar
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
+  }, [movement, deleteExpense, deleteIncomeEvent, onOpenChange]);
 
   const title = SHEET_TITLES[state];
-  const body = renderContent();
+  const body =
+    movement &&
+    renderBody({
+      state,
+      movement,
+      currencyCode,
+      isDeleting,
+      deleteError,
+      goTo,
+      onClose: () => handleOpenChange(false),
+      onConfirmDelete: () => void handleDelete(),
+      onCancelDelete: () => {
+        goTo("detail", "back");
+        setDeleteError(null);
+      },
+    });
+
   const animatedBody = body ? (
     <AnimatedView
       viewKey={state}
@@ -444,3 +198,76 @@ export function MovementDetailSheet({
     </Dialog>
   );
 }
+
+type RenderBodyArgs = {
+  state: SheetState;
+  movement: MovementForDetail;
+  currencyCode: string;
+  isDeleting: boolean;
+  deleteError: string | null;
+  goTo: (next: SheetState, direction?: Direction) => void;
+  onClose: () => void;
+  onConfirmDelete: () => void;
+  onCancelDelete: () => void;
+};
+
+function renderBody({
+  state,
+  movement,
+  currencyCode,
+  isDeleting,
+  deleteError,
+  goTo,
+  onClose,
+  onConfirmDelete,
+  onCancelDelete,
+}: RenderBodyArgs) {
+  switch (state) {
+    case "success":
+      return <MovementDetailSuccess onClose={onClose} />;
+    case "confirm-delete":
+      return (
+        <MovementDetailConfirmDelete
+          isIncome={movement.kind === "income"}
+          isDeleting={isDeleting}
+          deleteError={deleteError}
+          onCancel={onCancelDelete}
+          onConfirm={onConfirmDelete}
+          onCloseSheet={onClose}
+        />
+      );
+    case "edit-expense":
+      if (movement.kind !== "expense") return null;
+      return (
+        <MovementDetailEditExpense
+          movement={movement}
+          currencyCode={currencyCode}
+          onSuccess={() => goTo("success")}
+          onCancel={() => goTo("detail", "back")}
+        />
+      );
+    case "edit-income":
+      if (movement.kind !== "income") return null;
+      return (
+        <MovementDetailEditIncome
+          movement={movement}
+          currencyCode={currencyCode}
+          onSuccess={() => goTo("success")}
+          onCancel={() => goTo("detail", "back")}
+        />
+      );
+    default:
+      return (
+        <MovementDetailCard
+          movement={movement}
+          currencyCode={currencyCode}
+          onEdit={() =>
+            goTo(movement.kind === "income" ? "edit-income" : "edit-expense")
+          }
+          onRequestDelete={() => goTo("confirm-delete")}
+        />
+      );
+  }
+}
+
+// (Type already exported above as `MovementForDetail`.)

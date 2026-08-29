@@ -27,17 +27,18 @@ import {
 } from "../constants";
 import { createFeedbackFormSchema, type FeedbackFormValues } from "../schemas";
 
+const FEEDBACK_FORM_DEFAULT_VALUES: FeedbackFormValues = {
+  category: "question",
+  message: "",
+};
+
 export function FeedbackForm() {
   const pathname = usePathname();
   const submitFeedbackMutation = useSubmitFeedback();
   const formSchema = useMemo(() => createFeedbackFormSchema(), []);
-  const defaultValues: FeedbackFormValues = {
-    category: "question",
-    message: "",
-  };
 
   const form = useForm({
-    defaultValues,
+    defaultValues: FEEDBACK_FORM_DEFAULT_VALUES,
     validators: {
       onChange: formSchema,
       onSubmit: formSchema,

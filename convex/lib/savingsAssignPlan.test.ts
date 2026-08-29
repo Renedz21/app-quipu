@@ -140,7 +140,10 @@ describe("validateSavingsAssignLines", () => {
 
   it("rechaza montos no enteros, cero, negativos o vacíos", () => {
     expect(() =>
-      validateSavingsAssignLines([], { availableCents: 100, ownedIds: ["fund"] }),
+      validateSavingsAssignLines([], {
+        availableCents: 100,
+        ownedIds: ["fund"],
+      }),
     ).toThrow();
     expect(() =>
       validateSavingsAssignLines([{ subEnvelopeId: "fund", amount: 1.5 }], {

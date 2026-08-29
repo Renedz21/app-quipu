@@ -142,4 +142,31 @@ describe("buildSimpleCorrectionPlan", () => {
       }),
     ).toThrow("Lo apartado no puede superar lo ingresado");
   });
+
+  it("lanza si apartado + sobres superan el ingreso menos lo gastado", () => {
+    expect(() =>
+      buildSimpleCorrectionPlan({
+        ...base,
+        incomeCents: 130_000,
+        spentPerEnvelope: { needs: 79_000, wants: 0, savings: 0 },
+        reservedWithCommitmentCents: 0,
+        reservedGenericCents: 50_000,
+        commitmentId: null,
+        targets: { needs: 19_000, wants: 0, savings: 0 },
+      }),
+    ).toThrow("Repartes más dinero del que realmente tienes disponible");
+  });
+
+  it("acepta cuando apartado + sobres igualan el disponible real", () => {
+    const result = buildSimpleCorrectionPlan({
+      ...base,
+      incomeCents: 130_000,
+      spentPerEnvelope: { needs: 79_000, wants: 0, savings: 0 },
+      reservedWithCommitmentCents: 0,
+      reservedGenericCents: 50_000,
+      commitmentId: null,
+      targets: { needs: 1_000, wants: 0, savings: 0 },
+    });
+    expect(result.declaredLiquidCents).toBe(51_000);
+  });
 });

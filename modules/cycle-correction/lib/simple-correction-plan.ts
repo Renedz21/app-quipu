@@ -63,6 +63,18 @@ export function buildSimpleCorrectionPlan(
   if (totalTargets > freeCents) {
     throw new Error("Los sobres no pueden superar el dinero libre");
   }
+  const totalSpent =
+    input.spentPerEnvelope.needs +
+    input.spentPerEnvelope.wants +
+    input.spentPerEnvelope.savings;
+  if (
+    totalTargets +
+      input.reservedWithCommitmentCents +
+      input.reservedGenericCents >
+    input.incomeCents - totalSpent
+  ) {
+    throw new Error("Repartes más dinero del que realmente tienes disponible");
+  }
   return {
     remainingByEnvelope: { ...input.targets },
     unallocatedCents: input.reservedGenericCents,

@@ -98,6 +98,7 @@ async function goToStep3(options?: {
     target: { value: "3800" },
   });
   fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+  fireEvent.click(screen.getByLabelText("De un compromiso que ya tengo"));
   fireEvent.change(screen.getByLabelText("Monto apartado"), {
     target: { value: "2500" },
   });
@@ -174,6 +175,52 @@ describe("CycleCorrectWizard", () => {
     expect(correct).not.toHaveBeenCalled();
   });
 
+  it("bloquea aplicar cuando apartado + sobres superan lo disponible real", async () => {
+    mockedUseQuery.mockImplementation((query: unknown) => {
+      const name = getFunctionName(query as never);
+      if (name === "settings:getSettingsOverview") {
+        return SETTINGS_FIXTURE;
+      }
+      if (name === "cycleCorrection:getRegisteredCycleIncome") {
+        return 380_000;
+      }
+      return {
+        ...SUMMARY_FIXTURE,
+        envelopes: [
+          { type: "needs", allocatedAmount: 380_000, remainingAmount: 301_000 },
+          { type: "wants", allocatedAmount: 0, remainingAmount: 0 },
+          { type: "savings", allocatedAmount: 0, remainingAmount: 0 },
+        ],
+      };
+    });
+    mockedUseMutation.mockReturnValue(vi.fn().mockResolvedValue(null));
+    render(<CycleCorrectWizard />);
+    fireEvent.change(screen.getByLabelText("Monto que ingresó este ciclo"), {
+      target: { value: "3800" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+    fireEvent.click(screen.getByLabelText("De un compromiso que ya tengo"));
+    expect(screen.getByText(/disponible real/i)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Monto apartado"), {
+      target: { value: "2500" },
+    });
+    fireEvent.change(screen.getByLabelText("Compromiso"), {
+      target: { value: "c1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+    await waitFor(() =>
+      expect(screen.getByText(/reparte lo libre/i)).toBeTruthy(),
+    );
+    expect(screen.getByText(/solo tienes/i)).toBeTruthy();
+    expect(
+      screen.getByText(/ajusta los sobres o el monto apartado/i),
+    ).toBeTruthy();
+    const submit = screen.getByRole("button", {
+      name: /aplicar corrección/i,
+    }) as HTMLButtonElement;
+    expect(submit.disabled).toBe(true);
+  });
+
   it("muestra el error del servidor cuando la corrección falla", async () => {
     mockBackend();
     const correct = vi.fn().mockRejectedValue({
@@ -205,10 +252,10 @@ describe("CycleCorrectWizard", () => {
       target: { value: "3800" },
     });
     fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+    fireEvent.click(screen.getByLabelText("Crear un compromiso nuevo"));
     fireEvent.change(screen.getByLabelText("Monto apartado"), {
       target: { value: "2500" },
     });
-    fireEvent.click(screen.getByLabelText("Crear un compromiso nuevo"));
     fireEvent.change(screen.getByLabelText("Nombre"), {
       target: { value: "Cuota auto" },
     });

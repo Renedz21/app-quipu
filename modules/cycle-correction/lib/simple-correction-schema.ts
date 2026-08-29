@@ -3,7 +3,7 @@ import { z } from "zod";
 export const simpleCorrectionWizardSchema = z
   .object({
     incomeCents: z.number().int().positive("El ingreso debe ser mayor a 0."),
-    reservedMode: z.enum(["existing", "create", "generic"]),
+    reservedMode: z.enum(["none", "existing", "create", "generic"]),
     reservedCents: z
       .number()
       .int()
@@ -29,6 +29,10 @@ export const simpleCorrectionWizardSchema = z
   })
   .refine((data) => data.reservedCents <= data.incomeCents, {
     message: "Lo apartado no puede superar lo ingresado.",
+    path: ["reservedCents"],
+  })
+  .refine((data) => data.reservedMode === "none" || data.reservedCents >= 1, {
+    message: "Pon el monto que vas a apartar.",
     path: ["reservedCents"],
   })
   .refine(

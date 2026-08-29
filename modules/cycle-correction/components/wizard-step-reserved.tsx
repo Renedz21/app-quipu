@@ -10,6 +10,7 @@ type NewCommitment = NonNullable<SimpleCorrectionWizardValues["newCommitment"]>;
 
 type Props = {
   incomeCents: number;
+  spentCents: number;
   reservedText: string;
   reservedMode: SimpleCorrectionWizardValues["reservedMode"];
   commitmentId: string;
@@ -25,6 +26,7 @@ type Props = {
 };
 
 const MODE_OPTIONS = [
+  { mode: "none" as const, label: "No voy a apartar nada todavía" },
   { mode: "existing" as const, label: "De un compromiso que ya tengo" },
   { mode: "create" as const, label: "Crear un compromiso nuevo" },
   { mode: "generic" as const, label: "Solo apartarlo, sin compromiso" },
@@ -32,7 +34,10 @@ const MODE_OPTIONS = [
 
 export function WizardStepReserved(props: Props) {
   const reservedCents = parseToCents(props.reservedText) ?? 0;
+  const maxDistributable = props.incomeCents - props.spentCents;
   const exceeds = reservedCents > props.incomeCents;
+  const exceedsReal = reservedCents > maxDistributable;
+  const amountMissing = props.reservedMode !== "none" && reservedCents <= 0;
   const missingCommitment =
     props.reservedMode === "existing" && !props.commitmentId;
   const newCommitmentInvalid =
@@ -41,7 +46,16 @@ export function WizardStepReserved(props: Props) {
       reservedCents <= 0 ||
       props.newCommitment.dueDay < 1 ||
       props.newCommitment.dueDay > 31);
-  const canContinue = !exceeds && !missingCommitment && !newCommitmentInvalid;
+  const canContinue =
+    !exceeds &&
+    !exceedsReal &&
+    !amountMissing &&
+    !missingCommitment &&
+    !newCommitmentInvalid;
+  const disponibleReal =
+    props.spentCents > 0
+      ? `Disponible real: ${formatCents(maxDistributable, { currency: props.currencyCode })} (${formatCents(props.incomeCents, { currency: props.currencyCode })} − ${formatCents(props.spentCents, { currency: props.currencyCode })} gastado)`
+      : null;
 
   return (
     <div className="space-y-4">
@@ -51,23 +65,32 @@ export function WizardStepReserved(props: Props) {
           Dinero que debes separar para compromisos fijos, como cuotas o deudas.
         </p>
       </div>
-      <div>
-        <Label htmlFor="wizard-reserved-amount">Monto apartado</Label>
-        <Input
-          id="wizard-reserved-amount"
-          className="mt-1.5 h-12 text-center font-serif text-xl"
-          inputMode="decimal"
-          placeholder="0.00"
-          value={props.reservedText}
-          onChange={(event) => props.onReservedChange(event.target.value)}
-        />
-        {exceeds ? (
-          <p className="mt-1 text-[12px] text-danger-ink">
-            Lo apartado no puede superar lo ingresado (
-            {formatCents(props.incomeCents, { currency: props.currencyCode })}).
-          </p>
-        ) : null}
-      </div>
+      {props.reservedMode !== "none" ? (
+        <div>
+          <Label htmlFor="wizard-reserved-amount">Monto apartado</Label>
+          <Input
+            id="wizard-reserved-amount"
+            className="mt-1.5 h-12 text-center font-serif text-xl"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={props.reservedText}
+            onChange={(event) => props.onReservedChange(event.target.value)}
+          />
+          {exceeds ? (
+            <p className="mt-1 text-[12px] text-danger-ink">
+              Lo apartado no puede superar lo ingresado (
+              {formatCents(props.incomeCents, { currency: props.currencyCode })}
+              ).
+            </p>
+          ) : disponibleReal ? (
+            <p
+              className={`mt-1 text-[12px] ${exceedsReal ? "text-danger-ink" : "text-mute"}`}
+            >
+              {disponibleReal}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <fieldset className="space-y-2">
         <legend className="text-[13px] text-mute">¿A qué se destina?</legend>
         {MODE_OPTIONS.map((option) => (

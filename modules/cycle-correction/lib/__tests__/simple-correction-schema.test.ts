@@ -80,6 +80,30 @@ describe("simpleCorrectionWizardSchema", () => {
     }
   });
 
+  it("acepta modo none con monto 0", () => {
+    expect(
+      simpleCorrectionWizardSchema.safeParse({
+        ...valid,
+        reservedMode: "none" as const,
+        reservedCents: 0,
+        commitmentId: undefined,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("exige monto mayor a 0 si el modo no es none", () => {
+    const result = simpleCorrectionWizardSchema.safeParse({
+      ...valid,
+      reservedCents: 0,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Pon el monto que vas a apartar.",
+      );
+    }
+  });
+
   it("rechaza targets negativos o no enteros", () => {
     expect(
       simpleCorrectionWizardSchema.safeParse({

@@ -56,6 +56,7 @@ describe("WizardStepReserved", () => {
     render(
       <WizardStepReserved
         incomeCents={380_000}
+        spentCents={0}
         reservedText="4000"
         reservedMode="existing"
         commitmentId="c1"
@@ -82,6 +83,7 @@ describe("WizardStepReserved", () => {
     render(
       <WizardStepReserved
         incomeCents={380_000}
+        spentCents={0}
         reservedText="2500"
         reservedMode="existing"
         commitmentId=""
@@ -106,6 +108,101 @@ describe("WizardStepReserved", () => {
         .disabled,
     ).toBe(true);
   });
+
+  it("deshabilita continuar sin monto en modo existing", () => {
+    render(
+      <WizardStepReserved
+        incomeCents={380_000}
+        spentCents={0}
+        reservedText=""
+        reservedMode="existing"
+        commitmentId="c1"
+        newCommitment={{
+          name: "",
+          amountCents: 0,
+          dueDay: 0,
+          envelope: "needs",
+        }}
+        commitments={commitments}
+        currencyCode="PEN"
+        onReservedChange={() => {}}
+        onModeChange={() => {}}
+        onCommitmentChange={() => {}}
+        onNewCommitmentChange={() => {}}
+        onBack={() => {}}
+        onNext={() => {}}
+      />,
+    );
+    expect(
+      (screen.getByRole("button", { name: /continuar/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("en modo none oculta el monto y habilita continuar", () => {
+    render(
+      <WizardStepReserved
+        incomeCents={380_000}
+        spentCents={51_000}
+        reservedText=""
+        reservedMode="none"
+        commitmentId=""
+        newCommitment={{
+          name: "",
+          amountCents: 0,
+          dueDay: 0,
+          envelope: "needs",
+        }}
+        commitments={commitments}
+        currencyCode="PEN"
+        onReservedChange={() => {}}
+        onModeChange={() => {}}
+        onCommitmentChange={() => {}}
+        onNewCommitmentChange={() => {}}
+        onBack={() => {}}
+        onNext={() => {}}
+      />,
+    );
+    expect(
+      (
+        screen.getByLabelText(
+          "No voy a apartar nada todavía",
+        ) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    expect(screen.queryByLabelText("Monto apartado")).toBeNull();
+    expect(
+      (screen.getByRole("button", { name: /continuar/i }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false);
+  });
+
+  it("muestra el disponible real cuando hay gasto previo", () => {
+    render(
+      <WizardStepReserved
+        incomeCents={380_000}
+        spentCents={51_000}
+        reservedText="2500"
+        reservedMode="existing"
+        commitmentId="c1"
+        newCommitment={{
+          name: "",
+          amountCents: 0,
+          dueDay: 0,
+          envelope: "needs",
+        }}
+        commitments={commitments}
+        currencyCode="PEN"
+        onReservedChange={() => {}}
+        onModeChange={() => {}}
+        onCommitmentChange={() => {}}
+        onNewCommitmentChange={() => {}}
+        onBack={() => {}}
+        onNext={() => {}}
+      />,
+    );
+    expect(screen.getByText(/disponible real/i)).toBeTruthy();
+  });
 });
 
 describe("WizardStepSplit", () => {
@@ -119,7 +216,6 @@ describe("WizardStepSplit", () => {
         targets={targets}
         currencyCode="PEN"
         spentCents={51_000}
-        overrunWarning={null}
         onTargetChange={onTargetChange}
         onResetProposal={() => {}}
         onBack={() => {}}
@@ -139,7 +235,6 @@ describe("WizardStepSplit", () => {
         targets={targets}
         currencyCode="PEN"
         spentCents={0}
-        overrunWarning={null}
         onTargetChange={() => {}}
         onResetProposal={() => {}}
         onBack={() => {}}

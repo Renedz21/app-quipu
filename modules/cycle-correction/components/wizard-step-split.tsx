@@ -11,7 +11,6 @@ type Props = {
   targets: EnvelopeTargets;
   currencyCode: string;
   spentCents: number;
-  overrunWarning: string | null;
   onTargetChange: (key: keyof EnvelopeTargets, cents: number) => void;
   onResetProposal: () => void;
   onBack: () => void;
@@ -43,9 +42,6 @@ export function WizardStepSplit(props: Props) {
           este ciclo; ese dinero sale en la corrección.
         </p>
       </div>
-      {props.overrunWarning ? (
-        <p className="text-[12px] text-warning-text">{props.overrunWarning}</p>
-      ) : null}
       <div className="space-y-3">
         {(["needs", "wants", "savings"] as const).map((key) => (
           <div

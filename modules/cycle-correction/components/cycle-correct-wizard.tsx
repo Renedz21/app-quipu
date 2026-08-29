@@ -54,7 +54,7 @@ export function CycleCorrectWizard() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [incomeText, setIncomeText] = useState("");
   const [reservedText, setReservedText] = useState("");
-  const [reservedMode, setReservedMode] = useState<Mode>("existing");
+  const [reservedMode, setReservedMode] = useState<Mode>("none");
   const [commitmentId, setCommitmentId] = useState("");
   const [newCommitment, setNewCommitment] =
     useState<NewCommitment>(EMPTY_NEW_COMMITMENT);
@@ -107,10 +107,15 @@ export function CycleCorrectWizard() {
     };
   }, [summary]);
 
+  const reservedWithCommitmentCents =
+    reservedMode === "existing" || reservedMode === "create"
+      ? reservedCents
+      : 0;
+  const reservedGenericCents = reservedMode === "generic" ? reservedCents : 0;
   const freeCents = computeFreeCents({
     incomeCents,
-    reservedWithCommitmentCents: reservedMode === "generic" ? 0 : reservedCents,
-    reservedGenericCents: reservedMode === "generic" ? reservedCents : 0,
+    reservedWithCommitmentCents,
+    reservedGenericCents,
   });
 
   if (summary === undefined || settings === undefined) {
@@ -200,9 +205,8 @@ export function CycleCorrectWizard() {
       try {
         plan = buildSimpleCorrectionPlan({
           incomeCents,
-          reservedWithCommitmentCents:
-            reservedMode === "generic" ? 0 : reservedCents,
-          reservedGenericCents: reservedMode === "generic" ? reservedCents : 0,
+          reservedWithCommitmentCents,
+          reservedGenericCents,
           commitmentId: effectiveCommitmentId,
           allocation,
           spentPerEnvelope,
@@ -243,13 +247,10 @@ export function CycleCorrectWizard() {
   const assigned = targets.needs + targets.wants + targets.savings;
   const spentCents =
     spentPerEnvelope.needs + spentPerEnvelope.wants + spentPerEnvelope.savings;
-  const overAssigned = assigned > freeCents;
-  const overrunWarning =
-    spentPerEnvelope.needs > targets.needs ||
-    spentPerEnvelope.wants > targets.wants ||
-    spentPerEnvelope.savings > targets.savings
-      ? "Ya gastaste más de lo que te tocaría en algún sobre; ese sobre queda en 0 y el resto se ajusta con lo que te queda."
-      : null;
+  const maxDistributable = incomeCents - spentCents;
+  const capExceeded =
+    reservedWithCommitmentCents + reservedGenericCents + assigned >
+    maxDistributable;
 
   return (
     <section className="mx-auto max-w-lg px-4 py-8">
@@ -271,6 +272,7 @@ export function CycleCorrectWizard() {
       {step === 2 ? (
         <WizardStepReserved
           incomeCents={incomeCents}
+          spentCents={spentCents}
           reservedText={reservedText}
           reservedMode={reservedMode}
           commitmentId={commitmentId}
@@ -297,7 +299,7 @@ export function CycleCorrectWizard() {
       ) : null}
       {step === 3 && mismatch && registeredIncomeCents !== undefined ? (
         <p className="mb-2 text-[12px] text-mute">
-          {`Quipu tenía ${formatCents(registeredIncomeCents, { currency: currencyCode })} · Ajuste ${incomeCents > registeredIncomeCents ? "+" : "−"}${formatCents(Math.abs(incomeCents - registeredIncomeCents), { currency: currencyCode })} · Tus sobres quedarán con ${formatCents(assigned, { currency: currencyCode })} en total.`}
+          {`Quipu tenía ${formatCents(registeredIncomeCents, { currency: currencyCode })} · Ajuste ${incomeCents > registeredIncomeCents ? "+" : "−"}${formatCents(Math.abs(incomeCents - registeredIncomeCents), { currency: currencyCode })}.`}
         </p>
       ) : null}
       {step === 3 ? (
@@ -306,8 +308,7 @@ export function CycleCorrectWizard() {
           targets={targets}
           currencyCode={currencyCode}
           spentCents={spentCents}
-          overrunWarning={overrunWarning}
-          disabled={saving || overAssigned}
+          disabled={saving || capExceeded}
           onTargetChange={(key, cents) =>
             setTargets((current) => ({ ...current, [key]: cents }))
           }
@@ -316,9 +317,9 @@ export function CycleCorrectWizard() {
           onSubmit={apply}
         />
       ) : null}
-      {step === 3 && overAssigned ? (
+      {step === 3 && capExceeded ? (
         <p className="mt-2 text-[12px] text-danger-ink">
-          Los sobres no pueden superar el dinero libre.
+          {`Solo tienes ${formatCents(maxDistributable, { currency: currencyCode })} disponibles (${formatCents(incomeCents, { currency: currencyCode })} que entraron − ${formatCents(spentCents, { currency: currencyCode })} ya gastados). Ajusta los sobres o el monto apartado.`}
         </p>
       ) : null}
       {serverError ? (

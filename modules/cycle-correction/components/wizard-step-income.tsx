@@ -2,13 +2,17 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { parseToCents } from "@/shared/lib/money";
+import { formatCents, parseToCents } from "@/shared/lib/money";
 
 type Props = {
   amountText: string;
   currencyCode: string;
   onAmountChange: (value: string) => void;
   onNext: () => void;
+  registeredIncomeCents?: number;
+  mismatch?: boolean;
+  mismatchConfirmed?: boolean;
+  onMismatchConfirmedChange?: (checked: boolean) => void;
 };
 
 export function WizardStepIncome({
@@ -16,9 +20,15 @@ export function WizardStepIncome({
   currencyCode,
   onAmountChange,
   onNext,
+  registeredIncomeCents,
+  mismatch,
+  mismatchConfirmed,
+  onMismatchConfirmedChange,
 }: Props) {
   const cents = parseToCents(amountText);
   const valid = cents != null && cents > 0;
+  const diff = (cents ?? 0) - (registeredIncomeCents ?? 0);
+  const blocked = mismatch === true && mismatchConfirmed !== true;
   return (
     <div className="space-y-4">
       <div>
@@ -37,8 +47,25 @@ export function WizardStepIncome({
         value={amountText}
         onChange={(event) => onAmountChange(event.target.value)}
       />
+      {mismatch ? (
+        <div className="rounded-[14px] border border-line bg-card p-3 text-[12px] text-warning-text">
+          <p>{`Quipu tiene registrado ${formatCents(registeredIncomeCents ?? 0, { currency: currencyCode })} · Declaras ${formatCents(cents ?? 0, { currency: currencyCode })}`}</p>
+          <p className="mt-1">{`La diferencia (${diff >= 0 ? "+" : "−"}${formatCents(Math.abs(diff), { currency: currencyCode })}) ${diff >= 0 ? "entrará" : "saldrá"} como ajuste de conciliación.`}</p>
+          <label className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              className="accent-[var(--qp)]"
+              checked={mismatchConfirmed === true}
+              onChange={(event) =>
+                onMismatchConfirmedChange?.(event.target.checked)
+              }
+            />
+            Entiendo; quiero corregir con este monto
+          </label>
+        </div>
+      ) : null}
       <p className="text-[12px] text-mute">Moneda: {currencyCode}</p>
-      <Button className="w-full" disabled={!valid} onClick={onNext}>
+      <Button className="w-full" disabled={!valid || blocked} onClick={onNext}>
         Continuar
       </Button>
     </div>

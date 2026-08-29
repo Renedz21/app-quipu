@@ -7,7 +7,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnalyticsEvents, track } from "@/core/analytics";
 import { fromConvexError } from "@/core/errors";
-import { parseToCents } from "@/shared/lib/money";
+import { Button } from "@/shared/components/ui/button";
+import { formatCents, parseToCents } from "@/shared/lib/money";
 import {
   type Allocation,
   buildSimpleCorrectionPlan,
@@ -41,6 +42,10 @@ export function CycleCorrectWizard() {
   const router = useRouter();
   const summary = useQuery(api.dashboard.getSummary, {});
   const settings = useQuery(api.settings.getSettingsOverview, {});
+  const registeredIncomeCents = useQuery(
+    api.cycleCorrection.getRegisteredCycleIncome,
+    {},
+  );
   const correct = useMutation(api.cycleCorrection.correctActiveCycleAllocation);
   const createCommitment = useMutation(
     api.fixedCommitments.createFixedCommitment,
@@ -60,6 +65,7 @@ export function CycleCorrectWizard() {
   });
   const [serverError, setServerError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
   const startedTracked = useRef(false);
 
   useEffect(() => {
@@ -79,6 +85,10 @@ export function CycleCorrectWizard() {
 
   const incomeCents = parseToCents(incomeText) ?? 0;
   const reservedCents = parseToCents(reservedText) ?? 0;
+  const mismatch =
+    incomeCents > 0 &&
+    registeredIncomeCents !== undefined &&
+    incomeCents !== registeredIncomeCents;
 
   const spentPerEnvelope = useMemo<EnvelopeTargets>(() => {
     const envelopes = summary?.envelopes ?? [];
@@ -118,6 +128,26 @@ export function CycleCorrectWizard() {
   }
 
   const activeCycle = summary.cycle;
+
+  if (registeredIncomeCents === 0) {
+    return (
+      <section className="mx-auto max-w-lg px-4 py-8">
+        <h2 className="font-serif text-xl text-ink">
+          Aún no registras tu ingreso de este ciclo
+        </h2>
+        <p className="mt-2 text-sm text-mute">
+          Para corregir cómo está repartido tu dinero, primero registra lo que
+          entró.
+        </p>
+        <Button
+          className="mt-4"
+          onClick={() => router.push("/income/register")}
+        >
+          Registrar ingreso
+        </Button>
+      </section>
+    );
+  }
 
   function startStep3() {
     setTargets(
@@ -229,6 +259,10 @@ export function CycleCorrectWizard() {
           currencyCode={currencyCode}
           onAmountChange={setIncomeText}
           onNext={() => setStep(2)}
+          registeredIncomeCents={registeredIncomeCents}
+          mismatch={mismatch}
+          mismatchConfirmed={mismatchConfirmed}
+          onMismatchConfirmedChange={setMismatchConfirmed}
         />
       ) : null}
       {step === 2 ? (
@@ -257,6 +291,11 @@ export function CycleCorrectWizard() {
             startStep3();
           }}
         />
+      ) : null}
+      {step === 3 && mismatch && registeredIncomeCents !== undefined ? (
+        <p className="mb-2 text-[12px] text-mute">
+          {`Quipu tenía ${formatCents(registeredIncomeCents, { currency: currencyCode })} · Ajuste ${incomeCents > registeredIncomeCents ? "+" : "−"}${formatCents(Math.abs(incomeCents - registeredIncomeCents), { currency: currencyCode })} · Tus sobres quedarán con ${formatCents(assigned, { currency: currencyCode })} en total.`}
+        </p>
       ) : null}
       {step === 3 ? (
         <WizardStepSplit

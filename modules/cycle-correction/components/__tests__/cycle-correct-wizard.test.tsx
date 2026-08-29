@@ -6,7 +6,6 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "@/convex/_generated/api";
 
 const { pushMock, trackMock } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -63,10 +62,15 @@ const SUMMARY_FIXTURE = {
 
 function mockBackend(overrides?: {
   cycle?: typeof SUMMARY_FIXTURE.cycle | null;
+  registeredIncome?: number;
 }) {
   mockedUseQuery.mockImplementation((query: unknown) => {
-    if (query === api.settings.getSettingsOverview) {
+    const name = getFunctionName(query as never);
+    if (name === "settings:getSettingsOverview") {
       return SETTINGS_FIXTURE;
+    }
+    if (name === "cycleCorrection:getRegisteredCycleIncome") {
+      return overrides?.registeredIncome ?? 380_000;
     }
     return {
       ...SUMMARY_FIXTURE,
@@ -222,5 +226,49 @@ describe("CycleCorrectWizard", () => {
       expect(screen.getByText(/no se pudo crear el compromiso/i)).toBeTruthy(),
     );
     expect(correct).not.toHaveBeenCalled();
+  });
+
+  it("bloquea el wizard cuando el ciclo activo no tiene ingreso registrado", () => {
+    mockBackend({ registeredIncome: 0 });
+    render(<CycleCorrectWizard />);
+    expect(
+      screen.getByText(/aún no registras tu ingreso de este ciclo/i),
+    ).toBeTruthy();
+    expect(screen.queryByLabelText("Monto que ingresó este ciclo")).toBeNull();
+    const cta = screen.getByRole("button", { name: /registrar ingreso/i });
+    fireEvent.click(cta);
+    expect(pushMock).toHaveBeenCalledWith("/income/register");
+  });
+
+  it("pide confirmación cuando el ingreso declarado difiere del registrado", () => {
+    mockBackend({ registeredIncome: 380_000 });
+    render(<CycleCorrectWizard />);
+    fireEvent.change(screen.getByLabelText("Monto que ingresó este ciclo"), {
+      target: { value: "1200" },
+    });
+    expect(screen.getByText(/Quipu tiene registrado/)).toBeTruthy();
+    expect(screen.getByText(/Declaras/)).toBeTruthy();
+    expect(screen.getByText(/como ajuste de conciliación/)).toBeTruthy();
+    const next = screen.getByRole("button", {
+      name: /continuar/i,
+    }) as HTMLButtonElement;
+    expect(next.disabled).toBe(true);
+    fireEvent.click(
+      screen.getByLabelText(/entiendo; quiero corregir con este monto/i),
+    );
+    expect(next.disabled).toBe(false);
+  });
+
+  it("no advierte cuando el ingreso declarado coincide con el registrado", () => {
+    mockBackend({ registeredIncome: 380_000 });
+    render(<CycleCorrectWizard />);
+    fireEvent.change(screen.getByLabelText("Monto que ingresó este ciclo"), {
+      target: { value: "3800" },
+    });
+    expect(screen.queryByText(/Quipu tiene registrado/)).toBeNull();
+    const next = screen.getByRole("button", {
+      name: /continuar/i,
+    }) as HTMLButtonElement;
+    expect(next.disabled).toBe(false);
   });
 });

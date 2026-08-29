@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { sumActiveReservedCents } from "./lib/commitmentReservation";
 import {
   buildCycleCorrectionTransfers,
@@ -446,6 +446,35 @@ export const correctActiveCycleAllocation = mutation({
       reservedCents,
       spendableCents,
     };
+  },
+});
+
+export const getRegisteredCycleIncome = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return 0;
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+    if (!profile) return 0;
+
+    const activeCycle = await ctx.db
+      .query("financialCycles")
+      .withIndex("by_profile_status", (q) =>
+        q.eq("profileId", profile._id).eq("status", "active"),
+      )
+      .unique();
+    if (!activeCycle) return 0;
+
+    const incomes = await ctx.db
+      .query("incomeEvents")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", activeCycle._id))
+      .collect();
+    return incomes.reduce((sum, event) => sum + event.amount, 0);
   },
 });
 

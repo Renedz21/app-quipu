@@ -37,5 +37,11 @@ yarn-error.log*
 .DS_Store
 *.pem
 
+# Generated Convex API spec (committed from packages/convex-api/src/api.ts)
+/packages/convex-api/src/api.ts
+
+# Local-only Convex example (do not commit)
+/CONVEX-MOBILE-EXAMPLE.md
+
 # Agents
 .agents/*

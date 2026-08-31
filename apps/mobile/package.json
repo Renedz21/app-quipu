@@ -3,6 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@quipu/convex-api": "workspace:*",
+    "convex": "^1.45.0",
     "expo": "~57.0.18",
     "expo-font": "~57.0.2",
     "expo-router": "~57.0.17",
@@ -24,6 +26,7 @@
   },
   "scripts": {
     "start": "expo start -c",
+    "prebuild": "expo prebuild --clean",
     "android": "expo start:android",
     "ios": "expo start:ios",
     "web": "expo start:web",

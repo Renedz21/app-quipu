@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 // import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
+import "../global.css";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 export {

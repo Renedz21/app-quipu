@@ -1,5 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "root": true,
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -17,6 +18,7 @@
       "!**/_generated",
       "!**/convex/_generated",
       "!**/convex/betterAuth/_generated",
+      "!**/uniwind-types.d.ts",
       "!biome-report.json",
       "!lint-full.txt",
       "!lint-out.txt"
@@ -31,6 +33,14 @@
     "enabled": true,
     "rules": {
       "preset": "recommended"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": true
     }
   },
   "assist": {

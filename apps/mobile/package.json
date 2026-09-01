@@ -3,9 +3,11 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo/ui": "^57.0.14",
     "@quipu/convex-api": "workspace:*",
     "convex": "^1.45.0",
     "expo": "~57.0.18",
+    "expo-dev-client": "~57.0.16",
     "expo-font": "~57.0.2",
     "expo-haptics": "~57.0.2",
     "expo-router": "~57.0.17",
@@ -18,7 +20,9 @@
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
+    "react-native-svg": "^15.15.4",
     "react-native-worklets": "0.10.1",
+    "reicon-react-native": "^1.0.102",
     "uniwind": "^1.11.0"
   },
   "devDependencies": {

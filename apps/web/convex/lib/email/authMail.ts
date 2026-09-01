@@ -68,7 +68,6 @@ export async function sendPasswordResetEmail(
 type OtpEmailRecipient = {
   to: string;
   otp: string;
-  name?: string | null;
 };
 
 function logOtpEmailToConsole(params: OtpEmailRecipient): void {
@@ -87,7 +86,6 @@ export async function sendOtpEmail(params: OtpEmailRecipient): Promise<void> {
 
   const { subject, html, text } = buildOtpEmail({
     code: params.otp,
-    name: params.name ?? undefined,
   });
 
   await sendOutboundEmail({

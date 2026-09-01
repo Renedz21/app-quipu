@@ -129,7 +129,6 @@ export function buildPasswordResetEmail(input: AuthEmailBuildInput): {
 
 type OtpEmailBuildInput = {
   code: string;
-  name?: string;
 };
 
 const OTP_EMAIL_STYLES = {
@@ -147,16 +146,12 @@ export function buildOtpEmail(input: OtpEmailBuildInput): {
   html: string;
   text: string;
 } {
-  const greeting = input.name?.trim()
-    ? `Hola, ${input.name.trim()}`
-    : undefined;
   const paragraphs = ["Tu código para confirmar tu correo en Quipu es:"];
 
   const html = `<!DOCTYPE html>
 <html><body style="${OTP_EMAIL_STYLES.body}">
   <div style="${OTP_EMAIL_STYLES.card}">
     <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:24px;font-weight:400;">Confirma tu correo</h1>
-    ${greeting ? `<p style="${OTP_EMAIL_STYLES.paragraph}">${greeting}</p>` : ""}
     ${paragraphs.map((p) => `<p style="${OTP_EMAIL_STYLES.paragraph}">${p}</p>`).join("\n    ")}
     <div style="${OTP_EMAIL_STYLES.code}">${input.code}</div>
     <p style="${OTP_EMAIL_STYLES.paragraph}">El código caduca en 10 minutos.</p>
@@ -166,7 +161,6 @@ export function buildOtpEmail(input: OtpEmailBuildInput): {
 
   const text = [
     "Confirma tu correo",
-    ...(greeting ? [greeting, ""] : []),
     ...paragraphs.map((p) => `${p}\n`),
     input.code,
     "",

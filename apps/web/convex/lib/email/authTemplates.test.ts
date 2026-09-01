@@ -106,9 +106,4 @@ describe("buildOtpEmail", () => {
     expect(email.html).toContain("482913");
     expect(email.text).toContain("10 minutos");
   });
-
-  it("incluye saludo cuando hay nombre", () => {
-    const email = buildOtpEmail({ code: "482913", name: "Edzon" });
-    expect(email.text).toContain("Hola, Edzon");
-  });
 });

@@ -7,10 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {
-  KeyboardAvoidingView,
-  KeyboardToolbar,
-} from "react-native-keyboard-controller";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import FieldError from "@/shared/components/auth/field-error";
@@ -82,7 +79,22 @@ export default function SignUpScreen() {
         </View>
 
         <View className="gap-3">
-          <form.Field name="email">
+          <form.Field
+            name="email"
+            listeners={{
+              // Tras el primer blur (o tras submit), re-ejecuta la validación
+              // onBlur en cada cambio para que el mensaje no quede congelado
+              // mientras el usuario corrige el valor.
+              onChange: ({ fieldApi }) => {
+                if (
+                  fieldApi.state.meta.isBlurred ||
+                  fieldApi.state.meta.errors.length > 0
+                ) {
+                  fieldApi.validate("blur");
+                }
+              },
+            }}
+          >
             {(field) => (
               <View className="gap-1">
                 <TextInput
@@ -100,7 +112,19 @@ export default function SignUpScreen() {
             )}
           </form.Field>
 
-          <form.Field name="password">
+          <form.Field
+            name="password"
+            listeners={{
+              onChange: ({ fieldApi }) => {
+                if (
+                  fieldApi.state.meta.isBlurred ||
+                  fieldApi.state.meta.errors.length > 0
+                ) {
+                  fieldApi.validate("blur");
+                }
+              },
+            }}
+          >
             {(field) => (
               <View className="gap-1">
                 <TextInput
@@ -163,8 +187,6 @@ export default function SignUpScreen() {
             </Text>
           </Pressable>
         </View>
-
-        <KeyboardToolbar />
       </View>
     </KeyboardAvoidingView>
   );

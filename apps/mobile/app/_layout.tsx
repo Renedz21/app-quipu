@@ -6,7 +6,7 @@ import {
   type AuthClient,
   ConvexBetterAuthProvider,
 } from "@convex-dev/better-auth/react";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from "convex/react";
 import { StatusBar } from "expo-status-bar";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import {
@@ -33,14 +33,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <KeyboardProvider>
-        <ConvexProvider client={convex}>
-          <ConvexBetterAuthProvider
-            client={convex}
-            authClient={authClient as unknown as AuthClient}
-          >
-            <RootLayoutNav />
-          </ConvexBetterAuthProvider>
-        </ConvexProvider>
+        <ConvexBetterAuthProvider
+          client={convex}
+          authClient={authClient as unknown as AuthClient}
+        >
+          <RootLayoutNav />
+        </ConvexBetterAuthProvider>
         <StatusBar animated style="dark" />
       </KeyboardProvider>
     </SafeAreaProvider>

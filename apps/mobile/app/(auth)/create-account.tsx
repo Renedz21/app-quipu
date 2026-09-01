@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -67,6 +67,7 @@ export default function CreateAccountScreen() {
   const [resendIn, setResendIn] = useState(60);
   const [passkeyDone, setPasskeyDone] = useState<boolean | null>(null);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const otpRequestedRef = useRef(false);
 
   const form = useForm({
     defaultValues: {
@@ -85,6 +86,17 @@ export default function CreateAccountScreen() {
         name: value.name,
       });
       if (error) {
+        // Wizard idempotente: si la cuenta ya existe seguimos al paso 2;
+        // el OTP prueba la propiedad del email (sin la contraseña correcta
+        // no hay sesión en el paso 3).
+        const haystack = [error?.code, error?.message]
+          .filter(Boolean)
+          .join(" ");
+        if (/user already exists/i.test(haystack)) {
+          setAccount(value);
+          setStep(2);
+          return;
+        }
         formApi.setErrorMap({
           onSubmit: {
             form: error.message ?? "No se pudo crear la cuenta",
@@ -114,14 +126,17 @@ export default function CreateAccountScreen() {
   }, [account]);
 
   useEffect(() => {
-    if (step === 2 && resendIn === 60) void sendOtp();
-  }, [step, resendIn, sendOtp]);
+    if (step === 2 && !otpRequestedRef.current) {
+      otpRequestedRef.current = true;
+      void sendOtp();
+    }
+  }, [step, sendOtp]);
 
   useEffect(() => {
-    if (resendIn <= 0) return;
+    if (step !== 2 || resendIn <= 0) return;
     const t = setInterval(() => setResendIn((s) => s - 1), 1000);
     return () => clearInterval(t);
-  }, [resendIn]);
+  }, [step, resendIn]);
 
   const verifyOtp = async () => {
     if (!account) return;

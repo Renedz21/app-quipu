@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import FieldError from "@/shared/components/auth/field-error";
@@ -208,9 +209,7 @@ export default function CreateAccountScreen() {
               hitSlop={12}
               className="-ml-1 px-1 py-2"
             >
-              <Text className="font-hanken text-[24px] leading-7 text-foreground">
-                ‹
-              </Text>
+              <ChevronLeft size={24} color="#1A1A1A" />
             </Pressable>
           </View>
         ) : null}

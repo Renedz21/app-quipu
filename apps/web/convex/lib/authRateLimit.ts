@@ -1,3 +1,4 @@
+import { MINUTE } from "@convex-dev/rate-limiter";
 import { ConvexError, v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { assertEmailAllowed } from "./email/domainPolicy";
@@ -8,6 +9,7 @@ const authActionValidator = v.union(
   v.literal("sign_up"),
   v.literal("verification"),
   v.literal("password_reset"),
+  v.literal("otp"),
 );
 
 export const assertAuthRateLimit = internalMutation({
@@ -52,6 +54,23 @@ export const assertAuthRateLimit = internalMutation({
         throws: true,
       });
       await recordEmailSend(ctx, email, "password_reset");
+      return null;
+    }
+
+    if (args.action === "otp") {
+      // Bucket propio por email (mismos límites que "verification"): no puede
+      // compartir bucket ni cooldown con "verification" porque el alta de
+      // cuenta dispara sendVerificationEmail segundos antes del OTP del wizard.
+      await authRateLimiter.limit(ctx, "authEmailOtp", {
+        key: email,
+        throws: true,
+        config: {
+          kind: "token bucket",
+          rate: 2,
+          period: 5 * MINUTE,
+          capacity: 1,
+        },
+      });
       return null;
     }
 

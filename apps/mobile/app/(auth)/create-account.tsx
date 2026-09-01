@@ -67,7 +67,7 @@ export default function CreateAccountScreen() {
   const [resendIn, setResendIn] = useState(60);
   const [passkeyDone, setPasskeyDone] = useState<boolean | null>(null);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
-  const otpRequestedRef = useRef(false);
+  const otpRequestedForRef = useRef<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -92,7 +92,7 @@ export default function CreateAccountScreen() {
         const haystack = [error?.code, error?.message]
           .filter(Boolean)
           .join(" ");
-        if (/user already exists/i.test(haystack)) {
+        if (/user[\s_]?already[\s_]?exists/i.test(haystack)) {
           setAccount(value);
           setStep(2);
           return;
@@ -122,15 +122,17 @@ export default function CreateAccountScreen() {
       setOtpError(error.message ?? "No se pudo enviar el código");
       return;
     }
+    otpRequestedForRef.current = account.email;
     setResendIn(60);
   }, [account]);
 
   useEffect(() => {
-    if (step === 2 && !otpRequestedRef.current) {
-      otpRequestedRef.current = true;
+    if (step === 2 && account && otpRequestedForRef.current !== account.email) {
+      otpRequestedForRef.current = account.email;
+      setResendIn(60);
       void sendOtp();
     }
-  }, [step, sendOtp]);
+  }, [step, account, sendOtp]);
 
   useEffect(() => {
     if (step !== 2 || resendIn <= 0) return;
@@ -416,7 +418,11 @@ export default function CreateAccountScreen() {
                   Reenviar en 0:{String(resendIn).padStart(2, "0")}
                 </Text>
               ) : (
-                <Pressable onPress={() => void sendOtp()} hitSlop={8}>
+                <Pressable
+                  onPress={() => void sendOtp()}
+                  disabled={otpLoading}
+                  hitSlop={8}
+                >
                   <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground uppercase">
                     Reenviar
                   </Text>

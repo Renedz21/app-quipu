@@ -32,7 +32,7 @@ const authFunctions: AuthFunctions = internal.auth;
 async function enforceAuthEmailRateLimit(
   ctx: GenericCtx<DataModel>,
   email: string,
-  action: "verification" | "password_reset" | "sign_up",
+  action: "verification" | "password_reset" | "sign_up" | "otp",
 ): Promise<void> {
   if (!isRunMutationCtx(ctx)) return;
   await ctx.runMutation(internal.lib.authRateLimit.assertAuthRateLimit, {
@@ -164,6 +164,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         storeOTP: "hashed",
         sendVerificationOTP: async ({ email, otp }) => {
           assertEmailAllowed(email);
+          await enforceAuthEmailRateLimit(ctx, email, "otp");
           await sendOtpEmail({ to: email, otp });
         },
       }),

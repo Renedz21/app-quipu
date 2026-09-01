@@ -1,18 +1,14 @@
 import { useForm } from "@tanstack/react-form";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
+import AuthButton from "@/shared/components/auth/auth-button";
 import FieldError from "@/shared/components/auth/field-error";
+import { revalidateOnBlur, setFormError } from "@/shared/lib/form";
 
 type SignInView = "welcome" | "email";
 
@@ -44,12 +40,10 @@ export default function SignInScreen() {
     onSubmit: async ({ value, formApi }) => {
       const { error } = await authClient.signIn.email(value);
       if (error) {
-        formApi.setErrorMap({
-          onSubmit: {
-            form: error.message ?? "Email o contraseña incorrectos",
-            fields: {},
-          },
-        });
+        setFormError(
+          formApi,
+          error.message ?? "Email o contraseña incorrectos",
+        );
         return;
       }
       router.replace("/(tabs)");
@@ -63,12 +57,7 @@ export default function SignInScreen() {
     const { error } = await authClient.signIn.passkey();
     setPasskeyLoading(false);
     if (error) {
-      form.setErrorMap({
-        onSubmit: {
-          form: error.message ?? "No se pudo iniciar sesión",
-          fields: {},
-        },
-      });
+      setFormError(form, error.message ?? "No se pudo iniciar sesión");
       return;
     }
     router.replace("/(tabs)");
@@ -101,19 +90,11 @@ export default function SignInScreen() {
               </Text>
             </View>
 
-            <Pressable
+            <AuthButton
+              label="Continuar con Passkey"
               onPress={() => void signInWithPasskey()}
-              disabled={passkeyLoading}
-              className="items-center rounded-xl bg-foreground px-5 py-3.5"
-            >
-              {passkeyLoading ? (
-                <ActivityIndicator color="#FBFAF7" />
-              ) : (
-                <Text className="font-hanken-semibold text-[15px] text-[#FBFAF7]">
-                  Continuar con Passkey
-                </Text>
-              )}
-            </Pressable>
+              loading={passkeyLoading}
+            />
 
             <Text className="text-center font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
               Face ID · Touch ID · Código del teléfono
@@ -127,14 +108,11 @@ export default function SignInScreen() {
               <View className="h-px flex-1 bg-[#E8E6DF]" />
             </View>
 
-            <Pressable
+            <AuthButton
+              label="Entrar con correo"
+              variant="outline"
               onPress={() => setView("email")}
-              className="items-center rounded-xl border border-[#E8E6DF] px-5 py-3.5"
-            >
-              <Text className="font-hanken-semibold text-[15px] text-foreground">
-                Entrar con correo
-              </Text>
-            </Pressable>
+            />
 
             <View className="flex-row justify-center gap-1">
               <Text className="font-hanken text-[13px] text-foreground/55">
@@ -160,19 +138,7 @@ export default function SignInScreen() {
             <View className="gap-3">
               <form.Field
                 name="email"
-                listeners={{
-                  // Tras el primer blur (o tras submit), re-ejecuta la validación
-                  // onBlur en cada cambio para que el mensaje no quede congelado
-                  // mientras el usuario corrige el valor.
-                  onChange: ({ fieldApi }) => {
-                    if (
-                      fieldApi.state.meta.isBlurred ||
-                      fieldApi.state.meta.errors.length > 0
-                    ) {
-                      fieldApi.validate("blur");
-                    }
-                  },
-                }}
+                listeners={{ onChange: revalidateOnBlur }}
               >
                 {(field) => (
                   <View className="gap-1">
@@ -193,16 +159,7 @@ export default function SignInScreen() {
 
               <form.Field
                 name="password"
-                listeners={{
-                  onChange: ({ fieldApi }) => {
-                    if (
-                      fieldApi.state.meta.isBlurred ||
-                      fieldApi.state.meta.errors.length > 0
-                    ) {
-                      fieldApi.validate("blur");
-                    }
-                  },
-                }}
+                listeners={{ onChange: revalidateOnBlur }}
               >
                 {(field) => (
                   <View className="gap-1">
@@ -226,19 +183,13 @@ export default function SignInScreen() {
                 }
               >
                 {([canSubmit, isSubmitting]) => (
-                  <Pressable
+                  <AuthButton
+                    label="Iniciar sesión"
+                    variant="outline"
                     onPress={() => void form.handleSubmit()}
-                    disabled={!canSubmit || isSubmitting}
-                    className="items-center rounded-xl border border-[#E8E6DF] px-5 py-3.5"
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator color="#1A1A1A" />
-                    ) : (
-                      <Text className="font-hanken-semibold text-[15px] text-foreground">
-                        Iniciar sesión
-                      </Text>
-                    )}
-                  </Pressable>
+                    loading={isSubmitting}
+                    disabled={!canSubmit}
+                  />
                 )}
               </form.Subscribe>
             </View>

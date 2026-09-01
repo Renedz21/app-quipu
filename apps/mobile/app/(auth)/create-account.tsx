@@ -1,20 +1,16 @@
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Check } from "reicon-react-native/icons/Check";
 import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AppShell from "@/shared/components/app-shell";
+import AuthButton from "@/shared/components/auth/auth-button";
 import FieldError from "@/shared/components/auth/field-error";
+import { revalidateOnBlur, setFormError } from "@/shared/lib/form";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -39,6 +35,9 @@ const otpSchema = z.object({
   otp: z.string().regex(/^\d{6}$/, "Ingresa los 6 dígitos"),
 });
 
+const OTP_BOX_BORDER_ACTIVE = { borderColor: "#1A1A1A" };
+const OTP_BOX_BORDER_IDLE = { borderColor: "#E8E6DF" };
+
 function ProgressHeader({ label, filled }: { label: string; filled: number }) {
   return (
     <View className="gap-4">
@@ -51,7 +50,7 @@ function ProgressHeader({ label, filled }: { label: string; filled: number }) {
             key={segment}
             className="h-1 flex-1 rounded-full"
             style={{
-              backgroundColor: segment < filled ? "#1A1A1A" : "#E8E6DF",
+              backgroundColor: segment < filled ? "#3C7D6E" : "#E8E6DF",
             }}
           />
         ))}
@@ -100,12 +99,7 @@ export default function CreateAccountScreen() {
           setStep(2);
           return;
         }
-        formApi.setErrorMap({
-          onSubmit: {
-            form: error.message ?? "No se pudo crear la cuenta",
-            fields: {},
-          },
-        });
+        setFormError(formApi, error.message ?? "No se pudo crear la cuenta");
         return;
       }
       setAccount(value);
@@ -125,7 +119,6 @@ export default function CreateAccountScreen() {
       setOtpError(error.message ?? "No se pudo enviar el código");
       return;
     }
-    otpRequestedForRef.current = account.email;
     setResendIn(60);
   }, [account]);
 
@@ -149,38 +142,40 @@ export default function CreateAccountScreen() {
     if (!parsed.success) return;
     setOtpLoading(true);
     setOtpError(null);
-    const { error } = await authClient.emailOtp.verifyEmail({
-      email: account.email,
-      otp,
-    });
-    if (error) {
-      setOtpLoading(false);
-      // TOO_MANY_ATTEMPTS llega con status 403 (FORBIDDEN) y/o code/message
-      // "Too many attempts"; 429 u OTP_EXPIRED/INVALID_OTP caen en genérico.
-      const tooMany =
-        error.status === 429 ||
-        /TOO_MANY|too many/i.test(
-          [error.message, error.statusText].filter(Boolean).join(" "),
+    try {
+      const { error } = await authClient.emailOtp.verifyEmail({
+        email: account.email,
+        otp,
+      });
+      if (error) {
+        // TOO_MANY_ATTEMPTS llega con status 403 (FORBIDDEN) y/o code/message
+        // "Too many attempts"; 429 u OTP_EXPIRED/INVALID_OTP caen en genérico.
+        const tooMany =
+          error.status === 429 ||
+          /TOO_MANY|too many/i.test(
+            [error.message, error.statusText].filter(Boolean).join(" "),
+          );
+        setOtpError(
+          tooMany
+            ? "Demasiados intentos. Pide un código nuevo."
+            : "Código incorrecto o expirado",
         );
-      setOtpError(
-        tooMany
-          ? "Demasiados intentos. Pide un código nuevo."
-          : "Código incorrecto o expirado",
-      );
-      return;
+        return;
+      }
+      // Sesión transparente con las credenciales en memoria
+      const signIn = await authClient.signIn.email({
+        email: account.email,
+        password: account.password,
+      });
+      if (signIn.error) {
+        setOtpError("Correo verificado. Inicia sesión para continuar.");
+        router.replace("/sign-in");
+        return;
+      }
+      setStep(3);
+    } finally {
+      setOtpLoading(false);
     }
-    // Sesión transparente con las credenciales en memoria
-    const signIn = await authClient.signIn.email({
-      email: account.email,
-      password: account.password,
-    });
-    setOtpLoading(false);
-    if (signIn.error) {
-      setOtpError("Correo verificado. Inicia sesión para continuar.");
-      router.replace("/sign-in");
-      return;
-    }
-    setStep(3);
   };
 
   const createPasskey = async () => {
@@ -204,7 +199,7 @@ export default function CreateAccountScreen() {
   return (
     <AppShell>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-        <View className="flex-1 bg-[#FBFAF7]">
+        <View className="flex-1 bg-background">
           {step !== 4 ? (
             <View className="h-14 flex-row items-center">
               <Pressable
@@ -233,16 +228,7 @@ export default function CreateAccountScreen() {
               <View className="gap-3">
                 <form.Field
                   name="name"
-                  listeners={{
-                    onChange: ({ fieldApi }) => {
-                      if (
-                        fieldApi.state.meta.isBlurred ||
-                        fieldApi.state.meta.errors.length > 0
-                      ) {
-                        fieldApi.validate("blur");
-                      }
-                    },
-                  }}
+                  listeners={{ onChange: revalidateOnBlur }}
                 >
                   {(field) => (
                     <View className="gap-1">
@@ -262,16 +248,7 @@ export default function CreateAccountScreen() {
 
                 <form.Field
                   name="email"
-                  listeners={{
-                    onChange: ({ fieldApi }) => {
-                      if (
-                        fieldApi.state.meta.isBlurred ||
-                        fieldApi.state.meta.errors.length > 0
-                      ) {
-                        fieldApi.validate("blur");
-                      }
-                    },
-                  }}
+                  listeners={{ onChange: revalidateOnBlur }}
                 >
                   {(field) => (
                     <View className="gap-1">
@@ -292,16 +269,7 @@ export default function CreateAccountScreen() {
 
                 <form.Field
                   name="password"
-                  listeners={{
-                    onChange: ({ fieldApi }) => {
-                      if (
-                        fieldApi.state.meta.isBlurred ||
-                        fieldApi.state.meta.errors.length > 0
-                      ) {
-                        fieldApi.validate("blur");
-                      }
-                    },
-                  }}
+                  listeners={{ onChange: revalidateOnBlur }}
                 >
                   {(field) => (
                     <View className="gap-1">
@@ -325,19 +293,13 @@ export default function CreateAccountScreen() {
                   }
                 >
                   {([canSubmit, isSubmitting]) => (
-                    <Pressable
+                    <AuthButton
+                      label="Continuar"
+                      variant="outline"
                       onPress={() => void form.handleSubmit()}
-                      disabled={!canSubmit || isSubmitting}
-                      className="items-center rounded-xl border border-[#E8E6DF] px-5 py-3.5"
-                    >
-                      {isSubmitting ? (
-                        <ActivityIndicator color="#1A1A1A" />
-                      ) : (
-                        <Text className="font-hanken-semibold text-[15px] text-foreground">
-                          Continuar
-                        </Text>
-                      )}
-                    </Pressable>
+                      loading={isSubmitting}
+                      disabled={!canSubmit}
+                    />
                   )}
                 </form.Subscribe>
 
@@ -381,12 +343,11 @@ export default function CreateAccountScreen() {
                       <View
                         key={index}
                         className="h-14 w-12 items-center justify-center rounded-lg border"
-                        style={{
-                          borderColor:
-                            index === otp.length && otp.length < 6
-                              ? "#1A1A1A"
-                              : "#E8E6DF",
-                        }}
+                        style={
+                          index === otp.length && otp.length < 6
+                            ? OTP_BOX_BORDER_ACTIVE
+                            : OTP_BOX_BORDER_IDLE
+                        }
                       >
                         <Text className="font-hanken-semibold text-[22px] text-foreground">
                           {otp[index] ?? ""}
@@ -447,19 +408,12 @@ export default function CreateAccountScreen() {
                 </Text>
               ) : null}
 
-              <Pressable
+              <AuthButton
+                label="Verificar"
                 onPress={() => void verifyOtp()}
-                disabled={otp.length < 6 || otpLoading}
-                className="items-center rounded-xl bg-foreground px-5 py-3.5"
-              >
-                {otpLoading ? (
-                  <ActivityIndicator color="#FBFAF7" />
-                ) : (
-                  <Text className="font-hanken-semibold text-[15px] text-[#FBFAF7]">
-                    Verificar
-                  </Text>
-                )}
-              </Pressable>
+                loading={otpLoading}
+                disabled={otp.length < 6}
+              />
 
               <View className="rounded-xl bg-[#F1EFE8] px-4 py-3">
                 <Text className="font-hanken text-[13px] text-foreground/55">
@@ -496,31 +450,20 @@ export default function CreateAccountScreen() {
               </View>
 
               <View className="gap-3">
-                <Pressable
+                <AuthButton
+                  label="Crear mi Passkey"
                   onPress={() => void createPasskey()}
-                  disabled={passkeyLoading}
-                  className="items-center rounded-xl bg-foreground px-5 py-3.5"
-                >
-                  {passkeyLoading ? (
-                    <ActivityIndicator color="#FBFAF7" />
-                  ) : (
-                    <Text className="font-hanken-semibold text-[15px] text-[#FBFAF7]">
-                      Crear mi Passkey
-                    </Text>
-                  )}
-                </Pressable>
+                  loading={passkeyLoading}
+                />
 
-                <Pressable
+                <AuthButton
+                  label="Continuar sin Passkey"
+                  variant="outline"
                   onPress={() => {
                     setPasskeyDone(false);
                     setStep(4);
                   }}
-                  className="items-center rounded-xl border border-[#E8E6DF] px-5 py-3.5"
-                >
-                  <Text className="font-hanken-semibold text-[15px] text-foreground">
-                    Continuar sin Passkey
-                  </Text>
-                </Pressable>
+                />
               </View>
             </View>
           ) : null}
@@ -573,14 +516,10 @@ export default function CreateAccountScreen() {
                 ))}
               </View>
 
-              <Pressable
+              <AuthButton
+                label="Configurar mi sistema"
                 onPress={() => router.replace("/(tabs)")}
-                className="items-center rounded-xl bg-foreground px-5 py-3.5"
-              >
-                <Text className="font-hanken-semibold text-[15px] text-[#FBFAF7]">
-                  Configurar mi sistema
-                </Text>
-              </Pressable>
+              />
             </View>
           ) : null}
         </View>

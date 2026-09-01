@@ -1,4 +1,4 @@
-import { BottomTabBarButtonProps } from "expo-router/tabs";
+import type { BottomTabBarButtonProps } from "expo-router/tabs";
 import { Pressable } from "react-native";
 import { Add } from "reicon-react-native/icons/Add";
 

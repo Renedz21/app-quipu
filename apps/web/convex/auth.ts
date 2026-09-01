@@ -4,6 +4,7 @@ import { createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import { emailOTP } from "better-auth/plugins";
 import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
@@ -12,6 +13,7 @@ import authSchema from "./betterAuth/schema";
 import {
   sendPasswordResetEmail as deliverPasswordResetEmail,
   sendVerificationEmail as deliverVerificationEmail,
+  sendOtpEmail,
 } from "./lib/email/authMail";
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
 
@@ -80,6 +82,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         "/request-password-reset": { window: 900, max: 3 },
         "/send-verification-email": { window: 300, max: 2 },
         "/passkey/*": { window: 60, max: 10 },
+        "/email-otp/*": { window: 60, max: 3 },
       },
     },
     emailAndPassword: {
@@ -152,6 +155,16 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
             });
             return { id: created.id, name: created.name, displayName: email };
           },
+        },
+      }),
+      emailOTP({
+        otpLength: 6,
+        expiresIn: 600,
+        allowedAttempts: 3,
+        storeOTP: "hashed",
+        sendVerificationOTP: async ({ email, otp }) => {
+          assertEmailAllowed(email);
+          await sendOtpEmail({ to: email, otp });
         },
       }),
     ],

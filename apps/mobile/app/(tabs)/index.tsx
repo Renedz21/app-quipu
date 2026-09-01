@@ -1,5 +1,6 @@
-import AppShell from "@/shared/components/app-shell";
 import { ScrollView, Text, View } from "react-native";
+import AppShell from "@/shared/components/app-shell";
+import SignOutButton from "@/shared/components/auth/sign-out-button";
 
 type Tone = "needs" | "wants" | "savings";
 
@@ -137,11 +138,14 @@ export default function HomePage() {
           <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/55 uppercase">
             {cycleLabel} · Día {cycleDay} / {cycleTotal}
           </Text>
-          <View className="flex-row items-center gap-1.5 rounded-full bg-stable/15 px-2.5 py-1">
-            <View className="h-1.5 w-1.5 rounded-full bg-stable" />
-            <Text className="font-hanken-semibold text-[12px] text-stable">
-              Estable
-            </Text>
+          <View className="flex-row items-center gap-3">
+            <View className="flex-row items-center gap-1.5 rounded-full bg-stable/15 px-2.5 py-1">
+              <View className="h-1.5 w-1.5 rounded-full bg-stable" />
+              <Text className="font-hanken-semibold text-[12px] text-stable">
+                Estable
+              </Text>
+            </View>
+            <SignOutButton />
           </View>
         </View>
 

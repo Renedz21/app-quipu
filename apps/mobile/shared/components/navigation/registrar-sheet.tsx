@@ -31,12 +31,10 @@ export default function RegistrarSheet({ isPresented, onDismiss }: Props) {
           <Text className="text-[11px] uppercase tracking-[0.18em] accent-[#9A968C]">
             Quipu · Registrar
           </Text>
-          <Text className="text-[26px] accent-foreground">
-            Registrar gasto
-          </Text>
+          <Text className="text-[26px] accent-foreground">Registrar gasto</Text>
           <Text className="text-[14px] leading-5 accent-foreground opacity-60">
-            Aquí vivirá el formulario de captura. Por ahora solo confirmamos
-            que el bottom sheet nativo abre y cierra.
+            Aquí vivirá el formulario de captura. Por ahora solo confirmamos que
+            el bottom sheet nativo abre y cierra.
           </Text>
         </Column>
       </BottomSheet>

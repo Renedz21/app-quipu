@@ -19,32 +19,6 @@ export default function SignUpScreen() {
 
   if (session) return <Redirect href="/(tabs)" />;
 
-  const signUpWithPasskey = async () => {
-    setError(null);
-    setLoading(true);
-    // Passkey-first (Better Auth 1.6.30): el server resuelve/crea el usuario
-    // con `context` (email) y registra la passkey SIN crear sesión.
-    const registration = await authClient.passkey.addPasskey({
-      context: email,
-    });
-    if (registration.error) {
-      setLoading(false);
-      setError(registration.error.message ?? "No se pudo crear la cuenta");
-      return;
-    }
-    // El registro 1.6.30 no crea sesión: el sign-in con la passkey recién
-    // creada la establece (segunda ceremonia, sin contraseña).
-    const signIn = await authClient.signIn.passkey();
-    setLoading(false);
-    if (signIn.error) {
-      setError(
-        "Tu passkey quedó registrada. Inicia sesión con ella para continuar.",
-      );
-      return;
-    }
-    router.replace("/(tabs)");
-  };
-
   const signUpWithEmail = async () => {
     setError(null);
     setLoading(true);
@@ -69,7 +43,7 @@ export default function SignUpScreen() {
           Crea tu cuenta
         </Text>
         <Text className="font-hanken text-[14px] text-foreground/55">
-          Tu llave de acceso (passkey) es tu método principal.
+          Después de verificar tu cuenta, inicia sesión con tu passkey.
         </Text>
       </View>
 
@@ -83,30 +57,6 @@ export default function SignUpScreen() {
           placeholder="Email"
           className="rounded-xl border border-[#E8E6DF] px-4 py-3 font-hanken text-[15px] text-foreground"
         />
-        <Pressable
-          onPress={() => void signUpWithPasskey()}
-          disabled={loading || !email}
-          className="items-center rounded-xl bg-foreground px-5 py-3.5"
-        >
-          {loading ? (
-            <ActivityIndicator color="#FBFAF7" />
-          ) : (
-            <Text className="font-hanken-semibold text-[15px] text-[#FBFAF7]">
-              Crear cuenta con Passkey
-            </Text>
-          )}
-        </Pressable>
-      </View>
-
-      <View className="flex-row items-center gap-3">
-        <View className="h-px flex-1 bg-[#E8E6DF]" />
-        <Text className="font-geist-mono text-[10.5px] text-foreground/45 uppercase">
-          o con email
-        </Text>
-        <View className="h-px flex-1 bg-[#E8E6DF]" />
-      </View>
-
-      <View className="gap-3">
         <TextInput
           value={password}
           onChangeText={setPassword}
@@ -118,11 +68,15 @@ export default function SignUpScreen() {
         <Pressable
           onPress={() => void signUpWithEmail()}
           disabled={loading || !email || !password}
-          className="items-center rounded-xl border border-[#E8E6DF] px-5 py-3.5"
+          className="items-center rounded-xl bg-foreground px-5 py-3.5"
         >
-          <Text className="font-hanken-semibold text-[15px] text-foreground">
-            Crear cuenta con email
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#FBFAF7" />
+          ) : (
+            <Text className="font-hanken-semibold text-[15px] text-[#FBFAF7]">
+              Crear cuenta
+            </Text>
+          )}
         </Pressable>
       </View>
 

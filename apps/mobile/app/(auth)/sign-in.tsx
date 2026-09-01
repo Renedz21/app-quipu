@@ -207,7 +207,7 @@ export default function SignInScreen() {
           <Text className="font-hanken text-[13px] text-foreground/55">
             ¿No tienes cuenta?
           </Text>
-          <Pressable onPress={() => router.push("/sign-up")}>
+          <Pressable onPress={() => router.push("/create-account")}>
             <Text className="font-hanken-semibold text-[13px] text-foreground">
               Crear cuenta
             </Text>

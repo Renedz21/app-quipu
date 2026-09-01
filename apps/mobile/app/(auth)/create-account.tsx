@@ -374,7 +374,7 @@ export default function CreateAccountScreen() {
 
             <View className="items-center">
               <View className="relative">
-                <View className="flex-row gap-1.5">
+                <View className="flex-row gap-3">
                   {[0, 1, 2, 3, 4, 5].map((index) => (
                     <View
                       key={index}
@@ -392,6 +392,9 @@ export default function CreateAccountScreen() {
                     </View>
                   ))}
                 </View>
+                {/* Input real invisible: opacity/position inline (RN core);
+                    NO usar utilities de uniwind aquí — si la clase no se
+                    aplica, el texto del input se pinta sobre las cajas. */}
                 <TextInput
                   value={otp}
                   onChangeText={(value) => {
@@ -403,8 +406,14 @@ export default function CreateAccountScreen() {
                   textAlign="center"
                   caretHidden
                   autoFocus
-                  className="absolute inset-0 opacity-0"
-                  style={{ letterSpacing: 12 }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    opacity: 0,
+                  }}
                 />
               </View>
             </View>

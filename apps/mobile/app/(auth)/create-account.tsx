@@ -66,6 +66,7 @@ export default function CreateAccountScreen() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [passkeyDone, setPasskeyDone] = useState<boolean | null>(null);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const { seconds: resendIn, reset: resetResend } = useCountdown(60);
   const otpRequestedForRef = useRef<string | null>(null);
 
@@ -173,11 +174,19 @@ export default function CreateAccountScreen() {
 
   const createPasskey = async () => {
     setPasskeyLoading(true);
+    setPasskeyError(null);
     const { error } = await authClient.passkey.addPasskey({
       name: account?.email,
     });
     setPasskeyLoading(false);
-    setPasskeyDone(!error);
+    if (error) {
+      // No silenciar: quedarse en el paso 3 con el motivo visible.
+      // El módulo nativo también loguea "Passkey registration error" en Metro.
+      console.log("[passkey] addPasskey error:", error);
+      setPasskeyError(error.message ?? "No se pudo crear la passkey");
+      return;
+    }
+    setPasskeyDone(true);
     setStep(4);
   };
 
@@ -457,6 +466,16 @@ export default function CreateAccountScreen() {
               </View>
 
               <View className="gap-4">
+                {passkeyError ? (
+                  <Text
+                    accessibilityRole="alert"
+                    accessibilityLiveRegion="polite"
+                    className="text-center font-hanken text-[13px] text-danger"
+                  >
+                    {passkeyError}
+                  </Text>
+                ) : null}
+
                 <AuthButton
                   label="Crear mi Passkey"
                   onPress={() => void createPasskey()}

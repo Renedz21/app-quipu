@@ -1,5 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "root": true,
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -9,23 +10,19 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
-      "!node_modules",
-      "!.next",
-      "!dist",
-      "!build",
-      "!public",
-      "!convex/_generated",
-      "!convex/betterAuth/_generated",
-      "!quipu-2.html",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/dist",
+      "!**/build",
+      "!**/public",
+      "!**/_generated",
+      "!**/convex/_generated",
+      "!**/convex/betterAuth/_generated",
+      "!**/uniwind-types.d.ts",
       "!biome-report.json",
       "!lint-full.txt",
       "!lint-out.txt"
     ]
-  },
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
-    }
   },
   "formatter": {
     "enabled": true,
@@ -35,44 +32,17 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended",
-      "suspicious": {
-        "noUnknownAtRules": "off"
-      }
-    },
-    "domains": {
-      "next": "recommended",
-      "react": "recommended"
+      "preset": "recommended"
     }
   },
-  "overrides": [
-    {
-      "includes": ["shared/components/ui/**"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useSemanticElements": "off",
-            "noLabelWithoutControl": "off",
-            "useKeyWithClickEvents": "off"
-          },
-          "suspicious": {
-            "noDocumentCookie": "off",
-            "noArrayIndexKey": "off"
-          }
-        }
-      }
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     },
-    {
-      "includes": ["modules/auth/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          }
-        }
-      }
+    "formatter": {
+      "enabled": true
     }
-  ],
+  },
   "assist": {
     "actions": {
       "source": {

@@ -1,79 +1,47 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Dependencies
+node_modules
+.pnp
+.pnp.js
 
-# testing
-/coverage
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# next.js
-/.next/
-/out/
+# Testing
+coverage
 
-# production
-/build
+# Turbo
+.turbo
 
-# Design canvas (local only; not versioned)
-/quipu-2.html
+# Vercel
+.vercel
 
-# misc
-.DS_Store
-*.pem
-# Windows reserved device names that sometimes leak into the working tree
-nul
-aux
-con
-prn
+# Build Outputs
+.next/
+out/
+build
+dist
 
-# debug
+
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Misc
+.DS_Store
+*.pem
 
-# vercel
-.vercel
+# Generated Convex API spec (committed from packages/convex-api/src/api.ts)
+/packages/convex-api/src/api.ts
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-# tsc emit accidental (solo _generated es fuente de verdad en convex)
-convex/**/*.d.ts
-!convex/_generated/**
-!convex/**/_generated/**
-shared/**/*.d.ts
+# Local-only Convex example (do not commit)
+/CONVEX-MOBILE-EXAMPLE.md
 
-# AI skills
+# Agents
 .agents/*
-.claude/*
-.cursor/*
-.codegraph/*
-
-# Ledger local de SDD (superpowers); docs/ sí se commitea
-/.superpowers/sdd/
-
-# Convex prod snapshots (datos reales; no commitear)
-/backups/
-
-# Sync local de tipos Convex → app móvil (no commitear)
-/mobile-types-out/
-/scripts/sync-mobile-types/
-/function_spec_*.json
-/types.ts
-
-docs/*
-!docs/QUIPU-MASTER.md
-!docs/manuales-de-sistema.md
-!docs/adr/
-!docs/security-debt.md
-!docs/superpowers/

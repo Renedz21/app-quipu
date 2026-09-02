@@ -1,149 +1,159 @@
-# app-quipu
+# Turborepo starter
 
-Repositorio de **Quipu v2** — app web de finanzas personales para Perú (PEN, español). El producto responde: *¿cuánto puedo gastar hoy sin destruir mi mes?* Divide el dinero en tres sobres (Necesidades / Gustos / Ahorro) antes de gastarlo.
+This Turborepo starter is maintained by the Turborepo core team.
 
-**Estado:** desarrollo activo. Bloques 1–5 implementados (auth, onboarding, dashboard, gastos, ingresos). Detalle en [`docs/QUIPU-MASTER.md` §8](docs/QUIPU-MASTER.md).
+## Using this example
 
----
+Run the following command:
 
-## Inicio rápido
-
-**Requisitos:** Node.js 20+, [pnpm](https://pnpm.io/), cuenta en [Convex](https://convex.dev).
-
-```bash
-pnpm install
-cp .env.example .env.local   # si existe; si no, crear .env.local (ver abajo)
-npx convex dev               # terminal 1
-pnpm dev                     # terminal 2 → http://localhost:3000
+```sh
+npx create-turbo@latest
 ```
 
-**Verificar que funciona:**
+## What's inside?
 
-```bash
-pnpm typecheck
-pnpm test
+This Turborepo includes the following packages/apps:
+
+### Apps and Packages
+
+- `docs`: a [Next.js](https://nextjs.org/) app
+- `web`: another [Next.js](https://nextjs.org/) app
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+
+Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+
+### Utilities
+
+This Turborepo has some additional tools already setup for you:
+
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
+
+### Build
+
+To build all apps and packages, run the following command:
+
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+
+```sh
+cd my-turborepo
+turbo build
 ```
 
----
+Without global `turbo`, use your package manager:
 
-## Variables de entorno
-
-Crear `.env.local` en la raíz (no se commitea):
-
-```env
-NEXT_PUBLIC_CONVEX_URL=https://<tu-deployment>.convex.cloud
-NEXT_PUBLIC_CONVEX_SITE_URL=https://<tu-deployment>.convex.site
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-BETTER_AUTH_SECRET=<mínimo 32 caracteres aleatorios>
+```sh
+cd my-turborepo
+npx turbo build
+pnpm exec turbo build
+pnpm exec turbo build
 ```
 
-Todas las variables se validan en build vía [`core/env.ts`](core/env.ts). Las que empiezan con `NEXT_PUBLIC_` son públicas en el bundle.
+You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
 
----
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
 
-## Stack
-
-| Capa | Tecnología |
-|------|------------|
-| Frontend | Next.js 16 (App Router) · React 19 · Tailwind v4 |
-| Backend | Convex (queries, mutations, schema) |
-| Auth | Better Auth + passkey |
-| Forms | TanStack Form + Zod |
-| UI | shadcn/ui sobre Base UI |
-| Calidad | Biome · Vitest |
-
----
-
-## Estructura del repo
-
-```
-app/
-  (auth)/          sign-in, sign-up
-  (onboarding)/    wizard de configuración inicial
-  (app)/           dashboard, income/register
-auth/              Better Auth (client, server, sesión)
-convex/            backend: schema, queries, mutations, lib/
-core/              env, errores tipados, constantes
-modules/           un directorio por dominio funcional
-  auth/ onboarding/ dashboard/ expenses/ income/ coach/ savings/
-shared/            UI primitivos, layout, helpers (money, date)
-docs/              documentación del proyecto
+```sh
+turbo build --filter=docs
 ```
 
-**Reglas de arquitectura** (resumen):
+Without global `turbo`:
 
-- Lógica de negocio en `convex/`, no en componentes React.
-- `app/` solo enruta y compone; sin lógica de dominio.
-- Cada módulo: `components/`, `actions.ts`, `schemas.ts`, `types.ts`, `lib/`.
-- Tipos de datos desde `convex/_generated/dataModel`; no duplicar a mano.
-- Dinero en céntimos (`shared/lib/money.ts`); fechas en `America/Lima` (`shared/lib/date.ts`).
-
-Detalle completo: [`docs/QUIPU-MASTER.md` §4–§6](docs/QUIPU-MASTER.md).
-
----
-
-## Comandos
-
-```bash
-pnpm dev              # Next.js dev server
-npx convex dev        # Convex backend (regenera tipos)
-pnpm typecheck        # TypeScript (0 errores)
-pnpm lint             # Biome check
-pnpm lint:fix         # Biome auto-fix
-pnpm test             # Vitest (unitarios)
-npx convex dashboard  # UI de Convex
+```sh
+npx turbo build --filter=docs
+pnpm exec turbo build --filter=docs
+pnpm exec turbo build --filter=docs
 ```
 
-### Antes de commit / PR
+### Develop
 
-1. `pnpm typecheck` sin errores.
-2. `pnpm lint` sin warnings nuevos.
-3. Si tocaste `convex/schema.ts` → regenerar tipos y commitear `convex/_generated/`.
-4. Nueva env var → agregar en `core/env.ts` con Zod.
-5. Nuevo error de dominio → enum en `core/errors/`.
-6. Actualizar [`docs/QUIPU-MASTER.md` §8](docs/QUIPU-MASTER.md) si cerraste o descubriste trabajo.
+To develop all apps and packages, run the following command:
 
----
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
 
-## Documentación
+```sh
+cd my-turborepo
+turbo dev
+```
 
-| Documento | Para qué |
-|-----------|----------|
-| [`docs/QUIPU-MASTER.md`](docs/QUIPU-MASTER.md) | **Leer primero.** Producto, diseño, arquitectura, backend, estándares, roadmap |
-| [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md) | Contexto para agentes de IA y herramientas |
-| [`convex/_generated/ai/guidelines.md`](convex/_generated/ai/guidelines.md) | Reglas de Convex (obligatorio antes de tocar `convex/`) |
-| [`docs/manuales-de-sistema.md`](docs/manuales-de-sistema.md) | System prompts de rigor (seguridad, RCA, CI/CD) |
-| [`quipu-2.html`](quipu-2.html) | Canvas visual del diseño (9 bloques) |
+Without global `turbo`, use your package manager:
 
-**Mapa rápido del maestro:**
+```sh
+cd my-turborepo
+npx turbo dev
+pnpm exec turbo dev
+pnpm exec turbo dev
+```
 
-| Necesito… | Sección |
-|-----------|---------|
-| Qué falta por construir | §8 Estado y roadmap |
-| Escribir o revisar código | §4 Arquitectura + §6 Estándares |
-| Tocar UI | §3 Diseño (canon v3.0) |
-| Tocar backend | §5 Backend + guidelines de Convex |
+You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
 
----
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
 
-## Política de branching
+```sh
+turbo dev --filter=web
+```
 
-Todo el desarrollo va en la rama de trabajo actual. **Nada mergea a `main` hasta que la app esté completa.** Los P0 bloquean el release del producto, no un merge intermedio.
+Without global `turbo`:
 
-CI: lint, typecheck y Vitest corren en push/PR a `main`/`master` (ver [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+```sh
+npx turbo dev --filter=web
+pnpm exec turbo dev --filter=web
+pnpm exec turbo dev --filter=web
+```
 
----
+### Remote Caching
 
-## Troubleshooting
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
 
-| Problema | Qué revisar |
-|----------|-------------|
-| Build falla por env | Variables en `.env.local` y esquema en `core/env.ts` |
-| Tipos de Convex desactualizados | Correr `npx convex dev` y commitear `_generated/` |
-| Auth no funciona | `BETTER_AUTH_SECRET` (≥32 chars) y URLs de Convex correctas |
+Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
 
----
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
 
-## Licencia
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
 
-Proyecto privado. Sin licencia pública definida.
+```sh
+cd my-turborepo
+turbo login
+```
+
+Without global `turbo`, use your package manager:
+
+```sh
+cd my-turborepo
+npx turbo login
+pnpm exec turbo login
+pnpm exec turbo login
+```
+
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+
+```sh
+turbo link
+```
+
+Without global `turbo`:
+
+```sh
+npx turbo link
+pnpm exec turbo link
+pnpm exec turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
+- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
+- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
+- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
+- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
+- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)

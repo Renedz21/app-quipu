@@ -1,17 +1,17 @@
-minimumReleaseAge: 1440
-trustPolicy: no-downgrade
-# Versiones ya pinneadas en el lockfile con evidencia de trust más débil
-# que releases anteriores; excluidas para no bloquear installs reproducibles.
-trustPolicyExclude:
-  - semver@6.3.1
-  - undici-types@6.21.0
+packages:
+  - "apps/*"
+  - "packages/*"
 allowBuilds:
-  '@sentry/cli': false
-  core-js: false
+  "@sentry/cli": true
+  core-js: true
   esbuild: true
-  sharp: true
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
 minimumReleaseAgeExclude:
-  - convex@1.43.0
+  - expo-font@57.0.3
+  - expo-dev-client@57.0.18
+  - expo-dev-launcher@57.0.19
+  - expo-dev-menu@57.0.18
+  - expo-updates@57.0.21
+overrides:
+  better-auth: 1.6.30
+  "@better-auth/passkey": 1.6.30
+  "@better-auth/core": 1.6.30

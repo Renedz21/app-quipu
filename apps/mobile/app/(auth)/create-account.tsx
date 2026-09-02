@@ -539,7 +539,10 @@ export default function CreateAccountScreen() {
 
               <AuthButton
                 label="Configurar mi sistema"
-                onPress={() => router.replace("/(onboarding)/sistema" as Href)}
+                onPress={() =>
+                  // El screen sistema llega en una task posterior.
+                  router.replace("/(onboarding)/sistema" as Href)
+                }
               />
             </View>
           ) : null}

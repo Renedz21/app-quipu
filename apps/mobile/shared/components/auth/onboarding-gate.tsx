@@ -4,9 +4,8 @@ import { type Href, Redirect } from "expo-router";
 import type { ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
 
-// Los screens de (onboarding) se crean en Task 5; typed routes aún no los
-// conoce, por eso el cast.
-const ONBOARDING_INDEX = "/(onboarding)/index" as Href;
+const ONBOARDING_INDEX = "/(onboarding)";
+// El screen sistema llega en una task posterior; typed routes aún no la conoce.
 const ONBOARDING_SISTEMA = "/(onboarding)/sistema" as Href;
 
 export default function OnboardingGate({ children }: { children: ReactNode }) {

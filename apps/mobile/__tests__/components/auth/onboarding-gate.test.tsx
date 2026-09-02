@@ -47,7 +47,7 @@ describe("OnboardingGate", () => {
     mockUseSession.mockReturnValue({ data: null, isPending: false });
     mockUseQuery.mockReturnValue(undefined);
     const { getByText } = await renderGate();
-    expect(getByText("redirect:/(onboarding)/index")).toBeTruthy();
+    expect(getByText("redirect:/(onboarding)")).toBeTruthy();
     expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), "skip");
   });
 

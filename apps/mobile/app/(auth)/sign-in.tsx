@@ -61,9 +61,10 @@ export default function SignInScreen() {
     return (
       <Redirect
         href={
-          (profile?.onboardingComplete
+          profile?.onboardingComplete
             ? "/(tabs)"
-            : "/(onboarding)/sistema") as Href
+            : // El screen sistema llega en una task posterior.
+              ("/(onboarding)/sistema" as Href)
         }
       />
     );

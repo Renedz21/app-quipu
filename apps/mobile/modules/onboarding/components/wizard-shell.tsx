@@ -21,7 +21,11 @@ export function WizardShell({
 
   const goBack = () => {
     if (stepNumber <= 1) {
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace("/(onboarding)");
+      }
       return;
     }
     dispatch({ type: "SET_STEP", payload: (stepNumber - 1) as WizardStep });

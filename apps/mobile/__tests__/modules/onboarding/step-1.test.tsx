@@ -7,9 +7,14 @@ import {
 } from "@/modules/onboarding/onboarding-provider";
 
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ back: mockBack }),
+  useRouter: () => ({
+    back: mockBack,
+    canGoBack: () => true,
+    replace: mockReplace,
+  }),
 }));
 
 jest.mock("@/shared/components/ui/reicon", () => {

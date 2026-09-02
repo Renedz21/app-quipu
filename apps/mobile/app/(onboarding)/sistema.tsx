@@ -4,6 +4,7 @@ import { Redirect } from "expo-router";
 import { View } from "react-native";
 import { authClient } from "@/lib/auth-client";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
+import { Step2System } from "@/modules/onboarding/components/step-2-system";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -15,7 +16,9 @@ function SistemaWizard() {
   switch (state.step) {
     case 1:
       return <Step1IncomeProfile />;
-    // Los pasos 2–4, confirm y success llegan en tasks posteriores.
+    case 2:
+      return <Step2System />;
+    // Los pasos 3–4, confirm y success llegan en tasks posteriores.
     default:
       return null;
   }

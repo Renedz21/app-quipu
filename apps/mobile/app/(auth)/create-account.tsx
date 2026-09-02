@@ -11,6 +11,13 @@ import FieldError from "@/shared/components/auth/field-error";
 import { Check, ChevronLeft } from "@/shared/components/ui/reicon";
 import { useCountdown } from "@/shared/hooks/use-countdown";
 import { revalidateOnBlur, setFormError } from "@/shared/lib/form";
+import {
+  isUserAlreadyExistsError,
+  mapOtpVerifyError,
+  parseOtpInput,
+  shouldAutoVerifyOtp,
+  shouldSendOtp,
+} from "@/shared/lib/signup-flow";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -87,7 +94,7 @@ export default function CreateAccountScreen() {
   const continueToOtp = (value: Account) => {
     setAccount(value);
     setStep(2);
-    if (otpRequestedForRef.current !== value.email) {
+    if (shouldSendOtp(otpRequestedForRef.current, value.email)) {
       otpRequestedForRef.current = value.email;
       resetResend();
       void sendOtp(value.email);
@@ -116,10 +123,7 @@ export default function CreateAccountScreen() {
         // Wizard idempotente: si la cuenta ya existe seguimos al paso 2;
         // el OTP prueba la propiedad del email (sin la contraseña correcta
         // no hay sesión en el paso 3).
-        const haystack = [error?.code, error?.message]
-          .filter(Boolean)
-          .join(" ");
-        if (/user[\s_]?already[\s_]?exists/i.test(haystack)) {
+        if (isUserAlreadyExistsError(error)) {
           continueToOtp(value);
           return;
         }
@@ -142,18 +146,7 @@ export default function CreateAccountScreen() {
         otp: code,
       });
       if (error) {
-        // TOO_MANY_ATTEMPTS llega con status 403 (FORBIDDEN) y/o code/message
-        // "Too many attempts"; 429 u OTP_EXPIRED/INVALID_OTP caen en genérico.
-        const tooMany =
-          error.status === 429 ||
-          /TOO_MANY|too many/i.test(
-            [error.message, error.statusText].filter(Boolean).join(" "),
-          );
-        setOtpError(
-          tooMany
-            ? "Demasiados intentos. Pide un código nuevo."
-            : "Código incorrecto o expirado",
-        );
+        setOtpError(mapOtpVerifyError(error));
         return;
       }
       // Sesión transparente con las credenciales en memoria
@@ -365,13 +358,13 @@ export default function CreateAccountScreen() {
                   <TextInput
                     value={otp}
                     onChangeText={(value) => {
-                      const next = value.replace(/\D/g, "").slice(0, 6);
+                      const next = parseOtpInput(value);
                       setOtp(next);
                       setOtpError(null);
                       // Autoverificación al completar los 6 dígitos
                       // (WCAG 3.3.8: menos carga cognitiva; el botón
                       // "Verificar" queda como alternativa manual).
-                      if (next.length === 6) void verifyOtp(next);
+                      if (shouldAutoVerifyOtp(next)) void verifyOtp(next);
                     }}
                     keyboardType="numeric"
                     maxLength={6}

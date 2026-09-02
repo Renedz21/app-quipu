@@ -39,6 +39,12 @@ export function formatSoles(cents: number, symbol = "S/"): string {
   return `${symbol} ${formatted}`;
 }
 
+/** Formatea dígitos de soles enteros con separador de miles ("3500" → "3,500"). */
+export function formatIntegerEs(digits: string): string {
+  if (!digits) return "";
+  return Number(digits).toLocaleString("es-PE");
+}
+
 export function formatDailyAvailable(cents: number, symbol = "S/"): string {
   const soles = Math.floor(cents / 100);
   const rem = cents % 100;

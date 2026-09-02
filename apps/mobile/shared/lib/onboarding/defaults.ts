@@ -1,4 +1,28 @@
-import type { OnboardingState, PayFrequency } from "./types";
+import type { IncomeModel, OnboardingState, PayFrequency } from "./types";
+
+export const INCOME_MODEL_OPTIONS: {
+  value: IncomeModel;
+  title: string;
+  description: string;
+}[] = [
+  {
+    value: "fixed",
+    title: "Fijo",
+    description: "Sueldo en planilla, siempre el mismo monto y la misma fecha.",
+  },
+  {
+    value: "variable",
+    title: "Variable",
+    description:
+      "Recibos por honorarios, negocio propio o ingresos por proyecto.",
+  },
+  {
+    value: "mixed",
+    title: "Mixto",
+    description:
+      "Un sueldo base más trabajos extra que aparecen de vez en cuando.",
+  },
+];
 
 export const ONBOARDING_DEFAULTS: OnboardingState = {
   step: 1,

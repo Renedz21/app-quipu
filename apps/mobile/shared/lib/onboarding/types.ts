@@ -1,6 +1,7 @@
 export type IncomeModel = "fixed" | "variable" | "mixed";
 export type PayFrequency = "monthly" | "biweekly" | "weekly";
 export type WizardStep = 1 | 2 | 3 | 4 | "confirm" | "success";
+export type EnvelopeKey = "needs" | "wants" | "savings";
 
 export type DraftCommitment = {
   id: string;

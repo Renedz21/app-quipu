@@ -1,4 +1,4 @@
-import type { OnboardingState } from "./types";
+import type { EnvelopeKey, OnboardingState } from "./types";
 
 type Allocation = Pick<
   OnboardingState,
@@ -48,5 +48,22 @@ export const ALLOCATION_DEFAULTS: Allocation = {
   allocationWants: 30,
   allocationSavings: 20,
 };
+
+export const ENVELOPES: EnvelopeKey[] = ["needs", "wants", "savings"];
+
+const STATE_KEY_BY_ENVELOPE: Record<EnvelopeKey, AllocationKey> = {
+  needs: "allocationNeeds",
+  wants: "allocationWants",
+  savings: "allocationSavings",
+};
+
+/** Redistribuye los otros dos sobres al mover uno (paso 3). */
+export function setEnvelopeAllocation(
+  state: Allocation,
+  envelope: EnvelopeKey,
+  value: number,
+): Allocation {
+  return distributeEnvelope(state, STATE_KEY_BY_ENVELOPE[envelope], value);
+}
 
 export type { Allocation, AllocationKey };

@@ -100,7 +100,9 @@ export default function CreateAccountScreen() {
       password: "",
     },
     validators: {
-      onBlur: accountSchema,
+      // onBlur vive a NIVEL CAMPO (con el slice del schema): un validator
+      // onBlur de objeto completo a nivel form valida TODOS los campos en
+      // el blur de cualquiera y muestra errores prematuros.
       onSubmit: accountSchema,
     },
     onSubmit: async ({ value, formApi }) => {
@@ -219,6 +221,7 @@ export default function CreateAccountScreen() {
               <View className="gap-3">
                 <form.Field
                   name="name"
+                  validators={{ onBlur: accountSchema.shape.name }}
                   listeners={{ onChange: revalidateOnBlur }}
                 >
                   {(field) => (
@@ -239,6 +242,7 @@ export default function CreateAccountScreen() {
 
                 <form.Field
                   name="email"
+                  validators={{ onBlur: accountSchema.shape.email }}
                   listeners={{ onChange: revalidateOnBlur }}
                 >
                   {(field) => (
@@ -260,6 +264,7 @@ export default function CreateAccountScreen() {
 
                 <form.Field
                   name="password"
+                  validators={{ onBlur: accountSchema.shape.password }}
                   listeners={{ onChange: revalidateOnBlur }}
                 >
                   {(field) => (
@@ -286,7 +291,7 @@ export default function CreateAccountScreen() {
                   {([canSubmit, isSubmitting]) => (
                     <AuthButton
                       label="Continuar"
-                      variant="outline"
+                      variant="solid"
                       onPress={() => void form.handleSubmit()}
                       loading={isSubmitting}
                       disabled={!canSubmit}
@@ -441,7 +446,7 @@ export default function CreateAccountScreen() {
                 ))}
               </View>
 
-              <View className="gap-3">
+              <View className="gap-4">
                 <AuthButton
                   label="Crear mi Passkey"
                   onPress={() => void createPasskey()}
@@ -503,7 +508,7 @@ export default function CreateAccountScreen() {
                         {row.value}
                       </Text>
                       {row.done ? (
-                        <Check size={14} colorClassName="accent-foreground" />
+                        <Check size={14} colorClassName="accent-primary" />
                       ) : null}
                     </View>
                   </View>

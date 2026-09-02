@@ -151,6 +151,15 @@ describe("Step3Allocation — reparto 50/30/20", () => {
     expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
   });
 
+  it("redondea valores flotantes del slider a enteros (60.65… → 61, suma 100)", async () => {
+    await renderStep3(null);
+    await setSlider("allocation-slider-needs", 60.65657567567766);
+    expect(screen.getByTestId("probe-needs").props.children).toBe("61");
+    expect(screen.getByTestId("probe-wants").props.children).toBe("23");
+    expect(screen.getByTestId("probe-savings").props.children).toBe("16");
+    expect(screen.getByTestId("allocation-sum").props.children).toBe("100%");
+  });
+
   it("'Volver al 50/30/20 recomendado' restaura los defaults", async () => {
     await renderStep3(350000);
     await setSlider("allocation-slider-needs", 60);

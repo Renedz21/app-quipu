@@ -71,11 +71,10 @@ export function AllocationSlider({
           value={value}
           minimumValue={0}
           maximumValue={100}
-          step={1}
           minimumTrackTintColor={ENVELOPE_TINT[envelope]}
           maximumTrackTintColor={TRACK_TINT}
           thumbTintColor={ENVELOPE_TINT[envelope]}
-          onValueChange={onValueChange}
+          onValueChange={(raw) => onValueChange(Math.round(raw))}
           style={{ width: "100%", height: 32 }}
         />
       </View>

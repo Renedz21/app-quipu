@@ -6,6 +6,7 @@ import { authClient } from "@/lib/auth-client";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { Step2System } from "@/modules/onboarding/components/step-2-system";
 import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
+import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -21,7 +22,9 @@ function SistemaWizard() {
       return <Step2System />;
     case 3:
       return <Step3Allocation />;
-    // Los pasos 4, confirm y success llegan en tasks posteriores.
+    case 4:
+      return <Step4Commitments />;
+    // confirm y success llegan en tasks posteriores.
     default:
       return null;
   }

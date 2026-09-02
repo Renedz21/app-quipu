@@ -7,6 +7,8 @@ import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-incom
 import { Step2System } from "@/modules/onboarding/components/step-2-system";
 import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
+import { StepConfirm } from "@/modules/onboarding/components/step-confirm";
+import { StepSuccess } from "@/modules/onboarding/components/step-success";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -24,9 +26,10 @@ function SistemaWizard() {
       return <Step3Allocation />;
     case 4:
       return <Step4Commitments />;
-    // confirm y success llegan en tasks posteriores.
-    default:
-      return null;
+    case "confirm":
+      return <StepConfirm />;
+    case "success":
+      return <StepSuccess />;
   }
 }
 

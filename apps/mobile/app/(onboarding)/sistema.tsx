@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { authClient } from "@/lib/auth-client";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { Step2System } from "@/modules/onboarding/components/step-2-system";
+import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -18,7 +19,9 @@ function SistemaWizard() {
       return <Step1IncomeProfile />;
     case 2:
       return <Step2System />;
-    // Los pasos 3–4, confirm y success llegan en tasks posteriores.
+    case 3:
+      return <Step3Allocation />;
+    // Los pasos 4, confirm y success llegan en tasks posteriores.
     default:
       return null;
   }

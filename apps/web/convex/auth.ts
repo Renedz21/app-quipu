@@ -20,6 +20,16 @@ import { assertEmailAllowed } from "./lib/email/domainPolicy";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
+// Orígenes válidos para verificar credenciales passkey. Android Credential
+// Manager firma clientDataJSON con "android:apk-key-hash:<sha256-base64>"
+// del certificado de firma (debug y Play signing tienen hashes distintos),
+// así que se suman por env separados por coma.
+const androidApkKeyHashes = (process.env.PASSKEY_ANDROID_APK_KEY_HASHES ?? "")
+  .split(",")
+  .map((hash) => hash.trim())
+  .filter(Boolean)
+  .map((hash) => `android:apk-key-hash:${hash}`);
+const passkeyOrigins = [siteUrl, ...androidApkKeyHashes];
 const rpName = process.env.PASSKEY_RP_NAME || "quipu";
 
 const emailSchema = z
@@ -131,7 +141,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       passkey({
         rpName: rpName,
         rpID: rpID,
-        origin: siteUrl,
+        origin: passkeyOrigins,
         authenticatorSelection: {
           residentKey: "preferred",
           userVerification: "preferred",

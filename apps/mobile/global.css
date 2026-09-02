@@ -12,8 +12,8 @@
   :root {
     @variant dark {
       --color-line: oklch(0.925 0.0088 90);
-      --color-background: oklch(0.985 0.0041 91.45);
-      --color-foreground: oklch(0.2178 0 0);
+      --color-background: oklch(0.1893 0.0077 248.23);
+      --color-foreground: oklch(0.9659 0.0025 228.78);
       --color-primary: oklch(0.5423 0.0712 176.41);
       --color-secondary: oklch(0.4934 0.0735 251.4);
       --color-warning: oklch(0.7164 0.1241 81.96);

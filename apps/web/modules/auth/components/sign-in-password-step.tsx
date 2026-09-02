@@ -106,7 +106,7 @@ export function PasswordStep({
         />
       )}
 
-      <div className="flex items-center justify-between rounded-[11px] border border-line bg-surface-soft px-[15px] py-3">
+      <div className="flex items-center justify-between rounded-[11px] border border-line bg-surface-soft px-3.75 py-3">
         <span className="text-[14px] text-body">{email}</span>
         <button
           type="button"

@@ -6,7 +6,8 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["jest"]
   },
   "include": [
     "**/*.ts",

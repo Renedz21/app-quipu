@@ -192,6 +192,7 @@ describe("Step2System — variable", () => {
     expect(screen.getByTestId("probe-step").props.children).toBe("3");
     expect(screen.getByTestId("probe-cycle-days").props.children).toBe("30");
     expect(screen.getByTestId("probe-sources").props.children).toBe(1);
+    expect(screen.getByTestId("probe-frequency").props.children).toBe("null");
   });
 
   it("agrega y elimina chips de fuentes, y trunca a 30 caracteres", async () => {

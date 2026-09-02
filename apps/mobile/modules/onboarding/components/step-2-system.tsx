@@ -5,20 +5,34 @@ import { FrequencyPicker } from "@/modules/onboarding/components/frequency-picke
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
-import { FREQ_DRIFT_COPY } from "@/shared/lib/onboarding/defaults";
+import { CYCLE_DAYS_BY_FREQUENCY } from "@/shared/lib/onboarding/daily";
+import {
+  FREQ_DRIFT_COPY,
+  PAYDAYS_BY_FREQUENCY,
+} from "@/shared/lib/onboarding/defaults";
 import type { PayFrequency } from "@/shared/lib/onboarding/types";
 
-const PAYDAY_TEXT: Record<PayFrequency, string> = {
-  monthly: "El 1 de cada mes",
-  biweekly: "El 15 y 30 de cada mes",
-  weekly: "Cada 7 días",
-};
+const MONTH_START = PAYDAYS_BY_FREQUENCY.monthly[0];
 
-const CYCLE_PREVIEW: Record<PayFrequency, string> = {
-  monthly: "1 – 30 de cada mes · 30 DÍAS",
-  biweekly: "1 – 15 / 16 – 30 · 15 DÍAS",
-  weekly: "7 DÍAS",
-};
+function paydayText(frequency: PayFrequency): string {
+  const paydays = PAYDAYS_BY_FREQUENCY[frequency];
+  if (frequency === "weekly") {
+    return `Cada ${CYCLE_DAYS_BY_FREQUENCY.weekly} días`;
+  }
+  return `El ${paydays.join(" y ")} de cada mes`;
+}
+
+function cyclePreview(frequency: PayFrequency): string {
+  const paydays = PAYDAYS_BY_FREQUENCY[frequency];
+  const cycleDays = CYCLE_DAYS_BY_FREQUENCY[frequency];
+  if (frequency === "monthly") {
+    return `${MONTH_START} – ${cycleDays} de cada mes · ${cycleDays} DÍAS`;
+  }
+  if (frequency === "biweekly") {
+    return `${MONTH_START} – ${paydays[0]} / ${paydays[0] + 1} – ${paydays[1]} · ${cycleDays} DÍAS`;
+  }
+  return `${cycleDays} DÍAS`;
+}
 
 const MONO_LABEL =
   "font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase";
@@ -105,7 +119,6 @@ export function Step2System() {
           onChangeText={(text) => setSourceDraft(text.slice(0, 30))}
           maxLength={30}
           placeholder="Ej. Recibos, ventas, proyectos"
-          placeholderTextColor="rgba(0,0,0,0.25)"
           onSubmitEditing={addSource}
           className="h-11 flex-1 rounded-xl border border-line px-4 font-hanken text-[14px] text-foreground"
         />
@@ -180,7 +193,7 @@ export function Step2System() {
             <View className="gap-3">
               <Text className={MONO_LABEL}>DÍA DE PAGO</Text>
               <Text className="font-hanken-semibold text-[15px] text-foreground">
-                {PAYDAY_TEXT[frequency]}
+                {paydayText(frequency)}
               </Text>
               <Text className="font-hanken text-[13px] text-foreground/55">
                 {FREQ_DRIFT_COPY[frequency]}
@@ -202,7 +215,7 @@ export function Step2System() {
             <View className="rounded-xl border border-line px-4 py-3">
               <Text className={MONO_LABEL}>TU CICLO SERÍA</Text>
               <Text className="mt-1 font-hanken-semibold text-[15px] text-foreground">
-                {CYCLE_PREVIEW[frequency]}
+                {cyclePreview(frequency)}
               </Text>
             </View>
           ) : null}
@@ -274,7 +287,7 @@ export function Step2System() {
             <View className="gap-2">
               <Text className={MONO_LABEL}>DÍA DE PAGO</Text>
               <Text className="font-hanken-semibold text-[15px] text-foreground">
-                {PAYDAY_TEXT[frequency]}
+                {paydayText(frequency)}
               </Text>
             </View>
           ) : null}

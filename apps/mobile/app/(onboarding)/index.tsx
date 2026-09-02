@@ -1,6 +1,6 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useEffect } from "react";
 import { View } from "react-native";
 import { authClient } from "@/lib/auth-client";
@@ -17,9 +17,23 @@ export default function OnboardingIndexScreen() {
     }
   }, [hasSession, profile]);
 
-  return (
-    <View className="flex-1 bg-background px-0 pt-16">
-      <IntroCarousel />
-    </View>
-  );
+  // Sin sesión: la intro es la puerta de entrada al onboarding.
+  if (!hasSession) {
+    return (
+      <View className="flex-1 bg-background px-0 pt-16">
+        <IntroCarousel />
+      </View>
+    );
+  }
+
+  // Con sesión pero perfil aún cargando: no renderizar nada.
+  if (profile === undefined) return null;
+
+  // Perfil sin onboarding completo: directo al wizard.
+  if (!profile.onboardingComplete) {
+    return <Redirect href="/(onboarding)/sistema" />;
+  }
+
+  // Con onboarding completo el efecto navega a /(tabs).
+  return null;
 }

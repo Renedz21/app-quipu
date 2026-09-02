@@ -1,12 +1,11 @@
 import { api } from "@quipu/convex-api";
 import { useQuery } from "convex/react";
-import { type Href, Redirect } from "expo-router";
+import { Redirect } from "expo-router";
 import type { ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
 
 const ONBOARDING_INDEX = "/(onboarding)";
-// El screen sistema llega en una task posterior; typed routes aún no la conoce.
-const ONBOARDING_SISTEMA = "/(onboarding)/sistema" as Href;
+const ONBOARDING_SISTEMA = "/(onboarding)/sistema";
 
 export default function OnboardingGate({ children }: { children: ReactNode }) {
   const { data: session, isPending } = authClient.useSession();

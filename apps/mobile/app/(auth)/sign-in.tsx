@@ -1,7 +1,7 @@
 import { api } from "@quipu/convex-api";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "convex/react";
-import { type Href, Redirect, useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -60,12 +60,7 @@ export default function SignInScreen() {
   if (hasSession) {
     return (
       <Redirect
-        href={
-          profile?.onboardingComplete
-            ? "/(tabs)"
-            : // El screen sistema llega en una task posterior.
-              ("/(onboarding)/sistema" as Href)
-        }
+        href={profile?.onboardingComplete ? "/(tabs)" : "/(onboarding)/sistema"}
       />
     );
   }

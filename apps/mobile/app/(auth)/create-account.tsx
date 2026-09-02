@@ -1,15 +1,15 @@
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { Check } from "reicon-react-native/icons/Check";
-import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AppShell from "@/shared/components/app-shell";
 import AuthButton from "@/shared/components/auth/auth-button";
 import FieldError from "@/shared/components/auth/field-error";
+import { Check, ChevronLeft } from "@/shared/components/ui/reicon";
+import { useCountdown } from "@/shared/hooks/use-countdown";
 import { revalidateOnBlur, setFormError } from "@/shared/lib/form";
 
 type Step = 1 | 2 | 3 | 4;
@@ -35,9 +35,6 @@ const otpSchema = z.object({
   otp: z.string().regex(/^\d{6}$/, "Ingresa los 6 dígitos"),
 });
 
-const OTP_BOX_BORDER_ACTIVE = { borderColor: "#1A1A1A" };
-const OTP_BOX_BORDER_IDLE = { borderColor: "#E8E6DF" };
-
 function ProgressHeader({ label, filled }: { label: string; filled: number }) {
   return (
     <View className="gap-4">
@@ -48,10 +45,11 @@ function ProgressHeader({ label, filled }: { label: string; filled: number }) {
         {[0, 1, 2].map((segment) => (
           <View
             key={segment}
-            className="h-1 flex-1 rounded-full"
-            style={{
-              backgroundColor: segment < filled ? "#3C7D6E" : "#E8E6DF",
-            }}
+            className={
+              segment < filled
+                ? "h-1 flex-1 rounded-full bg-primary"
+                : "h-1 flex-1 rounded-full bg-line"
+            }
           />
         ))}
       </View>
@@ -66,10 +64,34 @@ export default function CreateAccountScreen() {
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpLoading, setOtpLoading] = useState(false);
-  const [resendIn, setResendIn] = useState(60);
   const [passkeyDone, setPasskeyDone] = useState<boolean | null>(null);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const { seconds: resendIn, reset: resetResend } = useCountdown(60);
   const otpRequestedForRef = useRef<string | null>(null);
+
+  const sendOtp = async (email: string) => {
+    setOtpLoading(true);
+    const { error } = await authClient.emailOtp.sendVerificationOtp({
+      email,
+      type: "email-verification",
+    });
+    setOtpLoading(false);
+    if (error) {
+      setOtpError(error.message ?? "No se pudo enviar el código");
+      return;
+    }
+    resetResend();
+  };
+
+  const continueToOtp = (value: Account) => {
+    setAccount(value);
+    setStep(2);
+    if (otpRequestedForRef.current !== value.email) {
+      otpRequestedForRef.current = value.email;
+      resetResend();
+      void sendOtp(value.email);
+    }
+  };
 
   const form = useForm({
     defaultValues: {
@@ -95,46 +117,15 @@ export default function CreateAccountScreen() {
           .filter(Boolean)
           .join(" ");
         if (/user[\s_]?already[\s_]?exists/i.test(haystack)) {
-          setAccount(value);
-          setStep(2);
+          continueToOtp(value);
           return;
         }
         setFormError(formApi, error.message ?? "No se pudo crear la cuenta");
         return;
       }
-      setAccount(value);
-      setStep(2);
+      continueToOtp(value);
     },
   });
-
-  const sendOtp = useCallback(async () => {
-    if (!account) return;
-    setOtpLoading(true);
-    const { error } = await authClient.emailOtp.sendVerificationOtp({
-      email: account.email,
-      type: "email-verification",
-    });
-    setOtpLoading(false);
-    if (error) {
-      setOtpError(error.message ?? "No se pudo enviar el código");
-      return;
-    }
-    setResendIn(60);
-  }, [account]);
-
-  useEffect(() => {
-    if (step === 2 && account && otpRequestedForRef.current !== account.email) {
-      otpRequestedForRef.current = account.email;
-      setResendIn(60);
-      void sendOtp();
-    }
-  }, [step, account, sendOtp]);
-
-  useEffect(() => {
-    if (step !== 2 || resendIn <= 0) return;
-    const t = setInterval(() => setResendIn((s) => s - 1), 1000);
-    return () => clearInterval(t);
-  }, [step, resendIn]);
 
   const verifyOtp = async () => {
     if (!account) return;
@@ -207,7 +198,7 @@ export default function CreateAccountScreen() {
                 hitSlop={12}
                 className="-ml-1 px-1 py-2"
               >
-                <ChevronLeft size={22} color="#1A1A1A" />
+                <ChevronLeft size={22} colorClassName="accent-foreground" />
               </Pressable>
             </View>
           ) : null}
@@ -239,7 +230,7 @@ export default function CreateAccountScreen() {
                         autoCapitalize="words"
                         autoComplete="name"
                         placeholder="Nombre"
-                        className="rounded-xl border border-[#E8E6DF] px-4 py-3 font-hanken text-[15px] text-foreground"
+                        className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
                       />
                       <FieldError field={field} />
                     </View>
@@ -260,7 +251,7 @@ export default function CreateAccountScreen() {
                         autoComplete="email"
                         inputMode="email"
                         placeholder="Email"
-                        className="rounded-xl border border-[#E8E6DF] px-4 py-3 font-hanken text-[15px] text-foreground"
+                        className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
                       />
                       <FieldError field={field} />
                     </View>
@@ -280,7 +271,7 @@ export default function CreateAccountScreen() {
                         autoComplete="new-password"
                         secureTextEntry
                         placeholder="Contraseña"
-                        className="rounded-xl border border-[#E8E6DF] px-4 py-3 font-hanken text-[15px] text-foreground"
+                        className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
                       />
                       <FieldError field={field} />
                     </View>
@@ -310,7 +301,7 @@ export default function CreateAccountScreen() {
                       | undefined;
                     const message = formError?.form;
                     return message ? (
-                      <Text className="font-hanken text-[13px] text-[#B4482F]">
+                      <Text className="font-hanken text-[13px] text-danger">
                         {message}
                       </Text>
                     ) : null;
@@ -342,11 +333,10 @@ export default function CreateAccountScreen() {
                     {[0, 1, 2, 3, 4, 5].map((index) => (
                       <View
                         key={index}
-                        className="h-14 w-12 items-center justify-center rounded-lg border"
-                        style={
+                        className={
                           index === otp.length && otp.length < 6
-                            ? OTP_BOX_BORDER_ACTIVE
-                            : OTP_BOX_BORDER_IDLE
+                            ? "h-14 w-12 items-center justify-center rounded-lg border border-foreground"
+                            : "h-14 w-12 items-center justify-center rounded-lg border border-line"
                         }
                       >
                         <Text className="font-hanken-semibold text-[22px] text-foreground">
@@ -391,7 +381,9 @@ export default function CreateAccountScreen() {
                   </Text>
                 ) : (
                   <Pressable
-                    onPress={() => void sendOtp()}
+                    onPress={() => {
+                      if (account) void sendOtp(account.email);
+                    }}
                     disabled={otpLoading}
                     hitSlop={8}
                   >
@@ -403,7 +395,7 @@ export default function CreateAccountScreen() {
               </View>
 
               {otpError ? (
-                <Text className="text-center font-hanken text-[13px] text-[#B4482F]">
+                <Text className="text-center font-hanken text-[13px] text-danger">
                   {otpError}
                 </Text>
               ) : null}
@@ -415,7 +407,7 @@ export default function CreateAccountScreen() {
                 disabled={otp.length < 6}
               />
 
-              <View className="rounded-xl bg-[#F1EFE8] px-4 py-3">
+              <View className="rounded-xl border border-line bg-background px-4 py-3">
                 <Text className="font-hanken text-[13px] text-foreground/55">
                   También puedes abrir el enlace del correo desde este teléfono;
                   Quipu continúa solo.
@@ -441,8 +433,8 @@ export default function CreateAccountScreen() {
                   "Puedes agregar otra en cualquier momento",
                 ].map((line) => (
                   <View key={line} className="flex-row items-start gap-3">
-                    <Check size={16} color="#1A1A1A" />
-                    <Text className="font-hanken-semibold text-[15px] text-[#1A1A1A]">
+                    <Check size={16} colorClassName="accent-foreground" />
+                    <Text className="font-hanken-semibold text-[15px] text-foreground">
                       {line}
                     </Text>
                   </View>
@@ -474,8 +466,8 @@ export default function CreateAccountScreen() {
                 <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
                   CUENTA LISTA
                 </Text>
-                <View className="h-14 w-14 items-center justify-center rounded-full bg-[#E8E6DF]">
-                  <Check size={28} color="#1A1A1A" />
+                <View className="h-14 w-14 items-center justify-center rounded-full bg-line">
+                  <Check size={28} colorClassName="accent-foreground" />
                 </View>
               </View>
 
@@ -510,7 +502,9 @@ export default function CreateAccountScreen() {
                       <Text className="font-hanken-semibold text-[14px] text-foreground">
                         {row.value}
                       </Text>
-                      {row.done ? <Check size={14} color="#1A1A1A" /> : null}
+                      {row.done ? (
+                        <Check size={14} colorClassName="accent-foreground" />
+                      ) : null}
                     </View>
                   </View>
                 ))}

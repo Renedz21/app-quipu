@@ -23,18 +23,20 @@ export default function AuthButton({
       className={
         variant === "solid"
           ? "items-center rounded-xl bg-foreground px-5 py-3.5"
-          : "items-center rounded-xl border border-[#E8E6DF] px-5 py-3.5"
+          : "items-center rounded-xl border border-line px-5 py-3.5"
       }
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === "solid" ? "#FBFAF7" : "#1A1A1A"}
+          colorClassName={
+            variant === "solid" ? "accent-background" : "accent-foreground"
+          }
         />
       ) : (
         <Text
           className={
             variant === "solid"
-              ? "font-hanken-semibold text-[15px] text-[#FBFAF7]"
+              ? "font-hanken-semibold text-[15px] text-background"
               : "font-hanken-semibold text-[15px] text-foreground"
           }
         >

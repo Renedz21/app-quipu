@@ -15,7 +15,5 @@ export default function FieldError({ field }: { field: AnyFieldApi }) {
     .filter(Boolean)
     .join(", ");
   if (!message) return null;
-  return (
-    <Text className="font-hanken text-[12px] text-[#B4482F]">{message}</Text>
-  );
+  return <Text className="font-hanken text-[12px] text-danger">{message}</Text>;
 }

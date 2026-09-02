@@ -3,11 +3,11 @@ import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { ChevronLeft } from "reicon-react-native/icons/ChevronLeft";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 import AuthButton from "@/shared/components/auth/auth-button";
 import FieldError from "@/shared/components/auth/field-error";
+import { ChevronLeft } from "@/shared/components/ui/reicon";
 import { revalidateOnBlur, setFormError } from "@/shared/lib/form";
 
 type SignInView = "welcome" | "email";
@@ -65,7 +65,7 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-      <View className="flex-1 bg-[#FBFAF7] px-6">
+      <View className="flex-1 bg-background px-6">
         {view === "email" ? (
           <View className="h-14 flex-row items-center">
             <Pressable
@@ -73,7 +73,7 @@ export default function SignInScreen() {
               hitSlop={12}
               className="-ml-1 px-1 py-2"
             >
-              <ChevronLeft size={24} color="#1A1A1A" />
+              <ChevronLeft size={24} colorClassName="accent-foreground" />
             </Pressable>
           </View>
         ) : null}
@@ -101,11 +101,11 @@ export default function SignInScreen() {
             </Text>
 
             <View className="flex-row items-center gap-3">
-              <View className="h-px flex-1 bg-[#E8E6DF]" />
+              <View className="h-px flex-1 bg-line" />
               <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
                 O bien
               </Text>
-              <View className="h-px flex-1 bg-[#E8E6DF]" />
+              <View className="h-px flex-1 bg-line" />
             </View>
 
             <AuthButton
@@ -150,7 +150,7 @@ export default function SignInScreen() {
                       autoComplete="email"
                       inputMode="email"
                       placeholder="Email"
-                      className="rounded-xl border border-[#E8E6DF] px-4 py-3 font-hanken text-[15px] text-foreground"
+                      className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
                     />
                     <FieldError field={field} />
                   </View>
@@ -170,7 +170,7 @@ export default function SignInScreen() {
                       autoComplete="current-password"
                       secureTextEntry
                       placeholder="Contraseña"
-                      className="rounded-xl border border-[#E8E6DF] px-4 py-3 font-hanken text-[15px] text-foreground"
+                      className="rounded-xl border border-line px-4 py-3 font-hanken text-[15px] text-foreground"
                     />
                     <FieldError field={field} />
                   </View>
@@ -215,7 +215,7 @@ export default function SignInScreen() {
             const formError = onSubmitError as { form?: string } | undefined;
             const message = formError?.form;
             return message ? (
-              <Text className="pb-4 text-center font-hanken text-[13px] text-[#B4482F]">
+              <Text className="pb-4 text-center font-hanken text-[13px] text-danger">
                 {message}
               </Text>
             ) : null;

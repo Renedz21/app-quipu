@@ -1,42 +1,16 @@
-import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
 import { Check } from "@/shared/components/ui/reicon";
-import type { IncomeModel } from "@/shared/lib/onboarding/types";
-
-const INCOME_OPTIONS: {
-  value: IncomeModel;
-  title: string;
-  description: string;
-}[] = [
-  {
-    value: "fixed",
-    title: "Fijo",
-    description: "Sueldo en planilla, siempre el mismo monto y la misma fecha.",
-  },
-  {
-    value: "variable",
-    title: "Variable",
-    description:
-      "Recibos por honorarios, negocio propio o ingresos por proyecto.",
-  },
-  {
-    value: "mixed",
-    title: "Mixto",
-    description:
-      "Un sueldo base más trabajos extra que aparecen de vez en cuando.",
-  },
-];
+import { INCOME_MODEL_OPTIONS } from "@/shared/lib/onboarding/defaults";
 
 export function Step1IncomeProfile() {
-  const { dispatch } = useOnboarding();
-  const [selected, setSelected] = useState<IncomeModel | null>(null);
+  const { state, dispatch } = useOnboarding();
+  const selected = state.incomeModel;
 
   const continueToStep2 = () => {
     if (!selected) return;
-    dispatch({ type: "UPDATE", payload: { incomeModel: selected } });
     dispatch({ type: "SET_STEP", payload: 2 });
   };
 
@@ -61,13 +35,18 @@ export function Step1IncomeProfile() {
       </View>
 
       <View className="mt-6 gap-3">
-        {INCOME_OPTIONS.map((option) => {
+        {INCOME_MODEL_OPTIONS.map((option) => {
           const isSelected = selected === option.value;
           return (
             <Pressable
               key={option.value}
               testID={`option-${option.value}`}
-              onPress={() => setSelected(option.value)}
+              onPress={() =>
+                dispatch({
+                  type: "UPDATE",
+                  payload: { incomeModel: option.value },
+                })
+              }
               className={
                 isSelected
                   ? "flex-row items-start gap-3 rounded-xl border border-primary bg-primary/5 px-4 py-4"

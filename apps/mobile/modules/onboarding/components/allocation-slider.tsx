@@ -1,20 +1,8 @@
 import { Slider } from "@expo/ui/community/slider";
 import { Text, View } from "react-native";
 import { formatSoles } from "@/shared/lib/onboarding/daily";
-
-export type EnvelopeKey = "needs" | "wants" | "savings";
-
-export const ENVELOPE_LABELS: Record<EnvelopeKey, string> = {
-  needs: "Necesidades",
-  wants: "Gustos",
-  savings: "Ahorro",
-};
-
-const ENVELOPE_BG: Record<EnvelopeKey, string> = {
-  needs: "bg-needs",
-  wants: "bg-wants",
-  savings: "bg-savings",
-};
+import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
+import { ENVELOPE_BG, ENVELOPE_LABELS } from "./envelopes";
 
 // Hex equivalentes a los tokens oklch (--color-*) para el tint nativo del Slider.
 const ENVELOPE_TINT: Record<EnvelopeKey, string> = {

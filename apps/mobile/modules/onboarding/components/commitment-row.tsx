@@ -1,20 +1,16 @@
-import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { X } from "@/shared/components/ui/reicon";
+import { isCommitmentValid } from "@/shared/lib/onboarding/commitments";
+import { formatIntegerEs } from "@/shared/lib/onboarding/daily";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
+import { MonoLabel } from "./mono-label";
 
-export function isCommitmentValid(commitment: DraftCommitment): boolean {
-  return (
-    commitment.name.trim().length > 0 &&
-    commitment.amountCents > 0 &&
-    commitment.dueDay >= 1 &&
-    commitment.dueDay <= 31
-  );
+function amountDigits(amountCents: number): string {
+  return amountCents > 0 ? String(Math.floor(amountCents / 100)) : "";
 }
 
-function formatAmount(digits: string): string {
-  if (!digits) return "";
-  return Number(digits).toLocaleString("es-PE");
+function dayDigits(dueDay: number): string {
+  return dueDay >= 1 ? String(dueDay) : "";
 }
 
 type CommitmentRowProps = {
@@ -30,16 +26,6 @@ export function CommitmentRow({
   onChange,
   onRemove,
 }: CommitmentRowProps) {
-  const [name, setName] = useState(commitment.name);
-  const [amountDigits, setAmountDigits] = useState(
-    commitment.amountCents > 0
-      ? String(Math.floor(commitment.amountCents / 100))
-      : "",
-  );
-  const [day, setDay] = useState(
-    commitment.dueDay >= 1 ? String(commitment.dueDay) : "",
-  );
-
   const valid = isCommitmentValid(commitment);
 
   return (
@@ -52,11 +38,8 @@ export function CommitmentRow({
       <View className="flex-row items-center gap-2">
         <TextInput
           testID={`commitment-name-${index}`}
-          value={name}
-          onChangeText={(text) => {
-            setName(text);
-            onChange({ ...commitment, name: text });
-          }}
+          value={commitment.name}
+          onChangeText={(text) => onChange({ ...commitment, name: text })}
           placeholder="Nombre"
           className="flex-1 font-hanken text-[15px] text-foreground"
         />
@@ -75,10 +58,9 @@ export function CommitmentRow({
         </Text>
         <TextInput
           testID={`commitment-amount-${index}`}
-          value={formatAmount(amountDigits)}
+          value={formatIntegerEs(amountDigits(commitment.amountCents))}
           onChangeText={(raw) => {
             const next = raw.replace(/\D/g, "").slice(0, 9);
-            setAmountDigits(next);
             onChange({
               ...commitment,
               amountCents: next ? Number(next) * 100 : 0,
@@ -88,15 +70,12 @@ export function CommitmentRow({
           placeholder="0"
           className="w-20 font-newsreader text-[16px] text-foreground"
         />
-        <Text className="ml-auto font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-          CADA DÍA
-        </Text>
+        <MonoLabel className="ml-auto">CADA DÍA</MonoLabel>
         <TextInput
           testID={`commitment-day-${index}`}
-          value={day}
+          value={dayDigits(commitment.dueDay)}
           onChangeText={(raw) => {
             const next = raw.replace(/\D/g, "").slice(0, 2);
-            setDay(next);
             onChange({ ...commitment, dueDay: next ? Number(next) : 0 });
           }}
           keyboardType="number-pad"

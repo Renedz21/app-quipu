@@ -1,19 +1,18 @@
 import { useRef } from "react";
 import { Pressable, Text, View } from "react-native";
-import {
-  CommitmentRow,
-  isCommitmentValid,
-} from "@/modules/onboarding/components/commitment-row";
+import { CommitmentRow } from "@/modules/onboarding/components/commitment-row";
+import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
+import {
+  isCommitmentValid,
+  validCommitmentsTotalCents,
+} from "@/shared/lib/onboarding/commitments";
 import { formatSoles } from "@/shared/lib/onboarding/daily";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
 
 const QUICK_CHIPS = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"];
-
-const MONO_LABEL =
-  "font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase";
 
 export function Step4Commitments() {
   const { state, dispatch } = useOnboarding();
@@ -41,9 +40,7 @@ export function Step4Commitments() {
   };
 
   const allValid = state.commitments.every(isCommitmentValid);
-  const totalCents = state.commitments
-    .filter(isCommitmentValid)
-    .reduce((acc, c) => acc + c.amountCents, 0);
+  const totalCents = validCommitmentsTotalCents(state.commitments);
 
   const goConfirm = () => {
     dispatch({ type: "SET_STEP", payload: "confirm" });
@@ -117,7 +114,7 @@ export function Step4Commitments() {
         ) : null}
 
         <View className="flex-row items-center justify-between">
-          <Text className={MONO_LABEL}>Se reserva de Necesidades</Text>
+          <MonoLabel>Se reserva de Necesidades</MonoLabel>
           <Text
             testID="commitments-total"
             className="font-hanken-semibold text-[13px] text-foreground"

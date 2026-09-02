@@ -1,36 +1,17 @@
 import { Pressable, Text, View } from "react-native";
-import {
-  AllocationSlider,
-  type EnvelopeKey,
-} from "@/modules/onboarding/components/allocation-slider";
+import { AllocationSlider } from "@/modules/onboarding/components/allocation-slider";
+import { ENVELOPE_BG } from "@/modules/onboarding/components/envelopes";
+import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
 import { Check } from "@/shared/components/ui/reicon";
 import {
   ALLOCATION_DEFAULTS,
-  distributeEnvelope,
+  ENVELOPES,
+  setEnvelopeAllocation,
 } from "@/shared/lib/onboarding/allocation";
-
-const ENVELOPES: EnvelopeKey[] = ["needs", "wants", "savings"];
-
-const ENVELOPE_BG: Record<EnvelopeKey, string> = {
-  needs: "bg-needs",
-  wants: "bg-wants",
-  savings: "bg-savings",
-};
-
-const ENVELOPE_STATE_KEYS: Record<
-  EnvelopeKey,
-  "allocationNeeds" | "allocationWants" | "allocationSavings"
-> = {
-  needs: "allocationNeeds",
-  wants: "allocationWants",
-  savings: "allocationSavings",
-};
-
-const MONO_LABEL =
-  "font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase";
+import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
 
 export function Step3Allocation() {
   const { state, dispatch } = useOnboarding();
@@ -43,15 +24,8 @@ export function Step3Allocation() {
   const sum = ENVELOPES.reduce((acc, key) => acc + values[key], 0);
 
   const setEnvelope = (key: EnvelopeKey, value: number) => {
-    const next = distributeEnvelope(state, ENVELOPE_STATE_KEYS[key], value);
-    dispatch({
-      type: "UPDATE",
-      payload: {
-        allocationNeeds: next.allocationNeeds,
-        allocationWants: next.allocationWants,
-        allocationSavings: next.allocationSavings,
-      },
-    });
+    const next = setEnvelopeAllocation(state, key, value);
+    dispatch({ type: "UPDATE", payload: next });
   };
 
   const resetToDefaults = () => {
@@ -105,7 +79,7 @@ export function Step3Allocation() {
         </View>
 
         <View className="flex-row items-center justify-between">
-          <Text className={MONO_LABEL}>Suma</Text>
+          <MonoLabel>Suma</MonoLabel>
           <View className="flex-row items-center gap-1.5">
             <Text
               testID="allocation-sum"

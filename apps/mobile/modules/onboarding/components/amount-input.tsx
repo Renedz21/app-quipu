@@ -1,5 +1,6 @@
-import { useState } from "react";
 import { Text, TextInput, View } from "react-native";
+import { formatIntegerEs } from "@/shared/lib/onboarding/daily";
+import { MonoLabel } from "./mono-label";
 
 type AmountInputProps = {
   label?: string;
@@ -7,9 +8,8 @@ type AmountInputProps = {
   onChangeCents: (cents: number | null) => void;
 };
 
-function formatDisplay(digits: string): string {
-  if (!digits) return "";
-  return Number(digits).toLocaleString("es-PE");
+function digitsFromCents(cents: number | null): string {
+  return cents != null ? String(Math.floor(cents / 100)) : "";
 }
 
 export function AmountInput({
@@ -17,30 +17,23 @@ export function AmountInput({
   valueCents,
   onChangeCents,
 }: AmountInputProps) {
-  const [digits, setDigits] = useState(
-    valueCents != null ? String(Math.floor(valueCents / 100)) : "",
-  );
+  const digits = digitsFromCents(valueCents);
 
   const handleChange = (raw: string) => {
     const next = raw.replace(/\D/g, "").slice(0, 9);
-    setDigits(next);
     onChangeCents(next ? Number(next) * 100 : null);
   };
 
   return (
     <View className="gap-2">
-      {label ? (
-        <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-          {label}
-        </Text>
-      ) : null}
+      {label ? <MonoLabel>{label}</MonoLabel> : null}
       <View className="flex-row items-baseline gap-2 border-b border-line pb-2">
         <Text className="font-newsreader text-[24px] text-foreground/45">
           S/
         </Text>
         <TextInput
           testID="amount-input"
-          value={formatDisplay(digits)}
+          value={formatIntegerEs(digits)}
           onChangeText={handleChange}
           keyboardType="number-pad"
           placeholder="0"

@@ -1,10 +1,6 @@
-export const SEGMENT_COLORS = {
-  needs: "bg-needs",
-  wants: "bg-wants",
-  savings: "bg-savings",
-} as const;
+import type { EnvelopeKey } from "@/shared/lib/onboarding/types";
 
-export type SegmentColor = keyof typeof SEGMENT_COLORS;
+export type SegmentColor = EnvelopeKey;
 
 export type IntroSlide = {
   eyebrow: string;
@@ -16,6 +12,9 @@ export type IntroSlide = {
   segmentNote?: string;
   dailyCard?: { label: string; value: string };
   rules?: string[];
+  cta: string;
+  ctaAction: "next" | "sign-up";
+  signInLink?: boolean;
 };
 
 export const INTRO_SLIDES: IntroSlide[] = [
@@ -24,6 +23,9 @@ export const INTRO_SLIDES: IntroSlide[] = [
     title: "Divide tu dinero antes de gastarlo, no después.",
     body: "No es una app de cuentas ni un banco. Es un sistema para responder una sola pregunta, todos los días.",
     quote: "¿Cuánto puedo gastar hoy sin arruinar mi mes?",
+    cta: "Cómo funciona",
+    ctaAction: "next",
+    signInLink: true,
   },
   {
     eyebrow: "LOS TRES SOBRES",
@@ -35,6 +37,8 @@ export const INTRO_SLIDES: IntroSlide[] = [
       { label: "Ahorro", pct: "20%", color: "savings" },
     ],
     segmentNote: "Los porcentajes son tuyos: puedes cambiarlos cuando quieras.",
+    cta: "Siguiente",
+    ctaAction: "next",
   },
   {
     eyebrow: "CICLOS Y DISPONIBLE DIARIO",
@@ -46,5 +50,7 @@ export const INTRO_SLIDES: IntroSlide[] = [
       "Si gastas de menos, mañana sube.",
       "Tu ahorro no se toca.",
     ],
+    cta: "Crear mi cuenta",
+    ctaAction: "sign-up",
   },
 ];

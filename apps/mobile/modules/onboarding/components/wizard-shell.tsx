@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
 import type { WizardStep } from "@/shared/lib/onboarding/types";
@@ -47,9 +48,7 @@ export function WizardShell({
         </View>
 
         <View className="gap-4">
-          <Text className="font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase">
-            {`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/04`}
-          </Text>
+          <MonoLabel>{`TU SISTEMA · ${String(stepNumber).padStart(2, "0")}/04`}</MonoLabel>
           <View className="flex-row gap-1.5">
             {[1, 2, 3, 4].map((segment) => (
               <View

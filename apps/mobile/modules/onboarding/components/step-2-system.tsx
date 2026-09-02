@@ -2,122 +2,62 @@ import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AmountInput } from "@/modules/onboarding/components/amount-input";
 import { FrequencyPicker } from "@/modules/onboarding/components/frequency-picker";
+import { MonoLabel } from "@/modules/onboarding/components/mono-label";
 import { WizardShell } from "@/modules/onboarding/components/wizard-shell";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
-import { CYCLE_DAYS_BY_FREQUENCY } from "@/shared/lib/onboarding/daily";
-import {
-  FREQ_DRIFT_COPY,
-  PAYDAYS_BY_FREQUENCY,
-} from "@/shared/lib/onboarding/defaults";
-import type { PayFrequency } from "@/shared/lib/onboarding/types";
+import { cyclePreview, paydayText } from "@/shared/lib/onboarding/cycle";
+import { FREQ_DRIFT_COPY } from "@/shared/lib/onboarding/defaults";
+import type { OnboardingState } from "@/shared/lib/onboarding/types";
 
-const MONTH_START = PAYDAYS_BY_FREQUENCY.monthly[0];
+const SOURCE_MAX_LENGTH = 30;
 
-function paydayText(frequency: PayFrequency): string {
-  const paydays = PAYDAYS_BY_FREQUENCY[frequency];
-  if (frequency === "weekly") {
-    return `Cada ${CYCLE_DAYS_BY_FREQUENCY.weekly} días`;
-  }
-  return `El ${paydays.join(" y ")} de cada mes`;
+function StepHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <View className="gap-1">
+      <Text className="font-newsreader text-[28px] text-foreground">
+        {title}
+      </Text>
+      <Text className="font-hanken text-[14px] text-foreground/55">
+        {subtitle}
+      </Text>
+    </View>
+  );
 }
 
-function cyclePreview(frequency: PayFrequency): string {
-  const paydays = PAYDAYS_BY_FREQUENCY[frequency];
-  const cycleDays = CYCLE_DAYS_BY_FREQUENCY[frequency];
-  if (frequency === "monthly") {
-    return `${MONTH_START} – ${cycleDays} de cada mes · ${cycleDays} DÍAS`;
-  }
-  if (frequency === "biweekly") {
-    return `${MONTH_START} – ${paydays[0]} / ${paydays[0] + 1} – ${paydays[1]} · ${cycleDays} DÍAS`;
-  }
-  return `${cycleDays} DÍAS`;
-}
-
-const MONO_LABEL =
-  "font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase";
-
-export function Step2System() {
+function SourcesSection() {
   const { state, dispatch } = useOnboarding();
-  const model = state.incomeModel;
-
-  const [frequency, setFrequency] = useState<PayFrequency | null>(
-    state.payFrequency,
-  );
-  const [referenceCents, setReferenceCents] = useState<number | null>(
-    state.referenceIncomeCents,
-  );
-  const [fixedCents, setFixedCents] = useState<number | undefined>(
-    state.mixedFixedAmountCents,
-  );
-  const [cycleDays, setCycleDays] = useState<15 | 30 | undefined>(
-    state.cycleDurationDays,
-  );
-  const [sources, setSources] = useState<string[]>(
-    state.variableIncomeSources ?? [],
-  );
-  const [sourceDraft, setSourceDraft] = useState("");
-
-  if (!model) return null;
-
-  const canContinue =
-    model === "fixed"
-      ? frequency != null
-      : model === "variable"
-        ? cycleDays != null && sources.length >= 1
-        : frequency != null && fixedCents != null && sources.length >= 1;
+  const sources = state.variableIncomeSources;
+  const [draft, setDraft] = useState("");
 
   const addSource = () => {
-    const name = sourceDraft.trim().slice(0, 30);
+    const name = draft.trim().slice(0, SOURCE_MAX_LENGTH);
     if (name.length < 1 || sources.includes(name)) return;
-    setSources([...sources, name]);
-    setSourceDraft("");
+    dispatch({
+      type: "UPDATE",
+      payload: { variableIncomeSources: [...sources, name] },
+    });
+    setDraft("");
   };
 
   const removeSource = (index: number) => {
-    setSources(sources.filter((_, i) => i !== index));
+    dispatch({
+      type: "UPDATE",
+      payload: {
+        variableIncomeSources: sources.filter((_, i) => i !== index),
+      },
+    });
   };
 
-  const continueToStep3 = () => {
-    if (!canContinue) return;
-    if (model === "fixed") {
-      dispatch({
-        type: "UPDATE",
-        payload: {
-          payFrequency: frequency,
-          referenceIncomeCents: referenceCents,
-        },
-      });
-    } else if (model === "variable") {
-      dispatch({
-        type: "UPDATE",
-        payload: {
-          cycleDurationDays: cycleDays,
-          variableIncomeSources: sources,
-        },
-      });
-    } else {
-      dispatch({
-        type: "UPDATE",
-        payload: {
-          payFrequency: frequency,
-          mixedFixedAmountCents: fixedCents,
-          variableIncomeSources: sources,
-        },
-      });
-    }
-    dispatch({ type: "SET_STEP", payload: 3 });
-  };
-
-  const sourcesSection = (
+  return (
     <View className="gap-3">
-      <Text className={MONO_LABEL}>¿DE DÓNDE LLEGA TU DINERO?</Text>
+      <MonoLabel>¿DE DÓNDE LLEGA TU DINERO?</MonoLabel>
       <View className="flex-row items-center gap-2">
         <TextInput
           testID="source-input"
-          value={sourceDraft}
-          onChangeText={(text) => setSourceDraft(text.slice(0, 30))}
-          maxLength={30}
+          value={draft}
+          onChangeText={(text) => setDraft(text.slice(0, SOURCE_MAX_LENGTH))}
+          maxLength={SOURCE_MAX_LENGTH}
           placeholder="Ej. Recibos, ventas, proyectos"
           onSubmitEditing={addSource}
           className="h-11 flex-1 rounded-xl border border-line px-4 font-hanken text-[14px] text-foreground"
@@ -161,6 +101,192 @@ export function Step2System() {
       ) : null}
     </View>
   );
+}
+
+function FixedFields() {
+  const { state, dispatch } = useOnboarding();
+  const frequency = state.payFrequency;
+
+  return (
+    <View className="gap-6">
+      <StepHeader
+        title="¿Cuándo y cuánto?"
+        subtitle="Con esto armamos tu primer ciclo. Después lo afinamos con datos reales."
+      />
+
+      <View className="gap-3">
+        <FrequencyPicker
+          value={frequency}
+          onChange={(f) =>
+            dispatch({ type: "UPDATE", payload: { payFrequency: f } })
+          }
+        />
+      </View>
+
+      {frequency ? (
+        <View className="gap-3">
+          <MonoLabel>DÍA DE PAGO</MonoLabel>
+          <Text className="font-hanken-semibold text-[15px] text-foreground">
+            {paydayText(frequency)}
+          </Text>
+          <Text className="font-hanken text-[13px] text-foreground/55">
+            {FREQ_DRIFT_COPY[frequency]}
+          </Text>
+        </View>
+      ) : null}
+
+      <AmountInput
+        label="CUÁNTO SUELES RECIBIR"
+        valueCents={state.referenceIncomeCents}
+        onChangeCents={(cents) =>
+          dispatch({
+            type: "UPDATE",
+            payload: { referenceIncomeCents: cents },
+          })
+        }
+      />
+      <Text className="font-hanken text-[13px] text-foreground/55">
+        Es solo una referencia para armar el primer ciclo. Cuando registres tu
+        ingreso real, Quipu recalcula.
+      </Text>
+
+      {frequency ? (
+        <View className="rounded-xl border border-line px-4 py-3">
+          <MonoLabel>TU CICLO SERÍA</MonoLabel>
+          <Text className="mt-1 font-hanken-semibold text-[15px] text-foreground">
+            {cyclePreview(frequency)}
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function VariableFields() {
+  const { state, dispatch } = useOnboarding();
+  const cycleDays = state.cycleDurationDays;
+
+  return (
+    <View className="gap-6">
+      <StepHeader
+        title="¿Cómo se arma tu ciclo?"
+        subtitle="Sin fecha fija, el ciclo va de un ingreso registrado al siguiente."
+      />
+
+      <View className="gap-3">
+        <MonoLabel>DURACIÓN DEL CICLO</MonoLabel>
+        <View className="flex-row gap-2">
+          {([15, 30] as const).map((days) => {
+            const isActive = cycleDays === days;
+            return (
+              <Pressable
+                key={days}
+                testID={`cycle-pill-${days}`}
+                onPress={() =>
+                  dispatch({
+                    type: "UPDATE",
+                    payload: { cycleDurationDays: days },
+                  })
+                }
+                className={
+                  isActive
+                    ? "flex-1 items-center rounded-full border border-primary bg-primary/5 px-4 py-2.5"
+                    : "flex-1 items-center rounded-full border border-line px-4 py-2.5"
+                }
+              >
+                <Text
+                  className={
+                    isActive
+                      ? "font-hanken-semibold text-[14px] text-foreground"
+                      : "font-hanken text-[14px] text-foreground/55"
+                  }
+                >
+                  {days} días
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <SourcesSection />
+    </View>
+  );
+}
+
+function MixedFields() {
+  const { state, dispatch } = useOnboarding();
+  const frequency = state.payFrequency;
+
+  return (
+    <View className="gap-6">
+      <StepHeader
+        title="Tu base + lo extra"
+        subtitle="Define la parte fija y cuéntanos de dónde llega lo variable."
+      />
+
+      <View className="gap-3">
+        <FrequencyPicker
+          value={frequency}
+          onChange={(f) =>
+            dispatch({ type: "UPDATE", payload: { payFrequency: f } })
+          }
+        />
+      </View>
+
+      {frequency ? (
+        <View className="gap-2">
+          <MonoLabel>DÍA DE PAGO</MonoLabel>
+          <Text className="font-hanken-semibold text-[15px] text-foreground">
+            {paydayText(frequency)}
+          </Text>
+        </View>
+      ) : null}
+
+      <AmountInput
+        label="PARTE FIJA APROXIMADA"
+        valueCents={state.mixedFixedAmountCents ?? null}
+        onChangeCents={(cents) =>
+          dispatch({
+            type: "UPDATE",
+            payload: { mixedFixedAmountCents: cents ?? undefined },
+          })
+        }
+      />
+
+      <SourcesSection />
+    </View>
+  );
+}
+
+function canContinueFrom(state: OnboardingState): boolean {
+  switch (state.incomeModel) {
+    case "fixed":
+      return state.payFrequency != null;
+    case "variable":
+      return (
+        state.cycleDurationDays != null &&
+        state.variableIncomeSources.length >= 1
+      );
+    case "mixed":
+      return (
+        state.payFrequency != null &&
+        state.mixedFixedAmountCents != null &&
+        state.variableIncomeSources.length >= 1
+      );
+    default:
+      return false;
+  }
+}
+
+export function Step2System() {
+  const { state, dispatch } = useOnboarding();
+  const model = state.incomeModel;
+
+  const continueToStep3 = () => {
+    if (!canContinueFrom(state)) return;
+    dispatch({ type: "SET_STEP", payload: 3 });
+  };
 
   return (
     <WizardShell
@@ -169,138 +295,13 @@ export function Step2System() {
         <AuthButton
           label="Continuar"
           onPress={continueToStep3}
-          disabled={!canContinue}
+          disabled={!canContinueFrom(state)}
         />
       }
     >
-      {model === "fixed" ? (
-        <View className="gap-6">
-          <View className="gap-1">
-            <Text className="font-newsreader text-[28px] text-foreground">
-              ¿Cuándo y cuánto?
-            </Text>
-            <Text className="font-hanken text-[14px] text-foreground/55">
-              Con esto armamos tu primer ciclo. Después lo afinamos con datos
-              reales.
-            </Text>
-          </View>
-
-          <View className="gap-3">
-            <FrequencyPicker value={frequency} onChange={setFrequency} />
-          </View>
-
-          {frequency ? (
-            <View className="gap-3">
-              <Text className={MONO_LABEL}>DÍA DE PAGO</Text>
-              <Text className="font-hanken-semibold text-[15px] text-foreground">
-                {paydayText(frequency)}
-              </Text>
-              <Text className="font-hanken text-[13px] text-foreground/55">
-                {FREQ_DRIFT_COPY[frequency]}
-              </Text>
-            </View>
-          ) : null}
-
-          <AmountInput
-            label="CUÁNTO SUELES RECIBIR"
-            valueCents={referenceCents}
-            onChangeCents={setReferenceCents}
-          />
-          <Text className="font-hanken text-[13px] text-foreground/55">
-            Es solo una referencia para armar el primer ciclo. Cuando registres
-            tu ingreso real, Quipu recalcula.
-          </Text>
-
-          {frequency ? (
-            <View className="rounded-xl border border-line px-4 py-3">
-              <Text className={MONO_LABEL}>TU CICLO SERÍA</Text>
-              <Text className="mt-1 font-hanken-semibold text-[15px] text-foreground">
-                {cyclePreview(frequency)}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      ) : null}
-
-      {model === "variable" ? (
-        <View className="gap-6">
-          <View className="gap-1">
-            <Text className="font-newsreader text-[28px] text-foreground">
-              ¿Cómo se arma tu ciclo?
-            </Text>
-            <Text className="font-hanken text-[14px] text-foreground/55">
-              Sin fecha fija, el ciclo va de un ingreso registrado al siguiente.
-            </Text>
-          </View>
-
-          <View className="gap-3">
-            <Text className={MONO_LABEL}>DURACIÓN DEL CICLO</Text>
-            <View className="flex-row gap-2">
-              {([15, 30] as const).map((days) => {
-                const isActive = cycleDays === days;
-                return (
-                  <Pressable
-                    key={days}
-                    testID={`cycle-pill-${days}`}
-                    onPress={() => setCycleDays(days)}
-                    className={
-                      isActive
-                        ? "flex-1 items-center rounded-full border border-primary bg-primary/5 px-4 py-2.5"
-                        : "flex-1 items-center rounded-full border border-line px-4 py-2.5"
-                    }
-                  >
-                    <Text
-                      className={
-                        isActive
-                          ? "font-hanken-semibold text-[14px] text-foreground"
-                          : "font-hanken text-[14px] text-foreground/55"
-                      }
-                    >
-                      {days} días
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-
-          {sourcesSection}
-        </View>
-      ) : null}
-
-      {model === "mixed" ? (
-        <View className="gap-6">
-          <View className="gap-1">
-            <Text className="font-newsreader text-[28px] text-foreground">
-              Tu base + lo extra
-            </Text>
-            <Text className="font-hanken text-[14px] text-foreground/55">
-              Define la parte fija y cuéntanos de dónde llega lo variable.
-            </Text>
-          </View>
-
-          <View className="gap-3">
-            <FrequencyPicker value={frequency} onChange={setFrequency} />
-          </View>
-
-          {frequency ? (
-            <View className="gap-2">
-              <Text className={MONO_LABEL}>DÍA DE PAGO</Text>
-              <Text className="font-hanken-semibold text-[15px] text-foreground">
-                {paydayText(frequency)}
-              </Text>
-            </View>
-          ) : null}
-
-          <AmountInput
-            label="PARTE FIJA APROXIMADA"
-            valueCents={fixedCents ?? null}
-            onChangeCents={(cents) => setFixedCents(cents ?? undefined)}
-          />
-
-          {sourcesSection}
-        </View>
-      ) : null}
+      {model === "fixed" ? <FixedFields /> : null}
+      {model === "variable" ? <VariableFields /> : null}
+      {model === "mixed" ? <MixedFields /> : null}
     </WizardShell>
   );
 }

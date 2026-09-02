@@ -1,48 +1,49 @@
 import { Pressable, Text, View } from "react-native";
-import { isCommitmentValid } from "@/modules/onboarding/components/commitment-row";
 import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import { useCompleteOnboarding } from "@/modules/onboarding/use-complete-onboarding";
 import { ChevronLeft } from "@/shared/components/ui/reicon";
+import { validCommitmentsTotalCents } from "@/shared/lib/onboarding/commitments";
 import {
-  CYCLE_DAYS_BY_FREQUENCY,
+  currentMonthLabel,
+  cycleDaysForModel,
+} from "@/shared/lib/onboarding/cycle";
+import {
   estimateDailyAvailable,
   formatDailyAvailable,
   formatSoles,
 } from "@/shared/lib/onboarding/daily";
+import { MonoLabel } from "./mono-label";
 
-const MONTHS = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-];
-
-const MONO_LABEL =
-  "font-geist-mono text-[10.5px] tracking-[0.18em] text-foreground/45 uppercase";
+function SummaryRow({
+  label,
+  value,
+  testID,
+}: {
+  label: string;
+  value: string;
+  testID?: string;
+}) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <Text className="font-hanken text-[14px] text-foreground/70">
+        {label}
+      </Text>
+      <Text
+        testID={testID}
+        className="font-hanken-semibold text-[14px] text-foreground"
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
 
 export function StepConfirm() {
   const { state, dispatch } = useOnboarding();
   const { submit, isSubmitting, error } = useCompleteOnboarding();
 
   const referenceCents = state.referenceIncomeCents;
-  const commitmentsTotalCents = state.commitments
-    .filter(isCommitmentValid)
-    .reduce((acc, c) => acc + c.amountCents, 0);
-
-  const cycleDays =
-    state.incomeModel === "variable"
-      ? (state.cycleDurationDays ?? 30)
-      : state.payFrequency
-        ? CYCLE_DAYS_BY_FREQUENCY[state.payFrequency]
-        : 30;
+  const commitmentsTotalCents = validCommitmentsTotalCents(state.commitments);
 
   const dailyCents =
     referenceCents == null
@@ -53,16 +54,11 @@ export function StepConfirm() {
           allocationNeeds: state.allocationNeeds,
           allocationWants: state.allocationWants,
           allocationSavings: state.allocationSavings,
-          cycleDays,
+          cycleDays: cycleDaysForModel(state),
         });
 
   const envelopeAmount = (pct: number) =>
     referenceCents == null ? null : Math.floor((referenceCents * pct) / 100);
-
-  const monthLabel = (() => {
-    const name = MONTHS[new Date().getMonth()];
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  })();
 
   const envelopes = [
     { key: "needs", label: "Necesidades", pct: state.allocationNeeds },
@@ -85,9 +81,9 @@ export function StepConfirm() {
 
       <View className="flex-1 pt-4">
         <View className="gap-4">
-          <Text className={MONO_LABEL}>CONFIRMA TU SISTEMA</Text>
+          <MonoLabel>CONFIRMA TU SISTEMA</MonoLabel>
           <Text className="font-newsreader text-[28px] text-foreground">
-            {`Así queda tu ciclo de ${monthLabel}`}
+            {`Así queda tu ciclo de ${currentMonthLabel()}`}
           </Text>
         </View>
 
@@ -95,7 +91,7 @@ export function StepConfirm() {
           testID="confirm-daily-card"
           className="mt-6 rounded-xl bg-primary/10 px-4 py-4"
         >
-          <Text className={MONO_LABEL}>PODRÁS GASTAR AL DÍA</Text>
+          <MonoLabel>PODRÁS GASTAR AL DÍA</MonoLabel>
           <Text
             testID="confirm-daily"
             className="mt-2 font-geist-mono text-[32px] text-foreground"
@@ -110,51 +106,33 @@ export function StepConfirm() {
         </View>
 
         <View className="mt-6 gap-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-hanken text-[14px] text-foreground/70">
-              Ingreso del ciclo
-            </Text>
-            <Text
-              testID="confirm-income"
-              className="font-hanken-semibold text-[14px] text-foreground"
-            >
-              {referenceCents == null ? "—" : formatSoles(referenceCents)}
-            </Text>
-          </View>
+          <SummaryRow
+            label="Ingreso del ciclo"
+            testID="confirm-income"
+            value={referenceCents == null ? "—" : formatSoles(referenceCents)}
+          />
 
           {envelopes.map((envelope) => {
             const amount = envelopeAmount(envelope.pct);
             return (
-              <View
+              <SummaryRow
                 key={envelope.key}
-                className="flex-row items-center justify-between"
-              >
-                <Text className="font-hanken text-[14px] text-foreground/70">
-                  {envelope.label}
-                </Text>
-                <Text
-                  testID={`confirm-envelope-${envelope.key}`}
-                  className="font-hanken-semibold text-[14px] text-foreground"
-                >
-                  {amount == null
+                label={envelope.label}
+                testID={`confirm-envelope-${envelope.key}`}
+                value={
+                  amount == null
                     ? `${envelope.pct}%`
-                    : `${envelope.pct}% · ${formatSoles(amount)}`}
-                </Text>
-              </View>
+                    : `${envelope.pct}% · ${formatSoles(amount)}`
+                }
+              />
             );
           })}
 
-          <View className="flex-row items-center justify-between">
-            <Text className="font-hanken text-[14px] text-foreground/70">
-              Compromisos reservados
-            </Text>
-            <Text
-              testID="confirm-commitments"
-              className="font-hanken-semibold text-[14px] text-foreground"
-            >
-              {formatSoles(commitmentsTotalCents)}
-            </Text>
-          </View>
+          <SummaryRow
+            label="Compromisos reservados"
+            testID="confirm-commitments"
+            value={formatSoles(commitmentsTotalCents)}
+          />
         </View>
 
         <Text className="mt-6 font-hanken text-[13px] text-foreground/45">

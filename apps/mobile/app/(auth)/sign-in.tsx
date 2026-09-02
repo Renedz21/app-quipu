@@ -1,4 +1,6 @@
+import { api } from "@quipu/convex-api";
 import { useForm } from "@tanstack/react-form";
+import { useQuery } from "convex/react";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
@@ -26,6 +28,8 @@ const signInSchema = z.object({
 export default function SignInScreen() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const hasSession = Boolean(session);
+  const profile = useQuery(api.profiles.getMyProfile, hasSession ? {} : "skip");
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [view, setView] = useState<SignInView>("welcome");
 
@@ -52,7 +56,14 @@ export default function SignInScreen() {
     },
   });
 
-  if (session) return <Redirect href="/(tabs)" />;
+  if (hasSession && profile === undefined) return null;
+  if (hasSession) {
+    return (
+      <Redirect
+        href={profile?.onboardingComplete ? "/(tabs)" : "/(onboarding)/sistema"}
+      />
+    );
+  }
 
   const signInWithPasskey = async () => {
     setPasskeyLoading(true);

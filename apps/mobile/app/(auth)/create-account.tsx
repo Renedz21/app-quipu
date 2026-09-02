@@ -539,7 +539,7 @@ export default function CreateAccountScreen() {
 
               <AuthButton
                 label="Configurar mi sistema"
-                onPress={() => router.replace("/(tabs)")}
+                onPress={() => router.replace("/(onboarding)/sistema")}
               />
             </View>
           ) : null}

@@ -5,7 +5,7 @@ import { Graph } from "reicon-react-native/icons/Graph";
 import { Home } from "reicon-react-native/icons/Home";
 import { ReceiptText } from "reicon-react-native/icons/ReceiptText";
 import { Wallet } from "reicon-react-native/icons/Wallet";
-import AuthGate from "@/shared/components/auth/auth-gate";
+import OnboardingGate from "@/shared/components/auth/onboarding-gate";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
 import RegistrarTabButton from "@/shared/components/navigation/registrar-tab-button";
 
@@ -13,7 +13,7 @@ export default function TabLayout() {
   const [registrarOpen, setRegistrarOpen] = useState(false);
 
   return (
-    <AuthGate>
+    <OnboardingGate>
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
@@ -95,6 +95,6 @@ export default function TabLayout() {
           onDismiss={() => setRegistrarOpen(false)}
         />
       </View>
-    </AuthGate>
+    </OnboardingGate>
   );
 }

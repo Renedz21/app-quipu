@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -539,7 +539,7 @@ export default function CreateAccountScreen() {
 
               <AuthButton
                 label="Configurar mi sistema"
-                onPress={() => router.replace("/(tabs)")}
+                onPress={() => router.replace("/(onboarding)/sistema" as Href)}
               />
             </View>
           ) : null}

@@ -129,16 +129,16 @@ export default function CreateAccountScreen() {
     },
   });
 
-  const verifyOtp = async () => {
-    if (!account) return;
-    const parsed = otpSchema.safeParse({ otp });
+  const verifyOtp = async (code: string) => {
+    if (!account || otpLoading) return;
+    const parsed = otpSchema.safeParse({ otp: code });
     if (!parsed.success) return;
     setOtpLoading(true);
     setOtpError(null);
     try {
       const { error } = await authClient.emailOtp.verifyEmail({
         email: account.email,
-        otp,
+        otp: code,
       });
       if (error) {
         // TOO_MANY_ATTEMPTS llega con status 403 (FORBIDDEN) y/o code/message
@@ -356,14 +356,20 @@ export default function CreateAccountScreen() {
                   <TextInput
                     value={otp}
                     onChangeText={(value) => {
-                      setOtp(value.replace(/\D/g, "").slice(0, 6));
+                      const next = value.replace(/\D/g, "").slice(0, 6);
+                      setOtp(next);
                       setOtpError(null);
+                      // Autoverificación al completar los 6 dígitos
+                      // (WCAG 3.3.8: menos carga cognitiva; el botón
+                      // "Verificar" queda como alternativa manual).
+                      if (next.length === 6) void verifyOtp(next);
                     }}
                     keyboardType="numeric"
                     maxLength={6}
                     textAlign="center"
                     caretHidden
                     autoFocus
+                    accessibilityLabel="Código de verificación de 6 dígitos"
                     style={{
                       position: "absolute",
                       top: 0,
@@ -400,14 +406,18 @@ export default function CreateAccountScreen() {
               </View>
 
               {otpError ? (
-                <Text className="text-center font-hanken text-[13px] text-danger">
+                <Text
+                  accessibilityRole="alert"
+                  accessibilityLiveRegion="polite"
+                  className="text-center font-hanken text-[13px] text-danger"
+                >
                   {otpError}
                 </Text>
               ) : null}
 
               <AuthButton
                 label="Verificar"
-                onPress={() => void verifyOtp()}
+                onPress={() => void verifyOtp(otp)}
                 loading={otpLoading}
                 disabled={otp.length < 6}
               />
@@ -422,7 +432,7 @@ export default function CreateAccountScreen() {
           ) : null}
 
           {step === 3 ? (
-            <View className="flex-1 justify-center gap-6 pb-14">
+            <View className="flex-1 justify-center gap-8 pb-14">
               <ProgressHeader label="CREAR CUENTA · 03/03" filled={3} />
 
               <View className="gap-1">

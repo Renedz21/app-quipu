@@ -1,3 +1,4 @@
+import { expo } from "@better-auth/expo";
 import { passkey } from "@better-auth/passkey";
 import type { AuthFunctions, GenericCtx } from "@convex-dev/better-auth";
 import { createClient } from "@convex-dev/better-auth";
@@ -69,6 +70,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   return {
     baseURL: siteUrl,
+    // Origen del app móvil: el plugin server expo() copia el header
+    // "expo-origin" (que envía expoClient) a "Origin" para el check CSRF.
+    trustedOrigins: [siteUrl, "quipu://"],
     database: authComponent.adapter(ctx),
     rateLimit: {
       enabled: true,
@@ -123,6 +127,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     plugins: [
       convex({ authConfig }),
+      expo(),
       passkey({
         rpName: rpName,
         rpID: rpID,

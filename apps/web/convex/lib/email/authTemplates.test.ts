@@ -106,4 +106,9 @@ describe("buildOtpEmail", () => {
     expect(email.html).toContain("482913");
     expect(email.text).toContain("10 minutos");
   });
+
+  it("el html del OTP no contiene links", () => {
+    const email = buildOtpEmail({ code: "482913" });
+    expect(email.html).not.toContain("<a ");
+  });
 });

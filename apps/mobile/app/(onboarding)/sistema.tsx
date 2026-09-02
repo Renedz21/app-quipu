@@ -1,8 +1,5 @@
-import { api } from "@quipu/convex-api";
-import { useQuery } from "convex/react";
 import { Redirect } from "expo-router";
 import { View } from "react-native";
-import { authClient } from "@/lib/auth-client";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { Step2System } from "@/modules/onboarding/components/step-2-system";
 import { Step3Allocation } from "@/modules/onboarding/components/step-3-allocation";
@@ -13,6 +10,7 @@ import {
   OnboardingProvider,
   useOnboarding,
 } from "@/modules/onboarding/onboarding-provider";
+import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
 function SistemaWizard() {
   const { state } = useOnboarding();
@@ -34,12 +32,10 @@ function SistemaWizard() {
 }
 
 export default function SistemaScreen() {
-  const { data: session, isPending } = authClient.useSession();
-  const hasSession = Boolean(session) && !isPending;
-  const profile = useQuery(api.profiles.getMyProfile, hasSession ? {} : "skip");
+  const { isAuthReady, isLoading, profile } = useProfileGate();
 
-  if (isPending || (hasSession && profile === undefined)) return null;
-  if (!hasSession) return <Redirect href="/(auth)/sign-in" />;
+  if (isLoading) return null;
+  if (!isAuthReady) return <Redirect href="/(auth)/sign-in" />;
   if (profile?.onboardingComplete) return <Redirect href="/(tabs)" />;
 
   return (

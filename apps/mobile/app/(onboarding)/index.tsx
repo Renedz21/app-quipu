@@ -1,24 +1,23 @@
-import { api } from "@quipu/convex-api";
-import { useQuery } from "convex/react";
 import { Redirect, router } from "expo-router";
 import { useEffect } from "react";
 import { View } from "react-native";
-import { authClient } from "@/lib/auth-client";
 import { IntroCarousel } from "@/modules/onboarding/components/intro-carousel";
+import { useProfileGate } from "@/shared/hooks/use-profile-gate";
 
 export default function OnboardingIndexScreen() {
-  const { data: session, isPending } = authClient.useSession();
-  const hasSession = Boolean(session) && !isPending;
-  const profile = useQuery(api.profiles.getMyProfile, hasSession ? {} : "skip");
+  const { isAuthReady, isLoading, profile } = useProfileGate();
 
   useEffect(() => {
-    if (hasSession && profile?.onboardingComplete) {
+    if (isAuthReady && profile?.onboardingComplete) {
       router.replace("/(tabs)");
     }
-  }, [hasSession, profile]);
+  }, [isAuthReady, profile]);
+
+  // Sesión/token aún restaurándose en cold start: no decidir todavía.
+  if (isLoading) return null;
 
   // Sin sesión: la intro es la puerta de entrada al onboarding.
-  if (!hasSession) {
+  if (!isAuthReady) {
     return (
       <View className="flex-1 bg-background px-0 pt-16">
         <IntroCarousel />
@@ -26,11 +25,8 @@ export default function OnboardingIndexScreen() {
     );
   }
 
-  // Con sesión pero perfil aún cargando: no renderizar nada.
-  if (profile === undefined) return null;
-
   // Perfil sin onboarding completo: directo al wizard.
-  if (!profile.onboardingComplete) {
+  if (!profile?.onboardingComplete) {
     return <Redirect href="/(onboarding)/sistema" />;
   }
 

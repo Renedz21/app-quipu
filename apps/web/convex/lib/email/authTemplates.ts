@@ -16,8 +16,9 @@ function buildPlainText(parts: {
   headline: string;
   greeting?: string;
   paragraphs: string[];
-  ctaLabel: string;
-  url: string;
+  ctaLabel?: string;
+  url?: string;
+  code?: string;
   secondaryNote?: string;
   footerLines: string[];
 }): string {
@@ -31,7 +32,13 @@ function buildPlainText(parts: {
     lines.push(paragraph, "");
   }
 
-  lines.push(`${parts.ctaLabel}: ${parts.url}`, "");
+  if (parts.ctaLabel !== undefined && parts.url !== undefined) {
+    lines.push(`${parts.ctaLabel}: ${parts.url}`, "");
+  }
+
+  if (parts.code !== undefined) {
+    lines.push(parts.code, "");
+  }
 
   if (parts.secondaryNote) {
     lines.push(parts.secondaryNote, "");
@@ -122,6 +129,44 @@ export function buildPasswordResetEmail(input: AuthEmailBuildInput): {
 
   return {
     subject: "Restablece tu contraseña en Quipu",
+    html,
+    text,
+  };
+}
+
+type OtpEmailBuildInput = {
+  code: string;
+};
+
+export function buildOtpEmail(input: OtpEmailBuildInput): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const headline = "Confirma tu correo";
+  const paragraphs = ["Tu código para confirmar tu correo en Quipu es:"];
+  const footerLines = [
+    "El código caduca en 10 minutos.",
+    "Si no creaste una cuenta en Quipu, puedes ignorar este correo.",
+  ];
+
+  const html = renderAuthEmailHtml({
+    preheader: "Un paso más para activar tu cuenta en Quipu.",
+    headline,
+    paragraphs,
+    code: input.code,
+    footerLines,
+  });
+
+  const text = buildPlainText({
+    headline,
+    paragraphs,
+    code: input.code,
+    footerLines,
+  });
+
+  return {
+    subject: `Tu código de Quipu: ${input.code}`,
     html,
     text,
   };

@@ -1,5 +1,6 @@
 import { isDevelopmentDeployment } from "../deployment";
 import {
+  buildOtpEmail,
   buildPasswordResetEmail,
   buildVerificationEmail,
 } from "./authTemplates";
@@ -62,4 +63,35 @@ export async function sendPasswordResetEmail(
   params: AuthEmailRecipient,
 ): Promise<void> {
   await deliverAuthEmail("password_reset", params, buildPasswordResetEmail);
+}
+
+type OtpEmailRecipient = {
+  to: string;
+  otp: string;
+};
+
+function logOtpEmailToConsole(params: OtpEmailRecipient): void {
+  console.log(
+    `[Quipu dev] Código OTP (verificación de correo) — Resend desactivado.\n` +
+      `  to: ${params.to}\n` +
+      `  code: ${params.otp}`,
+  );
+}
+
+export async function sendOtpEmail(params: OtpEmailRecipient): Promise<void> {
+  if (isDevelopmentDeployment()) {
+    logOtpEmailToConsole(params);
+    return;
+  }
+
+  const { subject, html, text } = buildOtpEmail({
+    code: params.otp,
+  });
+
+  await sendOutboundEmail({
+    to: params.to,
+    subject,
+    html,
+    text,
+  });
 }

@@ -1,9 +1,11 @@
+import { expo } from "@better-auth/expo";
 import { passkey } from "@better-auth/passkey";
 import type { AuthFunctions, GenericCtx } from "@convex-dev/better-auth";
 import { createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import { emailOTP } from "better-auth/plugins";
 import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
@@ -12,11 +14,22 @@ import authSchema from "./betterAuth/schema";
 import {
   sendPasswordResetEmail as deliverPasswordResetEmail,
   sendVerificationEmail as deliverVerificationEmail,
+  sendOtpEmail,
 } from "./lib/email/authMail";
 import { assertEmailAllowed } from "./lib/email/domainPolicy";
 
 const siteUrl = process.env.SITE_URL || "http://localhost:3000";
 const rpID = process.env.PASSKEY_RP_ID || "localhost";
+// Orígenes válidos para verificar credenciales passkey. Android Credential
+// Manager firma clientDataJSON con "android:apk-key-hash:<sha256-base64>"
+// del certificado de firma (debug y Play signing tienen hashes distintos),
+// así que se suman por env separados por coma.
+const androidApkKeyHashes = (process.env.PASSKEY_ANDROID_APK_KEY_HASHES ?? "")
+  .split(",")
+  .map((hash) => hash.trim())
+  .filter(Boolean)
+  .map((hash) => `android:apk-key-hash:${hash}`);
+const passkeyOrigins = [siteUrl, ...androidApkKeyHashes];
 const rpName = process.env.PASSKEY_RP_NAME || "quipu";
 
 const emailSchema = z
@@ -30,7 +43,7 @@ const authFunctions: AuthFunctions = internal.auth;
 async function enforceAuthEmailRateLimit(
   ctx: GenericCtx<DataModel>,
   email: string,
-  action: "verification" | "password_reset" | "sign_up",
+  action: "verification" | "password_reset" | "sign_up" | "otp",
 ): Promise<void> {
   if (!isRunMutationCtx(ctx)) return;
   await ctx.runMutation(internal.lib.authRateLimit.assertAuthRateLimit, {
@@ -67,6 +80,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   return {
     baseURL: siteUrl,
+    // Origen del app móvil: el plugin server expo() copia el header
+    // "expo-origin" (que envía expoClient) a "Origin" para el check CSRF.
+    trustedOrigins: [siteUrl, "quipu://"],
     database: authComponent.adapter(ctx),
     rateLimit: {
       enabled: true,
@@ -80,6 +96,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         "/request-password-reset": { window: 900, max: 3 },
         "/send-verification-email": { window: 300, max: 2 },
         "/passkey/*": { window: 60, max: 10 },
+        "/email-otp/*": { window: 60, max: 3 },
       },
     },
     emailAndPassword: {
@@ -120,10 +137,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     plugins: [
       convex({ authConfig }),
+      expo(),
       passkey({
         rpName: rpName,
         rpID: rpID,
-        origin: siteUrl,
+        origin: passkeyOrigins,
         authenticatorSelection: {
           residentKey: "preferred",
           userVerification: "preferred",
@@ -152,6 +170,17 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
             });
             return { id: created.id, name: created.name, displayName: email };
           },
+        },
+      }),
+      emailOTP({
+        otpLength: 6,
+        expiresIn: 600,
+        allowedAttempts: 3,
+        storeOTP: "hashed",
+        sendVerificationOTP: async ({ email, otp }) => {
+          assertEmailAllowed(email);
+          await enforceAuthEmailRateLimit(ctx, email, "otp");
+          await sendOtpEmail({ to: email, otp });
         },
       }),
     ],

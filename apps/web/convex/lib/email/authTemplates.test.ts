@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { escapeHtml } from "./authEmailLayout";
 import {
+  buildOtpEmail,
   buildPasswordResetEmail,
   buildVerificationEmail,
 } from "./authTemplates";
@@ -90,5 +91,24 @@ describe("escapeHtml", () => {
     });
     expect(email.html).not.toContain("<script>alert");
     expect(email.html).toContain("&lt;script&gt;");
+  });
+});
+
+describe("buildOtpEmail", () => {
+  it("incluye el código de 6 dígitos en texto y asunto", () => {
+    const email = buildOtpEmail({ code: "482913" });
+    expect(email.text).toContain("482913");
+    expect(email.subject).toContain("482913");
+  });
+
+  it("incluye el código en el html y caducidad de 10 minutos", () => {
+    const email = buildOtpEmail({ code: "482913" });
+    expect(email.html).toContain("482913");
+    expect(email.text).toContain("10 minutos");
+  });
+
+  it("el html del OTP no contiene links", () => {
+    const email = buildOtpEmail({ code: "482913" });
+    expect(email.html).not.toContain("<a ");
   });
 });

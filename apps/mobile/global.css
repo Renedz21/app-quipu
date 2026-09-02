@@ -11,6 +11,7 @@
 @layer theme {
   :root {
     @variant dark {
+      --color-line: oklch(0.925 0.0088 90);
       --color-background: oklch(0.985 0.0041 91.45);
       --color-foreground: oklch(0.2178 0 0);
       --color-primary: oklch(0.5423 0.0712 176.41);
@@ -27,6 +28,7 @@
 
     @variant light {
       /* UI */
+      --color-line: oklch(0.925 0.0088 90);
       --color-background: oklch(0.985 0.0041 91.45);
       --color-foreground: oklch(0.2178 0 0);
       --color-primary: oklch(0.5423 0.0712 176.41);

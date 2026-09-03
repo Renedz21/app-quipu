@@ -1,18 +1,20 @@
 import { Tabs } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
 import { Graph } from "reicon-react-native/icons/Graph";
 import { Home } from "reicon-react-native/icons/Home";
 import { ReceiptText } from "reicon-react-native/icons/ReceiptText";
 import { Wallet } from "reicon-react-native/icons/Wallet";
 import RegistrarSheet from "@/shared/components/navigation/registrar-sheet";
+import { RegistrarSheetProvider } from "@/shared/components/navigation/registrar-sheet-context";
 import RegistrarTabButton from "@/shared/components/navigation/registrar-tab-button";
 
 export default function TabLayout() {
   const [registrarOpen, setRegistrarOpen] = useState(false);
+  const openRegistrar = useCallback(() => setRegistrarOpen(true), []);
 
   return (
-    <>
+    <RegistrarSheetProvider open={openRegistrar}>
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
@@ -60,10 +62,7 @@ export default function TabLayout() {
             options={{
               title: "Registrar",
               tabBarButton: (props) => (
-                <RegistrarTabButton
-                  {...props}
-                  onPress={() => setRegistrarOpen(true)}
-                />
+                <RegistrarTabButton {...props} onPress={openRegistrar} />
               ),
             }}
           />
@@ -94,6 +93,6 @@ export default function TabLayout() {
           onDismiss={() => setRegistrarOpen(false)}
         />
       </View>
-    </>
+    </RegistrarSheetProvider>
   );
 }

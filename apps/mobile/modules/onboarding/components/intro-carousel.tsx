@@ -101,15 +101,16 @@ function ProgressBar({
           {from.value}
         </Text>
         <Text className="font-geist-mono text-[10.5px] tracking-wider text-foreground/60">
-          {current.value.split(current.highlight).map((part, i, arr) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: static split, order-stable
-            <Text key={i}>
-              {part}
-              {i < arr.length - 1 ? (
+          {(() => {
+            const parts = current.value.split(current.highlight);
+            return (
+              <>
+                {parts[0]}
                 <Text className="text-primary">{current.highlight}</Text>
-              ) : null}
-            </Text>
-          ))}
+                {parts[1] ?? null}
+              </>
+            );
+          })()}
         </Text>
         <Text className="font-geist-mono text-[10.5px] tracking-wider text-foreground/60">
           {to.value}

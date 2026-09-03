@@ -1,35 +1,25 @@
-import { Redirect, router } from "expo-router";
-import { useEffect } from "react";
+import { Redirect } from "expo-router";
 import { View } from "react-native";
 import { IntroCarousel } from "@/modules/onboarding/components/intro-carousel";
-import { useProfileGate } from "@/shared/hooks/use-profile-gate";
+import { useAppGate } from "@/shared/hooks/use-app-gate";
 
 export default function OnboardingIndexScreen() {
-  const { isAuthReady, isLoading, profile } = useProfileGate();
+  const { status, isLoading } = useAppGate();
 
-  useEffect(() => {
-    if (isAuthReady && profile?.onboardingComplete) {
-      router.replace("/(tabs)");
-    }
-  }, [isAuthReady, profile]);
-
-  // Sesión/token aún restaurándose en cold start: no decidir todavía.
   if (isLoading) return null;
 
-  // Sin sesión: la intro es la puerta de entrada al onboarding.
-  if (!isAuthReady) {
-    return (
-      <View className="flex-1 bg-background px-0 pt-16">
-        <IntroCarousel />
-      </View>
-    );
-  }
-
-  // Perfil sin onboarding completo: directo al wizard.
-  if (!profile?.onboardingComplete) {
+  // Sesión con onboarding pendiente: directo al wizard.
+  if (status === "onboarding") {
     return <Redirect href="/(onboarding)/sistema" />;
   }
 
-  // Con onboarding completo el efecto navega a /(tabs).
-  return null;
+  // Con onboarding completo RouteGuard lleva a /(tabs); no decidir aquí.
+  if (status === "ready") return null;
+
+  // Sin sesión: la intro es la puerta de entrada al onboarding.
+  return (
+    <View className="flex-1 bg-background px-0 pt-16">
+      <IntroCarousel />
+    </View>
+  );
 }

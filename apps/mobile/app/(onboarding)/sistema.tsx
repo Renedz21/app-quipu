@@ -1,4 +1,3 @@
-import { Redirect } from "expo-router";
 import { View } from "react-native";
 import { Step1IncomeProfile } from "@/modules/onboarding/components/step-1-income-profile";
 import { Step2System } from "@/modules/onboarding/components/step-2-system";
@@ -10,7 +9,7 @@ import {
   OnboardingProvider,
   useOnboarding,
 } from "@/modules/onboarding/onboarding-provider";
-import { useProfileGate } from "@/shared/hooks/use-profile-gate";
+import { useAppGate } from "@/shared/hooks/use-app-gate";
 
 function SistemaWizard() {
   const { state } = useOnboarding();
@@ -32,11 +31,12 @@ function SistemaWizard() {
 }
 
 export default function SistemaScreen() {
-  const { isAuthReady, isLoading, profile } = useProfileGate();
+  const { isLoading } = useAppGate();
 
   if (isLoading) return null;
-  if (!isAuthReady) return <Redirect href="/(auth)/sign-in" />;
-  if (profile?.onboardingComplete) return <Redirect href="/(tabs)" />;
+
+  // El acceso sin sesión y la salida con onboarding completo los
+  // resuelve RouteGuard en la raíz.
 
   return (
     <OnboardingProvider>

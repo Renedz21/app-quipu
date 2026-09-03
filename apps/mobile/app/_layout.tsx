@@ -14,6 +14,7 @@ import {
   SafeAreaProvider,
 } from "react-native-safe-area-context";
 import { authClient } from "@/lib/auth-client";
+import RouteGuard from "@/shared/components/auth/route-guard";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -37,7 +38,9 @@ export default function RootLayout() {
           client={convex}
           authClient={authClient as unknown as AuthClient}
         >
-          <RootLayoutNav />
+          <RouteGuard>
+            <RootLayoutNav />
+          </RouteGuard>
         </ConvexBetterAuthProvider>
         <StatusBar animated style="dark" />
       </KeyboardProvider>

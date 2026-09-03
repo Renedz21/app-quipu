@@ -1,5 +1,7 @@
 import {
+  commitmentErrorMessage,
   isCommitmentValid,
+  isNamedChipTaken,
   validCommitmentsTotalCents,
 } from "@/shared/lib/onboarding/commitments";
 import type { DraftCommitment } from "@/shared/lib/onboarding/types";
@@ -47,5 +49,72 @@ describe("validCommitmentsTotalCents", () => {
 
   it("lista vacía suma 0", () => {
     expect(validCommitmentsTotalCents([])).toBe(0);
+  });
+});
+
+describe("isNamedChipTaken", () => {
+  it("Agua no está tomada si no hay filas", () => {
+    expect(isNamedChipTaken("Agua", [])).toBe(false);
+  });
+
+  it("Agua queda tomada si ya hay una fila Agua", () => {
+    expect(isNamedChipTaken("Agua", [commitment({ name: "Agua" })])).toBe(true);
+  });
+
+  it("Agua no queda tomada por una fila Celular", () => {
+    expect(isNamedChipTaken("Agua", [commitment({ name: "Celular" })])).toBe(
+      false,
+    );
+  });
+
+  it("Otro nunca queda tomado, aunque ya haya filas Otro", () => {
+    expect(
+      isNamedChipTaken("Otro", [
+        commitment({ id: "a", name: "Otro" }),
+        commitment({ id: "b", name: "Otro" }),
+      ]),
+    ).toBe(false);
+  });
+
+  it("compara el nombre sin importar mayúsculas ni espacios", () => {
+    expect(isNamedChipTaken("Agua", [commitment({ name: "  agua  " })])).toBe(
+      true,
+    );
+  });
+});
+
+describe("commitmentErrorMessage", () => {
+  it("completo no tiene mensaje", () => {
+    expect(commitmentErrorMessage(commitment())).toBeNull();
+  });
+
+  it("sin monto ni día", () => {
+    expect(
+      commitmentErrorMessage(commitment({ amountCents: 0, dueDay: 0 })),
+    ).toBe("Falta el monto y el día.");
+  });
+
+  it("solo falta el monto", () => {
+    expect(commitmentErrorMessage(commitment({ amountCents: 0 }))).toBe(
+      "Falta el monto.",
+    );
+  });
+
+  it("solo falta el día", () => {
+    expect(commitmentErrorMessage(commitment({ dueDay: 0 }))).toBe(
+      "Falta el día.",
+    );
+  });
+
+  it("día fuera de rango", () => {
+    expect(commitmentErrorMessage(commitment({ dueDay: 40 }))).toBe(
+      "El día debe ser del 1 al 31.",
+    );
+  });
+
+  it("falta el nombre", () => {
+    expect(commitmentErrorMessage(commitment({ name: "  " }))).toBe(
+      "Falta el nombre.",
+    );
   });
 });

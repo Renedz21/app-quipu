@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CommitmentRow } from "@/modules/onboarding/components/commitment-row";
 import { MonoLabel } from "@/modules/onboarding/components/mono-label";
@@ -7,6 +7,7 @@ import { useOnboarding } from "@/modules/onboarding/onboarding-provider";
 import AuthButton from "@/shared/components/auth/auth-button";
 import {
   isCommitmentValid,
+  isNamedChipTaken,
   validCommitmentsTotalCents,
 } from "@/shared/lib/onboarding/commitments";
 import { formatSoles } from "@/shared/lib/onboarding/daily";
@@ -17,6 +18,7 @@ const QUICK_CHIPS = ["Agua", "Celular", "Gimnasio", "Streaming", "Otro"];
 export function Step4Commitments() {
   const { state, dispatch } = useOnboarding();
   const idCounter = useRef(0);
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
 
   const addQuickCommitment = (name: string) => {
     idCounter.current += 1;
@@ -47,7 +49,10 @@ export function Step4Commitments() {
   };
 
   const continueToConfirm = () => {
-    if (!allValid) return;
+    if (!allValid) {
+      setShowFieldErrors(true);
+      return;
+    }
     goConfirm();
   };
 
@@ -56,11 +61,7 @@ export function Step4Commitments() {
       stepNumber={4}
       footer={
         <View className="gap-3">
-          <AuthButton
-            label="Continuar"
-            onPress={continueToConfirm}
-            disabled={!allValid}
-          />
+          <AuthButton label="Continuar" onPress={continueToConfirm} />
           <Pressable
             testID="commitments-skip"
             onPress={goConfirm}
@@ -85,18 +86,35 @@ export function Step4Commitments() {
         </View>
 
         <View className="flex-row flex-wrap gap-2">
-          {QUICK_CHIPS.map((name) => (
-            <Pressable
-              key={name}
-              testID={`chip-${name.toLowerCase()}`}
-              onPress={() => addQuickCommitment(name)}
-              className="border border-dashed border-line rounded-full px-3.5 py-2"
-            >
-              <Text className="font-hanken text-[13px] text-foreground/70">
-                {`+ ${name}`}
-              </Text>
-            </Pressable>
-          ))}
+          {QUICK_CHIPS.map((name) => {
+            const taken = isNamedChipTaken(name, state.commitments);
+            return (
+              <Pressable
+                key={name}
+                testID={`chip-${name.toLowerCase()}`}
+                onPress={() => {
+                  if (taken) return;
+                  addQuickCommitment(name);
+                }}
+                disabled={taken}
+                className={
+                  taken
+                    ? "rounded-full border border-line px-3.5 py-2 opacity-40"
+                    : "rounded-full border border-dashed border-line px-3.5 py-2"
+                }
+              >
+                <Text
+                  className={
+                    taken
+                      ? "font-hanken text-[13px] text-foreground/40"
+                      : "font-hanken text-[13px] text-foreground/70"
+                  }
+                >
+                  {`+ ${name}`}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {state.commitments.length > 0 ? (
@@ -108,6 +126,7 @@ export function Step4Commitments() {
                 commitment={commitment}
                 onChange={updateCommitment}
                 onRemove={() => removeCommitment(commitment.id)}
+                showErrors={showFieldErrors}
               />
             ))}
           </View>

@@ -175,11 +175,11 @@ describe("Step3Allocation — reparto 50/30/20", () => {
     );
   });
 
-  it("Continuar avanza al paso confirm", async () => {
+  it("Continuar avanza al paso 4 (compromisos)", async () => {
     await renderStep3(null);
     await act(async () => {
       fireEvent.press(screen.getByText("Continuar"));
     });
-    expect(screen.getByTestId("probe-step").props.children).toBe("confirm");
+    expect(screen.getByTestId("probe-step").props.children).toBe("4");
   });
 });

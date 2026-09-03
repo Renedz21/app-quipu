@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useEffect } from "react";
-import { Text } from "react-native";
+import { Text, TextInput } from "react-native";
 import { Step4Commitments } from "@/modules/onboarding/components/step-4-commitments";
 import {
   OnboardingProvider,
@@ -103,6 +103,76 @@ describe("Step4Commitments — compromisos", () => {
     expect(screen.getByTestId("commitments-total").props.children).toBe("S/ 0");
   });
 
+  it("tras agregar Agua, el chip Agua queda deshabilitado y no duplica", async () => {
+    await renderStep4();
+    await pressChip("Agua");
+    expect(getCommitments()).toHaveLength(1);
+    expect(
+      screen.getByTestId("chip-agua").props.accessibilityState.disabled,
+    ).toBe(true);
+    await pressChip("Agua");
+    expect(getCommitments()).toHaveLength(1);
+  });
+
+  it("Otro se puede agregar más de una vez y el chip sigue activo", async () => {
+    await renderStep4();
+    await pressChip("Otro");
+    await pressChip("Otro");
+    expect(getCommitments()).toHaveLength(2);
+    expect(
+      screen.getByTestId("chip-otro").props.accessibilityState?.disabled,
+    ).not.toBe(true);
+  });
+
+  it("eliminar la fila de Agua rehabilita el chip", async () => {
+    await renderStep4();
+    await pressChip("Agua");
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("remove-commitment-0"));
+    });
+    expect(
+      screen.getByTestId("chip-agua").props.accessibilityState?.disabled,
+    ).not.toBe(true);
+    await pressChip("Agua");
+    expect(getCommitments()).toHaveLength(1);
+  });
+
+  it("el día vacío muestra placeholder 1–31", async () => {
+    await renderStep4();
+    await pressChip("Agua");
+    expect(screen.getByTestId("commitment-day-0").props.placeholder).toBe(
+      "1–31",
+    );
+  });
+
+  it("el día anuncia Día del mes, del 1 al 31", async () => {
+    await renderStep4();
+    await pressChip("Agua");
+    expect(
+      screen.getByTestId("commitment-day-0").props.accessibilityLabel,
+    ).toBe("Día del mes, del 1 al 31");
+  });
+
+  it("el campo del día lleva subrayado", async () => {
+    await renderStep4();
+    await pressChip("Agua");
+    const field = screen.getByTestId("commitment-day-field-0");
+    expect(field.props.className).toContain("border-b");
+    expect(field.props.className).toContain("border-line");
+  });
+
+  it("tocar CADA DÍA enfoca el input del día", async () => {
+    const focusSpy = jest.spyOn(TextInput.prototype, "focus");
+    await renderStep4();
+    await pressChip("Agua");
+    focusSpy.mockClear();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("commitment-day-label-0"));
+    });
+    expect(focusSpy).toHaveBeenCalled();
+    focusSpy.mockRestore();
+  });
+
   it("editar monto 1100 guarda amountCents 110000 y día 5 guarda dueDay 5", async () => {
     await renderStep4();
     await pressChip("Agua");
@@ -118,6 +188,26 @@ describe("Step4Commitments — compromisos", () => {
     expect(screen.getByTestId("commitments-total").props.children).toBe(
       "S/ 1,100",
     );
+  });
+
+  it("39.99 guarda 3999 céntimos y se ve 39.99", async () => {
+    await renderStep4();
+    await pressChip("Celular");
+    await act(async () => {
+      fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "39.99");
+    });
+    expect(getCommitments()[0].amountCents).toBe(3999);
+    expect(screen.getByTestId("commitment-amount-0").props.value).toBe("39.99");
+  });
+
+  it("39,99 también guarda 3999 céntimos", async () => {
+    await renderStep4();
+    await pressChip("Celular");
+    await act(async () => {
+      fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "39,99");
+    });
+    expect(getCommitments()[0].amountCents).toBe(3999);
+    expect(screen.getByTestId("commitment-amount-0").props.value).toBe("39.99");
   });
 
   it("editar el nombre actualiza el compromiso en estado", async () => {
@@ -177,34 +267,46 @@ describe("Step4Commitments — compromisos", () => {
     );
   });
 
-  it("filas inválidas se marcan con border-danger y bloquean Continuar", async () => {
+  it("antes de Continuar no muestra qué falta", async () => {
     await renderStep4();
     await pressChip("Agua");
-    expect(screen.getByTestId("commitment-row-0").props.className).toContain(
-      "border-danger",
-    );
+    expect(screen.queryByTestId("commitment-errors-0")).toBeNull();
+    expect(
+      screen.getByTestId("commitment-row-0").props.className,
+    ).not.toContain("border-danger");
+  });
+
+  it("Continuar con huecos se queda y dice Falta el monto y el día", async () => {
+    await renderStep4();
+    await pressChip("Agua");
     await act(async () => {
       fireEvent.press(screen.getByText("Continuar"));
     });
     expect(screen.getByTestId("probe-step").props.children).toBe("4");
+    expect(screen.getByTestId("commitment-errors-0").props.children).toBe(
+      "Falta el monto y el día.",
+    );
+    expect(
+      screen.getByTestId("commitment-amount-field-0").props.className,
+    ).toContain("border-danger");
+    expect(
+      screen.getByTestId("commitment-day-field-0").props.className,
+    ).toContain("border-danger");
+  });
 
+  it("al completar monto y día, Continuar avanza a confirm", async () => {
+    await renderStep4();
+    await pressChip("Agua");
+    await act(async () => {
+      fireEvent.press(screen.getByText("Continuar"));
+    });
     await act(async () => {
       fireEvent.changeText(screen.getByTestId("commitment-amount-0"), "96");
     });
     await act(async () => {
-      fireEvent.changeText(screen.getByTestId("commitment-day-0"), "40");
-    });
-    await act(async () => {
-      fireEvent.press(screen.getByText("Continuar"));
-    });
-    expect(screen.getByTestId("probe-step").props.children).toBe("4");
-
-    await act(async () => {
       fireEvent.changeText(screen.getByTestId("commitment-day-0"), "20");
     });
-    expect(
-      screen.getByTestId("commitment-row-0").props.className,
-    ).not.toContain("border-danger");
+    expect(screen.queryByTestId("commitment-errors-0")).toBeNull();
     await act(async () => {
       fireEvent.press(screen.getByText("Continuar"));
     });

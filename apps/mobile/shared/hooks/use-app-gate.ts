@@ -1,5 +1,6 @@
 import { api } from "@quipu/convex-api";
 import { useConvexAuth, useQuery } from "convex/react";
+import { useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 
 export type AppGateStatus =
@@ -21,7 +22,13 @@ export function useAppGate() {
     isAuthReady ? {} : "skip",
   );
 
-  if (isSessionPending) {
+  // better-auth revalidates after /sign-out with isPending:true and no data.
+  // Once the session has resolved, a revalidation must not re-trigger the
+  // boot loading state (it would unmount screens like the intro -> flash).
+  const hasResolvedSessionRef = useRef(false);
+  if (!isSessionPending) hasResolvedSessionRef.current = true;
+
+  if (isSessionPending && !hasResolvedSessionRef.current) {
     return { status: "loading" as const, isLoading: true, profile };
   }
   if (!session) {

@@ -47,7 +47,7 @@ export default function SignInScreen() {
         );
         return;
       }
-      router.replace("/(tabs)");
+      // RouteGuard navega a (tabs) u (onboarding)/sistema según perfil.
     },
   });
 
@@ -59,7 +59,7 @@ export default function SignInScreen() {
       setFormError(form, error.message ?? "No se pudo iniciar sesión");
       return;
     }
-    router.replace("/(tabs)");
+    // RouteGuard navega a (tabs) u (onboarding)/sistema según perfil.
   };
 
   return (

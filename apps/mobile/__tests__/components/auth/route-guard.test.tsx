@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react-native";
+import { render, waitFor } from "@testing-library/react-native";
 import { Text } from "react-native";
 import RouteGuard from "@/shared/components/auth/route-guard";
 
@@ -6,6 +6,7 @@ const mockUseSession = jest.fn();
 const mockUseQuery = jest.fn();
 const mockUseConvexAuth = jest.fn();
 const mockUseSegments = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock("@/lib/auth-client", () => ({
   authClient: {
@@ -23,6 +24,7 @@ jest.mock("expo-router", () => {
   return {
     Redirect: ({ href }: { href: string }) => <Text>{`redirect:${href}`}</Text>,
     useSegments: () => mockUseSegments(),
+    useRouter: () => ({ replace: mockReplace }),
   };
 });
 
@@ -61,99 +63,103 @@ describe("RouteGuard", () => {
     mockUseSegments.mockReturnValue(["(tabs)"]);
   });
 
-  it("retorna null mientras la sesión está pendiente", async () => {
-    mockUseSession.mockReturnValue({ data: null, isPending: true });
-    mockUseConvexAuth.mockReturnValue({
-      isAuthenticated: false,
-      isLoading: true,
+  describe("loading", () => {
+    it("renderiza children sin navegar mientras la sesión está pendiente", async () => {
+      mockUseSession.mockReturnValue({ data: null, isPending: true });
+      mockUseConvexAuth.mockReturnValue({
+        isAuthenticated: false,
+        isLoading: true,
+      });
+      mockUseQuery.mockReturnValue(undefined);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
     });
-    mockUseQuery.mockReturnValue(undefined);
-    const { toJSON } = await renderGuard();
-    expect(toJSON()).toBeNull();
-    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), "skip");
-  });
 
-  it("retorna null durante el handshake de Convex con sesión resuelta", async () => {
-    mockUseSession.mockReturnValue({
-      data: { user: { id: "u1" } },
-      isPending: false,
+    it("renderiza children sin navegar durante el handshake de Convex", async () => {
+      mockUseSession.mockReturnValue({
+        data: { user: { id: "u1" } },
+        isPending: false,
+      });
+      mockUseConvexAuth.mockReturnValue({
+        isAuthenticated: false,
+        isLoading: true,
+      });
+      mockUseQuery.mockReturnValue(undefined);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
     });
-    mockUseConvexAuth.mockReturnValue({
-      isAuthenticated: false,
-      isLoading: true,
+  });
+
+  describe("unauthenticated", () => {
+    it("renderiza children y navega a /(onboarding) desde (tabs)", async () => {
+      mockUnauthenticated();
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      await waitFor(() =>
+        expect(mockReplace).toHaveBeenCalledWith("/(onboarding)"),
+      );
     });
-    mockUseQuery.mockReturnValue(undefined);
-    const { toJSON, queryByText } = await renderGuard();
-    expect(toJSON()).toBeNull();
-    expect(queryByText(/redirect:/)).toBeNull();
-    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), "skip");
+
+    it("renderiza children sin navegar cuando está en (auth)", async () => {
+      mockUnauthenticated();
+      mockUseSegments.mockReturnValue(["(auth)"]);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("renderiza children sin navegar cuando está en (onboarding)", async () => {
+      mockUnauthenticated();
+      mockUseSegments.mockReturnValue(["(onboarding)"]);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
   });
 
-  it("sin sesión redirige a la intro de onboarding desde (tabs)", async () => {
-    mockUnauthenticated();
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("redirect:/(onboarding)")).toBeTruthy();
-    expect(queryByText("contenido-protegido")).toBeNull();
-    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), "skip");
+  describe("onboarding", () => {
+    it("renderiza children y navega a /(onboarding)/sistema desde (tabs)", async () => {
+      mockAuthed(null);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      await waitFor(() =>
+        expect(mockReplace).toHaveBeenCalledWith("/(onboarding)/sistema"),
+      );
+    });
+
+    it("renderiza children sin navegar cuando está en (onboarding)", async () => {
+      mockAuthed(null);
+      mockUseSegments.mockReturnValue(["(onboarding)"]);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
   });
 
-  it("sin sesión permite el grupo (auth)", async () => {
-    mockUnauthenticated();
-    mockUseSegments.mockReturnValue(["(auth)"]);
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("contenido-protegido")).toBeTruthy();
-    expect(queryByText(/redirect:/)).toBeNull();
-  });
+  describe("ready", () => {
+    it("renderiza children sin navegar cuando está en (tabs)", async () => {
+      mockAuthed({ onboardingComplete: true });
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
 
-  it("sin sesión permite el grupo (onboarding) (intro)", async () => {
-    mockUnauthenticated();
-    mockUseSegments.mockReturnValue(["(onboarding)"]);
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("contenido-protegido")).toBeTruthy();
-    expect(queryByText(/redirect:/)).toBeNull();
-  });
+    it("renderiza children y navega a /(tabs) desde (auth)", async () => {
+      mockAuthed({ onboardingComplete: true });
+      mockUseSegments.mockReturnValue(["(auth)"]);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/(tabs)"));
+    });
 
-  it("sesión sin onboarding redirige a /(onboarding)/sistema desde (tabs)", async () => {
-    mockAuthed(null);
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("redirect:/(onboarding)/sistema")).toBeTruthy();
-    expect(queryByText("contenido-protegido")).toBeNull();
-  });
-
-  it("sesión con onboarding incompleto redirige a /(onboarding)/sistema desde (tabs)", async () => {
-    mockAuthed({ onboardingComplete: false });
-    const { getByText } = await renderGuard();
-    expect(getByText("redirect:/(onboarding)/sistema")).toBeTruthy();
-  });
-
-  it("sesión sin onboarding permite el grupo (onboarding)", async () => {
-    mockAuthed(null);
-    mockUseSegments.mockReturnValue(["(onboarding)"]);
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("contenido-protegido")).toBeTruthy();
-    expect(queryByText(/redirect:/)).toBeNull();
-  });
-
-  it("onboarding completo renderiza (tabs)", async () => {
-    mockAuthed({ onboardingComplete: true });
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("contenido-protegido")).toBeTruthy();
-    expect(queryByText(/redirect:/)).toBeNull();
-    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), {});
-  });
-
-  it("onboarding completo expulsa del grupo (auth)", async () => {
-    mockAuthed({ onboardingComplete: true });
-    mockUseSegments.mockReturnValue(["(auth)"]);
-    const { getByText, queryByText } = await renderGuard();
-    expect(getByText("redirect:/(tabs)")).toBeTruthy();
-    expect(queryByText("contenido-protegido")).toBeNull();
-  });
-
-  it("onboarding completo expulsa del grupo (onboarding)", async () => {
-    mockAuthed({ onboardingComplete: true });
-    mockUseSegments.mockReturnValue(["(onboarding)"]);
-    const { getByText } = await renderGuard();
-    expect(getByText("redirect:/(tabs)")).toBeTruthy();
+    it("renderiza children y navega a /(tabs) desde (onboarding)", async () => {
+      mockAuthed({ onboardingComplete: true });
+      mockUseSegments.mockReturnValue(["(onboarding)"]);
+      const { getByText } = await renderGuard();
+      expect(getByText("contenido-protegido")).toBeTruthy();
+      await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/(tabs)"));
+    });
   });
 });

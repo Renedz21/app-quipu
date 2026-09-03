@@ -62,4 +62,36 @@ describe("IntroCarousel", () => {
     fireEvent.press(screen.getByText("Ya tengo cuenta"));
     expect(mockPush).toHaveBeenCalledWith("/(auth)/sign-in");
   });
+
+  it('"Saltar" se muestra en los slides 2 y 3 pero no en el 1', async () => {
+    await render(<IntroCarousel />);
+    const skipLinks = screen.getAllByText("Saltar");
+    expect(skipLinks).toHaveLength(2);
+  });
+
+  it('"Saltar" navega a crear cuenta', async () => {
+    await render(<IntroCarousel />);
+    fireEvent.press(screen.getAllByText("Saltar")[0]);
+    expect(mockPush).toHaveBeenCalledWith("/(auth)/create-account");
+  });
+
+  it("slide 3 muestra el precio en pesos con tamaño mixto y la barra de progreso en el día actual", async () => {
+    await render(<IntroCarousel />);
+    expect(screen.getByText("S/")).toBeTruthy();
+    expect(screen.getByText("42")).toBeTruthy();
+    expect(screen.getByText(".30")).toBeTruthy();
+    expect(screen.getByText("DÍA 1")).toBeTruthy();
+    expect(screen.getByText("HOY · 15")).toBeTruthy();
+    expect(screen.getByText("DÍA 30")).toBeTruthy();
+  });
+
+  it("slide 3 muestra las reglas en dos columnas con la última en verde", async () => {
+    await render(<IntroCarousel />);
+    expect(screen.getByText("Si un día gastas de más")).toBeTruthy();
+    expect(screen.getByText("mañana baja")).toBeTruthy();
+    expect(screen.getByText("Si gastas de menos")).toBeTruthy();
+    expect(screen.getByText("mañana sube")).toBeTruthy();
+    expect(screen.getByText("Tu ahorro")).toBeTruthy();
+    expect(screen.getByText("no se toca")).toBeTruthy();
+  });
 });
